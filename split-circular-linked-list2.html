@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tortoise and Hare Pointer Technique</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .explanation {
+            background-color: #FD9F78;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+            color: #000000;
+        }
+
+        .visualization-area {
+            background-color: #FFFFFF;
+            border: 3px solid #FF4800;
+            border-radius: 15px;
+            padding: 40px;
+            margin: 30px 0;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .linked-list {
+            position: relative;
+            width: 600px;
+            height: 400px;
+            margin: 0 auto;
+        }
+
+        .node {
+            width: 60px;
+            height: 60px;
+            background-color: #FD9F78;
+            border: 3px solid #FF4800;
+            border-radius: 50%;
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #000000;
+            font-size: 18px;
+            transition: all 0.5s ease;
+        }
+
+        .arrow {
+            position: absolute;
+            width: 40px;
+            height: 3px;
+            background-color: #FF4800;
+            transform-origin: left center;
+        }
+
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: -8px;
+            top: -5px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid #FF4800;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+        }
+
+        .pointer {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #FFFFFF;
+            font-size: 12px;
+            transition: all 1s ease;
+            z-index: 10;
+        }
+
+        .tortoise {
+            background-color: #FF4800;
+            border: 2px solid #000000;
+        }
+
+        .hare {
+            background-color: #000000;
+            border: 2px solid #FF4800;
+        }
+
+        .controls {
+            margin: 30px 0;
+        }
+
+        .btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 15px 30px;
+            margin: 0 10px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #FD9F78;
+            color: #000000;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background-color: #cccccc;
+            color: #666666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .step-info {
+            background-color: #FD9F78;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 1.1em;
+            color: #000000;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+        }
+
+        .legend-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid;
+        }
+
+        .detection-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 18px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .cycle-detected {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐢 Tortoise and Hare Pointer Technique 🐰</h1>
+        
+        <div class="explanation">
+            <strong>Floyd's Cycle Detection Algorithm:</strong> The tortoise moves one step at a time while the hare moves two steps. 
+            If there's a cycle in the linked list, the hare will eventually meet the tortoise inside the cycle!
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-circle tortoise"></div>
+                <span>Tortoise (Slow Pointer)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-circle hare"></div>
+                <span>Hare (Fast Pointer)</span>
+            </div>
+        </div>
+
+        <div class="visualization-area">
+            <div class="detection-indicator" id="detectionIndicator">
+                🎯 Cycle Detected!
+            </div>
+            
+            <div class="linked-list" id="linkedList">
+                <!-- Nodes will be generated by JavaScript -->
+            </div>
+        </div>
+
+        <div class="step-info" id="stepInfo">
+            Click "Next Step" to start the animation and see how the tortoise and hare pointers move through the circular linked list!
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="prevBtn" onclick="previousStep()">⬅️ Previous</button>
+            <button class="btn" id="nextBtn" onclick="nextStep()">Next Step ➡️</button>
+            <button class="btn" id="resetBtn" onclick="resetAnimation()">🔄 Reset</button>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 0;
+        let maxSteps = 12;
+        let nodes = [];
+        let tortoisePosition = 0;
+        let harePosition = 0;
+        let cycleDetected = false;
+
+        const stepDescriptions = [
+            "Both pointers start at the first node. The tortoise and hare begin their journey!",
+            "Tortoise moves 1 step (to node 2), Hare moves 2 steps (to node 3)",
+            "Tortoise moves 1 step (to node 3), Hare moves 2 steps (to node 5)",
+            "Tortoise moves 1 step (to node 4), Hare moves 2 steps (to node 2)",
+            "Tortoise moves 1 step (to node 5), Hare moves 2 steps (to node 4)",
+            "Tortoise moves 1 step (to node 2), Hare moves 2 steps (to node 1)",
+            "Tortoise moves 1 step (to node 3), Hare moves 2 steps (to node 3)",
+            "🎯 CYCLE DETECTED! Both pointers are at the same node (node 3)",
+            "The algorithm successfully detected the cycle in the linked list!",
+            "In a real application, we would now find the start of the cycle",
+            "This technique is also used for finding the middle of a linked list",
+            "The tortoise and hare algorithm has O(n) time complexity and O(1) space complexity!"
+        ];
+
+        function createNodes() {
+            const linkedListContainer = document.getElementById('linkedList');
+            linkedListContainer.innerHTML = '';
+            
+            // Create 5 nodes in a circular pattern
+            const centerX = 300;
+            const centerY = 200;
+            const radius = 150;
+            
+            for (let i = 0; i < 5; i++) {
+                const angle = (i * 72 - 90) * Math.PI / 180; // 72 degrees apart, starting from top
+                const x = centerX + radius * Math.cos(angle) - 30; // -30 to center the node
+                const y = centerY + radius * Math.sin(angle) - 30;
+                
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.textContent = i + 1;
+                node.style.left = x + 'px';
+                node.style.top = y + 'px';
+                node.id = `node${i}`;
+                
+                linkedListContainer.appendChild(node);
+                
+                // Create arrow to next node
+                const nextIndex = (i + 1) % 5;
+                const nextAngle = (nextIndex * 72 - 90) * Math.PI / 180;
+                const nextX = centerX + radius * Math.cos(nextAngle);
+                const nextY = centerY + radius * Math.sin(nextAngle);
+                
+                const arrow = document.createElement('div');
+                arrow.className = 'arrow';
+                
+                const arrowX = x + 30;
+                const arrowY = y + 30;
+                const arrowAngle = Math.atan2(nextY - arrowY, nextX - arrowX) * 180 / Math.PI;
+                
+                arrow.style.left = arrowX + 'px';
+                arrow.style.top = arrowY + 'px';
+                arrow.style.transform = `rotate(${arrowAngle}deg)`;
+                
+                linkedListContainer.appendChild(arrow);
+                
+                nodes.push({x: x + 20, y: y + 20}); // Center of node
+            }
+            
+            // Create pointers
+            const tortoise = document.createElement('div');
+            tortoise.className = 'pointer tortoise';
+            tortoise.id = 'tortoise';
+            tortoise.textContent = '🐢';
+            tortoise.style.left = (nodes[0].x - 20) + 'px';
+            tortoise.style.top = (nodes[0].y - 50) + 'px';
+            linkedListContainer.appendChild(tortoise);
+            
+            const hare = document.createElement('div');
+            hare.className = 'pointer hare';
+            hare.id = 'hare';
+            hare.textContent = '🐰';
+            hare.style.left = (nodes[0].x + 20) + 'px';
+            hare.style.top = (nodes[0].y - 50) + 'px';
+            linkedListContainer.appendChild(hare);
+        }
+
+        function updatePointers() {
+            const tortoise = document.getElementById('tortoise');
+            const hare = document.getElementById('hare');
+            
+            tortoise.style.left = (nodes[tortoisePosition].x - 20) + 'px';
+            tortoise.style.top = (nodes[tortoisePosition].y - 50) + 'px';
+            
+            hare.style.left = (nodes[harePosition].x + 20) + 'px';
+            hare.style.top = (nodes[harePosition].y - 50) + 'px';
+            
+            // Highlight current nodes
+            document.querySelectorAll('.node').forEach(node => {
+                node.style.backgroundColor = '#FD9F78';
+                node.style.transform = 'scale(1)';
+            });
+            
+            document.getElementById(`node${tortoisePosition}`).style.backgroundColor = '#FF4800';
+            document.getElementById(`node${harePosition}`).style.backgroundColor = '#000000';
+            document.getElementById(`node${harePosition}`).style.color = '#FFFFFF';
+            
+            if (tortoisePosition === harePosition && currentStep > 0) {
+                document.getElementById(`node${tortoisePosition}`).style.transform = 'scale(1.2)';
+                document.getElementById('detectionIndicator').className = 'detection-indicator cycle-detected';
+                cycleDetected = true;
+            }
+        }
+
+        function nextStep() {
+            if (currentStep >= maxSteps - 1) return;
+            
+            currentStep++;
+            
+            if (currentStep <= 7 && !cycleDetected) {
+                // Move tortoise 1 step
+                tortoisePosition = (tortoisePosition + 1) % 5;
+                
+                // Move hare 2 steps
+                harePosition = (harePosition + 2) % 5;
+                
+                updatePointers();
+            }
+            
+            document.getElementById('stepInfo').textContent = stepDescriptions[currentStep];
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = false;
+            if (currentStep >= maxSteps - 1) {
+                document.getElementById('nextBtn').disabled = true;
+            }
+        }
+
+        function previousStep() {
+            if (currentStep <= 0) return;
+            
+            currentStep--;
+            
+            if (currentStep === 0) {
+                tortoisePosition = 0;
+                harePosition = 0;
+                cycleDetected = false;
+                document.getElementById('detectionIndicator').className = 'detection-indicator';
+            } else if (currentStep <= 7) {
+                // Reverse the movements
+                tortoisePosition = (tortoisePosition - 1 + 5) % 5;
+                harePosition = (harePosition - 2 + 5) % 5;
+                cycleDetected = false;
+                document.getElementById('detectionIndicator').className = 'detection-indicator';
+            }
+            
+            updatePointers();
+            document.getElementById('stepInfo').textContent = stepDescriptions[currentStep];
+            
+            // Update button states
+            document.getElementById('nextBtn').disabled = false;
+            if (currentStep <= 0) {
+                document.getElementById('prevBtn').disabled = true;
+            }
+        }
+
+        function resetAnimation() {
+            currentStep = 0;
+            tortoisePosition = 0;
+            harePosition = 0;
+            cycleDetected = false;
+            
+            document.getElementById('detectionIndicator').className = 'detection-indicator';
+            document.getElementById('stepInfo').textContent = stepDescriptions[0];
+            
+            updatePointers();
+            
+            // Reset button states
+            document.getElementById('prevBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        // Initialize the visualization
+        window.onload = function() {
+            createNodes();
+            updatePointers();
+            document.getElementById('prevBtn').disabled = true;
+        };
+    </script>
+</body>
+</html>
