@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doubly Linked List Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .explanation {
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .animation-container {
+            margin: 40px auto;
+            position: relative;
+            height: 400px;
+        }
+        
+        .slide {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        .node {
+            width: 180px;
+            height: 100px;
+            border: 3px solid #FF4800;
+            border-radius: 10px;
+            position: absolute;
+            background-color: #FFFFFF;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.5s ease;
+        }
+        
+        .node-title {
+            text-align: center;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            padding: 5px 0;
+            border-top-left-radius: 7px;
+            border-top-right-radius: 7px;
+            font-weight: bold;
+        }
+        
+        .node-content {
+            display: flex;
+            height: calc(100% - 30px);
+        }
+        
+        .prev-section, .data-section, .next-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+        }
+        
+        .prev-section, .next-section {
+            width: 35%;
+            border-right: 1px dashed #FD9F78;
+            border-left: 1px dashed #FD9F78;
+        }
+        
+        .data-section {
+            width: 30%;
+        }
+        
+        .section-title {
+            font-size: 10px;
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        
+        .data {
+            font-size: 18px;
+            font-weight: bold;
+            color: #000000;
+        }
+        
+        .pointer {
+            font-size: 18px;
+            color: #FD9F78;
+        }
+        
+        .arrow {
+            position: absolute;
+            height: 2px;
+            background-color: #FF4800;
+            transition: all 0.5s ease;
+        }
+        
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 8px solid #FF4800;
+        }
+        
+        .arrow.prev-arrow::after {
+            right: auto;
+            left: 0;
+            border-left: none;
+            border-right: 8px solid #FF4800;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .slide-indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #FF4800;
+        }
+        
+        .null-node {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #FF4800;
+            border-radius: 10px;
+            width: 80px;
+            height: 40px;
+            background-color: #FFFFFF;
+            font-weight: bold;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Doubly Linked List</h1>
+        
+        <div class="explanation">
+            <p>A doubly linked list is a type of linked data structure where each node contains three components:</p>
+            <ul>
+                <li>Data: The actual value stored in the node</li>
+                <li>Next pointer: Reference to the next node in the sequence</li>
+                <li>Previous pointer: Reference to the previous node in the sequence</li>
+            </ul>
+            <p>Unlike a singly linked list, a doubly linked list allows traversal in both directions (forward and backward).</p>
+        </div>
+        
+        <div class="animation-container">
+            <div class="slide active" id="slide1">
+                <!-- Structure of a node -->
+            </div>
+            
+            <div class="slide" id="slide2">
+                <!-- Entire linked list visualization -->
+            </div>
+            
+            <div class="slide" id="slide3">
+                <!-- Traversing forward -->
+            </div>
+            
+            <div class="slide" id="slide4">
+                <!-- Traversing backward -->
+            </div>
+        </div>
+        
+        <div class="slide-indicator">
+            <span id="slideNumber">1</span> / 4
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="nav-btn" id="prevBtn" disabled>Previous</button>
+            <button class="nav-btn" id="nextBtn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        // Initialize the slides
+        let currentSlide = 1;
+        const totalSlides = 4;
+        
+        function updateNavButtons() {
+            document.getElementById('prevBtn').disabled = (currentSlide === 1);
+            document.getElementById('nextBtn').disabled = (currentSlide === totalSlides);
+            document.getElementById('slideNumber').textContent = currentSlide;
+        }
+        
+        function showSlide(slideNumber) {
+            // Hide all slides
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            // Show the requested slide
+            document.getElementById(`slide${slideNumber}`).classList.add('active');
+            
+            // Update buttons
+            currentSlide = slideNumber;
+            updateNavButtons();
+        }
+        
+        // Button event listeners
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentSlide > 1) {
+                showSlide(currentSlide - 1);
+            }
+        });
+        
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentSlide < totalSlides) {
+                showSlide(currentSlide + 1);
+            }
+        });
+        
+        // Create slide 1: Node structure
+        function createNodeStructure() {
+            const slide = document.getElementById('slide1');
+            
+            const nodeTitle = document.createElement('h2');
+            nodeTitle.textContent = 'Structure of a Doubly Linked List Node';
+            nodeTitle.style.textAlign = 'center';
+            nodeTitle.style.color = '#FF4800';
+            slide.appendChild(nodeTitle);
+            
+            const description = document.createElement('p');
+            description.textContent = 'Each node in a doubly linked list contains three components:';
+            description.style.textAlign = 'center';
+            slide.appendChild(description);
+            
+            // Create the node
+            const node = document.createElement('div');
+            node.className = 'node';
+            node.style.left = 'calc(50% - 90px)';
+            node.style.top = '150px';
+            
+            node.innerHTML = `
+                <div class="node-title">Node</div>
+                <div class="node-content">
+                    <div class="prev-section">
+                        <div class="section-title">PREV POINTER</div>
+                        <div class="pointer">↩</div>
+                    </div>
+                    <div class="data-section">
+                        <div class="section-title">DATA</div>
+                        <div class="data">X</div>
+                    </div>
+                    <div class="next-section">
+                        <div class="section-title">NEXT POINTER</div>
+                        <div class="pointer">↪</div>
+                    </div>
+                </div>
+            `;
+            
+            slide.appendChild(node);
+            
+            const explanation = document.createElement('div');
+            explanation.style.position = 'absolute';
+            explanation.style.top = '280px';
+            explanation.style.width = '100%';
+            explanation.innerHTML = `
+                <ul style="width: 80%; margin: 0 auto;">
+                    <li><strong>Prev Pointer:</strong> Points to the previous node in the list (or NULL if it's the first node)</li>
+                    <li><strong>Data:</strong> Stores the actual value/information</li>
+                    <li><strong>Next Pointer:</strong> Points to the next node in the list (or NULL if it's the last node)</li>
+                </ul>
+            `;
+            slide.appendChild(explanation);
+        }
+        
+        // Create slide 2: Full linked list
+        function createFullList() {
+            const slide = document.getElementById('slide2');
+            
+            const title = document.createElement('h2');
+            title.textContent = 'A 4-Node Doubly Linked List';
+            title.style.textAlign = 'center';
+            title.style.color = '#FF4800';
+            slide.appendChild(title);
+            
+            const description = document.createElement('p');
+            description.textContent = 'A doubly linked list connects nodes in both directions:';
+            description.style.textAlign = 'center';
+            slide.appendChild(description);
+            
+            // Create 4 nodes
+            const nodeWidth = 120;
+            const nodeHeight = 80;
+            const spacing = 160;
+            const startX = 80;
+            const y = 150;
+            
+            for (let i = 1; i <= 4; i++) {
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.style.width = `${nodeWidth}px`;
+                node.style.height = `${nodeHeight}px`;
+                node.style.left = `${startX + (i-1) * spacing}px`;
+                node.style.top = `${y}px`;
+                
+                node.innerHTML = `
+                    <div class="node-title">Node ${i}</div>
+                    <div class="node-content">
+                        <div class="prev-section">
+                            <div class="section-title">PREV</div>
+                            <div class="pointer">${i === 1 ? 'NULL' : '←'}</div>
+                        </div>
+                        <div class="data-section">
+                            <div class="section-title">DATA</div>
+                            <div class="data">${i}</div>
+                        </div>
+                        <div class="next-section">
+                            <div class="section-title">NEXT</div>
+                            <div class="pointer">${i === 4 ? 'NULL' : '→'}</div>
+                        </div>
+                    </div>
+                `;
+                
+                slide.appendChild(node);
+            }
+            
+            // Create NULL node at the beginning
+            const nullNodeStart = document.createElement('div');
+            nullNodeStart.className = 'null-node';
+            nullNodeStart.style.left = '10px';
+            nullNodeStart.style.top = `${y + nodeHeight/2 - 20}px`;
+            nullNodeStart.textContent = 'NULL';
+            slide.appendChild(nullNodeStart);
+            
+            // Create NULL node at the end
+            const nullNodeEnd = document.createElement('div');
+            nullNodeEnd.className = 'null-node';
+            nullNodeEnd.style.left = `${startX + 4 * spacing + 20}px`;
+            nullNodeEnd.style.top = `${y + nodeHeight/2 - 20}px`;
+            nullNodeEnd.textContent = 'NULL';
+            slide.appendChild(nullNodeEnd);
+            
+            // Create next arrows
+            for (let i = 1; i <= 4; i++) {
+                if (i < 4) {
+                    const nextArrow = document.createElement('div');
+                    nextArrow.className = 'arrow';
+                    nextArrow.style.left = `${startX + nodeWidth + (i-1) * spacing}px`;
+                    nextArrow.style.top = `${y + nodeHeight/2}px`;
+                    nextArrow.style.width = `${spacing - nodeWidth - 10}px`;
+                    slide.appendChild(nextArrow);
+                }
+            }
+            
+            // Create prev arrows
+            for (let i = 2; i <= 4; i++) {
+                const prevArrow = document.createElement('div');
+                prevArrow.className = 'arrow prev-arrow';
+                prevArrow.style.left = `${startX + nodeWidth + (i-2) * spacing + 10}px`;
+                prevArrow.style.top = `${y + nodeHeight/2 + 20}px`;
+                prevArrow.style.width = `${spacing - nodeWidth - 10}px`;
+                slide.appendChild(prevArrow);
+            }
+            
+            // Arrow from first node to NULL
+            const firstPrevArrow = document.createElement('div');
+            firstPrevArrow.className = 'arrow prev-arrow';
+            firstPrevArrow.style.left = `${nullNodeStart.offsetWidth + 20}px`;
+            firstPrevArrow.style.top = `${y + nodeHeight/2 + 20}px`;
+            firstPrevArrow.style.width = `${startX - nullNodeStart.offsetWidth - 30}px`;
+            slide.appendChild(firstPrevArrow);
+            
+            // Arrow from last node to NULL
+            const lastNextArrow = document.createElement('div');
+            lastNextArrow.className = 'arrow';
+            lastNextArrow.style.left = `${startX + 4 * spacing - 40}px`;
+            lastNextArrow.style.top = `${y + nodeHeight/2}px`;
+            lastNextArrow.style.width = `${60}px`;
+            slide.appendChild(lastNextArrow);
+            
+            const explanation = document.createElement('div');
+            explanation.style.position = 'absolute';
+            explanation.style.top = '280px';
+            explanation.style.width = '100%';
+            explanation.innerHTML = `
+                <ul style="width: 80%; margin: 0 auto;">
+                    <li>Each node points to both the next and the previous node</li>
+                    <li>The first node's previous pointer points to NULL</li>
+                    <li>The last node's next pointer points to NULL</li>
+                    <li>The bidirectional arrows allow traversal in both directions</li>
+                </ul>
+            `;
+            slide.appendChild(explanation);
+        }
+        
+        // Create slide 3: Forward traversal
+        function createForwardTraversal() {
+            const slide = document.getElementById('slide3');
+            
+            const title = document.createElement('h2');
+            title.textContent = 'Forward Traversal Using Next Pointers';
+            title.style.textAlign = 'center';
+            title.style.color = '#FF4800';
+            slide.appendChild(title);
+            
+            const description = document.createElement('p');
+            description.textContent = 'Following next pointers to traverse from start to end:';
+            description.style.textAlign = 'center';
+            slide.appendChild(description);
+            
+            // Create 4 nodes with simplified design
+            const nodeWidth = 120;
+            const nodeHeight = 80;
+            const spacing = 160;
+            const startX = 80;
+            const y = 150;
+            
+            for (let i = 1; i <= 4; i++) {
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.id = `forward-node-${i}`;
+                node.style.width = `${nodeWidth}px`;
+                node.style.height = `${nodeHeight}px`;
+                node.style.left = `${startX + (i-1) * spacing}px`;
+                node.style.top = `${y}px`;
+                
+                node.innerHTML = `
+                    <div class="node-title">Node ${i}</div>
+                    <div class="node-content">
+                        <div class="prev-section">
+                            <div class="section-title">PREV</div>
+                            <div class="pointer">${i === 1 ? 'NULL' : '←'}</div>
+                        </div>
+                        <div class="data-section">
+                            <div class="section-title">DATA</div>
+                            <div class="data">${i}</div>
+                        </div>
+                        <div class="next-section">
+                            <div class="section-title">NEXT</div>
+                            <div class="pointer">${i === 4 ? 'NULL' : '→'}</div>
+                        </div>
+                    </div>
+                `;
+                
+                slide.appendChild(node);
+            }
+            
+            // Create NULL nodes
+            const nullNodeStart = document.createElement('div');
+            nullNodeStart.className = 'null-node';
+            nullNodeStart.style.left = '10px';
+            nullNodeStart.style.top = `${y + nodeHeight/2 - 20}px`;
+            nullNodeStart.textContent = 'NULL';
+            slide.appendChild(nullNodeStart);
+            
+            const nullNodeEnd = document.createElement('div');
+            nullNodeEnd.className = 'null-node';
+            nullNodeEnd.id = 'forward-null-end';
+            nullNodeEnd.style.left = `${startX + 4 * spacing + 20}px`;
+            nullNodeEnd.style.top = `${y + nodeHeight/2 - 20}px`;
+            nullNodeEnd.textContent = 'NULL';
+            slide.appendChild(nullNodeEnd);
+            
+            // Create next arrows with IDs
+            for (let i = 1; i <= 4; i++) {
+                if (i < 4) {
+                    const nextArrow = document.createElement('div');
+                    nextArrow.className = 'arrow';
+                    nextArrow.id = `forward-next-${i}`;
+                    nextArrow.style.left = `${startX + nodeWidth + (i-1) * spacing}px`;
+                    nextArrow.style.top = `${y + nodeHeight/2}px`;
+                    nextArrow.style.width = `${spacing - nodeWidth - 10}px`;
+                    slide.appendChild(nextArrow);
+                }
+            }
+            
+            // Arrow from last node to NULL
+            const lastNextArrow = document.createElement('div');
+            lastNextArrow.className = 'arrow';
+            lastNextArrow.id = 'forward-next-4';
+            lastNextArrow.style.left = `${startX + 4 * spacing - 40}px`;
+            lastNextArrow.style.top = `${y + nodeHeight/2}px`;
+            lastNextArrow.style.width = `${60}px`;
+            slide.appendChild(lastNextArrow);
+            
+            const explanation = document.createElement('div');
+            explanation.style.position = 'absolute';
+            explanation.style.top = '280px';
+            explanation.style.width = '100%';
+            explanation.innerHTML = `
+                <p style="text-align: center; font-weight: bold;" id="forward-message">Starting at the head (first node) of the list</p>
+                <ul style="width: 80%; margin: 0 auto;">
+                    <li>Begin at the first node (head of the list)</li>
+                    <li>Access each node's data</li>
+                    <li>Follow the next pointer to move to the next node</li>
+                    <li>Continue until reaching NULL (end of the list)</li>
+                </ul>
+            `;
+            slide.appendChild(explanation);
+            
+            // Animation timing
+            setTimeout(() => {
+                if (currentSlide === 3) animateForwardTraversal();
+            }, 500);
+        }
+        
+        // Create slide 4: Backward traversal
+        function createBackwardTraversal() {
+            const slide = document.getElementById('slide4');
+            
+            const title = document.createElement('h2');
+            title.textContent = 'Backward Traversal Using Previous Pointers';
+            title.style.textAlign = 'center';
+            title.style.color = '#FF4800';
+            slide.appendChild(title);
+            
+            const description = document.createElement('p');
+            description.textContent = 'Following previous pointers to traverse from end to start:';
+            description.style.textAlign = 'center';
+            slide.appendChild(description);
+            
+            // Create 4 nodes with simplified design
+            const nodeWidth = 120;
+            const nodeHeight = 80;
+            const spacing = 160;
+            const startX = 80;
+            const y = 150;
+            
+            for (let i = 1; i <= 4; i++) {
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.id = `backward-node-${i}`;
+                node.style.width = `${nodeWidth}px`;
+                node.style.height = `${nodeHeight}px`;
+                node.style.left = `${startX + (i-1) * spacing}px`;
+                node.style.top = `${y}px`;
+                
+                node.innerHTML = `
+                    <div class="node-title">Node ${i}</div>
+                    <div class="node-content">
+                        <div class="prev-section">
+                            <div class="section-title">PREV</div>
+                            <div class="pointer">${i === 1 ? 'NULL' : '←'}</div>
+                        </div>
+                        <div class="data-section">
+                            <div class="section-title">DATA</div>
+                            <div class="data">${i}</div>
+                        </div>
+                        <div class="next-section">
+                            <div class="section-title">NEXT</div>
+                            <div class="pointer">${i === 4 ? 'NULL' : '→'}</div>
+                        </div>
+                    </div>
+                `;
+                
+                slide.appendChild(node);
+            }
+            
+            // Create NULL nodes
+            const nullNodeStart = document.createElement('div');
+            nullNodeStart.className = 'null-node';
+            nullNodeStart.id = 'backward-null-start';
+            nullNodeStart.style.left = '10px';
+            nullNodeStart.style.top = `${y + nodeHeight/2 - 20}px`;
+            nullNodeStart.textContent = 'NULL';
+            slide.appendChild(nullNodeStart);
+            
+            const nullNodeEnd = document.createElement('div');
+            nullNodeEnd.className = 'null-node';
+            nullNodeEnd.style.left = `${startX + 4 * spacing + 20}px`;
+            nullNodeEnd.style.top = `${y + nodeHeight/2 - 20}px`;
+            nullNodeEnd.textContent = 'NULL';
+            slide.appendChild(nullNodeEnd);
+            
+            // Create prev arrows with IDs
+            for (let i = 2; i <= 4; i++) {
+                const prevArrow = document.createElement('div');
+                prevArrow.className = 'arrow prev-arrow';
+                prevArrow.id = `backward-prev-${i}`;
+                prevArrow.style.left = `${startX + nodeWidth + (i-2) * spacing + 10}px`;
+                prevArrow.style.top = `${y + nodeHeight/2 + 20}px`;
+                prevArrow.style.width = `${spacing - nodeWidth - 10}px`;
+                slide.appendChild(prevArrow);
+            }
+            
+            // Arrow from first node to NULL
+            const firstPrevArrow = document.createElement('div');
+            firstPrevArrow.className = 'arrow prev-arrow';
+            firstPrevArrow.id = 'backward-prev-1';
+            firstPrevArrow.style.left = `${nullNodeStart.offsetWidth + 20}px`;
+            firstPrevArrow.style.top = `${y + nodeHeight/2 + 20}px`;
+            firstPrevArrow.style.width = `${startX - nullNodeStart.offsetWidth - 30}px`;
+            slide.appendChild(firstPrevArrow);
+            
+            const explanation = document.createElement('div');
+            explanation.style.position = 'absolute';
+            explanation.style.top = '280px';
+            explanation.style.width = '100%';
+            explanation.innerHTML = `
+                <p style="text-align: center; font-weight: bold;" id="backward-message">Starting at the tail (last node) of the list</p>
+                <ul style="width: 80%; margin: 0 auto;">
+                    <li>Begin at the last node (tail of the list)</li>
+                    <li>Access each node's data</li>
+                    <li>Follow the previous pointer to move to the previous node</li>
+                    <li>Continue until reaching NULL (start of the list)</li>
+                </ul>
+            `;
+            slide.appendChild(explanation);
+            
+            // Animation timing
+            setTimeout(() => {
+                if (currentSlide === 4) animateBackwardTraversal();
+            }, 500);
+        }
+        
+        // Animation for forward traversal
+        function animateForwardTraversal() {
+            const nodes = [
+                document.getElementById('forward-node-1'),
+                document.getElementById('forward-node-2'),
+                document.getElementById('forward-node-3'),
+                document.getElementById('forward-node-4'),
+                document.getElementById('forward-null-end')
+            ];
+            
+            const arrows = [
+                document.getElementById('forward-next-1'),
+                document.getElementById('forward-next-2'),
+                document.getElementById('forward-next-3'),
+                document.getElementById('forward-next-4')
+            ];
+            
+            const message = document.getElementById('forward-message');
+            
+            let currentIndex = 0;
+            
+            function highlightNext() {
+                // Reset all
+                nodes.forEach(node => {
+                    if (node) node.style.border = '3px solid #FF4800';
+                    if (node) node.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
+                });
+                
+                arrows.forEach(arrow => {
+                    if (arrow) arrow.style.backgroundColor = '#FF4800';
+                    if (arrow) arrow.style.height = '2px';
+                });
+                
+                // Highlight current node
+                if (nodes[currentIndex]) {
+                    nodes[currentIndex].style.border = '3px solid #FF4800';
+                    nodes[currentIndex].style.boxShadow = '0 0 10px 5px rgba(255, 72, 0, 0.3)';
+                    
+                    if (currentIndex < 4) {
+                        message.textContent = `Visiting Node ${currentIndex + 1} (value: ${currentIndex + 1})`;
+                    } else {
+                        message.textContent = 'Reached NULL - end of list';
+                    }
+                    
+                    // Highlight current arrow if not at the end
+                    if (currentIndex < arrows.length && arrows[currentIndex]) {
+                        arrows[currentIndex].style.backgroundColor = '#FD9F78';
+                        arrows[currentIndex].style.height = '4px';
+                    }
+                }
+                
+                currentIndex++;
+                
+                // Continue animation if not at the end
+                if (currentIndex <= nodes.length - 1 && currentSlide === 3) {
+                    setTimeout(highlightNext, 1000);
+                } else if (currentSlide === 3) {
+                    // Restart the animation after a delay
+                    setTimeout(() => {
+                        if (currentSlide === 3) {
+                            currentIndex = 0;
+                            highlightNext();
+                        }
+                    }, 2000);
+                }
+            }
+            
+            // Start the animation
+            highlightNext();
+        }
+        
+        // Animation for backward traversal
+        function animateBackwardTraversal() {
+            const nodes = [
+                document.getElementById('backward-node-4'),
+                document.getElementById('backward-node-3'),
+                document.getElementById('backward-node-2'),
+                document.getElementById('backward-node-1'),
+                document.getElementById('backward-null-start')
+            ];
+            
+            const arrows = [
+                document.getElementById('backward-prev-4'),
+                document.getElementById('backward-prev-3'),
+                document.getElementById('backward-prev-2'),
+                document.getElementById('backward-prev-1')
+            ];
+            
+            const message = document.getElementById('backward-message');
+            
+            let currentIndex = 0;
+            
+            function highlightPrev() {
+                // Reset all
+                nodes.forEach(node => {
+                    if (node) node.style.border = '3px solid #FF4800';
+                    if (node) node.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
+                });
+                
+                arrows.forEach(arrow => {
+                    if (arrow) arrow.style.backgroundColor = '#FF4800';
+                    if (arrow) arrow.style.height = '2px';
+                });
+                
+                // Highlight current node
+                if (nodes[currentIndex]) {
+                    nodes[currentIndex].style.border = '3px solid #FF4800';
+                    nodes[currentIndex].style.boxShadow = '0 0 10px 5px rgba(255, 72, 0, 0.3)';
+                    
+                    if (currentIndex < 4) {
+                        const nodeNumber = 4 - currentIndex;
+                        message.textContent = `Visiting Node ${nodeNumber} (value: ${nodeNumber})`;
+                    } else {
+                        message.textContent = 'Reached NULL - beginning of list';
+                    }
+                    
+                    // Highlight current arrow if not at the beginning
+                    if (currentIndex < arrows.length && arrows[currentIndex]) {
+                        arrows[currentIndex].style.backgroundColor = '#FD9F78';
+                        arrows[currentIndex].style.height = '4px';
+                    }
+                }
+                
+                currentIndex++;
+                
+                // Continue animation if not at the beginning
+                if (currentIndex <= nodes.length - 1 && currentSlide === 4) {
+                    setTimeout(highlightPrev, 1000);
+                } else if (currentSlide === 4) {
+                    // Restart the animation after a delay
+                    setTimeout(() => {
+                        if (currentSlide === 4) {
+                            currentIndex = 0;
+                            highlightPrev();
+                        }
+                    }, 2000);
+                }
+            }
+            
+            // Start the animation
+            highlightPrev();
+        }
+        
+        // Initialize all slides
+        createNodeStructure();
+        createFullList();
+        createForwardTraversal();
+        createBackwardTraversal();
+        
+        // Set up event listeners for slide changes
+        document.getElementById('slide3').addEventListener('transitionend', () => {
+            if (currentSlide === 3) animateForwardTraversal();
+        });
+        
+        document.getElementById('slide4').addEventListener('transitionend', () => {
+            if (currentSlide === 4) animateBackwardTraversal();
+        });
+        
+        // Additional event listeners for slide changes
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (currentSlide === 3) animateForwardTraversal();
+                if (currentSlide === 4) animateBackwardTraversal();
+            });
+        });
+    </script>
+</body>
+</html>
