@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linked List Partitioning Process</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        #animation-container {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+            position: relative;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .node {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            position: absolute;
+            transition: all 1s ease;
+        }
+        
+        .pivot {
+            background-color: #FF4800;
+            color: white;
+        }
+        
+        .smaller {
+            background-color: #FD9F78;
+        }
+        
+        .larger {
+            background-color: #FD9F78;
+        }
+        
+        .arrow {
+            position: absolute;
+            width: 50px;
+            height: 2px;
+            background-color: #000000;
+            transition: all 1s ease;
+        }
+        
+        .arrow::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-top: 2px solid #000000;
+            border-right: 2px solid #000000;
+            transform: rotate(45deg);
+            right: 0;
+            top: -4px;
+        }
+        
+        .explanation {
+            background-color: rgba(253, 159, 120, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Linked List Partitioning Process</h1>
+        
+        <div class="explanation" id="explanation">
+            Step 1: We start with our linked list [3, 1, 5, 2, 4] and choose the first node with value 3 as our pivot.
+        </div>
+        
+        <div id="animation-container"></div>
+        
+        <div class="navigation">
+            <button id="prev-btn" class="nav-btn" disabled>Previous</button>
+            <button id="next-btn" class="nav-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize animation elements
+        const container = document.getElementById('animation-container');
+        const explanation = document.getElementById('explanation');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        
+        // List data
+        const listValues = [3, 1, 5, 2, 4];
+        const pivotValue = listValues[0];
+        
+        // Animation steps
+        let currentStep = 0;
+        const totalSteps = 5;
+        
+        // Create initial nodes
+        const createInitialList = () => {
+            container.innerHTML = '';
+            const nodeWidth = 50;
+            const arrowWidth = 50;
+            const startX = (container.offsetWidth - (listValues.length * (nodeWidth + arrowWidth) - arrowWidth)) / 2;
+            const centerY = container.offsetHeight / 2;
+            
+            for (let i = 0; i < listValues.length; i++) {
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.id = `node-${i}`;
+                node.innerText = listValues[i];
+                node.style.left = `${startX + i * (nodeWidth + arrowWidth)}px`;
+                node.style.top = `${centerY - nodeWidth/2}px`;
+                
+                if (i === 0) {
+                    node.classList.add('pivot');
+                }
+                
+                container.appendChild(node);
+                
+                // Add arrow if not last element
+                if (i < listValues.length - 1) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'arrow';
+                    arrow.id = `arrow-${i}`;
+                    arrow.style.left = `${startX + nodeWidth/2 + i * (nodeWidth + arrowWidth)}px`;
+                    arrow.style.top = `${centerY}px`;
+                    arrow.style.width = `${arrowWidth}px`;
+                    container.appendChild(arrow);
+                }
+            }
+        };
+        
+        // Initialize the animation
+        createInitialList();
+        
+        // Animation steps
+        const animateStep = (step) => {
+            switch(step) {
+                case 0:
+                    // Initial state
+                    createInitialList();
+                    explanation.innerText = "Step 1: We start with our linked list [3, 1, 5, 2, 4] and choose the first node with value 3 as our pivot.";
+                    break;
+                    
+                case 1:
+                    // Identify and color nodes based on pivot comparison
+                    const nodes = document.querySelectorAll('.node');
+                    nodes.forEach((node, index) => {
+                        const value = listValues[index];
+                        if (index === 0) {
+                            node.classList.add('pivot');
+                        } else if (value < pivotValue) {
+                            node.classList.add('smaller');
+                            node.style.backgroundColor = '#FD9F78';
+                        } else {
+                            node.classList.add('larger');
+                            node.style.backgroundColor = '#FD9F78';
+                        }
+                    });
+                    explanation.innerText = "Step 2: We identify nodes that are smaller than the pivot (1, 2) and nodes that are greater than or equal to the pivot (5, 4).";
+                    break;
+                    
+                case 2:
+                    // Separate nodes into three chains
+                    const centerY = container.offsetHeight / 2;
+                    const nodeWidth = 50;
+                    const arrowWidth = 50;
+                    const smallerY = centerY - 100;
+                    const pivotY = centerY;
+                    const largerY = centerY + 100;
+                    
+                    // Position smaller nodes
+                    let smallerX = 100;
+                    let largerX = 100;
+                    
+                    // Remove all arrows
+                    document.querySelectorAll('.arrow').forEach(arrow => arrow.remove());
+                    
+                    // Position pivot
+                    const pivot = document.getElementById('node-0');
+                    pivot.style.left = `${container.offsetWidth / 2 - nodeWidth/2}px`;
+                    pivot.style.top = `${pivotY - nodeWidth/2}px`;
+                    
+                    // Create smaller chain
+                    for (let i = 1; i < listValues.length; i++) {
+                        const node = document.getElementById(`node-${i}`);
+                        if (listValues[i] < pivotValue) {
+                            node.style.left = `${smallerX}px`;
+                            node.style.top = `${smallerY - nodeWidth/2}px`;
+                            
+                            // Add arrow if not first in chain
+                            if (smallerX > 100) {
+                                const arrow = document.createElement('div');
+                                arrow.className = 'arrow';
+                                arrow.style.left = `${smallerX - arrowWidth}px`;
+                                arrow.style.top = `${smallerY}px`;
+                                arrow.style.width = `${arrowWidth}px`;
+                                container.appendChild(arrow);
+                            }
+                            
+                            smallerX += nodeWidth + arrowWidth;
+                        } else {
+                            node.style.left = `${largerX}px`;
+                            node.style.top = `${largerY - nodeWidth/2}px`;
+                            
+                            // Add arrow if not first in chain
+                            if (largerX > 100) {
+                                const arrow = document.createElement('div');
+                                arrow.className = 'arrow';
+                                arrow.style.left = `${largerX - arrowWidth}px`;
+                                arrow.style.top = `${largerY}px`;
+                                arrow.style.width = `${arrowWidth}px`;
+                                container.appendChild(arrow);
+                            }
+                            
+                            largerX += nodeWidth + arrowWidth;
+                        }
+                    }
+                    
+                    explanation.innerText = "Step 3: We separate the nodes into three chains: smaller chain [1, 2], pivot [3], and larger chain [5, 4].";
+                    break;
+                    
+                case 3:
+                    // Add labels for chains
+                    const smallerLabel = document.createElement('div');
+                    smallerLabel.innerText = "Smaller Chain";
+                    smallerLabel.style.position = "absolute";
+                    smallerLabel.style.left = "10px";
+                    smallerLabel.style.top = "50px";
+                    smallerLabel.style.color = "#FF4800";
+                    smallerLabel.style.fontWeight = "bold";
+                    
+                    const pivotLabel = document.createElement('div');
+                    pivotLabel.innerText = "Pivot";
+                    pivotLabel.style.position = "absolute";
+                    pivotLabel.style.left = `${container.offsetWidth / 2 - 20}px`;
+                    pivotLabel.style.top = "150px";
+                    pivotLabel.style.color = "#FF4800";
+                    pivotLabel.style.fontWeight = "bold";
+                    
+                    const largerLabel = document.createElement('div');
+                    largerLabel.innerText = "Larger Chain";
+                    largerLabel.style.position = "absolute";
+                    largerLabel.style.left = "10px";
+                    largerLabel.style.top = "300px";
+                    largerLabel.style.color = "#FF4800";
+                    largerLabel.style.fontWeight = "bold";
+                    
+                    container.appendChild(smallerLabel);
+                    container.appendChild(pivotLabel);
+                    container.appendChild(largerLabel);
+                    
+                    explanation.innerText = "Step 4: Now we have our three separate chains identified.";
+                    break;
+                    
+                case 4:
+                    // Connect the chains
+                    const finalY = container.offsetHeight / 2;
+                    const startX = 100;
+                    let currentX = startX;
+                    
+                    // Clear container
+                    container.innerHTML = '';
+                    
+                    // Create the final linked list
+                    const finalOrder = [1, 2, 3, 5, 4]; // The final order after partitioning
+                    
+                    for (let i = 0; i < finalOrder.length; i++) {
+                        const node = document.createElement('div');
+                        node.className = 'node';
+                        if (finalOrder[i] === pivotValue) {
+                            node.classList.add('pivot');
+                        } else if (finalOrder[i] < pivotValue) {
+                            node.classList.add('smaller');
+                        } else {
+                            node.classList.add('larger');
+                        }
+                        node.innerText = finalOrder[i];
+                        node.style.left = `${currentX}px`;
+                        node.style.top = `${finalY - 25}px`;
+                        container.appendChild(node);
+                        
+                        // Add arrow if not last element
+                        if (i < finalOrder.length - 1) {
+                            const arrow = document.createElement('div');
+                            arrow.className = 'arrow';
+                            arrow.style.left = `${currentX + 25}px`;
+                            arrow.style.top = `${finalY}px`;
+                            arrow.style.width = `${50}px`;
+                            container.appendChild(arrow);
+                        }
+                        
+                        currentX += 100;
+                    }
+                    
+                    // Add final message
+                    const finalLabel = document.createElement('div');
+                    finalLabel.innerText = "Final Partitioned List";
+                    finalLabel.style.position = "absolute";
+                    finalLabel.style.left = "10px";
+                    finalLabel.style.top = "20px";
+                    finalLabel.style.color = "#FF4800";
+                    finalLabel.style.fontWeight = "bold";
+                    finalLabel.style.fontSize = "18px";
+                    container.appendChild(finalLabel);
+                    
+                    explanation.innerText = "Step 5: Finally, we connect the smaller chain to the pivot, and the pivot to the larger chain, resulting in our partitioned linked list [1, 2, 3, 5, 4].";
+                    break;
+            }
+        };
+        
+        // Event listeners for navigation
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                animateStep(currentStep);
+                prevBtn.disabled = false;
+                if (currentStep === totalSteps - 1) {
+                    nextBtn.disabled = true;
+                }
+            }
+        });
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                animateStep(currentStep);
+                nextBtn.disabled = false;
+                if (currentStep === 0) {
+                    prevBtn.disabled = true;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
