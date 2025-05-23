@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circular Linked List Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .canvas-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            margin: 20px 0;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #FD9F78;
+            border-radius: 5px;
+            color: #000000;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Circular Linked List Visualization</h1>
+        
+        <div class="canvas-container">
+            <canvas id="linkedListCanvas"></canvas>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            Welcome to the Circular Linked List visualization! This animation will show you how a circular linked list works.
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('linkedListCanvas');
+        const ctx = canvas.getContext('2d');
+        const explanationEl = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        // Set canvas resolution
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // Colors
+        const primaryColor = '#FF4800';
+        const secondaryColor = '#FD9F78';
+        const blackColor = '#000000';
+        const whiteColor = '#FFFFFF';
+        
+        let currentStep = 0;
+        const totalSteps = 6;
+        
+        // Node class for drawing
+        class Node {
+            constructor(value, x, y) {
+                this.value = value;
+                this.x = x;
+                this.y = y;
+                this.radius = 30;
+                this.nextX = 0;
+                this.nextY = 0;
+                this.highlighted = false;
+            }
+            
+            draw() {
+                // Draw node circle
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.highlighted ? secondaryColor : whiteColor;
+                ctx.fill();
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = primaryColor;
+                ctx.stroke();
+                
+                // Draw value
+                ctx.font = '18px Arial';
+                ctx.fillStyle = blackColor;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.value, this.x, this.y);
+                
+                // Draw pointer box
+                const pointerBoxSize = 15;
+                const pointerX = this.x + this.radius - pointerBoxSize / 2;
+                ctx.fillStyle = primaryColor;
+                ctx.fillRect(pointerX, this.y - pointerBoxSize / 2, pointerBoxSize, pointerBoxSize);
+            }
+            
+            drawArrow(targetX, targetY) {
+                // Calculate arrow path
+                const angle = Math.atan2(targetY - this.y, targetX - this.x);
+                const startX = this.x + (this.radius + 10) * Math.cos(angle);
+                const startY = this.y + (this.radius + 10) * Math.sin(angle);
+                const endX = targetX - (this.radius + 10) * Math.cos(angle);
+                const endY = targetY - (this.radius + 10) * Math.sin(angle);
+                
+                // Draw arrow line
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                ctx.strokeStyle = this.highlighted ? secondaryColor : primaryColor;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Draw arrowhead
+                const arrowSize = 10;
+                ctx.beginPath();
+                ctx.moveTo(endX, endY);
+                ctx.lineTo(
+                    endX - arrowSize * Math.cos(angle - Math.PI / 6),
+                    endY - arrowSize * Math.sin(angle - Math.PI / 6)
+                );
+                ctx.lineTo(
+                    endX - arrowSize * Math.cos(angle + Math.PI / 6),
+                    endY - arrowSize * Math.sin(angle + Math.PI / 6)
+                );
+                ctx.closePath();
+                ctx.fillStyle = this.highlighted ? secondaryColor : primaryColor;
+                ctx.fill();
+            }
+        }
+        
+        // Create nodes
+        function createNodes() {
+            const nodeCount = 5;
+            const nodes = [];
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(canvas.width, canvas.height) / 3;
+            
+            for (let i = 0; i < nodeCount; i++) {
+                const angle = (i * 2 * Math.PI / nodeCount) - Math.PI / 2;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                nodes.push(new Node(i + 1, x, y));
+            }
+            
+            return nodes;
+        }
+        
+        let nodes = createNodes();
+        
+        function updateExplanation() {
+            switch(currentStep) {
+                case 0:
+                    explanationEl.textContent = "This is a Circular Linked List with 5 nodes containing values 1 through 5. Unlike a regular linked list, the last node points back to the first node, forming a circle.";
+                    break;
+                case 1:
+                    explanationEl.textContent = "Each node contains a value (in this case numbers 1-5) and a pointer to the next node in the sequence.";
+                    break;
+                case 2:
+                    explanationEl.textContent = "Node 1 points to Node 2. The pointer connects one node to the next one in the list.";
+                    break;
+                case 3:
+                    explanationEl.textContent = "Node 2 points to Node 3, Node 3 points to Node 4, and Node 4 points to Node 5.";
+                    break;
+                case 4:
+                    explanationEl.textContent = "Here comes the special part about circular linked lists: Node 5 (the last node) points back to Node 1 (the first node), creating a circle.";
+                    break;
+                case 5:
+                    explanationEl.textContent = "This circular structure allows us to traverse the entire list starting from any node. There is no null pointer that marks the end of the list.";
+                    break;
+            }
+        }
+        
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Reset highlights
+            nodes.forEach(node => node.highlighted = false);
+            
+            // Draw nodes
+            nodes.forEach(node => node.draw());
+            
+            // Draw connections based on current step
+            if (currentStep >= 1) {
+                if (currentStep === 2) {
+                    nodes[0].highlighted = true;
+                    nodes[0].drawArrow(nodes[1].x, nodes[1].y);
+                } else if (currentStep === 3) {
+                    for (let i = 0; i < 4; i++) {
+                        nodes[i].drawArrow(nodes[i + 1].x, nodes[i + 1].y);
+                    }
+                } else if (currentStep === 4) {
+                    for (let i = 0; i < 4; i++) {
+                        nodes[i].drawArrow(nodes[i + 1].x, nodes[i + 1].y);
+                    }
+                    nodes[4].highlighted = true;
+                    nodes[4].drawArrow(nodes[0].x, nodes[0].y);
+                } else if (currentStep === 5) {
+                    for (let i = 0; i < 4; i++) {
+                        nodes[i].drawArrow(nodes[i + 1].x, nodes[i + 1].y);
+                    }
+                    nodes[4].drawArrow(nodes[0].x, nodes[0].y);
+                    
+                    // Animate traversal
+                    const time = Date.now() / 1000;
+                    const highlightIndex = Math.floor(time % 5);
+                    nodes[highlightIndex].highlighted = true;
+                } else {
+                    for (let i = 0; i < 4; i++) {
+                        nodes[i].drawArrow(nodes[i + 1].x, nodes[i + 1].y);
+                    }
+                    nodes[4].drawArrow(nodes[0].x, nodes[0].y);
+                }
+            }
+            
+            // Draw "head" label pointing to first node
+            ctx.font = 'bold 16px Arial';
+            ctx.fillStyle = blackColor;
+            ctx.textAlign = 'center';
+            const headX = nodes[0].x - 60;
+            const headY = nodes[0].y;
+            ctx.fillText('Head', headX, headY);
+            
+            // Draw arrow from head to first node
+            ctx.beginPath();
+            ctx.moveTo(headX + 25, headY);
+            ctx.lineTo(nodes[0].x - nodes[0].radius, headY);
+            ctx.strokeStyle = primaryColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw arrowhead
+            ctx.beginPath();
+            ctx.moveTo(nodes[0].x - nodes[0].radius, headY);
+            ctx.lineTo(nodes[0].x - nodes[0].radius - 10, headY - 5);
+            ctx.lineTo(nodes[0].x - nodes[0].radius - 10, headY + 5);
+            ctx.closePath();
+            ctx.fillStyle = primaryColor;
+            ctx.fill();
+            
+            updateExplanation();
+            
+            if (currentStep === 5) {
+                requestAnimationFrame(draw);
+            }
+        }
+        
+        // Navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                prevBtn.disabled = currentStep === 0;
+                nextBtn.disabled = false;
+                draw();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                nextBtn.disabled = currentStep === totalSteps - 1;
+                prevBtn.disabled = false;
+                draw();
+            }
+        });
+        
+        // Initialize
+        draw();
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            nodes = createNodes();
+            draw();
+        });
+    </script>
+</body>
+</html>
