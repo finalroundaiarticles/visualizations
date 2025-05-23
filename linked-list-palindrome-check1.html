@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brute Force Palindrome Check Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        h1 {
+            color: #FF4800;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+
+        .subtitle {
+            color: #000000;
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+            font-weight: normal;
+        }
+
+        .step-container {
+            background-color: #FFFFFF;
+            border: 3px solid #FF4800;
+            border-radius: 15px;
+            padding: 40px;
+            margin: 20px 0;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .step-title {
+            color: #FF4800;
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .linked-list {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .node {
+            width: 80px;
+            height: 80px;
+            background-color: #FD9F78;
+            border: 3px solid #FF4800;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #FFFFFF;
+            margin: 10px;
+            position: relative;
+            animation: nodeAppear 0.8s ease-in-out;
+        }
+
+        .arrow {
+            font-size: 2rem;
+            color: #FF4800;
+            margin: 0 10px;
+            animation: arrowSlide 0.8s ease-in-out 0.3s both;
+        }
+
+        .array-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+        }
+
+        .array-box {
+            width: 80px;
+            height: 80px;
+            border: 3px solid #FF4800;
+            background-color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #000000;
+            margin: 5px;
+            position: relative;
+            animation: boxSlide 0.8s ease-in-out;
+        }
+
+        .array-index {
+            position: absolute;
+            bottom: -30px;
+            font-size: 1rem;
+            color: #FF4800;
+            font-weight: bold;
+        }
+
+        .pointer {
+            position: absolute;
+            top: -50px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            animation: pointerBounce 1s ease-in-out infinite;
+        }
+
+        .left-pointer {
+            color: #FF4800;
+        }
+
+        .right-pointer {
+            color: #FD9F78;
+        }
+
+        .highlighted {
+            background-color: #FD9F78 !important;
+            color: #FFFFFF !important;
+            transform: scale(1.1);
+            transition: all 0.3s ease;
+        }
+
+        .comparison-text {
+            font-size: 1.5rem;
+            color: #000000;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .result-text {
+            font-size: 2rem;
+            color: #FF4800;
+            margin: 20px 0;
+            font-weight: bold;
+            animation: resultGlow 1s ease-in-out;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .nav-btn:hover {
+            background-color: #FD9F78;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .step-counter {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        @keyframes nodeAppear {
+            0% {
+                opacity: 0;
+                transform: scale(0);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes arrowSlide {
+            0% {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes boxSlide {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pointerBounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes resultGlow {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .explanation {
+            background-color: #FD9F78;
+            color: #FFFFFF;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .linked-list, .array-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .arrow {
+                transform: rotate(90deg);
+                margin: 10px 0;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .step-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Brute Force Palindrome Check</h1>
+        <p class="subtitle">Step-by-step visualization of checking if a linked list is a palindrome</p>
+        
+        <div class="step-container" id="stepContainer">
+            <div class="step-counter" id="stepCounter">Step 1 of 6</div>
+            <div id="stepContent">
+                <!-- Step content will be dynamically inserted here -->
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prevBtn" onclick="previousStep()">← Previous</button>
+            <button class="nav-btn" id="nextBtn" onclick="nextStep()">Next →</button>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 0;
+        const totalSteps = 6;
+
+        const steps = [
+            {
+                title: "Original Linked List",
+                content: `
+                    <div class="linked-list">
+                        <div class="node">1</div>
+                        <div class="arrow">→</div>
+                        <div class="node">2</div>
+                        <div class="arrow">→</div>
+                        <div class="node">2</div>
+                        <div class="arrow">→</div>
+                        <div class="node">1</div>
+                        <div class="arrow">→</div>
+                        <div class="node">NULL</div>
+                    </div>
+                    <div class="explanation">
+                        We start with a linked list containing values: 1 → 2 → 2 → 1 → NULL
+                        <br>Our goal is to check if this linked list forms a palindrome.
+                    </div>
+                `
+            },
+            {
+                title: "Extract Values to Array",
+                content: `
+                    <div class="linked-list">
+                        <div class="node">1</div>
+                        <div class="arrow">→</div>
+                        <div class="node">2</div>
+                        <div class="arrow">→</div>
+                        <div class="node">2</div>
+                        <div class="arrow">→</div>
+                        <div class="node">1</div>
+                    </div>
+                    <div class="arrow" style="font-size: 3rem; margin: 20px 0;">↓</div>
+                    <div class="array-container">
+                        <div class="array-box">1<div class="array-index">0</div></div>
+                        <div class="array-box">2<div class="array-index">1</div></div>
+                        <div class="array-box">2<div class="array-index">2</div></div>
+                        <div class="array-box">1<div class="array-index">3</div></div>
+                    </div>
+                    <div class="explanation">
+                        We traverse the linked list and extract all values into an array: [1, 2, 2, 1]
+                        <br>This allows us to easily access elements from both ends.
+                    </div>
+                `
+            },
+            {
+                title: "Initialize Two Pointers",
+                content: `
+                    <div class="array-container">
+                        <div class="array-box">
+                            1
+                            <div class="array-index">0</div>
+                            <div class="pointer left-pointer">LEFT</div>
+                        </div>
+                        <div class="array-box">2<div class="array-index">1</div></div>
+                        <div class="array-box">2<div class="array-index">2</div></div>
+                        <div class="array-box">
+                            1
+                            <div class="array-index">3</div>
+                            <div class="pointer right-pointer">RIGHT</div>
+                        </div>
+                    </div>
+                    <div class="explanation">
+                        We place two pointers: LEFT at the beginning (index 0) and RIGHT at the end (index 3).
+                        <br>We'll compare values at these positions and move them towards each other.
+                    </div>
+                `
+            },
+            {
+                title: "First Comparison: Index 0 vs Index 3",
+                content: `
+                    <div class="array-container">
+                        <div class="array-box highlighted">
+                            1
+                            <div class="array-index">0</div>
+                            <div class="pointer left-pointer">LEFT</div>
+                        </div>
+                        <div class="array-box">2<div class="array-index">1</div></div>
+                        <div class="array-box">2<div class="array-index">2</div></div>
+                        <div class="array-box highlighted">
+                            1
+                            <div class="array-index">3</div>
+                            <div class="pointer right-pointer">RIGHT</div>
+                        </div>
+                    </div>
+                    <div class="comparison-text">
+                        Comparing: arr[0] = 1 and arr[3] = 1 ✓
+                    </div>
+                    <div class="explanation">
+                        The values match! Both positions contain 1.
+                        <br>Move LEFT pointer right and RIGHT pointer left for the next comparison.
+                    </div>
+                `
+            },
+            {
+                title: "Second Comparison: Index 1 vs Index 2",
+                content: `
+                    <div class="array-container">
+                        <div class="array-box">1<div class="array-index">0</div></div>
+                        <div class="array-box highlighted">
+                            2
+                            <div class="array-index">1</div>
+                            <div class="pointer left-pointer">LEFT</div>
+                        </div>
+                        <div class="array-box highlighted">
+                            2
+                            <div class="array-index">2</div>
+                            <div class="pointer right-pointer">RIGHT</div>
+                        </div>
+                        <div class="array-box">1<div class="array-index">3</div></div>
+                    </div>
+                    <div class="comparison-text">
+                        Comparing: arr[1] = 2 and arr[2] = 2 ✓
+                    </div>
+                    <div class="explanation">
+                        Another match! Both positions contain 2.
+                        <br>Since LEFT pointer (1) is no longer less than RIGHT pointer (2), we stop.
+                    </div>
+                `
+            },
+            {
+                title: "Result: Palindrome Confirmed!",
+                content: `
+                    <div class="array-container">
+                        <div class="array-box">1<div class="array-index">0</div></div>
+                        <div class="array-box">2<div class="array-index">1</div></div>
+                        <div class="array-box">2<div class="array-index">2</div></div>
+                        <div class="array-box">1<div class="array-index">3</div></div>
+                    </div>
+                    <div class="result-text">
+                        🎉 IT'S A PALINDROME! 🎉
+                    </div>
+                    <div class="explanation">
+                        All comparisons matched! The linked list 1→2→2→1 is indeed a palindrome.
+                        <br>The brute force approach works by extracting values to an array and using two pointers to compare from both ends.
+                        <br><strong>Time Complexity:</strong> O(n) | <strong>Space Complexity:</strong> O(n)
+                    </div>
+                `
+            }
+        ];
+
+        function updateStep() {
+            const stepContent = document.getElementById('stepContent');
+            const stepCounter = document.getElementById('stepCounter');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            stepContent.innerHTML = `
+                <div class="step-title">${steps[currentStep].title}</div>
+                ${steps[currentStep].content}
+            `;
+
+            stepCounter.textContent = `Step ${currentStep + 1} of ${totalSteps}`;
+
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+
+            // Add animation class to step container
+            const stepContainer = document.getElementById('stepContainer');
+            stepContainer.style.animation = 'none';
+            stepContainer.offsetHeight; // Trigger reflow
+            stepContainer.style.animation = 'boxSlide 0.5s ease-in-out';
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateStep();
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowRight' || event.key === ' ') {
+                nextStep();
+            } else if (event.key === 'ArrowLeft') {
+                previousStep();
+            }
+        });
+
+        // Initialize the first step
+        updateStep();
+    </script>
+</body>
+</html>
