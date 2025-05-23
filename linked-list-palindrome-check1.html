@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Array Extraction and Palindrome Check</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .animation-container {
+            position: relative;
+            height: 400px;
+            margin: 30px 0;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .node {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #000000;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            transition: all 1s ease;
+        }
+        .arrow {
+            position: absolute;
+            height: 2px;
+            background-color: #FF4800;
+            transform-origin: left center;
+            transition: all 1s ease;
+        }
+        .arrow:after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 10px solid #FF4800;
+        }
+        .array-container {
+            position: absolute;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 1s ease;
+            opacity: 0;
+        }
+        .array-element {
+            width: 40px;
+            height: 40px;
+            background-color: #FD9F78;
+            color: #000000;
+            margin: 0 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+        .array-bracket {
+            font-size: 50px;
+            color: #FF4800;
+            margin: 0 5px;
+        }
+        .pointer {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #FF4800;
+            border-radius: 50%;
+            transition: all 1s ease;
+            opacity: 0;
+        }
+        .pointer-line {
+            position: absolute;
+            width: 2px;
+            background-color: #FF4800;
+            transform-origin: center top;
+            transition: all 1s ease;
+            opacity: 0;
+        }
+        .explanation {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 18px;
+            min-height: 50px;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .nav-button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .result {
+            position: absolute;
+            top: 300px;
+            width: 100%;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #FF4800;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Array Extraction and Palindrome Check</h1>
+        
+        <div class="animation-container" id="animation-container">
+            <!-- Elements will be added by JavaScript -->
+            <div class="result" id="result">This is a Palindrome!</div>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            Let's start with a linked list and check if it's a palindrome.
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prev-btn" disabled>Previous</button>
+            <button class="nav-button" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Animation states
+        const states = [
+            {
+                explanation: "Let's start with a linked list and check if it's a palindrome."
+            },
+            {
+                explanation: "First, we have a linked list with values 1 → 2 → 2 → 1"
+            },
+            {
+                explanation: "To check if a linked list is a palindrome, we need to extract its values into an array."
+            },
+            {
+                explanation: "We traverse the linked list and extract each value into an array [1, 2, 2, 1]."
+            },
+            {
+                explanation: "Now we need to check if this array is a palindrome by comparing elements from both ends."
+            },
+            {
+                explanation: "We set two pointers: one at the start (index 0) and one at the end (index 3)."
+            },
+            {
+                explanation: "Compare the elements: 1 == 1 (They match!)"
+            },
+            {
+                explanation: "Move both pointers inward. Compare the elements: 2 == 2 (They match!)"
+            },
+            {
+                explanation: "All elements have been compared and they match. This is a palindrome!"
+            }
+        ];
+
+        let currentState = 0;
+        const container = document.getElementById('animation-container');
+        const explanation = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const result = document.getElementById('result');
+
+        // Create nodes for linked list
+        function createLinkedList() {
+            const nodePositions = [
+                { x: 100, y: 100 },
+                { x: 250, y: 100 },
+                { x: 400, y: 100 },
+                { x: 550, y: 100 }
+            ];
+            
+            const nodeValues = [1, 2, 2, 1];
+            
+            for (let i = 0; i < nodeValues.length; i++) {
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.id = `node-${i}`;
+                node.textContent = nodeValues[i];
+                node.style.left = `${nodePositions[i].x}px`;
+                node.style.top = `${nodePositions[i].y}px`;
+                container.appendChild(node);
+                
+                // Create arrows between nodes (except for the last one)
+                if (i < nodeValues.length - 1) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'arrow';
+                    arrow.id = `arrow-${i}`;
+                    arrow.style.left = `${nodePositions[i].x + 40}px`;
+                    arrow.style.top = `${nodePositions[i].y + 20}px`;
+                    arrow.style.width = `${nodePositions[i+1].x - nodePositions[i].x - 40}px`;
+                    container.appendChild(arrow);
+                }
+            }
+        }
+
+        // Create array container
+        function createArrayContainer() {
+            const arrayContainer = document.createElement('div');
+            arrayContainer.className = 'array-container';
+            arrayContainer.id = 'array-container';
+            arrayContainer.style.top = '200px';
+            arrayContainer.style.left = '50%';
+            arrayContainer.style.transform = 'translateX(-50%)';
+            
+            // Left bracket
+            const leftBracket = document.createElement('div');
+            leftBracket.className = 'array-bracket';
+            leftBracket.textContent = '[';
+            arrayContainer.appendChild(leftBracket);
+            
+            // Array elements
+            const values = [1, 2, 2, 1];
+            for (let i = 0; i < values.length; i++) {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.id = `array-element-${i}`;
+                element.textContent = values[i];
+                arrayContainer.appendChild(element);
+            }
+            
+            // Right bracket
+            const rightBracket = document.createElement('div');
+            rightBracket.className = 'array-bracket';
+            rightBracket.textContent = ']';
+            arrayContainer.appendChild(rightBracket);
+            
+            container.appendChild(arrayContainer);
+        }
+
+        // Create pointers for palindrome check
+        function createPointers() {
+            // Left pointer
+            const leftPointer = document.createElement('div');
+            leftPointer.className = 'pointer';
+            leftPointer.id = 'left-pointer';
+            container.appendChild(leftPointer);
+            
+            const leftLine = document.createElement('div');
+            leftLine.className = 'pointer-line';
+            leftLine.id = 'left-line';
+            container.appendChild(leftLine);
+            
+            // Right pointer
+            const rightPointer = document.createElement('div');
+            rightPointer.className = 'pointer';
+            rightPointer.id = 'right-pointer';
+            container.appendChild(rightPointer);
+            
+            const rightLine = document.createElement('div');
+            rightLine.className = 'pointer-line';
+            rightLine.id = 'right-line';
+            container.appendChild(rightLine);
+        }
+
+        // Initialize the animation
+        function initialize() {
+            createLinkedList();
+            createArrayContainer();
+            createPointers();
+            updateState();
+        }
+
+        // Update the animation based on current state
+        function updateState() {
+            explanation.textContent = states[currentState].explanation;
+            
+            // Reset button states
+            prevBtn.disabled = currentState === 0;
+            nextBtn.disabled = currentState === states.length - 1;
+            
+            // Update visual elements based on state
+            const arrayContainer = document.getElementById('array-container');
+            const leftPointer = document.getElementById('left-pointer');
+            const rightPointer = document.getElementById('right-pointer');
+            const leftLine = document.getElementById('left-line');
+            const rightLine = document.getElementById('right-line');
+            
+            switch(currentState) {
+                case 0:
+                    // Initial state - hide everything except linked list
+                    arrayContainer.style.opacity = '0';
+                    leftPointer.style.opacity = '0';
+                    rightPointer.style.opacity = '0';
+                    leftLine.style.opacity = '0';
+                    rightLine.style.opacity = '0';
+                    result.style.opacity = '0';
+                    break;
+                    
+                case 1:
+                    // Show linked list
+                    for (let i = 0; i < 4; i++) {
+                        const node = document.getElementById(`node-${i}`);
+                        node.style.opacity = '1';
+                    }
+                    for (let i = 0; i < 3; i++) {
+                        const arrow = document.getElementById(`arrow-${i}`);
+                        arrow.style.opacity = '1';
+                    }
+                    arrayContainer.style.opacity = '0';
+                    break;
+                    
+                case 2:
+                    // Preparing to extract values
+                    arrayContainer.style.opacity = '0';
+                    break;
+                    
+                case 3:
+                    // Show array with extracted values
+                    arrayContainer.style.opacity = '1';
+                    break;
+                    
+                case 4:
+                    // Preparing for palindrome check
+                    arrayContainer.style.opacity = '1';
+                    break;
+                    
+                case 5:
+                    // Show pointers at start and end
+                    leftPointer.style.opacity = '1';
+                    rightPointer.style.opacity = '1';
+                    leftLine.style.opacity = '1';
+                    rightLine.style.opacity = '1';
+                    
+                    // Position pointers
+                    const arrayElement0 = document.getElementById('array-element-0');
+                    const arrayElement3 = document.getElementById('array-element-3');
+                    const element0Rect = arrayElement0.getBoundingClientRect();
+                    const element3Rect = arrayElement3.getBoundingClientRect();
+                    const containerRect = container.getBoundingClientRect();
+                    
+                    const leftX = element0Rect.left - containerRect.left + element0Rect.width/2;
+                    const rightX = element3Rect.left - containerRect.left + element3Rect.width/2;
+                    
+                    leftPointer.style.left = `${leftX - 10}px`;
+                    leftPointer.style.top = '250px';
+                    leftLine.style.left = `${leftX}px`;
+                    leftLine.style.top = '270px';
+                    leftLine.style.height = '30px';
+                    
+                    rightPointer.style.left = `${rightX - 10}px`;
+                    rightPointer.style.top = '250px';
+                    rightLine.style.left = `${rightX}px`;
+                    rightLine.style.top = '270px';
+                    rightLine.style.height = '30px';
+                    break;
+                    
+                case 6:
+                    // Highlight comparison of first and last elements
+                    document.getElementById('array-element-0').style.backgroundColor = '#FF4800';
+                    document.getElementById('array-element-3').style.backgroundColor = '#FF4800';
+                    break;
+                    
+                case 7:
+                    // Move pointers inward and highlight middle elements
+                    document.getElementById('array-element-0').style.backgroundColor = '#FD9F78';
+                    document.getElementById('array-element-3').style.backgroundColor = '#FD9F78';
+                    document.getElementById('array-element-1').style.backgroundColor = '#FF4800';
+                    document.getElementById('array-element-2').style.backgroundColor = '#FF4800';
+                    
+                    const arrayElement1 = document.getElementById('array-element-1');
+                    const arrayElement2 = document.getElementById('array-element-2');
+                    const element1Rect = arrayElement1.getBoundingClientRect();
+                    const element2Rect = arrayElement2.getBoundingClientRect();
+                    
+                    const leftX2 = element1Rect.left - containerRect.left + element1Rect.width/2;
+                    const rightX2 = element2Rect.left - containerRect.left + element2Rect.width/2;
+                    
+                    leftPointer.style.left = `${leftX2 - 10}px`;
+                    leftLine.style.left = `${leftX2}px`;
+                    
+                    rightPointer.style.left = `${rightX2 - 10}px`;
+                    rightLine.style.left = `${rightX2}px`;
+                    break;
+                    
+                case 8:
+                    // Show final result
+                    document.getElementById('array-element-1').style.backgroundColor = '#FD9F78';
+                    document.getElementById('array-element-2').style.backgroundColor = '#FD9F78';
+                    result.style.opacity = '1';
+                    break;
+            }
+        }
+
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentState > 0) {
+                currentState--;
+                updateState();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentState < states.length - 1) {
+                currentState++;
+                updateState();
+            }
+        });
+
+        // Initialize the animation
+        initialize();
+    </script>
+</body>
+</html>
