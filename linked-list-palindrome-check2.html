@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reversing Second Half of Linked List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        #animation-container {
+            width: 100%;
+            height: 300px;
+            position: relative;
+            margin: 30px 0;
+            overflow: hidden;
+        }
+        
+        .node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #000000;
+            text-align: center;
+            line-height: 40px;
+            position: absolute;
+            font-weight: bold;
+            transition: all 0.8s ease;
+        }
+        
+        .arrow {
+            position: absolute;
+            height: 2px;
+            background-color: #000000;
+            transform-origin: left center;
+            transition: all 0.8s ease;
+        }
+        
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid #000000;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        
+        .slow-pointer, .fast-pointer, .prev-pointer, .curr-pointer, .next-pointer {
+            position: absolute;
+            top: -25px;
+            font-size: 12px;
+            color: #FF4800;
+            font-weight: bold;
+            transition: all 0.8s ease;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #FF4800;
+            background-color: rgba(253, 159, 120, 0.1);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-counter {
+            text-align: center;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Reversing Second Half of Linked List</h1>
+        
+        <div class="explanation" id="explanation">
+            We start with a linked list and want to check if it's a palindrome.
+        </div>
+        
+        <div id="animation-container"></div>
+        
+        <div class="step-counter">
+            Step <span id="current-step">1</span> of <span id="total-steps">8</span>
+        </div>
+        
+        <div class="controls">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const animationContainer = document.getElementById('animation-container');
+        const explanationEl = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const currentStepEl = document.getElementById('current-step');
+        const totalStepsEl = document.getElementById('total-steps');
+        
+        let currentStep = 1;
+        const totalSteps = 8;
+        
+        // Initial positioning
+        const nodeSpacing = 120;
+        const startX = 50;
+        const middleY = 150;
+        
+        // Initialize the linked list visualization
+        function initializeLinkedList() {
+            animationContainer.innerHTML = '';
+            
+            // Create nodes
+            for (let i = 0; i < 5; i++) {
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.id = `node-${i+1}`;
+                node.textContent = i === 3 ? 2 : (i === 4 ? 1 : i+1);
+                node.style.left = `${startX + i * nodeSpacing}px`;
+                node.style.top = `${middleY}px`;
+                animationContainer.appendChild(node);
+                
+                // Create arrows except for the last node
+                if (i < 4) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'arrow';
+                    arrow.id = `arrow-${i+1}`;
+                    arrow.style.left = `${startX + 20 + i * nodeSpacing}px`;
+                    arrow.style.top = `${middleY + 20}px`;
+                    arrow.style.width = `${nodeSpacing - 40}px`;
+                    animationContainer.appendChild(arrow);
+                }
+            }
+            
+            // Add slow and fast pointers
+            const slow = document.createElement('div');
+            slow.className = 'slow-pointer';
+            slow.id = 'slow-pointer';
+            slow.textContent = 'slow';
+            slow.style.left = `${startX + 10}px`;
+            animationContainer.appendChild(slow);
+            
+            const fast = document.createElement('div');
+            fast.className = 'fast-pointer';
+            fast.id = 'fast-pointer';
+            fast.textContent = 'fast';
+            fast.style.left = `${startX + 10}px`;
+            animationContainer.appendChild(fast);
+            
+            // Add prev, curr, and next pointers (initially hidden)
+            const prev = document.createElement('div');
+            prev.className = 'prev-pointer';
+            prev.id = 'prev-pointer';
+            prev.textContent = 'prev';
+            prev.style.left = `${startX - 40}px`;
+            prev.style.opacity = '0';
+            animationContainer.appendChild(prev);
+            
+            const curr = document.createElement('div');
+            curr.className = 'curr-pointer';
+            curr.id = 'curr-pointer';
+            curr.textContent = 'curr';
+            curr.style.left = `${startX + 10 + 3 * nodeSpacing}px`;
+            curr.style.opacity = '0';
+            animationContainer.appendChild(curr);
+            
+            const next = document.createElement('div');
+            next.className = 'next-pointer';
+            next.id = 'next-pointer';
+            next.textContent = 'next';
+            next.style.left = `${startX + 10 + 4 * nodeSpacing}px`;
+            next.style.opacity = '0';
+            animationContainer.appendChild(next);
+        }
+        
+        // Update the visualization based on the current step
+        function updateVisualization() {
+            const slow = document.getElementById('slow-pointer');
+            const fast = document.getElementById('fast-pointer');
+            const prev = document.getElementById('prev-pointer');
+            const curr = document.getElementById('curr-pointer');
+            const next = document.getElementById('next-pointer');
+            
+            // Reset all nodes and arrows to original style
+            for (let i = 1; i <= 5; i++) {
+                const node = document.getElementById(`node-${i}`);
+                node.style.backgroundColor = '#FD9F78';
+                if (i < 5) {
+                    const arrow = document.getElementById(`arrow-${i}`);
+                    arrow.style.backgroundColor = '#000000';
+                    arrow.style.transform = 'rotate(0deg)';
+                }
+            }
+            
+            switch(currentStep) {
+                case 1:
+                    explanationEl.textContent = 'We start with a linked list 1 -> 2 -> 3 -> 2 -> 1 and need to find if it\'s a palindrome. We\'ll use slow and fast pointers to find the middle.';
+                    slow.style.left = `${startX + 10}px`;
+                    fast.style.left = `${startX + 10}px`;
+                    prev.style.opacity = '0';
+                    curr.style.opacity = '0';
+                    next.style.opacity = '0';
+                    break;
+                
+                case 2:
+                    explanationEl.textContent = 'Move slow pointer one step and fast pointer two steps. Fast moves twice as fast as slow.';
+                    slow.style.left = `${startX + 10 + nodeSpacing}px`;
+                    fast.style.left = `${startX + 10 + 2 * nodeSpacing}px`;
+                    break;
+                
+                case 3:
+                    explanationEl.textContent = 'Continue moving: slow goes one more step, fast goes two more steps.';
+                    slow.style.left = `${startX + 10 + 2 * nodeSpacing}px`;
+                    fast.style.left = `${startX + 10 + 4 * nodeSpacing}px`;
+                    break;
+                
+                case 4:
+                    explanationEl.textContent = 'Fast reached the end! Slow is now at the middle node (3). Now we\'ll reverse the second half of the list.';
+                    document.getElementById('node-3').style.backgroundColor = '#FF4800';
+                    slow.style.opacity = '0';
+                    fast.style.opacity = '0';
+                    prev.style.opacity = '1';
+                    prev.style.left = `${startX + 10 + 2 * nodeSpacing}px`;
+                    curr.style.opacity = '1';
+                    curr.style.left = `${startX + 10 + 3 * nodeSpacing}px`;
+                    next.style.opacity = '1';
+                    next.style.left = `${startX + 10 + 4 * nodeSpacing}px`;
+                    break;
+                
+                case 5:
+                    explanationEl.textContent = 'Reversing begins: we change the direction of the arrow from node 4 to node 3.';
+                    const arrow3 = document.getElementById('arrow-3');
+                    arrow3.style.transform = 'rotate(180deg)';
+                    arrow3.style.left = `${startX + 20 + 3 * nodeSpacing}px`;
+                    
+                    prev.style.left = `${startX + 10 + 3 * nodeSpacing}px`;
+                    curr.style.left = `${startX + 10 + 4 * nodeSpacing}px`;
+                    next.style.opacity = '0';
+                    break;
+                
+                case 6:
+                    explanationEl.textContent = 'Reversing complete: both arrows in the second half now point backward.';
+                    const arrow4 = document.getElementById('arrow-4');
+                    arrow4.style.transform = 'rotate(180deg)';
+                    arrow4.style.left = `${startX + 20 + 4 * nodeSpacing}px`;
+                    
+                    prev.style.left = `${startX + 10 + 4 * nodeSpacing}px`;
+                    curr.style.opacity = '0';
+                    next.style.opacity = '0';
+                    break;
+                
+                case 7:
+                    explanationEl.textContent = 'Now we compare the first half with the reversed second half to check if it\'s a palindrome.';
+                    prev.style.opacity = '0';
+                    
+                    // Highlight the first node from the first half
+                    document.getElementById('node-1').style.backgroundColor = '#FF4800';
+                    // Highlight the first node from the second half (which is the last node)
+                    document.getElementById('node-5').style.backgroundColor = '#FF4800';
+                    break;
+                
+                case 8:
+                    explanationEl.textContent = 'We continue comparing all nodes. Since all values match (1=1, 2=2), the linked list is a palindrome!';
+                    // Highlight all nodes to show they match
+                    for (let i = 1; i <= 5; i++) {
+                        document.getElementById(`node-${i}`).style.backgroundColor = '#FF4800';
+                    }
+                    break;
+            }
+            
+            // Update step counter
+            currentStepEl.textContent = currentStep;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === totalSteps;
+        }
+        
+        // Initialize the visualization
+        initializeLinkedList();
+        updateVisualization();
+        
+        // Set up event listeners for buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateVisualization();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+        
+        // Update total steps display
+        totalStepsEl.textContent = totalSteps;
+    </script>
+</body>
+</html>
