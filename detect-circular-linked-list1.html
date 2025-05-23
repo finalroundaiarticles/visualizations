@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circular vs. Non-Circular Linked List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .comparison {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+        
+        .list-container {
+            width: 48%;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .list-title {
+            background-color: #FF4800;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .explanation {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            border-left: 5px solid #FF4800;
+        }
+        
+        .node {
+            width: 40px;
+            height: 40px;
+            background-color: #FD9F78;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        
+        .arrow {
+            position: absolute;
+            background-color: #000000;
+            height: 3px;
+            transform-origin: left center;
+            transition: all 0.5s ease;
+        }
+        
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid #000000;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        
+        .null {
+            width: 60px;
+            height: 30px;
+            background-color: #f1f1f1;
+            border: 2px solid #000000;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            font-weight: bold;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .nav-button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .slide {
+            display: none;
+        }
+        
+        .active {
+            display: block;
+        }
+        
+        .highlight {
+            animation: pulse 1s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(255, 72, 0, 0.7);
+            }
+            100% {
+                transform: scale(1.1);
+                box-shadow: 0 0 10px 5px rgba(255, 72, 0, 0.5);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Circular vs. Non-Circular Linked List</h1>
+        
+        <div class="slide active" id="slide1">
+            <div class="comparison">
+                <div class="list-container" id="circular-container">
+                    <div class="list-title">Circular Linked List</div>
+                    <div class="node" id="c-node1" style="left: 50px; top: 100px;">1</div>
+                    <div class="node" id="c-node2" style="left: 150px; top: 100px;">2</div>
+                    <div class="node" id="c-node3" style="left: 250px; top: 100px;">3</div>
+                    <div class="node" id="c-node4" style="left: 350px; top: 100px;">4</div>
+                    
+                    <div class="arrow" id="c-arrow1" style="left: 70px; top: 100px; width: 80px;"></div>
+                    <div class="arrow" id="c-arrow2" style="left: 170px; top: 100px; width: 80px;"></div>
+                    <div class="arrow" id="c-arrow3" style="left: 270px; top: 100px; width: 80px;"></div>
+                    <div class="arrow" id="c-arrow4" style="left: 370px; top: 100px; width: 140px; transform: rotate(180deg);"></div>
+                </div>
+                
+                <div class="list-container" id="non-circular-container">
+                    <div class="list-title">Non-Circular Linked List</div>
+                    <div class="node" id="nc-node1" style="left: 50px; top: 100px;">1</div>
+                    <div class="node" id="nc-node2" style="left: 150px; top: 100px;">2</div>
+                    <div class="node" id="nc-node3" style="left: 250px; top: 100px;">3</div>
+                    <div class="null" id="nc-null" style="left: 350px; top: 95px;">NULL</div>
+                    
+                    <div class="arrow" id="nc-arrow1" style="left: 70px; top: 100px; width: 80px;"></div>
+                    <div class="arrow" id="nc-arrow2" style="left: 170px; top: 100px; width: 80px;"></div>
+                    <div class="arrow" id="nc-arrow3" style="left: 270px; top: 100px; width: 80px;"></div>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <h3>Basic Structure</h3>
+                <p>The illustration above shows two types of linked lists:</p>
+                <ul>
+                    <li><strong>Circular Linked List (Left):</strong> In this type, the last node points back to an earlier node in the list, creating a cycle. In our example, node 4 points back to node 2, forming a loop.</li>
+                    <li><strong>Non-Circular Linked List (Right):</strong> In this type, each node points to the next node in sequence, and the last node points to NULL, indicating the end of the list.</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide2">
+            <div class="comparison">
+                <div class="list-container" id="circular-container2">
+                    <div class="list-title">Circular Linked List</div>
+                    <div class="node" id="c2-node1" style="left: 50px; top: 100px;">1</div>
+                    <div class="node" id="c2-node2" style="left: 150px; top: 100px;">2</div>
+                    <div class="node" id="c2-node3" style="left: 250px; top: 100px;">3</div>
+                    <div class="node" id="c2-node4" style="left: 350px; top: 100px;">4</div>
+                    
+                    <div class="arrow" id="c2-arrow1" style="left: 70px; top: 100px; width: 80px;"></div>
+                    <div class="arrow" id="c2-arrow2" style="left: 170px; top: 100px; width: 80px;"></div>
+                    <div class="arrow" id="c2-arrow3" style="left: 270px; top: 100px; width: 80px;"></div>
+                    <div class="arrow" id="c2-arrow4" style="left: 370px; top: 100px; width: 140px; transform: rotate(180deg);"></div>
+                </div>
+                
+                <div class="list-container" id="non-circular-container2">
+                    <div class="list-title">Non-Circular Linked List</div>
+                    <div class="node" id="nc2-node1" style="left: 50px; top: 100px;">1</div>
+                    <div class="node" id="nc2-node2" style="left: 150px; top: 100px;">2</div>
+                    <div class="node" id="nc2-node3" style="left: 250px; top: 100px;">3</div>
+                    <div class="null" id="nc2-null" style="left: 350px; top: 95px;">NULL</div>
+                    
+                    <div class="arrow" id="nc2-arrow1" style="left: 70px; top: 100px; width: 80px;"></div>
+                    <div class="arrow" id="nc2-arrow2" style="left: 170px; top: 100px; width: 80px;"></div>
+                    <div class="arrow" id="nc2-arrow3" style="left: 270px; top: 100px; width: 80px;"></div>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <h3>Traversal Behavior</h3>
+                <p>Let's see how traversal differs between these two types:</p>
+                <ul>
+                    <li><strong>Circular Linked List:</strong> When traversing, you can potentially go around forever if there's no stopping condition. Starting from node 1, you'd go 1→2→3→4→2→3→4→2... and continue in this loop.</li>
+                    <li><strong>Non-Circular Linked List:</strong> Traversal will always stop when you reach the NULL pointer. Starting from node 1, you'd go 1→2→3→NULL and then stop.</li>
+                </ul>
+                <p>Click "Next" to see this traversal in action.</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide3">
+            <div class="comparison">
+                <div class="list-container" id="circular-container3">
+                    <div class="list-title">Circular Linked List - Key Characteristics</div>
+                    <div class="node" id="c3-node1" style="left: 50px; top: 100px;">1</div>
+                    <div class="node" id="c3-node2" style="left: 150px; top: 100px;">2</div>
+                    <div class="node" id="c3-node3" style="left: 250px; top: 100px;">3</div>
+                    <div class="node" id="c3-node4" style="left: 350px; top: 100px;">4</div>
+                    
+                    <div class="arrow" id="c3-arrow1" style="left: 70px; top: 100px; width: 80px;"></div>
+                    <div class="arrow" id="c3-arrow2" style="left: 170px; top: 100px; width: 80px;"></div>
+                    <div class="arrow" id="c3-arrow3" style="left: 270px; top: 100px; width: 80px;"></div>
+                    <div class="arrow" id="c3-arrow4" style="left: 370px; top: 100px; width: 140px; transform: rotate(180deg);"></div>
+                </div>
+                
+                <div class="list-container" id="non-circular-container3">
+                    <div class="list-title">Non-Circular Linked List - Key Characteristics</div>
+                    <div class="node" id="nc3-node1" style="left: 50px; top: 100px;">1</div>
+                    <div class="node" id="nc3-node2" style="left: 150px; top: 100px;">2</div>
+                    <div class="node" id="nc3-node3" style="left: 250px; top: 100px;">3</div>
+                    <div class="null" id="nc3-null" style="left: 350px; top: 95px;">NULL</div>
+                    
+                    <div class="arrow" id="nc3-arrow1" style="left: 70px; top: 100px; width: 80px;"></div>
+                    <div class="arrow" id="nc3-arrow2" style="left: 170px; top: 100px; width: 80px;"></div>
+                    <div class="arrow" id="nc3-arrow3" style="left: 270px; top: 100px; width: 80px;"></div>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <h3>Key Differences and Applications</h3>
+                <p><strong>Circular Linked List:</strong></p>
+                <ul>
+                    <li>No clear endpoint - any node can be the starting point</li>
+                    <li>Can lead to infinite loops if not handled properly</li>
+                    <li>Used in applications like round-robin scheduling, circular buffers</li>
+                    <li>Detecting a cycle is an important problem in linked list operations</li>
+                </ul>
+                <p><strong>Non-Circular Linked List:</strong></p>
+                <ul>
+                    <li>Has a clear beginning (head) and end (tail pointing to NULL)</li>
+                    <li>Traversal always terminates at NULL</li>
+                    <li>More commonly used for basic linear data storage</li>
+                    <li>Simpler to implement and reason about</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" class="nav-button" disabled>Previous</button>
+            <button id="nextBtn" class="nav-button">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let currentSlide = 1;
+            const totalSlides = 3;
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            function updateSlides() {
+                document.querySelectorAll('.slide').forEach(slide => {
+                    slide.classList.remove('active');
+                });
+                document.getElementById(`slide${currentSlide}`).classList.add('active');
+                
+                prevBtn.disabled = currentSlide === 1;
+                nextBtn.disabled = currentSlide === totalSlides;
+                
+                if (currentSlide === 2) {
+                    startTraversalAnimation();
+                } else {
+                    stopTraversalAnimation();
+                }
+            }
+            
+            prevBtn.addEventListener('click', function() {
+                if (currentSlide > 1) {
+                    currentSlide--;
+                    updateSlides();
+                }
+            });
+            
+            nextBtn.addEventListener('click', function() {
+                if (currentSlide < totalSlides) {
+                    currentSlide++;
+                    updateSlides();
+                }
+            });
+            
+            // Traversal animation for slide 2
+            let traversalInterval;
+            let circularCurrentNode = 1;
+            let nonCircularCurrentNode = 1;
+            let visitedCircular = new Set();
+            
+            function startTraversalAnimation() {
+                // Reset animation state
+                circularCurrentNode = 1;
+                nonCircularCurrentNode = 1;
+                visitedCircular = new Set();
+                
+                document.querySelectorAll('.node, .null').forEach(node => {
+                    node.classList.remove('highlight');
+                });
+                
+                traversalInterval = setInterval(() => {
+                    // Remove previous highlights
+                    document.querySelectorAll('.node, .null').forEach(node => {
+                        node.classList.remove('highlight');
+                    });
+                    
+                    // Highlight current nodes
+                    if (nonCircularCurrentNode <= 3) {
+                        document.getElementById(`nc2-node${nonCircularCurrentNode}`).classList.add('highlight');
+                        nonCircularCurrentNode++;
+                    } else if (nonCircularCurrentNode === 4) {
+                        document.getElementById('nc2-null').classList.add('highlight');
+                        nonCircularCurrentNode++;
+                    }
+                    
+                    // Circular list traversal with cycle detection
+                    const circularNodeId = `c2-node${circularCurrentNode}`;
+                    document.getElementById(circularNodeId).classList.add('highlight');
+                    
+                    // Record this node as visited
+                    if (visitedCircular.has(circularCurrentNode)) {
+                        // If we've seen this node before, add a visual indication
+                        document.getElementById(circularNodeId).style.boxShadow = '0 0 10px 5px red';
+                    } else {
+                        visitedCircular.add(circularCurrentNode);
+                    }
+                    
+                    // Move to the next node in the circular list
+                    if (circularCurrentNode === 1) circularCurrentNode = 2;
+                    else if (circularCurrentNode === 2) circularCurrentNode = 3;
+                    else if (circularCurrentNode === 3) circularCurrentNode = 4;
+                    else if (circularCurrentNode === 4) circularCurrentNode = 2; // Loop back to 2
+                    
+                }, 1000);
+            }
+            
+            function stopTraversalAnimation() {
+                clearInterval(traversalInterval);
+                document.querySelectorAll('.node, .null').forEach(node => {
+                    node.classList.remove('highlight');
+                    node.style.boxShadow = '';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
