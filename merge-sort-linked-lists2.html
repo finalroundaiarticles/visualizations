@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merge Sort for Linked List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .animation-container {
+            width: 100%;
+            height: 500px;
+            margin: 20px 0;
+            position: relative;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            transition: all 0.5s ease;
+            font-weight: bold;
+        }
+        .arrow {
+            position: absolute;
+            height: 2px;
+            background-color: #000000;
+            transform-origin: left center;
+            transition: all 0.5s ease;
+        }
+        .arrow::after {
+            content: "";
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 10px solid #000000;
+        }
+        .step-counter {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 14px;
+            color: #000000;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        .step-description {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            font-size: 16px;
+            color: #000000;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Merge Sort Process on a Linked List</h1>
+        <div class="animation-container" id="animation-container">
+            <div class="step-counter" id="step-counter">Step 1/10</div>
+            <div class="step-description" id="step-description">Initial linked list: 4 -> 2 -> 1 -> 3</div>
+        </div>
+        <div class="navigation">
+            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
+            <button class="nav-btn" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const animationContainer = document.getElementById('animation-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepCounter = document.getElementById('step-counter');
+        const stepDescription = document.getElementById('step-description');
+
+        let currentStep = 1;
+        const totalSteps = 10;
+
+        function clearContainer() {
+            const nodes = document.querySelectorAll('.node');
+            const arrows = document.querySelectorAll('.arrow');
+            nodes.forEach(node => node.remove());
+            arrows.forEach(arrow => arrow.remove());
+        }
+
+        function createNode(value, x, y, id = null) {
+            const node = document.createElement('div');
+            node.className = 'node';
+            node.textContent = value;
+            node.style.left = `${x}px`;
+            node.style.top = `${y}px`;
+            if (id) node.id = id;
+            animationContainer.appendChild(node);
+            return node;
+        }
+
+        function createArrow(x1, y1, x2, y2) {
+            const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+            
+            const arrow = document.createElement('div');
+            arrow.className = 'arrow';
+            arrow.style.width = `${length - 20}px`; // Adjusting for node radius
+            arrow.style.left = `${x1 + 20}px`; // Adjust for starting from right of node
+            arrow.style.top = `${y1 + 20}px`; // Center with node
+            arrow.style.transform = `rotate(${angle}deg)`;
+            
+            animationContainer.appendChild(arrow);
+            return arrow;
+        }
+
+        function renderStep(step) {
+            clearContainer();
+            stepCounter.textContent = `Step ${step}/${totalSteps}`;
+
+            const containerWidth = animationContainer.offsetWidth;
+            const containerHeight = animationContainer.offsetHeight;
+
+            switch (step) {
+                case 1:
+                    // Initial linked list
+                    stepDescription.textContent = "Initial linked list: 4 -> 2 -> 1 -> 3";
+                    
+                    const node1 = createNode(4, 100, 100);
+                    const node2 = createNode(2, 200, 100);
+                    const node3 = createNode(1, 300, 100);
+                    const node4 = createNode(3, 400, 100);
+                    
+                    createArrow(100, 100, 200, 100);
+                    createArrow(200, 100, 300, 100);
+                    createArrow(300, 100, 400, 100);
+                    break;
+
+                case 2:
+                    // Step 1: Finding the middle and splitting
+                    stepDescription.textContent = "Step 1: Finding the middle (using slow/fast pointers) and splitting the list into two halves";
+                    
+                    const leftHalf1 = createNode(4, 100, 100);
+                    const leftHalf2 = createNode(2, 200, 100);
+                    createArrow(100, 100, 200, 100);
+                    
+                    const rightHalf1 = createNode(1, 300, 100);
+                    const rightHalf2 = createNode(3, 400, 100);
+                    createArrow(300, 100, 400, 100);
+                    
+                    // Visualize the split
+                    const splitLine = document.createElement('div');
+                    splitLine.style.position = 'absolute';
+                    splitLine.style.left = '250px';
+                    splitLine.style.top = '50px';
+                    splitLine.style.height = '100px';
+                    splitLine.style.width = '2px';
+                    splitLine.style.backgroundColor = '#FD9F78';
+                    splitLine.style.borderStyle = 'dashed';
+                    animationContainer.appendChild(splitLine);
+                    break;
+
+                case 3:
+                    // Step 2: Recursive splitting - left half
+                    stepDescription.textContent = "Step 2: Recursively splitting the left half (4->2)";
+                    
+                    const leftNode1 = createNode(4, 100, 100);
+                    const leftNode2 = createNode(2, 200, 100);
+                    createArrow(100, 100, 200, 100);
+                    
+                    // Separate into individual nodes
+                    const leftSplitLine = document.createElement('div');
+                    leftSplitLine.style.position = 'absolute';
+                    leftSplitLine.style.left = '150px';
+                    leftSplitLine.style.top = '150px';
+                    leftSplitLine.style.height = '100px';
+                    leftSplitLine.style.width = '2px';
+                    leftSplitLine.style.backgroundColor = '#FD9F78';
+                    leftSplitLine.style.borderStyle = 'dashed';
+                    animationContainer.appendChild(leftSplitLine);
+                    
+                    const singleNode1 = createNode(4, 100, 250);
+                    const singleNode2 = createNode(2, 200, 250);
+                    break;
+
+                case 4:
+                    // Step 3: Recursive splitting - right half
+                    stepDescription.textContent = "Step 3: Recursively splitting the right half (1->3)";
+                    
+                    const rightNode1 = createNode(1, 300, 100);
+                    const rightNode2 = createNode(3, 400, 100);
+                    createArrow(300, 100, 400, 100);
+                    
+                    // Separate into individual nodes
+                    const rightSplitLine = document.createElement('div');
+                    rightSplitLine.style.position = 'absolute';
+                    rightSplitLine.style.left = '350px';
+                    rightSplitLine.style.top = '150px';
+                    rightSplitLine.style.height = '100px';
+                    rightSplitLine.style.width = '2px';
+                    rightSplitLine.style.backgroundColor = '#FD9F78';
+                    rightSplitLine.style.borderStyle = 'dashed';
+                    animationContainer.appendChild(rightSplitLine);
+                    
+                    const singleNode3 = createNode(1, 300, 250);
+                    const singleNode4 = createNode(3, 400, 250);
+                    break;
+
+                case 5:
+                    // Step 4: Base case - single nodes
+                    stepDescription.textContent = "Step 4: Base case reached - single nodes are already sorted";
+                    
+                    createNode(4, 100, 250);
+                    createNode(2, 200, 250);
+                    createNode(1, 300, 250);
+                    createNode(3, 400, 250);
+                    break;
+
+                case 6:
+                    // Step 5: Merging left half (4, 2)
+                    stepDescription.textContent = "Step 5: Merging the left half (4, 2) in sorted order";
+                    
+                    createNode(4, 100, 250);
+                    createNode(2, 200, 250);
+                    createNode(1, 300, 250);
+                    createNode(3, 400, 250);
+                    
+                    // Show comparison and merge result
+                    const compareLeftLabel = document.createElement('div');
+                    compareLeftLabel.textContent = "Compare 4 and 2";
+                    compareLeftLabel.style.position = 'absolute';
+                    compareLeftLabel.style.left = '120px';
+                    compareLeftLabel.style.top = '200px';
+                    compareLeftLabel.style.color = '#FF4800';
+                    compareLeftLabel.style.fontWeight = 'bold';
+                    animationContainer.appendChild(compareLeftLabel);
+                    
+                    const mergedLeft1 = createNode(2, 120, 320);
+                    const mergedLeft2 = createNode(4, 200, 320);
+                    createArrow(120, 320, 200, 320);
+                    break;
+
+                case 7:
+                    // Step 6: Merging right half (1, 3)
+                    stepDescription.textContent = "Step 6: Merging the right half (1, 3) in sorted order";
+                    
+                    // Show already merged left half
+                    const mergedLeft1_step7 = createNode(2, 120, 250);
+                    const mergedLeft2_step7 = createNode(4, 200, 250);
+                    createArrow(120, 250, 200, 250);
+                    
+                    createNode(1, 300, 250);
+                    createNode(3, 400, 250);
+                    
+                    // Show comparison and merge result
+                    const compareRightLabel = document.createElement('div');
+                    compareRightLabel.textContent = "Compare 1 and 3";
+                    compareRightLabel.style.position = 'absolute';
+                    compareRightLabel.style.left = '320px';
+                    compareRightLabel.style.top = '200px';
+                    compareRightLabel.style.color = '#FF4800';
+                    compareRightLabel.style.fontWeight = 'bold';
+                    animationContainer.appendChild(compareRightLabel);
+                    
+                    const mergedRight1 = createNode(1, 320, 320);
+                    const mergedRight2 = createNode(3, 400, 320);
+                    createArrow(320, 320, 400, 320);
+                    break;
+
+                case 8:
+                    // Step 7: Final merge preparation
+                    stepDescription.textContent = "Step 7: Preparing for final merge of sorted sublists (2->4 and 1->3)";
+                    
+                    const leftMerged1 = createNode(2, 120, 150);
+                    const leftMerged2 = createNode(4, 200, 150);
+                    createArrow(120, 150, 200, 150);
+                    
+                    const rightMerged1 = createNode(1, 320, 150);
+                    const rightMerged2 = createNode(3, 400, 150);
+                    createArrow(320, 150, 400, 150);
+                    
+                    // Show the final merge preparation
+                    const finalMergeLabel = document.createElement('div');
+                    finalMergeLabel.textContent = "Final merge: compare and merge the two sorted sublists";
+                    finalMergeLabel.style.position = 'absolute';
+                    finalMergeLabel.style.left = '150px';
+                    finalMergeLabel.style.top = '220px';
+                    finalMergeLabel.style.color = '#FF4800';
+                    finalMergeLabel.style.fontWeight = 'bold';
+                    finalMergeLabel.style.textAlign = 'center';
+                    animationContainer.appendChild(finalMergeLabel);
+                    break;
+
+                case 9:
+                    // Step 8: Final merging process
+                    stepDescription.textContent = "Step 8: Final merging process - comparing elements from both sublists";
+                    
+                    const leftList1 = createNode(2, 120, 150);
+                    const leftList2 = createNode(4, 200, 150);
+                    createArrow(120, 150, 200, 150);
+                    
+                    const rightList1 = createNode(1, 320, 150);
+                    const rightList2 = createNode(3, 400, 150);
+                    createArrow(320, 150, 400, 150);
+                    
+                    // Show merge comparison steps
+                    const comparison1 = document.createElement('div');
+                    comparison1.textContent = "Compare 2 and 1: 1 is smaller";
+                    comparison1.style.position = 'absolute';
+                    comparison1.style.left = '150px';
+                    comparison1.style.top = '220px';
+                    comparison1.style.color = '#000000';
+                    animationContainer.appendChild(comparison1);
+                    
+                    const comparison2 = document.createElement('div');
+                    comparison2.textContent = "Compare 2 and 3: 2 is smaller";
+                    comparison2.style.position = 'absolute';
+                    comparison2.style.left = '150px';
+                    comparison2.style.top = '250px';
+                    comparison2.style.color = '#000000';
+                    animationContainer.appendChild(comparison2);
+                    
+                    const comparison3 = document.createElement('div');
+                    comparison3.textContent = "Compare 4 and 3: 3 is smaller";
+                    comparison3.style.position = 'absolute';
+                    comparison3.style.left = '150px';
+                    comparison3.style.top = '280px';
+                    comparison3.style.color = '#000000';
+                    animationContainer.appendChild(comparison3);
+                    
+                    // Show the resulting order
+                    const finalResult = document.createElement('div');
+                    finalResult.textContent = "Result: 1 -> 2 -> 3 -> 4";
+                    finalResult.style.position = 'absolute';
+                    finalResult.style.left = '150px';
+                    finalResult.style.top = '330px';
+                    finalResult.style.color = '#FF4800';
+                    finalResult.style.fontWeight = 'bold';
+                    finalResult.style.fontSize = '18px';
+                    animationContainer.appendChild(finalResult);
+                    break;
+
+                case 10:
+                    // Final sorted list
+                    stepDescription.textContent = "Final sorted linked list: 1 -> 2 -> 3 -> 4";
+                    
+                    const sortedNode1 = createNode(1, 100, 200);
+                    const sortedNode2 = createNode(2, 230, 200);
+                    const sortedNode3 = createNode(3, 360, 200);
+                    const sortedNode4 = createNode(4, 490, 200);
+                    
+                    createArrow(100, 200, 230, 200);
+                    createArrow(230, 200, 360, 200);
+                    createArrow(360, 200, 490, 200);
+                    
+                    // Highlight the final result
+                    sortedNode1.style.boxShadow = '0 0 10px #FF4800';
+                    sortedNode2.style.boxShadow = '0 0 10px #FF4800';
+                    sortedNode3.style.boxShadow = '0 0 10px #FF4800';
+                    sortedNode4.style.boxShadow = '0 0 10px #FF4800';
+                    
+                    break;
+            }
+        }
+
+        function updateNavButtons() {
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === totalSteps;
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                renderStep(currentStep);
+                updateNavButtons();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                renderStep(currentStep);
+                updateNavButtons();
+            }
+        });
+
+        // Initial render
+        renderStep(currentStep);
+        updateNavButtons();
+    </script>
+</body>
+</html>
