@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circular vs Non-Circular Linked Lists</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Arial', sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        h1 {
+            color: #FF4800;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+        }
+
+        .animation-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            min-height: 500px;
+            margin: 40px 0;
+            flex-wrap: wrap;
+        }
+
+        .list-section {
+            width: 45%;
+            min-width: 400px;
+            margin: 20px;
+        }
+
+        .list-title {
+            font-size: 1.5em;
+            color: #FF4800;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .node {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            background-color: #FD9F78;
+            border: 3px solid #FF4800;
+            border-radius: 50%;
+            line-height: 54px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #000000;
+            margin: 10px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .node.active {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.2);
+        }
+
+        .arrow {
+            display: inline-block;
+            width: 40px;
+            height: 3px;
+            background-color: #FF4800;
+            position: relative;
+            margin: 0 5px;
+            vertical-align: middle;
+        }
+
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: -5px;
+            top: -5px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid #FF4800;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+        }
+
+        .curved-arrow {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 100px;
+        }
+
+        .curved-arrow svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .null-indicator {
+            display: inline-block;
+            padding: 15px 20px;
+            background-color: #000000;
+            color: #FFFFFF;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .navigation {
+            margin-top: 40px;
+        }
+
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 15px 30px;
+            margin: 0 10px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background-color: #FD9F78;
+            color: #000000;
+        }
+
+        .nav-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .explanation {
+            background-color: #FD9F78;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 30px 0;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .step-indicator {
+            font-size: 1.2em;
+            color: #FF4800;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 1s infinite;
+        }
+
+        @media (max-width: 768px) {
+            .animation-container {
+                flex-direction: column;
+            }
+            .list-section {
+                width: 100%;
+                min-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Circular vs Non-Circular Linked Lists</h1>
+        
+        <div class="step-indicator" id="stepIndicator">Step 1 of 6: Introduction</div>
+        
+        <div class="explanation" id="explanation">
+            Welcome! Let's explore the difference between Circular and Non-Circular Linked Lists. 
+            A linked list is a data structure where elements (nodes) are connected in sequence.
+        </div>
+
+        <div class="animation-container">
+            <div class="list-section" id="nonCircularSection">
+                <div class="list-title">Non-Circular Linked List</div>
+                <div class="list-display" id="nonCircularList">
+                    <div class="node" data-value="1">1</div>
+                    <div class="arrow"></div>
+                    <div class="node" data-value="2">2</div>
+                    <div class="arrow"></div>
+                    <div class="node" data-value="3">3</div>
+                    <div class="arrow"></div>
+                    <div class="node" data-value="4">4</div>
+                    <div class="arrow"></div>
+                    <div class="null-indicator">NULL</div>
+                </div>
+            </div>
+
+            <div class="list-section" id="circularSection">
+                <div class="list-title">Circular Linked List</div>
+                <div class="list-display" id="circularList" style="position: relative;">
+                    <div class="node" data-value="1">1</div>
+                    <div class="arrow"></div>
+                    <div class="node" data-value="2">2</div>
+                    <div class="arrow"></div>
+                    <div class="node" data-value="3">3</div>
+                    <div class="arrow"></div>
+                    <div class="node" data-value="4">4</div>
+                    <div class="curved-arrow">
+                        <svg viewBox="0 0 200 100">
+                            <path d="M 10 50 Q 100 10 190 50" stroke="#FF4800" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+                            <defs>
+                                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="#FF4800"/>
+                                </marker>
+                            </defs>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <button class="nav-btn" id="prevBtn" onclick="previousStep()">Previous</button>
+            <button class="nav-btn" id="nextBtn" onclick="nextStep()">Next</button>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 0;
+        const totalSteps = 6;
+
+        const steps = [
+            {
+                title: "Step 1 of 6: Introduction",
+                explanation: "Welcome! Let's explore the difference between Circular and Non-Circular Linked Lists. A linked list is a data structure where elements (nodes) are connected in sequence.",
+                action: () => {
+                    resetAnimations();
+                }
+            },
+            {
+                title: "Step 2 of 6: Non-Circular Linked List Structure",
+                explanation: "In a Non-Circular Linked List, nodes are connected in a linear sequence. The last node points to NULL, indicating the end of the list.",
+                action: () => {
+                    resetAnimations();
+                    highlightNonCircularStructure();
+                }
+            },
+            {
+                title: "Step 3 of 6: Traversing Non-Circular List",
+                explanation: "When traversing a non-circular list, we start from the first node and follow the pointers until we reach NULL. This clearly marks the end.",
+                action: () => {
+                    animateNonCircularTraversal();
+                }
+            },
+            {
+                title: "Step 4 of 6: Circular Linked List Structure",
+                explanation: "In a Circular Linked List, the last node points back to a previous node (often the first node), creating a circular connection with no NULL pointer.",
+                action: () => {
+                    resetAnimations();
+                    highlightCircularStructure();
+                }
+            },
+            {
+                title: "Step 5 of 6: Traversing Circular List",
+                explanation: "In a circular list, traversal can continue indefinitely since there's no NULL pointer. We need to track our starting point to avoid infinite loops.",
+                action: () => {
+                    animateCircularTraversal();
+                }
+            },
+            {
+                title: "Step 6 of 6: Key Differences",
+                explanation: "Key Differences: Non-circular lists end with NULL (clear termination), while circular lists connect back to a previous node (continuous loop). Circular lists are useful for round-robin scheduling and continuous data processing.",
+                action: () => {
+                    showComparison();
+                }
+            }
+        ];
+
+        function updateStep() {
+            const stepIndicator = document.getElementById('stepIndicator');
+            const explanation = document.getElementById('explanation');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            stepIndicator.textContent = steps[currentStep].title;
+            explanation.textContent = steps[currentStep].explanation;
+            
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+
+            steps[currentStep].action();
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateStep();
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        }
+
+        function resetAnimations() {
+            const allNodes = document.querySelectorAll('.node');
+            allNodes.forEach(node => {
+                node.classList.remove('active', 'pulse');
+            });
+        }
+
+        function highlightNonCircularStructure() {
+            const nonCircularNodes = document.querySelectorAll('#nonCircularList .node');
+            const nullIndicator = document.querySelector('.null-indicator');
+            
+            nonCircularNodes.forEach((node, index) => {
+                setTimeout(() => {
+                    node.classList.add('pulse');
+                    setTimeout(() => node.classList.remove('pulse'), 1000);
+                }, index * 300);
+            });
+            
+            setTimeout(() => {
+                nullIndicator.classList.add('pulse');
+                setTimeout(() => nullIndicator.classList.remove('pulse'), 1000);
+            }, nonCircularNodes.length * 300);
+        }
+
+        function animateNonCircularTraversal() {
+            const nonCircularNodes = document.querySelectorAll('#nonCircularList .node');
+            
+            nonCircularNodes.forEach((node, index) => {
+                setTimeout(() => {
+                    resetAnimations();
+                    node.classList.add('active');
+                }, index * 800);
+            });
+            
+            setTimeout(() => {
+                resetAnimations();
+                document.querySelector('.null-indicator').style.backgroundColor = '#FF4800';
+                setTimeout(() => {
+                    document.querySelector('.null-indicator').style.backgroundColor = '#000000';
+                }, 1000);
+            }, nonCircularNodes.length * 800);
+        }
+
+        function highlightCircularStructure() {
+            const circularNodes = document.querySelectorAll('#circularList .node');
+            const curvedArrow = document.querySelector('.curved-arrow svg path');
+            
+            circularNodes.forEach((node, index) => {
+                setTimeout(() => {
+                    node.classList.add('pulse');
+                    setTimeout(() => node.classList.remove('pulse'), 1000);
+                }, index * 300);
+            });
+            
+            setTimeout(() => {
+                curvedArrow.style.strokeWidth = '6';
+                setTimeout(() => {
+                    curvedArrow.style.strokeWidth = '3';
+                }, 1000);
+            }, circularNodes.length * 300);
+        }
+
+        function animateCircularTraversal() {
+            const circularNodes = document.querySelectorAll('#circularList .node');
+            let currentIndex = 0;
+            let traversalCount = 0;
+            const maxTraversals = 2;
+
+            function traverseNext() {
+                if (traversalCount >= maxTraversals * circularNodes.length) {
+                    resetAnimations();
+                    return;
+                }
+
+                resetAnimations();
+                circularNodes[currentIndex].classList.add('active');
+                
+                currentIndex = (currentIndex + 1) % circularNodes.length;
+                traversalCount++;
+                
+                setTimeout(traverseNext, 800);
+            }
+            
+            traverseNext();
+        }
+
+        function showComparison() {
+            const allNodes = document.querySelectorAll('.node');
+            
+            // Highlight all nodes alternately
+            allNodes.forEach((node, index) => {
+                setTimeout(() => {
+                    node.classList.add('active');
+                    setTimeout(() => {
+                        node.classList.remove('active');
+                    }, 500);
+                }, index * 200);
+            });
+            
+            // Highlight the curved arrow
+            setTimeout(() => {
+                const curvedArrow = document.querySelector('.curved-arrow svg path');
+                curvedArrow.style.strokeWidth = '6';
+                setTimeout(() => {
+                    curvedArrow.style.strokeWidth = '3';
+                }, 1000);
+            }, 1000);
+            
+            // Highlight NULL indicator
+            setTimeout(() => {
+                const nullIndicator = document.querySelector('.null-indicator');
+                nullIndicator.style.backgroundColor = '#FF4800';
+                setTimeout(() => {
+                    nullIndicator.style.backgroundColor = '#000000';
+                }, 1000);
+            }, 1500);
+        }
+
+        // Initialize
+        updateStep();
+    </script>
+</body>
+</html>
