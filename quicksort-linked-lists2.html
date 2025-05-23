@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Array Conversion Process</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .step-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .step-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #FF4800;
+        }
+        .animation-container {
+            position: relative;
+            height: 350px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .node {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            background-color: #FF4800;
+            color: white;
+            border-radius: 50%;
+            line-height: 60px;
+            font-size: 24px;
+            margin: 10px;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+        .arrow {
+            display: inline-block;
+            width: 30px;
+            height: 20px;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+        .arrow::after {
+            content: "→";
+            font-size: 24px;
+            color: #FF4800;
+        }
+        .array-box {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            background-color: #FD9F78;
+            color: white;
+            line-height: 60px;
+            font-size: 24px;
+            margin: 10px;
+            border-radius: 10px;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+        .linked-list, .array, .sorted-array, .updated-list {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            transition: all 0.5s ease;
+        }
+        .linked-list {
+            top: 50px;
+        }
+        .array {
+            top: 160px;
+            opacity: 0;
+        }
+        .sorted-array {
+            top: 270px;
+            opacity: 0;
+        }
+        .updated-list {
+            top: 50px;
+            opacity: 0;
+        }
+        .step-indicator {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .dot {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            background-color: #FD9F78;
+            border-radius: 50%;
+            margin: 0 5px;
+            cursor: pointer;
+        }
+        .dot.active {
+            background-color: #FF4800;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .nav-btn {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #FFF;
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Array Conversion Process for Sorting a Linked List</h1>
+        
+        <div class="animation-container" id="animation-container">
+            <div class="linked-list" id="linked-list">
+                <div class="node">7</div>
+                <div class="arrow"></div>
+                <div class="node">2</div>
+                <div class="arrow"></div>
+                <div class="node">9</div>
+                <div class="arrow"></div>
+                <div class="node">1</div>
+                <div class="arrow"></div>
+                <div class="node">5</div>
+            </div>
+
+            <div class="array" id="array">
+                <div class="array-box">7</div>
+                <div class="array-box">2</div>
+                <div class="array-box">9</div>
+                <div class="array-box">1</div>
+                <div class="array-box">5</div>
+            </div>
+
+            <div class="sorted-array" id="sorted-array">
+                <div class="array-box">1</div>
+                <div class="array-box">2</div>
+                <div class="array-box">5</div>
+                <div class="array-box">7</div>
+                <div class="array-box">9</div>
+            </div>
+
+            <div class="updated-list" id="updated-list">
+                <div class="node">1</div>
+                <div class="arrow"></div>
+                <div class="node">2</div>
+                <div class="arrow"></div>
+                <div class="node">5</div>
+                <div class="arrow"></div>
+                <div class="node">7</div>
+                <div class="arrow"></div>
+                <div class="node">9</div>
+            </div>
+        </div>
+
+        <div class="step-indicator">
+            <span class="dot active" onclick="goToStep(1)"></span>
+            <span class="dot" onclick="goToStep(2)"></span>
+            <span class="dot" onclick="goToStep(3)"></span>
+            <span class="dot" onclick="goToStep(4)"></span>
+        </div>
+
+        <div class="step-title" id="step-title">Step 1: Original Linked List</div>
+        
+        <div class="explanation" id="explanation">
+            Here we have an unsorted linked list with values [7, 2, 9, 1, 5]. Each node contains a value and points to the next node.
+        </div>
+
+        <div class="navigation">
+            <button class="nav-btn" id="prev-btn" onclick="prevStep()" disabled>Previous</button>
+            <button class="nav-btn" id="next-btn" onclick="nextStep()">Next</button>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 4;
+        
+        function updateStepIndicator() {
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((dot, index) => {
+                dot.classList.remove('active');
+                if (index === currentStep - 1) {
+                    dot.classList.add('active');
+                }
+            });
+        }
+        
+        function updateNavButtons() {
+            document.getElementById('prev-btn').disabled = (currentStep === 1);
+            document.getElementById('next-btn').disabled = (currentStep === totalSteps);
+        }
+
+        function updateStepContent() {
+            const stepTitle = document.getElementById('step-title');
+            const explanation = document.getElementById('explanation');
+            const linkedList = document.getElementById('linked-list');
+            const array = document.getElementById('array');
+            const sortedArray = document.getElementById('sorted-array');
+            const updatedList = document.getElementById('updated-list');
+
+            switch(currentStep) {
+                case 1:
+                    stepTitle.textContent = "Step 1: Original Linked List";
+                    explanation.textContent = "Here we have an unsorted linked list with values [7, 2, 9, 1, 5]. Each node contains a value and points to the next node.";
+                    linkedList.style.opacity = 1;
+                    array.style.opacity = 0;
+                    sortedArray.style.opacity = 0;
+                    updatedList.style.opacity = 0;
+                    break;
+                case 2:
+                    stepTitle.textContent = "Step 2: Extract Values into Array";
+                    explanation.textContent = "The first step of our brute force approach is to extract all values from the linked list into an array. This makes sorting easier.";
+                    linkedList.style.opacity = 0.3;
+                    array.style.opacity = 1;
+                    sortedArray.style.opacity = 0;
+                    updatedList.style.opacity = 0;
+                    
+                    // Animate nodes moving to array
+                    setTimeout(() => {
+                        const arrayBoxes = document.querySelectorAll('.array-box');
+                        arrayBoxes.forEach((box, index) => {
+                            box.style.transform = 'translateY(-20px)';
+                            setTimeout(() => {
+                                box.style.transform = 'translateY(0)';
+                            }, 300 + index * 100);
+                        });
+                    }, 100);
+                    break;
+                case 3:
+                    stepTitle.textContent = "Step 3: Sort the Array";
+                    explanation.textContent = "Now we can easily sort the array using built-in sorting functions. The array is sorted to [1, 2, 5, 7, 9].";
+                    linkedList.style.opacity = 0;
+                    array.style.opacity = 0.3;
+                    sortedArray.style.opacity = 1;
+                    updatedList.style.opacity = 0;
+                    
+                    // Animate sorting
+                    setTimeout(() => {
+                        const sortedBoxes = document.querySelectorAll('.sorted-array .array-box');
+                        sortedBoxes.forEach((box, index) => {
+                            box.style.transform = 'translateY(-20px)';
+                            setTimeout(() => {
+                                box.style.transform = 'translateY(0)';
+                            }, 300 + index * 100);
+                        });
+                    }, 100);
+                    break;
+                case 4:
+                    stepTitle.textContent = "Step 4: Update the Original Linked List";
+                    explanation.textContent = "Finally, we update the original linked list with the sorted values. The linked list is now sorted as [1, 2, 5, 7, 9].";
+                    linkedList.style.opacity = 0;
+                    array.style.opacity = 0;
+                    sortedArray.style.opacity = 0.3;
+                    updatedList.style.opacity = 1;
+                    
+                    // Animate nodes in updated list
+                    setTimeout(() => {
+                        const updatedNodes = document.querySelectorAll('#updated-list .node');
+                        updatedNodes.forEach((node, index) => {
+                            node.style.transform = 'scale(1.2)';
+                            setTimeout(() => {
+                                node.style.transform = 'scale(1)';
+                            }, 300 + index * 100);
+                        });
+                    }, 100);
+                    break;
+            }
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateStepIndicator();
+                updateNavButtons();
+                updateStepContent();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStepIndicator();
+                updateNavButtons();
+                updateStepContent();
+            }
+        }
+
+        function goToStep(step) {
+            currentStep = step;
+            updateStepIndicator();
+            updateNavButtons();
+            updateStepContent();
+        }
+    </script>
+</body>
+</html>
