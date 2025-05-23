@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linked List Middle Element - Brute Force</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #FFFFFF;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .explanation {
+            background-color: #FD9F78;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            color: #000000;
+            font-size: 1.2em;
+        }
+
+        .linked-list-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 40px 0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .node {
+            display: flex;
+            align-items: center;
+            background-color: #FFFFFF;
+            border: 3px solid #000000;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 5px;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+
+        .node-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #000000;
+            margin-right: 10px;
+        }
+
+        .node-pointer {
+            width: 0;
+            height: 0;
+            border-left: 15px solid #FF4800;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+        }
+
+        .node:last-child .node-pointer {
+            display: none;
+        }
+
+        .node.counting {
+            background-color: #FD9F78;
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 72, 0, 0.5);
+        }
+
+        .node.traversing {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 72, 0, 0.8);
+        }
+
+        .node.traversing .node-value {
+            color: #FFFFFF;
+        }
+
+        .node.middle-found {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.2);
+            box-shadow: 0 0 30px rgba(255, 72, 0, 0.9);
+            animation: pulse 1s infinite;
+        }
+
+        .node.middle-found .node-value {
+            color: #FFFFFF;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1.2); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1.2); }
+        }
+
+        .counter {
+            font-size: 2em;
+            color: #FF4800;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .phase-indicator {
+            background-color: #000000;
+            color: #FFFFFF;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .controls {
+            margin: 30px 0;
+        }
+
+        .btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 15px 30px;
+            margin: 0 10px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            background-color: #FD9F78;
+            color: #000000;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background-color: #FD9F78;
+            color: #FFFFFF;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .navigation {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-btn {
+            background-color: #000000;
+            color: #FFFFFF;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background-color: #FF4800;
+        }
+
+        .step-info {
+            background-color: #000000;
+            color: #FFFFFF;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .formula {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 1.1em;
+            color: #000000;
+            border: 2px solid #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Finding Middle Element in Linked List (Brute Force)</h1>
+        
+        <div class="explanation">
+            The brute force approach uses two passes: First, count all nodes to find the total length. Then, traverse to the middle position (length/2).
+        </div>
+
+        <div class="phase-indicator" id="phaseIndicator">
+            Ready to start - Click "Start Animation"
+        </div>
+
+        <div class="formula" id="formula" style="display: none;">
+            Middle Position = Total Length ÷ 2
+        </div>
+
+        <div class="counter" id="counter">Count: 0</div>
+
+        <div class="linked-list-container" id="linkedList">
+            <div class="node" data-index="0">
+                <span class="node-value">1</span>
+                <div class="node-pointer"></div>
+            </div>
+            <div class="node" data-index="1">
+                <span class="node-value">2</span>
+                <div class="node-pointer"></div>
+            </div>
+            <div class="node" data-index="2">
+                <span class="node-value">3</span>
+                <div class="node-pointer"></div>
+            </div>
+            <div class="node" data-index="3">
+                <span class="node-value">4</span>
+                <div class="node-pointer"></div>
+            </div>
+            <div class="node" data-index="4">
+                <span class="node-value">5</span>
+                <div class="node-pointer"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startAnimation()">Start Animation</button>
+            <button class="btn" id="resetBtn" onclick="resetAnimation()">Reset</button>
+        </div>
+
+        <div class="navigation">
+            <button class="nav-btn" onclick="previousTopic()">← Previous Topic</button>
+            <div class="step-info" id="stepInfo">Step 1 of 8</div>
+            <button class="nav-btn" onclick="nextTopic()">Next Topic →</button>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 0;
+        let isAnimating = false;
+        let animationSpeed = 1500;
+        
+        const nodes = document.querySelectorAll('.node');
+        const counter = document.getElementById('counter');
+        const phaseIndicator = document.getElementById('phaseIndicator');
+        const formula = document.getElementById('formula');
+        const stepInfo = document.getElementById('stepInfo');
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        const steps = [
+            {
+                phase: "Starting First Pass - Counting all nodes",
+                count: 0,
+                activeNode: -1,
+                showFormula: false
+            },
+            {
+                phase: "First Pass: Counting node 1",
+                count: 1,
+                activeNode: 0,
+                showFormula: false
+            },
+            {
+                phase: "First Pass: Counting node 2",
+                count: 2,
+                activeNode: 1,
+                showFormula: false
+            },
+            {
+                phase: "First Pass: Counting node 3",
+                count: 3,
+                activeNode: 2,
+                showFormula: false
+            },
+            {
+                phase: "First Pass: Counting node 4",
+                count: 4,
+                activeNode: 3,
+                showFormula: false
+            },
+            {
+                phase: "First Pass Complete: Total nodes = 5. Middle position = 5÷2 = 2 (3rd node)",
+                count: 5,
+                activeNode: 4,
+                showFormula: true
+            },
+            {
+                phase: "Second Pass: Traversing to middle position (position 2)",
+                count: 5,
+                activeNode: -1,
+                showFormula: true
+            },
+            {
+                phase: "Found Middle Element: Node with value 3 at position 2",
+                count: 5,
+                activeNode: 2,
+                showFormula: true,
+                middleFound: true
+            }
+        ];
+
+        function updateStep() {
+            const step = steps[currentStep];
+            
+            // Reset all nodes
+            nodes.forEach(node => {
+                node.classList.remove('counting', 'traversing', 'middle-found');
+            });
+
+            // Update phase indicator
+            phaseIndicator.textContent = step.phase;
+            
+            // Update counter
+            counter.textContent = `Count: ${step.count}`;
+            
+            // Show/hide formula
+            formula.style.display = step.showFormula ? 'block' : 'none';
+            
+            // Update step info
+            stepInfo.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+
+            // Highlight active node
+            if (step.activeNode >= 0) {
+                if (step.middleFound) {
+                    nodes[step.activeNode].classList.add('middle-found');
+                } else if (currentStep <= 5) {
+                    nodes[step.activeNode].classList.add('counting');
+                } else {
+                    nodes[step.activeNode].classList.add('traversing');
+                }
+            }
+        }
+
+        function startAnimation() {
+            if (isAnimating) return;
+            
+            isAnimating = true;
+            startBtn.disabled = true;
+            currentStep = 0;
+            
+            function animateStep() {
+                updateStep();
+                currentStep++;
+                
+                if (currentStep < steps.length) {
+                    setTimeout(animateStep, animationSpeed);
+                } else {
+                    isAnimating = false;
+                    startBtn.disabled = false;
+                    startBtn.textContent = "Restart Animation";
+                }
+            }
+            
+            animateStep();
+        }
+
+        function resetAnimation() {
+            isAnimating = false;
+            currentStep = 0;
+            startBtn.disabled = false;
+            startBtn.textContent = "Start Animation";
+            
+            // Reset all visual elements
+            nodes.forEach(node => {
+                node.classList.remove('counting', 'traversing', 'middle-found');
+            });
+            
+            counter.textContent = "Count: 0";
+            phaseIndicator.textContent = "Ready to start - Click 'Start Animation'";
+            formula.style.display = 'none';
+            stepInfo.textContent = "Step 1 of 8";
+        }
+
+        function previousTopic() {
+            alert("This would navigate to the previous topic in your learning sequence.");
+        }
+
+        function nextTopic() {
+            alert("This would navigate to the next topic: Two Pointer Technique for Middle Element.");
+        }
+
+        // Initialize
+        resetAnimation();
+    </script>
+</body>
+</html>
