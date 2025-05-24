@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brute Force Approach Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .description {
+            color: #000000;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        #animation-container {
+            width: 100%;
+            height: 300px;
+            margin: 20px auto;
+            position: relative;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        
+        .node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            font-weight: bold;
+            border: 2px solid #FF4800;
+            transition: all 0.5s ease;
+        }
+        
+        .array-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .array-element {
+            width: 40px;
+            height: 40px;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        
+        .explanation {
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+            text-align: center;
+            min-height: 60px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .arrow {
+            position: absolute;
+            height: 2px;
+            background-color: #FF4800;
+            transform-origin: left center;
+        }
+        
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid #FF4800;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        
+        .highlight {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.1);
+        }
+        
+        .label {
+            position: absolute;
+            color: #000000;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Brute Force Approach Visualization</h1>
+        <div class="description">
+            This animation demonstrates the brute force approach for a linked list with color values.
+        </div>
+        
+        <div class="array-container" id="input-array">
+            <div class="array-element">1</div>
+            <div class="array-element">0</div>
+            <div class="array-element">2</div>
+            <div class="array-element">1</div>
+            <div class="array-element">0</div>
+            <div class="array-element">2</div>
+        </div>
+        
+        <div id="animation-container"></div>
+        
+        <div class="array-container" id="count-array">
+            <div class="array-element">0</div>
+            <div class="array-element">0</div>
+            <div class="array-element">0</div>
+        </div>
+        <div class="label" style="margin-left: -60px;">Count Array: [0, 1, 2]</div>
+        
+        <div class="explanation" id="explanation">
+            Press the "Next" button to start the visualization of the brute force approach.
+        </div>
+        
+        <div class="controls">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const steps = [
+            {
+                description: "Starting with the input array [1, 0, 2, 1, 0, 2]. We will use a brute force approach to process this array.",
+                action: "init"
+            },
+            {
+                description: "First Pass: Counting the occurrences of each color (0, 1, 2). Let's start counting!",
+                action: "countInit"
+            },
+            {
+                description: "First value is 1. Increment count[1] from 0 to 1.",
+                action: "count",
+                index: 0,
+                value: 1
+            },
+            {
+                description: "Second value is 0. Increment count[0] from 0 to 1.",
+                action: "count",
+                index: 1,
+                value: 0
+            },
+            {
+                description: "Third value is 2. Increment count[2] from 0 to 1.",
+                action: "count",
+                index: 2,
+                value: 2
+            },
+            {
+                description: "Fourth value is 1. Increment count[1] from 1 to 2.",
+                action: "count",
+                index: 3,
+                value: 1
+            },
+            {
+                description: "Fifth value is 0. Increment count[0] from 1 to 2.",
+                action: "count",
+                index: 4,
+                value: 0
+            },
+            {
+                description: "Sixth value is 2. Increment count[2] from 1 to 2.",
+                action: "count",
+                index: 5,
+                value: 2
+            },
+            {
+                description: "First pass complete. Count array = [2, 2, 2] showing we have 2 of each color (0, 1, 2).",
+                action: "countComplete"
+            },
+            {
+                description: "Second Pass: Filling nodes with values in order. We'll create an empty linked list and fill it with 0s, 1s, and 2s in order.",
+                action: "fillInit"
+            },
+            {
+                description: "Add first 0 at position 0.",
+                action: "fill",
+                position: 0,
+                value: 0
+            },
+            {
+                description: "Add second 0 at position 1.",
+                action: "fill",
+                position: 1,
+                value: 0
+            },
+            {
+                description: "Add first 1 at position 2.",
+                action: "fill",
+                position: 2,
+                value: 1
+            },
+            {
+                description: "Add second 1 at position 3.",
+                action: "fill",
+                position: 3,
+                value: 1
+            },
+            {
+                description: "Add first 2 at position 4.",
+                action: "fill",
+                position: 4,
+                value: 2
+            },
+            {
+                description: "Add second 2 at position 5.",
+                action: "fill",
+                position: 5,
+                value: 2
+            },
+            {
+                description: "Second pass complete. The linked list is now sorted with all 0s, then all 1s, then all 2s: [0, 0, 1, 1, 2, 2].",
+                action: "complete"
+            }
+        ];
+        
+        // Variables
+        let currentStep = 0;
+        const countArray = [0, 0, 0];
+        const inputArray = [1, 0, 2, 1, 0, 2];
+        const outputArray = new Array(6).fill(null);
+        const nodes = [];
+        
+        // DOM Elements
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const explanationEl = document.getElementById('explanation');
+        const animationContainer = document.getElementById('animation-container');
+        const countArrayEl = document.getElementById('count-array');
+        
+        // Initialize
+        function init() {
+            updateButtons();
+            createInputArray();
+        }
+        
+        function createInputArray() {
+            const inputArrayEl = document.getElementById('input-array');
+            inputArrayEl.innerHTML = '';
+            
+            for (let i = 0; i < inputArray.length; i++) {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.textContent = inputArray[i];
+                inputArrayEl.appendChild(element);
+            }
+        }
+        
+        function createCountArray() {
+            const countArrayEl = document.getElementById('count-array');
+            countArrayEl.innerHTML = '';
+            
+            for (let i = 0; i < countArray.length; i++) {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.textContent = countArray[i];
+                countArrayEl.appendChild(element);
+            }
+        }
+        
+        function createLinkedList() {
+            animationContainer.innerHTML = '';
+            nodes.length = 0;
+            
+            for (let i = 0; i < inputArray.length; i++) {
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.textContent = '';
+                node.style.left = `${50 + i * 120}px`;
+                node.style.top = '120px';
+                animationContainer.appendChild(node);
+                nodes.push(node);
+                
+                if (i < inputArray.length - 1) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'arrow';
+                    arrow.style.left = `${70 + i * 120}px`;
+                    arrow.style.top = '140px';
+                    arrow.style.width = '100px';
+                    animationContainer.appendChild(arrow);
+                }
+            }
+        }
+        
+        function updateButtons() {
+            prevBtn.disabled = currentStep <= 0;
+            nextBtn.disabled = currentStep >= steps.length - 1;
+        }
+        
+        function handleNextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                executeStep();
+                updateButtons();
+            }
+        }
+        
+        function handlePrevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                executeStep();
+                updateButtons();
+            }
+        }
+        
+        function executeStep() {
+            const step = steps[currentStep];
+            explanationEl.textContent = step.description;
+            
+            // Reset highlights
+            document.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
+            
+            switch (step.action) {
+                case 'init':
+                    // Just show the initial state
+                    break;
+                    
+                case 'countInit':
+                    createCountArray();
+                    break;
+                    
+                case 'count':
+                    // Highlight the current element in the input array
+                    document.querySelectorAll('#input-array .array-element')[step.index].classList.add('highlight');
+                    
+                    // Update count array
+                    countArray[step.value]++;
+                    createCountArray();
+                    
+                    // Highlight the corresponding count element
+                    document.querySelectorAll('#count-array .array-element')[step.value].classList.add('highlight');
+                    break;
+                    
+                case 'countComplete':
+                    // All counts are complete
+                    break;
+                    
+                case 'fillInit':
+                    createLinkedList();
+                    break;
+                    
+                case 'fill':
+                    // Fill the node at position with value
+                    nodes[step.position].textContent = step.value;
+                    nodes[step.position].classList.add('highlight');
+                    
+                    // Update color based on value
+                    const colors = ['#FD9F78', '#FF4800', '#000000'];
+                    nodes[step.position].style.backgroundColor = colors[step.value];
+                    
+                    if (step.value === 0 || step.value === 2) {
+                        nodes[step.position].style.color = '#FFFFFF';
+                    }
+                    
+                    outputArray[step.position] = step.value;
+                    break;
+                    
+                case 'complete':
+                    // Final state, all nodes are filled
+                    break;
+            }
+        }
+        
+        // Event Listeners
+        prevBtn.addEventListener('click', handlePrevStep);
+        nextBtn.addEventListener('click', handleNextStep);
+        
+        // Initialize
+        init();
+    </script>
+</body>
+</html>
