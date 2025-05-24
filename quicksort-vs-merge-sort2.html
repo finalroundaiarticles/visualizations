@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merge Sort for Linked Lists</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .animation-container {
+            width: 100%;
+            height: 500px;
+            margin: 20px auto;
+            position: relative;
+            overflow: hidden;
+        }
+        .step-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none;
+        }
+        .step-container.active {
+            display: block;
+        }
+        .node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #000000;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            transition: all 0.5s ease;
+        }
+        .pointer {
+            position: absolute;
+            background-color: #000000;
+            height: 2px;
+            transform-origin: 0 50%;
+        }
+        .pointer:after {
+            content: '';
+            position: absolute;
+            right: -8px;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 10px solid #000000;
+        }
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            background-color: #FFFFFF;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .nav-button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #000000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Merge Sort Process for Linked Lists</h1>
+        
+        <div class="animation-container" id="animation-container">
+            <!-- Steps will be added by JavaScript -->
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <!-- Explanations will be added by JavaScript -->
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="nav-button" id="prev-btn" disabled>Previous</button>
+            <button class="nav-button" id="next-btn">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="step-indicator">Step 1 of 7</div>
+    </div>
+
+    <script>
+        // Steps data with node positions and explanations
+        const steps = [
+            {
+                title: "Initial Linked List",
+                nodes: [
+                    {value: 8, x: 100, y: 100},
+                    {value: 4, x: 200, y: 100},
+                    {value: 2, x: 300, y: 100},
+                    {value: 10, x: 400, y: 100},
+                    {value: 15, x: 500, y: 100},
+                    {value: 1, x: 600, y: 100}
+                ],
+                pointers: [
+                    {from: 0, to: 1},
+                    {from: 1, to: 2},
+                    {from: 2, to: 3},
+                    {from: 3, to: 4},
+                    {from: 4, to: 5}
+                ],
+                explanation: "We start with an unsorted linked list containing elements [8→4→2→10→15→1]. Merge sort algorithm will split this list recursively until individual elements are reached, then merge them back in sorted order."
+            },
+            {
+                title: "Split into Two Halves",
+                nodes: [
+                    {value: 8, x: 100, y: 100},
+                    {value: 4, x: 200, y: 100},
+                    {value: 2, x: 300, y: 100},
+                    {value: 10, x: 400, y: 200},
+                    {value: 15, x: 500, y: 200},
+                    {value: 1, x: 600, y: 200}
+                ],
+                pointers: [
+                    {from: 0, to: 1},
+                    {from: 1, to: 2},
+                    {from: 3, to: 4},
+                    {from: 4, to: 5}
+                ],
+                explanation: "First step: we split the linked list into two halves. First half: [8→4→2] and Second half: [10→15→1]. We find the middle by using the 'slow and fast pointer' technique, where slow moves one step at a time while fast moves two steps."
+            },
+            {
+                title: "Further Split Left Half",
+                nodes: [
+                    {value: 8, x: 100, y: 100},
+                    {value: 4, x: 200, y: 150},
+                    {value: 2, x: 300, y: 200},
+                    {value: 10, x: 400, y: 250},
+                    {value: 15, x: 500, y: 250},
+                    {value: 1, x: 600, y: 250}
+                ],
+                pointers: [
+                    {from: 0, to: 1},
+                    {from: 3, to: 4},
+                    {from: 4, to: 5}
+                ],
+                explanation: "We continue the splitting process on the left half [8→4→2]. We divide it into [8] and [4→2]. The right half [10→15→1] will be processed similarly in the next steps."
+            },
+            {
+                title: "Complete Splitting (Single Elements)",
+                nodes: [
+                    {value: 8, x: 100, y: 100},
+                    {value: 4, x: 200, y: 150},
+                    {value: 2, x: 300, y: 200},
+                    {value: 10, x: 400, y: 250},
+                    {value: 15, x: 500, y: 300},
+                    {value: 1, x: 600, y: 350}
+                ],
+                pointers: [],
+                explanation: "We continue splitting until we have individual elements. At this point, we have six individual nodes: [8], [4], [2], [10], [15], and [1]. Each node is considered a sorted list of length 1."
+            },
+            {
+                title: "Merge Step 1: Small Sublists",
+                nodes: [
+                    {value: 4, x: 100, y: 150},
+                    {value: 8, x: 200, y: 150},
+                    {value: 2, x: 300, y: 200},
+                    {value: 1, x: 400, y: 300},
+                    {value: 10, x: 500, y: 250},
+                    {value: 15, x: 600, y: 250}
+                ],
+                pointers: [
+                    {from: 0, to: 1},
+                    {from: 4, to: 5}
+                ],
+                explanation: "Now we begin merging the sublists in sorted order. First, we merge [8] and [4] to get [4→8], and [10] and [15] to get [10→15]. For [2] and [1], we'll merge them in the next step."
+            },
+            {
+                title: "Merge Step 2: Larger Sublists",
+                nodes: [
+                    {value: 2, x: 100, y: 150},
+                    {value: 4, x: 200, y: 150},
+                    {value: 8, x: 300, y: 150},
+                    {value: 1, x: 400, y: 250},
+                    {value: 10, x: 500, y: 250},
+                    {value: 15, x: 600, y: 250}
+                ],
+                pointers: [
+                    {from: 0, to: 1},
+                    {from: 1, to: 2},
+                    {from: 3, to: 4},
+                    {from: 4, to: 5}
+                ],
+                explanation: "We continue merging. We merge [4→8] with [2] to get [2→4→8], and [1] with [10→15] to get [1→10→15]. During merging, we compare the elements and arrange them in ascending order."
+            },
+            {
+                title: "Final Merged Sorted List",
+                nodes: [
+                    {value: 1, x: 100, y: 100},
+                    {value: 2, x: 200, y: 100},
+                    {value: 4, x: 300, y: 100},
+                    {value: 8, x: 400, y: 100},
+                    {value: 10, x: 500, y: 100},
+                    {value: 15, x: 600, y: 100}
+                ],
+                pointers: [
+                    {from: 0, to: 1},
+                    {from: 1, to: 2},
+                    {from: 2, to: 3},
+                    {from: 3, to: 4},
+                    {from: 4, to: 5}
+                ],
+                explanation: "In the final step, we merge the two sorted halves [2→4→8] and [1→10→15] to get the completely sorted linked list [1→2→4→8→10→15]. The merge process compares the front elements of both lists and selects the smaller one to add to the result."
+            }
+        ];
+
+        let currentStep = 0;
+        const totalSteps = steps.length;
+
+        const animationContainer = document.getElementById('animation-container');
+        const explanationDiv = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepIndicator = document.getElementById('step-indicator');
+
+        // Initialize first step
+        function initializeAnimation() {
+            renderStep(currentStep);
+        }
+
+        function renderStep(stepIndex) {
+            // Clear the container
+            animationContainer.innerHTML = '';
+            
+            const step = steps[stepIndex];
+            
+            // Create a step container
+            const stepContainer = document.createElement('div');
+            stepContainer.className = 'step-container active';
+            stepContainer.innerHTML = `<h2 style="text-align: center; color: #FF4800;">${step.title}</h2>`;
+            animationContainer.appendChild(stepContainer);
+            
+            // Create nodes
+            const nodes = [];
+            step.nodes.forEach((node, index) => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'node';
+                nodeElement.textContent = node.value;
+                nodeElement.style.left = `${node.x}px`;
+                nodeElement.style.top = `${node.y}px`;
+                stepContainer.appendChild(nodeElement);
+                nodes.push(nodeElement);
+            });
+            
+            // Create pointers
+            step.pointers.forEach(pointer => {
+                const fromNode = nodes[pointer.from];
+                const toNode = nodes[pointer.to];
+                
+                const fromRect = fromNode.getBoundingClientRect();
+                const toRect = toNode.getBoundingClientRect();
+                
+                const fromX = parseFloat(fromNode.style.left) + 40;
+                const fromY = parseFloat(fromNode.style.top) + 20;
+                const toX = parseFloat(toNode.style.left);
+                const toY = parseFloat(toNode.style.top) + 20;
+                
+                const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+                const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
+                
+                const pointerElement = document.createElement('div');
+                pointerElement.className = 'pointer';
+                pointerElement.style.width = `${length}px`;
+                pointerElement.style.left = `${fromX}px`;
+                pointerElement.style.top = `${fromY}px`;
+                pointerElement.style.transform = `rotate(${angle}deg)`;
+                
+                stepContainer.appendChild(pointerElement);
+            });
+            
+            // Update explanation
+            explanationDiv.innerHTML = `<p>${step.explanation}</p>`;
+            
+            // Update step indicator
+            stepIndicator.textContent = `Step ${stepIndex + 1} of ${totalSteps}`;
+            
+            // Update button states
+            prevBtn.disabled = stepIndex === 0;
+            nextBtn.disabled = stepIndex === totalSteps - 1;
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                renderStep(currentStep);
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                renderStep(currentStep);
+            }
+        }
+
+        // Event listeners
+        nextBtn.addEventListener('click', nextStep);
+        prevBtn.addEventListener('click', prevStep);
+
+        // Initialize the animation
+        initializeAnimation();
+    </script>
+</body>
+</html>
