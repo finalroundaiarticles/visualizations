@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doubly Linked List Rotation Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .explanation {
+            margin-bottom: 20px;
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 5px;
+            color: #000000;
+        }
+        
+        .canvas-container {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            margin: 20px 0;
+            height: 300px;
+        }
+        
+        canvas {
+            border: 1px solid #FD9F78;
+            background-color: #FFFFFF;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-info {
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+            color: #FF4800;
+        }
+        
+        .counter {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Doubly Linked List Rotation Visualization</h1>
+        
+        <div class="explanation">
+            <p>A doubly linked list is a data structure where each node contains a value and pointers to both the next and previous nodes in the list. Rotating a doubly linked list involves shifting all elements by a certain number of positions, while maintaining the proper connections between nodes.</p>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="dllCanvas" width="780" height="280"></canvas>
+        </div>
+        
+        <div class="step-info" id="stepInfo">Original Doubly Linked List: [1, 2, 3, 4, 5]</div>
+        <div class="counter" id="counter">Current Step: 1/6</div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous Step</button>
+            <button id="nextBtn">Next Step</button>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('dllCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepInfo = document.getElementById('stepInfo');
+        const counterElement = document.getElementById('counter');
+        
+        // Colors
+        const nodeColor = '#FD9F78';
+        const selectedNodeColor = '#FF4800';
+        const textColor = '#000000';
+        const arrowColor = '#FF4800';
+        const highlightColor = '#FF4800';
+        
+        let currentStep = 1;
+        const totalSteps = 6;
+        
+        class Node {
+            constructor(x, y, value, highlighted = false) {
+                this.x = x;
+                this.y = y;
+                this.value = value;
+                this.highlighted = highlighted;
+                this.selected = false;
+            }
+            
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 25, 0, 2 * Math.PI);
+                ctx.fillStyle = this.selected ? selectedNodeColor : (this.highlighted ? highlightColor : nodeColor);
+                ctx.fill();
+                ctx.strokeStyle = textColor;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.value, this.x, this.y);
+            }
+        }
+        
+        function drawArrow(fromX, fromY, toX, toY, color, reversed = false) {
+            const headLength = 10;
+            const dx = toX - fromX;
+            const dy = toY - fromY;
+            const angle = Math.atan2(dy, dx);
+            
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Arrow head
+            ctx.beginPath();
+            if (reversed) {
+                ctx.moveTo(fromX, fromY);
+                ctx.lineTo(fromX + headLength * Math.cos(angle - Math.PI / 6), fromY + headLength * Math.sin(angle - Math.PI / 6));
+                ctx.lineTo(fromX + headLength * Math.cos(angle + Math.PI / 6), fromY + headLength * Math.sin(angle + Math.PI / 6));
+            } else {
+                ctx.moveTo(toX, toY);
+                ctx.lineTo(toX - headLength * Math.cos(angle - Math.PI / 6), toY - headLength * Math.sin(angle - Math.PI / 6));
+                ctx.lineTo(toX - headLength * Math.cos(angle + Math.PI / 6), toY - headLength * Math.sin(angle + Math.PI / 6));
+            }
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+        
+        function drawNextArrow(from, to) {
+            const startX = from.x + 25;
+            const startY = from.y;
+            const endX = to.x - 25;
+            const endY = to.y;
+            drawArrow(startX, startY, endX, endY, arrowColor);
+        }
+        
+        function drawPrevArrow(from, to) {
+            const startX = from.x - 25;
+            const startY = from.y;
+            const endX = to.x + 25;
+            const endY = to.y;
+            drawArrow(startX, startY, endX, endY, arrowColor);
+        }
+        
+        function drawHead(node) {
+            ctx.font = 'bold 14px Arial';
+            ctx.fillStyle = textColor;
+            ctx.textAlign = 'center';
+            ctx.fillText('Head', node.x, node.y - 40);
+            drawArrow(node.x, node.y - 35, node.x, node.y - 25, highlightColor);
+        }
+        
+        function drawTail(node) {
+            ctx.font = 'bold 14px Arial';
+            ctx.fillStyle = textColor;
+            ctx.textAlign = 'center';
+            ctx.fillText('Tail', node.x, node.y - 40);
+            drawArrow(node.x, node.y - 35, node.x, node.y - 25, highlightColor);
+        }
+        
+        function drawCurvedArrow(startX, startY, endX, endY, height, color) {
+            const midX = (startX + endX) / 2;
+            const midY = startY - height;
+            
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.quadraticCurveTo(midX, midY, endX, endY);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Arrow head
+            const headLength = 10;
+            // Calculate the direction at the endpoint of the curve
+            const angle = Math.atan2(endY - midY, endX - midX);
+            
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(endX - headLength * Math.cos(angle - Math.PI / 6), endY - headLength * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(endX - headLength * Math.cos(angle + Math.PI / 6), endY - headLength * Math.sin(angle + Math.PI / 6));
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+        
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const nodeSpacing = 120;
+            const centerY = canvas.height / 2;
+            
+            if (currentStep === 1) {
+                // Original doubly linked list
+                const nodes = [];
+                for (let i = 0; i < 5; i++) {
+                    const node = new Node(150 + i * nodeSpacing, centerY, i + 1);
+                    nodes.push(node);
+                    node.draw();
+                }
+                
+                // Draw next pointers
+                for (let i = 0; i < 4; i++) {
+                    drawNextArrow(nodes[i], nodes[i+1]);
+                }
+                
+                // Draw prev pointers
+                for (let i = 1; i < 5; i++) {
+                    drawPrevArrow(nodes[i], nodes[i-1]);
+                }
+                
+                drawHead(nodes[0]);
+                drawTail(nodes[4]);
+                
+                stepInfo.textContent = "Original Doubly Linked List: [1, 2, 3, 4, 5]";
+            } 
+            else if (currentStep === 2) {
+                // Identify the new head position (after rotating right by 2)
+                const nodes = [];
+                for (let i = 0; i < 5; i++) {
+                    const node = new Node(150 + i * nodeSpacing, centerY, i + 1);
+                    if (i === 3) node.highlighted = true; // Highlight 4 as the new head
+                    nodes.push(node);
+                    node.draw();
+                }
+                
+                // Draw next pointers
+                for (let i = 0; i < 4; i++) {
+                    drawNextArrow(nodes[i], nodes[i+1]);
+                }
+                
+                // Draw prev pointers
+                for (let i = 1; i < 5; i++) {
+                    drawPrevArrow(nodes[i], nodes[i-1]);
+                }
+                
+                drawHead(nodes[0]);
+                drawTail(nodes[4]);
+                
+                stepInfo.textContent = "Step 1: Identify new head position - Node 4 will be the new head after rotating right by 2";
+            } 
+            else if (currentStep === 3) {
+                // Show the circular nature by connecting tail to head
+                const nodes = [];
+                for (let i = 0; i < 5; i++) {
+                    const node = new Node(150 + i * nodeSpacing, centerY, i + 1);
+                    nodes.push(node);
+                    node.draw();
+                }
+                
+                // Draw next pointers
+                for (let i = 0; i < 4; i++) {
+                    drawNextArrow(nodes[i], nodes[i+1]);
+                }
+                
+                // Draw prev pointers
+                for (let i = 1; i < 5; i++) {
+                    drawPrevArrow(nodes[i], nodes[i-1]);
+                }
+                
+                // Draw circular connection
+                drawCurvedArrow(nodes[4].x + 25, nodes[4].y, nodes[0].x - 25, nodes[0].y, 80, highlightColor);
+                drawCurvedArrow(nodes[0].x - 25, nodes[0].y + 10, nodes[4].x + 25, nodes[4].y + 10, -80, highlightColor);
+                
+                drawHead(nodes[0]);
+                drawTail(nodes[4]);
+                
+                stepInfo.textContent = "Step 2: Connect tail to head to visualize rotation (temporary circular structure)";
+            } 
+            else if (currentStep === 4) {
+                // Rearranging the nodes to show rotation
+                const rotatedValues = [4, 5, 1, 2, 3]; // After rotating right by 2
+                
+                const nodes = [];
+                for (let i = 0; i < 5; i++) {
+                    const node = new Node(150 + i * nodeSpacing, centerY, rotatedValues[i]);
+                    if (i === 0 || i === 1) node.highlighted = true;
+                    nodes.push(node);
+                    node.draw();
+                }
+                
+                // No connections yet
+                
+                stepInfo.textContent = "Step 3: Rearrange nodes for visualization (4 and 5 moved to front)";
+            } 
+            else if (currentStep === 5) {
+                // Start connecting in the new order
+                const rotatedValues = [4, 5, 1, 2, 3]; // After rotating right by 2
+                
+                const nodes = [];
+                for (let i = 0; i < 5; i++) {
+                    const node = new Node(150 + i * nodeSpacing, centerY, rotatedValues[i]);
+                    nodes.push(node);
+                    node.draw();
+                }
+                
+                // Draw next pointers
+                for (let i = 0; i < 4; i++) {
+                    drawNextArrow(nodes[i], nodes[i+1]);
+                }
+                
+                stepInfo.textContent = "Step 4: Connect next pointers in the new order";
+            } 
+            else if (currentStep === 6) {
+                // Complete rotation with all connections
+                const rotatedValues = [4, 5, 1, 2, 3]; // After rotating right by 2
+                
+                const nodes = [];
+                for (let i = 0; i < 5; i++) {
+                    const node = new Node(150 + i * nodeSpacing, centerY, rotatedValues[i]);
+                    nodes.push(node);
+                    node.draw();
+                }
+                
+                // Draw next pointers
+                for (let i = 0; i < 4; i++) {
+                    drawNextArrow(nodes[i], nodes[i+1]);
+                }
+                
+                // Draw prev pointers
+                for (let i = 1; i < 5; i++) {
+                    drawPrevArrow(nodes[i], nodes[i-1]);
+                }
+                
+                drawHead(nodes[0]);
+                drawTail(nodes[4]);
+                
+                stepInfo.textContent = "Final: Rotated List [4, 5, 1, 2, 3] with all connections properly updated";
+            }
+            
+            counterElement.textContent = `Current Step: ${currentStep}/${totalSteps}`;
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                render();
+                nextBtn.disabled = false;
+                if (currentStep === 1) {
+                    prevBtn.disabled = true;
+                }
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                render();
+                prevBtn.disabled = false;
+                if (currentStep === totalSteps) {
+                    nextBtn.disabled = true;
+                }
+            }
+        });
+        
+        // Initial render
+        render();
+    </script>
+</body>
+</html>
