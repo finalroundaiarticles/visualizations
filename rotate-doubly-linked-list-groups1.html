@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doubly Linked List Rotation Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            position: relative;
+        }
+        
+        .slide {
+            display: none;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FF4800;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin: 0 5px;
+            position: relative;
+        }
+        
+        .arrow {
+            display: inline-block;
+            color: #000000;
+            font-size: 24px;
+            margin: 0 5px;
+            font-weight: bold;
+        }
+        
+        .list-container {
+            margin: 50px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .group {
+            border: 2px dashed #FD9F78;
+            border-radius: 10px;
+            padding: 5px 10px;
+            margin: 5px;
+        }
+        
+        .explanation {
+            margin-top: 30px;
+            color: #000000;
+            font-size: 18px;
+            text-align: left;
+        }
+        
+        .highlight {
+            color: #FF4800;
+            font-weight: bold;
+        }
+        
+        .progress-indicator {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .progress-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #cccccc;
+            margin: 0 5px;
+        }
+        
+        .progress-dot.active {
+            background-color: #FF4800;
+        }
+        
+        .arrow-animation {
+            animation: arrowPulse 1s infinite;
+        }
+        
+        @keyframes arrowPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .node-animation {
+            animation: nodeHighlight 1s infinite;
+        }
+        
+        @keyframes nodeHighlight {
+            0% { background-color: #FF4800; }
+            50% { background-color: #FD9F78; }
+            100% { background-color: #FF4800; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Doubly Linked List Rotation (k=3)</h1>
+    
+    <div class="container">
+        <div class="slide active" id="slide1">
+            <h2>Initial Doubly Linked List</h2>
+            <div class="list-container">
+                <div class="node">1</div>
+                <div class="arrow">↔</div>
+                <div class="node">2</div>
+                <div class="arrow">↔</div>
+                <div class="node">3</div>
+                <div class="arrow">↔</div>
+                <div class="node">4</div>
+                <div class="arrow">↔</div>
+                <div class="node">5</div>
+                <div class="arrow">↔</div>
+                <div class="node">6</div>
+                <div class="arrow">↔</div>
+                <div class="node">7</div>
+                <div class="arrow">↔</div>
+                <div class="node">8</div>
+            </div>
+            <div class="explanation">
+                <p>This is our initial doubly linked list. Each node contains a value and has pointers to both the previous and next nodes.</p>
+                <p>A <span class="highlight">doubly linked list</span> allows us to traverse in both directions, as indicated by the bidirectional arrows (↔).</p>
+                <p>Our task is to rotate this list using k=3, which will result in groups of 3 nodes being reversed.</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide2">
+            <h2>Step 1: Identifying Groups for Rotation</h2>
+            <div class="list-container">
+                <div class="group">
+                    <div class="node">1</div>
+                    <div class="arrow">↔</div>
+                    <div class="node">2</div>
+                    <div class="arrow">↔</div>
+                    <div class="node">3</div>
+                </div>
+                <div class="arrow">↔</div>
+                <div class="group">
+                    <div class="node">4</div>
+                    <div class="arrow">↔</div>
+                    <div class="node">5</div>
+                    <div class="arrow">↔</div>
+                    <div class="node">6</div>
+                </div>
+                <div class="arrow">↔</div>
+                <div class="group">
+                    <div class="node">7</div>
+                    <div class="arrow">↔</div>
+                    <div class="node">8</div>
+                </div>
+            </div>
+            <div class="explanation">
+                <p>First, we divide the list into groups of k=3 nodes each:</p>
+                <ul>
+                    <li>Group 1: 1 ↔ 2 ↔ 3</li>
+                    <li>Group 2: 4 ↔ 5 ↔ 6</li>
+                    <li>Group 3: 7 ↔ 8 (this group has only 2 nodes since we don't have enough nodes to form a complete group of 3)</li>
+                </ul>
+                <p>Each of these groups will be rotated independently while maintaining the connections between groups.</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide3">
+            <h2>Step 2: Reversing First Group</h2>
+            <div class="list-container">
+                <div class="group">
+                    <div class="node node-animation">3</div>
+                    <div class="arrow arrow-animation">↔</div>
+                    <div class="node node-animation">2</div>
+                    <div class="arrow arrow-animation">↔</div>
+                    <div class="node node-animation">1</div>
+                </div>
+                <div class="arrow">↔</div>
+                <div class="group">
+                    <div class="node">4</div>
+                    <div class="arrow">↔</div>
+                    <div class="node">5</div>
+                    <div class="arrow">↔</div>
+                    <div class="node">6</div>
+                </div>
+                <div class="arrow">↔</div>
+                <div class="group">
+                    <div class="node">7</div>
+                    <div class="arrow">↔</div>
+                    <div class="node">8</div>
+                </div>
+            </div>
+            <div class="explanation">
+                <p>Now we reverse the first group (1 ↔ 2 ↔ 3):</p>
+                <p>The links between nodes are reversed, changing the order to <span class="highlight">3 ↔ 2 ↔ 1</span>.</p>
+                <p>To reverse a group:</p>
+                <ul>
+                    <li>We switch the next and previous pointers of each node</li>
+                    <li>Node 3 becomes the new head of this group</li>
+                    <li>Node 1 becomes the new tail of this group</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide4">
+            <h2>Step 3: Reversing Second Group</h2>
+            <div class="list-container">
+                <div class="group">
+                    <div class="node">3</div>
+                    <div class="arrow">↔</div>
+                    <div class="node">2</div>
+                    <div class="arrow">↔</div>
+                    <div class="node">1</div>
+                </div>
+                <div class="arrow">↔</div>
+                <div class="group">
+                    <div class="node node-animation">6</div>
+                    <div class="arrow arrow-animation">↔</div>
+                    <div class="node node-animation">5</div>
+                    <div class="arrow arrow-animation">↔</div>
+                    <div class="node node-animation">4</div>
+                </div>
+                <div class="arrow">↔</div>
+                <div class="group">
+                    <div class="node">7</div>
+                    <div class="arrow">↔</div>
+                    <div class="node">8</div>
+                </div>
+            </div>
+            <div class="explanation">
+                <p>Next, we reverse the second group (4 ↔ 5 ↔ 6):</p>
+                <p>Following the same process, the order changes to <span class="highlight">6 ↔ 5 ↔ 4</span>.</p>
+                <p>The pointers are adjusted so that:</p>
+                <ul>
+                    <li>Node 1 (last node of first group) connects to node 6 (first node of reversed second group)</li>
+                    <li>Node 6 becomes the new head of this group</li>
+                    <li>Node 4 becomes the new tail of this group</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide5">
+            <h2>Step 4: Reversing Final Group</h2>
+            <div class="list-container">
+                <div class="group">
+                    <div class="node">3</div>
+                    <div class="arrow">↔</div>
+                    <div class="node">2</div>
+                    <div class="arrow">↔</div>
+                    <div class="node">1</div>
+                </div>
+                <div class="arrow">↔</div>
+                <div class="group">
+                    <div class="node">6</div>
+                    <div class="arrow">↔</div>
+                    <div class="node">5</div>
+                    <div class="arrow">↔</div>
+                    <div class="node">4</div>
+                </div>
+                <div class="arrow">↔</div>
+                <div class="group">
+                    <div class="node node-animation">8</div>
+                    <div class="arrow arrow-animation">↔</div>
+                    <div class="node node-animation">7</div>
+                </div>
+            </div>
+            <div class="explanation">
+                <p>Finally, we reverse the last group (7 ↔ 8):</p>
+                <p>After reversal, the order becomes <span class="highlight">8 ↔ 7</span>.</p>
+                <p>Since this group doesn't have k=3 nodes (it only has 2), we still reverse it following the same rules:</p>
+                <ul>
+                    <li>Node 4 (last node of second group) connects to node 8 (first node of reversed third group)</li>
+                    <li>The pointers within the group are reversed</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide6">
+            <h2>Final Result: Rotated Doubly Linked List</h2>
+            <div class="list-container">
+                <div class="node">3</div>
+                <div class="arrow">↔</div>
+                <div class="node">2</div>
+                <div class="arrow">↔</div>
+                <div class="node">1</div>
+                <div class="arrow">↔</div>
+                <div class="node">6</div>
+                <div class="arrow">↔</div>
+                <div class="node">5</div>
+                <div class="arrow">↔</div>
+                <div class="node">4</div>
+                <div class="arrow">↔</div>
+                <div class="node">8</div>
+                <div class="arrow">↔</div>
+                <div class="node">7</div>
+            </div>
+            <div class="explanation">
+                <p>We have successfully rotated the doubly linked list with k=3!</p>
+                <p>Our original list: <span class="highlight">1 ↔ 2 ↔ 3 ↔ 4 ↔ 5 ↔ 6 ↔ 7 ↔ 8</span></p>
+                <p>Has been transformed to: <span class="highlight">3 ↔ 2 ↔ 1 ↔ 6 ↔ 5 ↔ 4 ↔ 8 ↔ 7</span></p>
+                <p>Each group of k=3 nodes (or less for the last group) has been reversed, and the connections between groups have been maintained.</p>
+                <p>The doubly linked list structure remains intact, allowing traversal in both directions.</p>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
+            <button class="nav-btn" id="next-btn">Next</button>
+        </div>
+        
+        <div class="progress-indicator" id="progress-indicator">
+            <!-- Progress dots will be added via JavaScript -->
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const slides = document.querySelectorAll('.slide');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const progressIndicator = document.getElementById('progress-indicator');
+            let currentSlide = 0;
+            
+            // Create progress dots
+            for (let i = 0; i < slides.length; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('progress-dot');
+                if (i === 0) dot.classList.add('active');
+                progressIndicator.appendChild(dot);
+            }
+            
+            const progressDots = document.querySelectorAll('.progress-dot');
+            
+            function showSlide(index) {
+                slides.forEach(slide => slide.classList.remove('active'));
+                progressDots.forEach(dot => dot.classList.remove('active'));
+                
+                slides[index].classList.add('active');
+                progressDots[index].classList.add('active');
+                
+                prevBtn.disabled = index === 0;
+                nextBtn.disabled = index === slides.length - 1;
+            }
+            
+            prevBtn.addEventListener('click', function() {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    showSlide(currentSlide);
+                }
+            });
+            
+            nextBtn.addEventListener('click', function() {
+                if (currentSlide < slides.length - 1) {
+                    currentSlide++;
+                    showSlide(currentSlide);
+                }
+            });
+            
+            // Allow clicking on progress dots to navigate
+            progressDots.forEach((dot, index) => {
+                dot.addEventListener('click', function() {
+                    currentSlide = index;
+                    showSlide(currentSlide);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
