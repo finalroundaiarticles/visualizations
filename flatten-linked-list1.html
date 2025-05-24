@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linked List Flattening Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            width: 90%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .step-container {
+            min-height: 450px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .step {
+            display: none;
+            text-align: center;
+        }
+        .step.active {
+            display: block;
+        }
+        .node {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #000000;
+            text-align: center;
+            line-height: 40px;
+            margin: 5px;
+            font-weight: bold;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+        .link {
+            display: inline-block;
+            width: 20px;
+            height: 2px;
+            background-color: #000000;
+            margin: 0 -2px;
+            vertical-align: middle;
+            position: relative;
+        }
+        .link::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -3px;
+            width: 0;
+            height: 0;
+            border-top: 4px solid transparent;
+            border-left: 8px solid #000000;
+            border-bottom: 4px solid transparent;
+        }
+        .down-link {
+            display: block;
+            width: 2px;
+            height: 20px;
+            background-color: #000000;
+            margin: 2px auto;
+            position: relative;
+        }
+        .down-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: -3px;
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 8px solid #000000;
+        }
+        .level {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f8f8;
+            border-left: 5px solid #FF4800;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #FD9F78;
+        }
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .highlight {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            animation: pulse 1s infinite;
+        }
+        .flatten-arrow {
+            position: absolute;
+            color: #FF4800;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .step-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #cccccc;
+            margin: 0 5px;
+            transition: background-color 0.3s;
+        }
+        .step-dot.active {
+            background-color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Linked List Flattening Visualization</h1>
+        
+        <div class="step-indicator" id="stepIndicator">
+            <!-- Step dots will be added dynamically -->
+        </div>
+        
+        <div class="step-container" id="stepContainer">
+            <!-- Step 1: Initial multilevel linked list -->
+            <div class="step active" id="step1">
+                <h2>Step 1: Multilevel Linked List</h2>
+                <div class="explanation">
+                    A multilevel linked list contains nodes that may have a child pointer, creating different levels. Our goal is to flatten this into a single-level linked list.
+                </div>
+                <div class="level">
+                    <div class="node">1</div>
+                    <div class="link"></div>
+                    <div class="node">2</div>
+                    <div class="link"></div>
+                    <div class="node">3</div>
+                    <div class="link"></div>
+                    <div class="node">7</div>
+                    <div class="link"></div>
+                    <div class="node">8</div>
+                </div>
+                <div class="level" style="margin-left: 85px;">
+                    <div class="down-link"></div>
+                    <div class="node">4</div>
+                    <div class="link"></div>
+                    <div class="node">5</div>
+                </div>
+                <div class="level" style="margin-left: 165px;">
+                    <div class="down-link"></div>
+                    <div class="node">6</div>
+                </div>
+                <div class="level" style="margin-left: 250px;">
+                    <div class="down-link"></div>
+                    <div class="node">9</div>
+                    <div class="link"></div>
+                    <div class="node">10</div>
+                </div>
+            </div>
+            
+            <!-- Step 2: Find first node with a child -->
+            <div class="step" id="step2">
+                <h2>Step 2: Identify First Node with Child</h2>
+                <div class="explanation">
+                    We start by identifying the first node that has a child. In this case, node 2 has a child pointer to node 4.
+                </div>
+                <div class="level">
+                    <div class="node">1</div>
+                    <div class="link"></div>
+                    <div class="node highlight">2</div>
+                    <div class="link"></div>
+                    <div class="node">3</div>
+                    <div class="link"></div>
+                    <div class="node">7</div>
+                    <div class="link"></div>
+                    <div class="node">8</div>
+                </div>
+                <div class="level" style="margin-left: 85px;">
+                    <div class="down-link"></div>
+                    <div class="node highlight">4</div>
+                    <div class="link"></div>
+                    <div class="node">5</div>
+                </div>
+                <div class="level" style="margin-left: 165px;">
+                    <div class="down-link"></div>
+                    <div class="node">6</div>
+                </div>
+                <div class="level" style="margin-left: 250px;">
+                    <div class="down-link"></div>
+                    <div class="node">9</div>
+                    <div class="link"></div>
+                    <div class="node">10</div>
+                </div>
+            </div>
+            
+            <!-- Step 3: Process first child list -->
+            <div class="step" id="step3">
+                <h2>Step 3: Flatten First Child List</h2>
+                <div class="explanation">
+                    We insert the child list of node 2 between node 2 and node 3. We need to remember that node 5 also has a child.
+                </div>
+                <div class="level">
+                    <div class="node">1</div>
+                    <div class="link"></div>
+                    <div class="node">2</div>
+                    <div class="link"></div>
+                    <div class="node highlight">4</div>
+                    <div class="link"></div>
+                    <div class="node highlight">5</div>
+                    <div class="link"></div>
+                    <div class="node">3</div>
+                    <div class="link"></div>
+                    <div class="node">7</div>
+                    <div class="link"></div>
+                    <div class="node">8</div>
+                </div>
+                <div class="level" style="margin-left: 165px;">
+                    <div class="down-link"></div>
+                    <div class="node highlight">6</div>
+                </div>
+                <div class="level" style="margin-left: 250px;">
+                    <div class="down-link"></div>
+                    <div class="node">9</div>
+                    <div class="link"></div>
+                    <div class="node">10</div>
+                </div>
+            </div>
+            
+            <!-- Step 4: Process second child list -->
+            <div class="step" id="step4">
+                <h2>Step 4: Flatten Second Child List</h2>
+                <div class="explanation">
+                    Now we need to flatten the child list of node 5, inserting node 6 between nodes 5 and 3.
+                </div>
+                <div class="level">
+                    <div class="node">1</div>
+                    <div class="link"></div>
+                    <div class="node">2</div>
+                    <div class="link"></div>
+                    <div class="node">4</div>
+                    <div class="link"></div>
+                    <div class="node">5</div>
+                    <div class="link"></div>
+                    <div class="node highlight">6</div>
+                    <div class="link"></div>
+                    <div class="node">3</div>
+                    <div class="link"></div>
+                    <div class="node">7</div>
+                    <div class="link"></div>
+                    <div class="node">8</div>
+                </div>
+                <div class="level" style="margin-left: 250px;">
+                    <div class="down-link"></div>
+                    <div class="node highlight">9</div>
+                    <div class="link"></div>
+                    <div class="node highlight">10</div>
+                </div>
+            </div>
+            
+            <!-- Step 5: Process third child list -->
+            <div class="step" id="step5">
+                <h2>Step 5: Flatten Third Child List</h2>
+                <div class="explanation">
+                    Finally, we flatten the child list of node 7, inserting nodes 9 and 10 between nodes 7 and 8.
+                </div>
+                <div class="level" style="text-align: left;">
+                    <div class="node">1</div>
+                    <div class="link"></div>
+                    <div class="node">2</div>
+                    <div class="link"></div>
+                    <div class="node">4</div>
+                    <div class="link"></div>
+                    <div class="node">5</div>
+                    <div class="link"></div>
+                    <div class="node">6</div>
+                    <div class="link"></div>
+                    <div class="node">3</div>
+                    <div class="link"></div>
+                    <div class="node">7</div>
+                    <div class="link"></div>
+                    <div class="node highlight">9</div>
+                    <div class="link"></div>
+                    <div class="node highlight">10</div>
+                    <div class="link"></div>
+                    <div class="node">8</div>
+                </div>
+            </div>
+            
+            <!-- Step 6: Final flattened list -->
+            <div class="step" id="step6">
+                <h2>Step 6: Complete Flattened Linked List</h2>
+                <div class="explanation">
+                    We have successfully flattened the multilevel linked list into a single-level linked list. The flattening process maintains the original order within each level and inserts child lists immediately after their parent nodes.
+                </div>
+                <div class="level" style="text-align: left;">
+                    <div class="node">1</div>
+                    <div class="link"></div>
+                    <div class="node">2</div>
+                    <div class="link"></div>
+                    <div class="node">4</div>
+                    <div class="link"></div>
+                    <div class="node">5</div>
+                    <div class="link"></div>
+                    <div class="node">6</div>
+                    <div class="link"></div>
+                    <div class="node">3</div>
+                    <div class="link"></div>
+                    <div class="node">7</div>
+                    <div class="link"></div>
+                    <div class="node">9</div>
+                    <div class="link"></div>
+                    <div class="node">10</div>
+                    <div class="link"></div>
+                    <div class="node">8</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="btn" id="prevBtn" disabled>Previous</button>
+            <button class="btn" id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const steps = document.querySelectorAll('.step');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const stepIndicator = document.getElementById('stepIndicator');
+            
+            let currentStep = 0;
+            
+            // Create step indicators
+            for (let i = 0; i < steps.length; i++) {
+                const dot = document.createElement('div');
+                dot.className = i === 0 ? 'step-dot active' : 'step-dot';
+                stepIndicator.appendChild(dot);
+            }
+            
+            const updateButtons = () => {
+                prevBtn.disabled = currentStep === 0;
+                nextBtn.disabled = currentStep === steps.length - 1;
+            };
+            
+            const updateSteps = () => {
+                steps.forEach((step, index) => {
+                    step.classList.toggle('active', index === currentStep);
+                });
+                
+                // Update step indicators
+                const dots = document.querySelectorAll('.step-dot');
+                dots.forEach((dot, index) => {
+                    dot.classList.toggle('active', index === currentStep);
+                });
+                
+                updateButtons();
+            };
+            
+            prevBtn.addEventListener('click', () => {
+                if (currentStep > 0) {
+                    currentStep--;
+                    updateSteps();
+                }
+            });
+            
+            nextBtn.addEventListener('click', () => {
+                if (currentStep < steps.length - 1) {
+                    currentStep++;
+                    updateSteps();
+                }
+            });
+            
+            // Initialize buttons state
+            updateButtons();
+            
+            // Add click event to step indicators
+            const dots = document.querySelectorAll('.step-dot');
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', () => {
+                    currentStep = index;
+                    updateSteps();
+                });
+            });
+        });
+    </script>
+</body>
+</html>
