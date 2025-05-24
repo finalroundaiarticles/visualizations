@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quicksort Partitioning Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            height: 220px;
+        }
+        .array-element {
+            width: 50px;
+            height: 50px;
+            margin: 0 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #FD9F78;
+            color: #000000;
+            font-weight: bold;
+            font-size: 20px;
+            border-radius: 5px;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+        .pivot {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .less-than {
+            background-color: #B3E5FC;
+        }
+        .greater-than {
+            background-color: #FFCCBC;
+        }
+        .final-position {
+            background-color: #A5D6A7;
+        }
+        .description {
+            margin: 20px 0;
+            font-size: 18px;
+            min-height: 100px;
+            padding: 10px;
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+        }
+        .buttons {
+            margin-top: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .arrow {
+            position: absolute;
+            font-size: 14px;
+            top: -25px;
+        }
+        .index {
+            position: absolute;
+            font-size: 14px;
+            bottom: -25px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Quicksort Partitioning Visualization</h1>
+        <div class="description" id="description">
+            Welcome to Quicksort Partitioning visualization. Click "Next" to start the animation.
+        </div>
+        <div class="array-container" id="arrayContainer"></div>
+        <div class="buttons">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Initial array
+        const initialArray = [5, 2, 9, 3, 7, 6];
+        
+        // Define the steps of the animation
+        const steps = [
+            {
+                array: [5, 2, 9, 3, 7, 6],
+                classes: [{}, {}, {}, {}, {}, {}],
+                description: "We start with the unsorted array [5, 2, 9, 3, 7, 6]. In Quicksort, we first select a pivot element to partition the array.",
+                pointers: {}
+            },
+            {
+                array: [5, 2, 9, 3, 7, 6],
+                classes: [{}, {}, {}, {}, {}, {pivot: true}],
+                description: "Let's choose the last element 6 as our pivot. The goal is to rearrange the array so that all elements less than 6 are on the left side, and all elements greater than 6 are on the right side.",
+                pointers: {}
+            },
+            {
+                array: [5, 2, 9, 3, 7, 6],
+                classes: [{}, {}, {}, {}, {}, {pivot: true}],
+                description: "We'll use two pointers to partition the array. The 'i' pointer tracks where elements less than the pivot should go. The 'j' pointer scans through the array.",
+                pointers: {i: 0, j: 0}
+            },
+            {
+                array: [5, 2, 9, 3, 7, 6],
+                classes: [{less_than: true}, {}, {}, {}, {}, {pivot: true}],
+                description: "Compare the first element (5) with the pivot (6). Since 5 < 6, it's already on the correct side. We increment both 'i' and 'j' pointers.",
+                pointers: {i: 1, j: 1}
+            },
+            {
+                array: [5, 2, 9, 3, 7, 6],
+                classes: [{less_than: true}, {less_than: true}, {}, {}, {}, {pivot: true}],
+                description: "Compare the second element (2) with the pivot (6). Since 2 < 6, it's already on the correct side. We increment both 'i' and 'j' pointers.",
+                pointers: {i: 2, j: 2}
+            },
+            {
+                array: [5, 2, 9, 3, 7, 6],
+                classes: [{less_than: true}, {less_than: true}, {greater_than: true}, {}, {}, {pivot: true}],
+                description: "Compare the third element (9) with the pivot (6). Since 9 > 6, it should be on the right side. We only increment the 'j' pointer.",
+                pointers: {i: 2, j: 3}
+            },
+            {
+                array: [5, 2, 9, 3, 7, 6],
+                classes: [{less_than: true}, {less_than: true}, {greater_than: true}, {}, {}, {pivot: true}],
+                description: "Compare the fourth element (3) with the pivot (6). Since 3 < 6, it should be on the left side. We need to swap elements at positions 'i' (9) and 'j' (3).",
+                pointers: {i: 2, j: 3}
+            },
+            {
+                array: [5, 2, 3, 9, 7, 6],
+                classes: [{less_than: true}, {less_than: true}, {less_than: true}, {greater_than: true}, {}, {pivot: true}],
+                description: "After swapping, 3 is now on the left side and 9 is on the right side. We increment both 'i' and 'j' pointers.",
+                pointers: {i: 3, j: 4}
+            },
+            {
+                array: [5, 2, 3, 9, 7, 6],
+                classes: [{less_than: true}, {less_than: true}, {less_than: true}, {greater_than: true}, {greater_than: true}, {pivot: true}],
+                description: "Compare the fifth element (7) with the pivot (6). Since 7 > 6, it should be on the right side. We only increment the 'j' pointer.",
+                pointers: {i: 3, j: 5}
+            },
+            {
+                array: [5, 2, 3, 9, 7, 6],
+                classes: [{less_than: true}, {less_than: true}, {less_than: true}, {greater_than: true}, {greater_than: true}, {pivot: true}],
+                description: "We've reached the pivot element. Now we need to place the pivot in its final correct position by swapping it with the element at position 'i'.",
+                pointers: {i: 3, j: 5}
+            },
+            {
+                array: [5, 2, 3, 6, 7, 9],
+                classes: [{less_than: true}, {less_than: true}, {less_than: true}, {final_position: true}, {greater_than: true}, {greater_than: true}],
+                description: "After swapping, the pivot (6) is now at its correct final position. All elements to the left of the pivot are less than it, and all elements to the right are greater than it.",
+                pointers: {}
+            },
+            {
+                array: [5, 2, 3, 6, 7, 9],
+                classes: [{less_than: true}, {less_than: true}, {less_than: true}, {final_position: true}, {greater_than: true}, {greater_than: true}],
+                description: "The partitioning is complete! In a full Quicksort, we would recursively apply the same process to the subarrays [5, 2, 3] and [7, 9] until the entire array is sorted.",
+                pointers: {}
+            }
+        ];
+
+        let currentStep = 0;
+        const arrayContainer = document.getElementById('arrayContainer');
+        const description = document.getElementById('description');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        // Function to render the current step
+        function renderStep() {
+            // Clear the array container
+            arrayContainer.innerHTML = '';
+            
+            // Get the current step data
+            const step = steps[currentStep];
+            
+            // Update the description
+            description.textContent = step.description;
+            
+            // Render the array elements
+            for (let i = 0; i < step.array.length; i++) {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.textContent = step.array[i];
+                
+                // Add index below each element
+                const indexSpan = document.createElement('span');
+                indexSpan.className = 'index';
+                indexSpan.textContent = i;
+                element.appendChild(indexSpan);
+                
+                // Apply classes for styling
+                if (step.classes[i].pivot) {
+                    element.classList.add('pivot');
+                }
+                if (step.classes[i].less_than) {
+                    element.classList.add('less-than');
+                }
+                if (step.classes[i].greater_than) {
+                    element.classList.add('greater-than');
+                }
+                if (step.classes[i].final_position) {
+                    element.classList.add('final-position');
+                }
+                
+                // Add pointers if needed
+                if (step.pointers && (step.pointers.i === i || step.pointers.j === i)) {
+                    const pointerSpan = document.createElement('span');
+                    pointerSpan.className = 'arrow';
+                    if (step.pointers.i === i && step.pointers.j === i) {
+                        pointerSpan.textContent = 'i,j';
+                    } else if (step.pointers.i === i) {
+                        pointerSpan.textContent = 'i';
+                    } else if (step.pointers.j === i) {
+                        pointerSpan.textContent = 'j';
+                    }
+                    element.appendChild(pointerSpan);
+                }
+                
+                arrayContainer.appendChild(element);
+            }
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+
+        // Initialize
+        renderStep();
+
+        // Event listeners for buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                renderStep();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                renderStep();
+            }
+        });
+    </script>
+</body>
+</html>
