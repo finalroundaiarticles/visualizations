@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interweaving Linked List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .animation-container {
+            width: 100%;
+            height: 500px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .node {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            position: absolute;
+            transition: all 1s ease;
+            border: 2px solid #FF4800;
+        }
+        
+        .node-prime {
+            background-color: #FFFFFF;
+            border: 2px dashed #FF4800;
+        }
+        
+        .arrow {
+            height: 2px;
+            background-color: #000000;
+            position: absolute;
+            transform-origin: left center;
+            transition: all 1s ease;
+        }
+        
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid #000000;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        
+        .random-arrow {
+            height: 2px;
+            background-color: #FF4800;
+            position: absolute;
+            transform-origin: left center;
+            transition: all 1s ease;
+        }
+        
+        .random-arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid #FF4800;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        
+        .step-description {
+            text-align: center;
+            margin: 20px 0;
+            height: 60px;
+            font-size: 18px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Interweaving Step-by-Step Illustration</h1>
+        
+        <div class="step-description" id="stepDescription">
+            Starting with original linked list with nodes A→B→C
+        </div>
+        
+        <div class="animation-container" id="animationContainer">
+            <!-- Elements will be added dynamically -->
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">Step 1 of 5</div>
+    </div>
+    
+    <script>
+        const animationContainer = document.getElementById('animationContainer');
+        const stepDescription = document.getElementById('stepDescription');
+        const stepIndicator = document.getElementById('stepIndicator');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        let currentStep = 1;
+        const totalSteps = 5;
+        
+        // Create nodes
+        function createNode(id, text, x, y, isPrime = false) {
+            const node = document.createElement('div');
+            node.id = id;
+            node.className = `node${isPrime ? ' node-prime' : ''}`;
+            node.textContent = text;
+            node.style.left = `${x}px`;
+            node.style.top = `${y}px`;
+            animationContainer.appendChild(node);
+            return node;
+        }
+        
+        // Create arrows
+        function createArrow(id, fromId, toId, isRandom = false) {
+            const from = document.getElementById(fromId);
+            const to = document.getElementById(toId);
+            
+            const arrow = document.createElement('div');
+            arrow.id = id;
+            arrow.className = isRandom ? 'random-arrow' : 'arrow';
+            
+            updateArrowPosition(arrow, from, to);
+            animationContainer.appendChild(arrow);
+            return arrow;
+        }
+        
+        // Update arrow position
+        function updateArrowPosition(arrow, from, to) {
+            const fromRect = from.getBoundingClientRect();
+            const toRect = to.getBoundingClientRect();
+            const containerRect = animationContainer.getBoundingClientRect();
+            
+            const fromX = fromRect.left + fromRect.width / 2 - containerRect.left;
+            const fromY = fromRect.top + fromRect.height / 2 - containerRect.top;
+            const toX = toRect.left + toRect.width / 2 - containerRect.left;
+            const toY = toRect.top + toRect.height / 2 - containerRect.top;
+            
+            const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+            const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
+            
+            arrow.style.width = `${length - 30}px`;
+            arrow.style.left = `${fromX}px`;
+            arrow.style.top = `${fromY}px`;
+            arrow.style.transform = `rotate(${angle}deg)`;
+        }
+        
+        // Setup initial state - Original list
+        function setupStep1() {
+            animationContainer.innerHTML = '';
+            
+            // Create original nodes
+            createNode('nodeA', 'A', 100, 100);
+            createNode('nodeB', 'B', 300, 100);
+            createNode('nodeC', 'C', 500, 100);
+            
+            // Create next pointers
+            createArrow('arrowAB', 'nodeA', 'nodeB');
+            createArrow('arrowBC', 'nodeB', 'nodeC');
+            
+            stepDescription.textContent = 'Starting with original linked list with nodes A→B→C';
+            stepIndicator.textContent = `Step ${currentStep} of ${totalSteps}`;
+        }
+        
+        // Interweave step 1 - Create copies
+        function setupStep2() {
+            // Create copy nodes
+            createNode('nodeAPrime', "A'", 150, 200, true);
+            createNode('nodeBPrime', "B'", 350, 200, true);
+            createNode('nodeCPrime', "C'", 550, 200, true);
+            
+            stepDescription.textContent = 'Step 1: Create copy nodes A\', B\', C\'';
+            stepIndicator.textContent = `Step ${currentStep} of ${totalSteps}`;
+        }
+        
+        // Interweave step 2 - Connect original nodes to their copies
+        function setupStep3() {
+            // Connect original nodes to their copies
+            createArrow('arrowAAPrime', 'nodeA', 'nodeAPrime');
+            createArrow('arrowBBPrime', 'nodeB', 'nodeBPrime');
+            createArrow('arrowCCPrime', 'nodeC', 'nodeCPrime');
+            
+            stepDescription.textContent = 'Step 2: Connect original nodes to their copies';
+            stepIndicator.textContent = `Step ${currentStep} of ${totalSteps}`;
+        }
+        
+        // Interweave step 3 - Interweave the list
+        function setupStep4() {
+            // Reposition the nodes to show interweaving
+            document.getElementById('nodeA').style.left = '100px';
+            document.getElementById('nodeAPrime').style.left = '200px';
+            document.getElementById('nodeAPrime').style.top = '100px';
+            
+            document.getElementById('nodeB').style.left = '300px';
+            document.getElementById('nodeBPrime').style.left = '400px';
+            document.getElementById('nodeBPrime').style.top = '100px';
+            
+            document.getElementById('nodeC').style.left = '500px';
+            document.getElementById('nodeCPrime').style.left = '600px';
+            document.getElementById('nodeCPrime').style.top = '100px';
+            
+            // Remove the old arrows
+            document.getElementById('arrowAB').remove();
+            document.getElementById('arrowBC').remove();
+            document.getElementById('arrowAAPrime').remove();
+            document.getElementById('arrowBBPrime').remove();
+            document.getElementById('arrowCCPrime').remove();
+            
+            // Create new interweaved arrows
+            createArrow('arrowAAPrime', 'nodeA', 'nodeAPrime');
+            createArrow('arrowAPrimeB', 'nodeAPrime', 'nodeB');
+            createArrow('arrowBBPrime', 'nodeB', 'nodeBPrime');
+            createArrow('arrowBPrimeC', 'nodeBPrime', 'nodeC');
+            createArrow('arrowCCPrime', 'nodeC', 'nodeCPrime');
+            
+            // Add random pointers (for illustration)
+            createArrow('randomAC', 'nodeA', 'nodeC', true);
+            createArrow('randomBPrimeAPrime', 'nodeBPrime', 'nodeAPrime', true);
+            
+            stepDescription.textContent = 'Step 3: Interweave the list A→A\'→B→B\'→C→C\' and establish random pointers';
+            stepIndicator.textContent = `Step ${currentStep} of ${totalSteps}`;
+        }
+        
+        // Final step - Separate the lists
+        function setupStep5() {
+            // Reposition the nodes to show separated lists
+            document.getElementById('nodeA').style.left = '100px';
+            document.getElementById('nodeA').style.top = '50px';
+            document.getElementById('nodeB').style.left = '300px';
+            document.getElementById('nodeB').style.top = '50px';
+            document.getElementById('nodeC').style.left = '500px';
+            document.getElementById('nodeC').style.top = '50px';
+            
+            document.getElementById('nodeAPrime').style.left = '100px';
+            document.getElementById('nodeAPrime').style.top = '200px';
+            document.getElementById('nodeBPrime').style.left = '300px';
+            document.getElementById('nodeBPrime').style.top = '200px';
+            document.getElementById('nodeCPrime').style.left = '500px';
+            document.getElementById('nodeCPrime').style.top = '200px';
+            
+            // Remove the interweaved arrows
+            document.getElementById('arrowAAPrime').remove();
+            document.getElementById('arrowAPrimeB').remove();
+            document.getElementById('arrowBBPrime').remove();
+            document.getElementById('arrowBPrimeC').remove();
+            document.getElementById('arrowCCPrime').remove();
+            
+            // Create new separated list arrows
+            createArrow('arrowAB', 'nodeA', 'nodeB');
+            createArrow('arrowBC', 'nodeB', 'nodeC');
+            
+            createArrow('arrowAPrimeBPrime', 'nodeAPrime', 'nodeBPrime');
+            createArrow('arrowBPrimeCPrime', 'nodeBPrime', 'nodeCPrime');
+            
+            // Update random pointers
+            document.getElementById('randomAC').remove();
+            document.getElementById('randomBPrimeAPrime').remove();
+            
+            createArrow('randomAC', 'nodeA', 'nodeC', true);
+            createArrow('randomBPrimeAPrime', 'nodeBPrime', 'nodeAPrime', true);
+            
+            stepDescription.textContent = 'Final step: Separate the original list and its copy, each with proper next and random pointers';
+            stepIndicator.textContent = `Step ${currentStep} of ${totalSteps}`;
+        }
+        
+        // Navigation functions
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateStep();
+                prevBtn.disabled = false;
+                
+                if (currentStep === totalSteps) {
+                    nextBtn.disabled = true;
+                }
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStep();
+                nextBtn.disabled = false;
+                
+                if (currentStep === 1) {
+                    prevBtn.disabled = true;
+                }
+            }
+        }
+        
+        function updateStep() {
+            switch (currentStep) {
+                case 1:
+                    setupStep1();
+                    break;
+                case 2:
+                    setupStep1();
+                    setupStep2();
+                    break;
+                case 3:
+                    setupStep1();
+                    setupStep2();
+                    setupStep3();
+                    break;
+                case 4:
+                    setupStep1();
+                    setupStep4();
+                    break;
+                case 5:
+                    setupStep1();
+                    setupStep5();
+                    break;
+            }
+        }
+        
+        // Initialize
+        setupStep1();
+        
+        // Event listeners
+        nextBtn.addEventListener('click', nextStep);
+        prevBtn.addEventListener('click', prevStep);
+    </script>
+</body>
+</html>
