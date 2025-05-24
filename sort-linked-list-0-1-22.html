@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three Chain Sorting Process</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        .animation-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            margin: 30px 0;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            font-weight: bold;
+            transition: all 1s ease;
+        }
+        .arrow {
+            position: absolute;
+            background-color: #FD9F78;
+            height: 4px;
+            transform-origin: left center;
+            transition: all 1s ease;
+        }
+        .arrow:after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -6px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid #FD9F78;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+        }
+        .chain-label {
+            position: absolute;
+            font-weight: bold;
+            color: #FF4800;
+            transition: opacity 0.5s ease;
+            opacity: 0;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            margin-top: 20px;
+            font-weight: bold;
+            color: #FF4800;
+        }
+        .explanation {
+            margin: 20px 0;
+            text-align: left;
+            padding: 15px;
+            border-left: 4px solid #FF4800;
+            background-color: #FFF;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Three Chain Sorting Process</h1>
+        
+        <div class="explanation" id="explanation">
+            Welcome to the Three Chain Sorting visualization. Click "Next" to start the animation.
+        </div>
+        
+        <div class="animation-container" id="animation-container">
+            <!-- Nodes and arrows will be added here by JavaScript -->
+        </div>
+        
+        <div class="step-indicator" id="step-indicator">Step 1 of 5</div>
+        
+        <div class="controls">
+            <button id="prev" disabled>Previous</button>
+            <button id="next">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const container = document.getElementById('animation-container');
+        const explanationDiv = document.getElementById('explanation');
+        const stepIndicator = document.getElementById('step-indicator');
+        const prevBtn = document.getElementById('prev');
+        const nextBtn = document.getElementById('next');
+        
+        let currentStep = 0;
+        const totalSteps = 5;
+        
+        const inputList = [1, 0, 2, 1, 0, 2];
+        const nodes = [];
+        const arrows = [];
+        const chainLabels = [];
+        
+        // Explanations for each step
+        const explanations = [
+            "We start with an unsorted list: 1 → 0 → 2 → 1 → 0 → 2. The goal is to sort this list using the Three Chain method.",
+            "We create three separate chains: zero_chain for 0s, one_chain for 1s, and two_chain for 2s. Each element will be moved to its respective chain.",
+            "Elements are being distributed to their respective chains based on their values.",
+            "All elements have been distributed to their respective chains: zero_chain has two 0s, one_chain has two 1s, and two_chain has two 2s.",
+            "Finally, we reconnect the chains in order (zero_chain → one_chain → two_chain) to get the sorted list: 0 → 0 → 1 → 1 → 2 → 2."
+        ];
+        
+        // Initialize the visualization
+        function init() {
+            // Create initial nodes for the input list
+            for (let i = 0; i < inputList.length; i++) {
+                createNode(i, inputList[i], 50 + i * 120, 100);
+                
+                if (i < inputList.length - 1) {
+                    createArrow(i, 50 + i * 120, 100, 50 + (i + 1) * 120, 100);
+                }
+            }
+            
+            // Create chain labels
+            createChainLabel("zero_chain", 100, 200, 0);
+            createChainLabel("one_chain", 100, 280, 0);
+            createChainLabel("two_chain", 100, 360, 0);
+            
+            updateStepIndicator();
+        }
+        
+        function createNode(id, value, x, y) {
+            const node = document.createElement('div');
+            node.className = 'node';
+            node.id = `node-${id}`;
+            node.textContent = value;
+            node.style.left = `${x}px`;
+            node.style.top = `${y}px`;
+            container.appendChild(node);
+            nodes.push({ id, element: node, value, x, y });
+        }
+        
+        function createArrow(id, x1, y1, x2, y2) {
+            const arrow = document.createElement('div');
+            arrow.className = 'arrow';
+            arrow.id = `arrow-${id}`;
+            
+            const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+            
+            arrow.style.width = `${length - 40}px`; // Adjust for node size
+            arrow.style.left = `${x1 + 20}px`;
+            arrow.style.top = `${y1 + 20}px`;
+            arrow.style.transform = `rotate(${angle}deg)`;
+            
+            container.appendChild(arrow);
+            arrows.push({ id, element: arrow, x1, y1, x2, y2 });
+        }
+        
+        function createChainLabel(text, x, y, opacity) {
+            const label = document.createElement('div');
+            label.className = 'chain-label';
+            label.textContent = text;
+            label.style.left = `${x}px`;
+            label.style.top = `${y}px`;
+            label.style.opacity = opacity;
+            container.appendChild(label);
+            chainLabels.push({ text, element: label });
+        }
+        
+        function updateNodePosition(id, x, y) {
+            const node = nodes.find(n => n.id === id);
+            if (node) {
+                node.x = x;
+                node.y = y;
+                node.element.style.left = `${x}px`;
+                node.element.style.top = `${y}px`;
+            }
+        }
+        
+        function updateArrow(id, x1, y1, x2, y2) {
+            const arrow = arrows.find(a => a.id === id);
+            if (arrow) {
+                const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+                const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+                
+                arrow.x1 = x1;
+                arrow.y1 = y1;
+                arrow.x2 = x2;
+                arrow.y2 = y2;
+                
+                arrow.element.style.width = `${length - 40}px`;
+                arrow.element.style.left = `${x1 + 20}px`;
+                arrow.element.style.top = `${y1 + 20}px`;
+                arrow.element.style.transform = `rotate(${angle}deg)`;
+            }
+        }
+        
+        function showChainLabels() {
+            chainLabels.forEach(label => {
+                label.element.style.opacity = 1;
+            });
+        }
+        
+        function updateStepIndicator() {
+            stepIndicator.textContent = `Step ${currentStep + 1} of ${totalSteps}`;
+            explanationDiv.textContent = explanations[currentStep];
+        }
+        
+        function executeStep(step) {
+            switch(step) {
+                case 0:
+                    // Initial state - already set up in init()
+                    break;
+                case 1:
+                    // Show chain labels
+                    showChainLabels();
+                    break;
+                case 2:
+                    // Distribute elements to chains
+                    let zeroCount = 0;
+                    let oneCount = 0;
+                    let twoCount = 0;
+                    
+                    // Rearrange nodes by value
+                    for (let i = 0; i < inputList.length; i++) {
+                        if (inputList[i] === 0) {
+                            updateNodePosition(i, 200 + zeroCount * 120, 200);
+                            zeroCount++;
+                        } else if (inputList[i] === 1) {
+                            updateNodePosition(i, 200 + oneCount * 120, 280);
+                            oneCount++;
+                        } else if (inputList[i] === 2) {
+                            updateNodePosition(i, 200 + twoCount * 120, 360);
+                            twoCount++;
+                        }
+                    }
+                    
+                    // Hide initial arrows
+                    arrows.forEach(arrow => {
+                        arrow.element.style.opacity = 0;
+                    });
+                    break;
+                case 3:
+                    // Update arrows within each chain
+                    let zeros = nodes.filter(n => n.value === 0).sort((a, b) => a.x - b.x);
+                    let ones = nodes.filter(n => n.value === 1).sort((a, b) => a.x - b.x);
+                    let twos = nodes.filter(n => n.value === 2).sort((a, b) => a.x - b.x);
+                    
+                    // Create new arrows within chains
+                    for (let i = 0; i < zeros.length - 1; i++) {
+                        createArrow(100 + i, zeros[i].x, zeros[i].y, zeros[i + 1].x, zeros[i + 1].y);
+                    }
+                    
+                    for (let i = 0; i < ones.length - 1; i++) {
+                        createArrow(200 + i, ones[i].x, ones[i].y, ones[i + 1].x, ones[i + 1].y);
+                    }
+                    
+                    for (let i = 0; i < twos.length - 1; i++) {
+                        createArrow(300 + i, twos[i].x, twos[i].y, twos[i + 1].x, twos[i + 1].y);
+                    }
+                    break;
+                case 4:
+                    // Reconnect chains
+                    let allSorted = [];
+                    allSorted = allSorted.concat(
+                        nodes.filter(n => n.value === 0).sort((a, b) => a.x - b.x),
+                        nodes.filter(n => n.value === 1).sort((a, b) => a.x - b.x),
+                        nodes.filter(n => n.value === 2).sort((a, b) => a.x - b.x)
+                    );
+                    
+                    // Reposition in a single row
+                    for (let i = 0; i < allSorted.length; i++) {
+                        updateNodePosition(allSorted[i].id, 50 + i * 120, 280);
+                    }
+                    
+                    // Remove all previous arrows
+                    arrows.forEach(arrow => {
+                        container.removeChild(arrow.element);
+                    });
+                    arrows.length = 0;
+                    
+                    // Add new connecting arrows
+                    for (let i = 0; i < allSorted.length - 1; i++) {
+                        createArrow(400 + i, 50 + i * 120, 280, 50 + (i + 1) * 120, 280);
+                    }
+                    
+                    // Hide chain labels
+                    chainLabels.forEach(label => {
+                        label.element.style.opacity = 0;
+                    });
+                    break;
+            }
+        }
+        
+        // Navigation functions
+        function next() {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                executeStep(currentStep);
+                updateStepIndicator();
+                prevBtn.disabled = false;
+                if (currentStep === totalSteps - 1) {
+                    nextBtn.disabled = true;
+                }
+            }
+        }
+        
+        function prev() {
+            if (currentStep > 0) {
+                currentStep--;
+                // Reset the entire animation and execute up to the current step
+                resetAnimation();
+                for (let i = 0; i <= currentStep; i++) {
+                    executeStep(i);
+                }
+                updateStepIndicator();
+                nextBtn.disabled = false;
+                if (currentStep === 0) {
+                    prevBtn.disabled = true;
+                }
+            }
+        }
+        
+        function resetAnimation() {
+            // Clear all nodes and arrows
+            container.innerHTML = '';
+            nodes.length = 0;
+            arrows.length = 0;
+            chainLabels.length = 0;
+            
+            // Reinitialize
+            init();
+        }
+        
+        // Event listeners
+        nextBtn.addEventListener('click', next);
+        prevBtn.addEventListener('click', prev);
+        
+        // Initialize the visualization
+        init();
+    </script>
+</body>
+</html>
