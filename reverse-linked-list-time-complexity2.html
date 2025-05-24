@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three-Pointer Technique for Linked List Reversal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            width: 800px;
+            max-width: 100%;
+        }
+        .animation-container {
+            position: relative;
+            height: 350px;
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .node {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            font-weight: bold;
+            color: #000000;
+            font-size: 20px;
+        }
+        .arrow {
+            position: absolute;
+            height: 2px;
+            background-color: #000000;
+            transform-origin: left center;
+        }
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid #000000;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        .pointer {
+            position: absolute;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: #FFFFFF;
+        }
+        .pointer.prev {
+            background-color: #FF4800;
+        }
+        .pointer.curr {
+            background-color: #000000;
+        }
+        .pointer.next {
+            background-color: #FF4800;
+        }
+        .explanation {
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .nav-btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .step-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            margin: 0 5px;
+            cursor: pointer;
+        }
+        .step-dot.active {
+            background-color: #FF4800;
+        }
+        .null-text {
+            position: absolute;
+            font-style: italic;
+            color: #000000;
+        }
+        .current-operation {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 15px;
+            background-color: #000000;
+            color: #FFFFFF;
+            border-radius: 5px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .current-operation.visible {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Three-Pointer Technique in Linked List Reversal</h1>
+        
+        <div class="animation-container" id="animationContainer">
+            <div class="current-operation" id="currentOperation"></div>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            Welcome to the Three-Pointer Technique for reversing a linked list! This animation will show you how to reverse a linked list by using three pointers: previous, current, and next. We'll walk through each step of the process visually.
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prevBtn" disabled>Previous</button>
+            <button class="nav-btn" id="nextBtn">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator"></div>
+    </div>
+
+    <script>
+        const steps = [
+            {
+                explanation: "We start with a linked list 1→2→3→4. We'll use three pointers: previous (initially NULL), current (pointing to head), and next (initially undefined). These three pointers will help us reverse the list.",
+                operation: ""
+            },
+            {
+                explanation: "First, we set next = current.next to save the next node (2) before we change current's next pointer.",
+                operation: "next = current.next"
+            },
+            {
+                explanation: "Now we reverse the current node's pointer by setting current.next = previous. This makes node 1 point to NULL.",
+                operation: "current.next = previous"
+            },
+            {
+                explanation: "Move previous to current position. Previous now points to node 1.",
+                operation: "previous = current"
+            },
+            {
+                explanation: "Move current to next position. Current now points to node 2.",
+                operation: "current = next"
+            },
+            {
+                explanation: "Repeat the process: Save next = current.next (which is node 3).",
+                operation: "next = current.next"
+            },
+            {
+                explanation: "Reverse the pointer: current.next = previous. Node 2 now points to node 1.",
+                operation: "current.next = previous"
+            },
+            {
+                explanation: "Move previous to current position. Previous now points to node 2.",
+                operation: "previous = current"
+            },
+            {
+                explanation: "Move current to next position. Current now points to node 3.",
+                operation: "current = next"
+            },
+            {
+                explanation: "Repeat the process: Save next = current.next (which is node 4).",
+                operation: "next = current.next"
+            },
+            {
+                explanation: "Reverse the pointer: current.next = previous. Node 3 now points to node 2.",
+                operation: "current.next = previous"
+            },
+            {
+                explanation: "Move previous to current position. Previous now points to node 3.",
+                operation: "previous = current"
+            },
+            {
+                explanation: "Move current to next position. Current now points to node 4.",
+                operation: "current = next"
+            },
+            {
+                explanation: "Repeat the process one last time: Save next = current.next (which is NULL).",
+                operation: "next = current.next"
+            },
+            {
+                explanation: "Reverse the pointer: current.next = previous. Node 4 now points to node 3.",
+                operation: "current.next = previous"
+            },
+            {
+                explanation: "Move previous to current position. Previous now points to node 4.",
+                operation: "previous = current"
+            },
+            {
+                explanation: "Move current to next position. Current now points to NULL, meaning we've reached the end of the list.",
+                operation: "current = next"
+            },
+            {
+                explanation: "The reversal is complete! The linked list is now 4→3→2→1→NULL. Previous is pointing to the new head (4).",
+                operation: "head = previous"
+            }
+        ];
+
+        let currentStep = 0;
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const explanation = document.getElementById('explanation');
+        const animationContainer = document.getElementById('animationContainer');
+        const currentOperation = document.getElementById('currentOperation');
+        const stepIndicator = document.getElementById('stepIndicator');
+
+        // Create step indicators
+        for (let i = 0; i < steps.length; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'step-dot';
+            dot.addEventListener('click', () => goToStep(i));
+            stepIndicator.appendChild(dot);
+        }
+
+        function renderStep(step) {
+            // Update explanation
+            explanation.textContent = steps[step].explanation;
+
+            // Update operation text
+            currentOperation.textContent = steps[step].operation;
+            currentOperation.classList.toggle('visible', steps[step].operation !== "");
+
+            // Clear animation container (except for the operation text)
+            Array.from(animationContainer.children).forEach(child => {
+                if (child !== currentOperation) {
+                    child.remove();
+                }
+            });
+
+            // Define the base positions
+            const nodePositions = [
+                { x: 100, y: 150 },
+                { x: 250, y: 150 },
+                { x: 400, y: 150 },
+                { x: 550, y: 150 }
+            ];
+
+            // Create nodes
+            for (let i = 0; i < 4; i++) {
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.textContent = i + 1;
+                node.style.left = `${nodePositions[i].x}px`;
+                node.style.top = `${nodePositions[i].y}px`;
+                animationContainer.appendChild(node);
+            }
+
+            // Add null text at the beginning and end
+            const nullLeft = document.createElement('div');
+            nullLeft.className = 'null-text';
+            nullLeft.textContent = 'NULL';
+            nullLeft.style.left = '30px';
+            nullLeft.style.top = '150px';
+            animationContainer.appendChild(nullLeft);
+
+            const nullRight = document.createElement('div');
+            nullRight.className = 'null-text';
+            nullRight.textContent = 'NULL';
+            nullRight.style.left = '650px';
+            nullRight.style.top = '150px';
+            animationContainer.appendChild(nullRight);
+
+            // Draw arrows based on the step
+            if (step === 0) {
+                // Initial state: 1->2->3->4
+                drawArrow(nodePositions[0], nodePositions[1]);
+                drawArrow(nodePositions[1], nodePositions[2]);
+                drawArrow(nodePositions[2], nodePositions[3]);
+                drawArrow(nodePositions[3], { x: 650, y: 150 });
+
+                // Draw pointers
+                drawPointer('prev', 30, 90, 'previous');
+                drawPointer('curr', 100, 90, 'current');
+                drawPointer('next', 250, 90, 'next');
+            } else if (step <= 4) {
+                // Steps 1-4: Reversing first node
+                if (step >= 3) {
+                    // 1 points to null
+                    drawArrow(nodePositions[0], { x: 30, y: 150 });
+                } else {
+                    // 1 still points to 2
+                    drawArrow(nodePositions[0], nodePositions[1]);
+                }
+                drawArrow(nodePositions[1], nodePositions[2]);
+                drawArrow(nodePositions[2], nodePositions[3]);
+                drawArrow(nodePositions[3], { x: 650, y: 150 });
+
+                // Draw pointers based on step
+                if (step === 1) {
+                    drawPointer('prev', 30, 90, 'previous');
+                    drawPointer('curr', 100, 90, 'current');
+                    drawPointer('next', 250, 90, 'next');
+                } else if (step === 2) {
+                    drawPointer('prev', 30, 90, 'previous');
+                    drawPointer('curr', 100, 90, 'current');
+                    drawPointer('next', 250, 90, 'next');
+                } else if (step === 3) {
+                    drawPointer('prev', 100, 90, 'previous');
+                    drawPointer('curr', 100, 90, 'current');
+                    drawPointer('next', 250, 90, 'next');
+                } else if (step === 4) {
+                    drawPointer('prev', 100, 90, 'previous');
+                    drawPointer('curr', 250, 90, 'current');
+                    drawPointer('next', 250, 90, 'next');
+                }
+            } else if (step <= 8) {
+                // Steps 5-8: Reversing second node
+                drawArrow(nodePositions[0], { x: 30, y: 150 });
+                
+                if (step >= 7) {
+                    // 2 points to 1
+                    drawArrow(nodePositions[1], nodePositions[0]);
+                } else {
+                    // 2 still points to 3
+                    drawArrow(nodePositions[1], nodePositions[2]);
+                }
+                
+                drawArrow(nodePositions[2], nodePositions[3]);
+                drawArrow(nodePositions[3], { x: 650, y: 150 });
+
+                // Draw pointers based on step
+                if (step === 5) {
+                    drawPointer('prev', 100, 90, 'previous');
+                    drawPointer('curr', 250, 90, 'current');
+                    drawPointer('next', 400, 90, 'next');
+                } else if (step === 6) {
+                    drawPointer('prev', 100, 90, 'previous');
+                    drawPointer('curr', 250, 90, 'current');
+                    drawPointer('next', 400, 90, 'next');
+                } else if (step === 7) {
+                    drawPointer('prev', 250, 90, 'previous');
+                    drawPointer('curr', 250, 90, 'current');
+                    drawPointer('next', 400, 90, 'next');
+                } else if (step === 8) {
+                    drawPointer('prev', 250, 90, 'previous');
+                    drawPointer('curr', 400, 90, 'current');
+                    drawPointer('next', 400, 90, 'next');
+                }
+            } else if (step <= 12) {
+                // Steps 9-12: Reversing third node
+                drawArrow(nodePositions[0], { x: 30, y: 150 });
+                drawArrow(nodePositions[1], nodePositions[0]);
+                
+                if (step >= 11) {
+                    // 3 points to 2
+                    drawArrow(nodePositions[2], nodePositions[1]);
+                } else {
+                    // 3 still points to 4
+                    drawArrow(nodePositions[2], nodePositions[3]);
+                }
+                
+                drawArrow(nodePositions[3], { x: 650, y: 150 });
+
+                // Draw pointers based on step
+                if (step === 9) {
+                    drawPointer('prev', 250, 90, 'previous');
+                    drawPointer('curr', 400, 90, 'current');
+                    drawPointer('next', 550, 90, 'next');
+                } else if (step === 10) {
+                    drawPointer('prev', 250, 90, 'previous');
+                    drawPointer('curr', 400, 90, 'current');
+                    drawPointer('next', 550, 90, 'next');
+                } else if (step === 11) {
+                    drawPointer('prev', 400, 90, 'previous');
+                    drawPointer('curr', 400, 90, 'current');
+                    drawPointer('next', 550, 90, 'next');
+                } else if (step === 12) {
+                    drawPointer('prev', 400, 90, 'previous');
+                    drawPointer('curr', 550, 90, 'current');
+                    drawPointer('next', 550, 90, 'next');
+                }
+            } else if (step <= 17) {
+                // Steps 13-17: Reversing fourth node and finishing
+                drawArrow(nodePositions[0], { x: 30, y: 150 });
+                drawArrow(nodePositions[1], nodePositions[0]);
+                drawArrow(nodePositions[2], nodePositions[1]);
+                
+                if (step >= 15) {
+                    // 4 points to 3
+                    drawArrow(nodePositions[3], nodePositions[2]);
+                } else {
+                    // 4 still points to null
+                    drawArrow(nodePositions[3], { x: 650, y: 150 });
+                }
+
+                // Draw pointers based on step
+                if (step === 13) {
+                    drawPointer('prev', 400, 90, 'previous');
+                    drawPointer('curr', 550, 90, 'current');
+                    drawPointer('next', 650, 90, 'next');
+                } else if (step === 14) {
+                    drawPointer('prev', 400, 90, 'previous');
+                    drawPointer('curr', 550, 90, 'current');
+                    drawPointer('next', 650, 90, 'next');
+                } else if (step === 15) {
+                    drawPointer('prev', 550, 90, 'previous');
+                    drawPointer('curr', 550, 90, 'current');
+                    drawPointer('next', 650, 90, 'next');
+                } else if (step === 16) {
+                    drawPointer('prev', 550, 90, 'previous');
+                    drawPointer('curr', 650, 90, 'current');
+                    drawPointer('next', 650, 90, 'next');
+                } else if (step === 17) {
+                    // Final state
+                    drawPointer('prev', 550, 90, 'previous (new head)');
+                    drawPointer('curr', 650, 90, 'current');
+                }
+            }
+
+            // Update step indicators
+            Array.from(stepIndicator.children).forEach((dot, index) => {
+                dot.classList.toggle('active', index === step);
+            });
+
+            // Update button states
+            prevBtn.disabled = step === 0;
+            nextBtn.disabled = step === steps.length - 1;
+        }
+
+        function drawArrow(from, to) {
+            const arrow = document.createElement('div');
+            arrow.className = 'arrow';
+            
+            // Calculate position and dimensions
+            const dx = to.x - from.x;
+            const dy = to.y - from.y;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            
+            arrow.style.width = `${length}px`;
+            arrow.style.left = `${from.x + 30}px`; // Offset from node center
+            arrow.style.top = `${from.y}px`;
+            arrow.style.transform = `rotate(${angle}deg)`;
+            
+            animationContainer.appendChild(arrow);
+        }
+
+        function drawPointer(type, x, y, text) {
+            const pointer = document.createElement('div');
+            pointer.className = `pointer ${type}`;
+            pointer.textContent = text;
+            pointer.style.left = `${x}px`;
+            pointer.style.top = `${y}px`;
+            animationContainer.appendChild(pointer);
+        }
+
+        function goToStep(step) {
+            currentStep = step;
+            renderStep(currentStep);
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                renderStep(currentStep);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                renderStep(currentStep);
+            }
+        });
+
+        // Initialize with the first step
+        renderStep(currentStep);
+    </script>
+</body>
+</html>
