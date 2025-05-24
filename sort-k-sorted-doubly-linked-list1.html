@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K-Sorted Doubly Linked List Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            text-align: left;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        .linkedlist-container {
+            position: relative;
+            width: 100%;
+            height: 250px;
+            margin: 40px 0;
+            overflow: hidden;
+        }
+        
+        .node {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            transition: all 1s ease;
+            z-index: 2;
+        }
+        
+        .arrow {
+            position: absolute;
+            height: 2px;
+            background-color: #000000;
+            z-index: 1;
+            transition: all 1s ease;
+            transform-origin: left center;
+        }
+        
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 10px solid #000000;
+        }
+        
+        .prev-arrow {
+            transform-origin: right center;
+        }
+        
+        .prev-arrow::after {
+            left: 0;
+            right: auto;
+            border-left: none;
+            border-right: 10px solid #000000;
+        }
+        
+        .sorted-list {
+            margin-top: 80px;
+            padding: 20px;
+            border: 1px dashed #FF4800;
+            text-align: center;
+            font-size: 18px;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+        
+        .navigation {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .k-distance {
+            position: absolute;
+            top: 160px;
+            font-size: 14px;
+            color: #FF4800;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .highlighted {
+            box-shadow: 0 0 10px 5px rgba(255, 72, 0, 0.5);
+        }
+        
+        .step-info {
+            margin-top: 20px;
+            font-size: 16px;
+            min-height: 60px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>K-Sorted Doubly Linked List Visualization</h1>
+        
+        <div class="explanation">
+            <p>A k-sorted array (or linked list) is one where each element is at most k positions away from its target position in the sorted array. For example, in our visualization, with k=2, each element is at most 2 positions away from where it should be in the sorted list.</p>
+        </div>
+        
+        <div class="linkedlist-container" id="linkedlist-container">
+            <!-- Nodes and arrows will be added here by JavaScript -->
+        </div>
+        
+        <div class="sorted-list" id="sorted-list">
+            Sorted order: [2, 3, 6, 8, 12, 56]
+        </div>
+        
+        <div class="step-info" id="step-info">
+            Click "Next" to start the visualization.
+        </div>
+        
+        <div class="navigation">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial unsorted list
+            const unsortedList = [3, 6, 2, 12, 56, 8];
+            // Sorted list
+            const sortedList = [2, 3, 6, 8, 12, 56];
+            
+            const container = document.getElementById('linkedlist-container');
+            const sortedListElement = document.getElementById('sorted-list');
+            const stepInfo = document.getElementById('step-info');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            let currentStep = 0;
+            const totalSteps = 6;
+            const nodeSpacing = 120;
+            const topPosition = 100;
+            
+            // Create initial nodes and arrows
+            function createLinkedList() {
+                // Clear container
+                container.innerHTML = '';
+                
+                // Create nodes
+                unsortedList.forEach((value, index) => {
+                    const node = document.createElement('div');
+                    node.className = 'node';
+                    node.id = `node-${index}`;
+                    node.textContent = value;
+                    node.style.left = `${50 + index * nodeSpacing}px`;
+                    node.style.top = `${topPosition}px`;
+                    container.appendChild(node);
+                    
+                    // Create next arrow if not last node
+                    if (index < unsortedList.length - 1) {
+                        const nextArrow = document.createElement('div');
+                        nextArrow.className = 'arrow';
+                        nextArrow.id = `next-arrow-${index}`;
+                        nextArrow.style.left = `${75 + index * nodeSpacing}px`;
+                        nextArrow.style.top = `${topPosition + 25}px`;
+                        nextArrow.style.width = `${nodeSpacing - 25}px`;
+                        container.appendChild(nextArrow);
+                    }
+                    
+                    // Create prev arrow if not first node
+                    if (index > 0) {
+                        const prevArrow = document.createElement('div');
+                        prevArrow.className = 'arrow prev-arrow';
+                        prevArrow.id = `prev-arrow-${index}`;
+                        prevArrow.style.left = `${50 + index * nodeSpacing}px`;
+                        prevArrow.style.top = `${topPosition + 25}px`;
+                        prevArrow.style.width = `${nodeSpacing - 25}px`;
+                        container.appendChild(prevArrow);
+                    }
+                    
+                    // Create k-distance markers for comparison with sorted position
+                    const sortedIndex = sortedList.indexOf(value);
+                    const distance = Math.abs(sortedIndex - index);
+                    
+                    if (distance > 0) {
+                        const kDistance = document.createElement('div');
+                        kDistance.className = 'k-distance';
+                        kDistance.id = `k-distance-${index}`;
+                        kDistance.textContent = `k = ${distance} away from sorted position`;
+                        kDistance.style.left = `${50 + index * nodeSpacing - 50}px`;
+                        container.appendChild(kDistance);
+                    }
+                });
+            }
+            
+            // Initialize the visualization
+            createLinkedList();
+            
+            // Define steps for the animation
+            const steps = [
+                {
+                    info: "This is a doubly linked list with values [3, 6, 2, 12, 56, 8]. Notice the bidirectional arrows connecting each node.",
+                    action: () => {
+                        // Just show the initial list
+                        sortedListElement.style.opacity = "0";
+                    }
+                },
+                {
+                    info: "The sorted order of this list would be [2, 3, 6, 8, 12, 56]. Let's see how each element is positioned compared to its sorted position.",
+                    action: () => {
+                        sortedListElement.style.opacity = "1";
+                    }
+                },
+                {
+                    info: "Notice that the value 2 is at index 2 in our list, but should be at index 0 in the sorted list. It's k=2 positions away.",
+                    action: () => {
+                        // Highlight node with value 2
+                        document.querySelectorAll('.node').forEach(node => {
+                            node.classList.remove('highlighted');
+                        });
+                        document.querySelectorAll('.k-distance').forEach(el => {
+                            el.style.opacity = "0";
+                        });
+                        
+                        const nodeIndex = unsortedList.indexOf(2);
+                        document.getElementById(`node-${nodeIndex}`).classList.add('highlighted');
+                        document.getElementById(`k-distance-${nodeIndex}`).style.opacity = "1";
+                    }
+                },
+                {
+                    info: "The value 3 is at index 0 but should be at index 1 in sorted order. It's k=1 position away.",
+                    action: () => {
+                        document.querySelectorAll('.node').forEach(node => {
+                            node.classList.remove('highlighted');
+                        });
+                        document.querySelectorAll('.k-distance').forEach(el => {
+                            el.style.opacity = "0";
+                        });
+                        
+                        const nodeIndex = unsortedList.indexOf(3);
+                        document.getElementById(`node-${nodeIndex}`).classList.add('highlighted');
+                        document.getElementById(`k-distance-${nodeIndex}`).style.opacity = "1";
+                    }
+                },
+                {
+                    info: "The value 8 is at index 5 but should be at index 3 in sorted order. It's k=2 positions away.",
+                    action: () => {
+                        document.querySelectorAll('.node').forEach(node => {
+                            node.classList.remove('highlighted');
+                        });
+                        document.querySelectorAll('.k-distance').forEach(el => {
+                            el.style.opacity = "0";
+                        });
+                        
+                        const nodeIndex = unsortedList.indexOf(8);
+                        document.getElementById(`node-${nodeIndex}`).classList.add('highlighted');
+                        document.getElementById(`k-distance-${nodeIndex}`).style.opacity = "1";
+                    }
+                },
+                {
+                    info: "In a k-sorted list with k=2, every element is at most 2 positions away from its correct position in the sorted order. This property can be leveraged for efficient sorting algorithms.",
+                    action: () => {
+                        document.querySelectorAll('.node').forEach(node => {
+                            node.classList.remove('highlighted');
+                        });
+                        document.querySelectorAll('.k-distance').forEach(el => {
+                            el.style.opacity = "1";
+                        });
+                    }
+                }
+            ];
+            
+            // Event listeners for navigation buttons
+            nextBtn.addEventListener('click', () => {
+                if (currentStep < totalSteps - 1) {
+                    currentStep++;
+                    updateVisualization();
+                }
+            });
+            
+            prevBtn.addEventListener('click', () => {
+                if (currentStep > 0) {
+                    currentStep--;
+                    updateVisualization();
+                }
+            });
+            
+            // Update the visualization based on current step
+            function updateVisualization() {
+                // Update buttons state
+                prevBtn.disabled = currentStep === 0;
+                nextBtn.disabled = currentStep === totalSteps - 1;
+                
+                // Execute step action
+                steps[currentStep].action();
+                
+                // Update step info
+                stepInfo.textContent = steps[currentStep].info;
+            }
+        });
+    </script>
+</body>
+</html>
