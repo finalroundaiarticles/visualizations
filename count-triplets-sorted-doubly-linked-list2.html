@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two-Pointer Technique for Triplet Sum</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background-color: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .description {
+            color: #000000;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .visualization {
+            position: relative;
+            height: 350px;
+            width: 100%;
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .array-element {
+            width: 50px;
+            height: 50px;
+            margin: 0 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #000000;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 18px;
+            position: relative;
+        }
+        .array-element.highlighted {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .array-element.triplet {
+            background-color: #FD9F78;
+            color: #000000;
+        }
+        .pointer {
+            position: absolute;
+            bottom: -30px;
+            font-size: 14px;
+            color: #FF4800;
+            font-weight: bold;
+        }
+        .info-box {
+            padding: 15px;
+            background-color: #FD9F78;
+            border-radius: 8px;
+            color: #000000;
+            margin-top: 20px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-counter {
+            margin-top: 10px;
+            color: #000000;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Two-Pointer Technique for Triplet Sum</h1>
+        <div class="description">
+            <p>Finding triplets in an array that sum to a target value (10)</p>
+        </div>
+
+        <div class="visualization">
+            <div class="array-container" id="array-container"></div>
+            <div class="info-box" id="info-box"></div>
+        </div>
+
+        <div class="controls">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+        <div class="step-counter" id="step-counter">Step 1 of 9</div>
+    </div>
+
+    <script>
+        // Array data
+        const array = [1, 2, 3, 4, 5, 6, 7];
+        const target = 10;
+        
+        // Steps for the animation
+        const steps = [
+            {
+                desc: "Initialize: first=1, left=2, right=6. We need to find triplets that sum to 10.",
+                first: 0,
+                left: 1, 
+                right: 5,
+                triplets: [],
+                sum: 1 + 2 + 6,
+                check: "1 + 2 + 6 = 9 < 10, so move left pointer"
+            },
+            {
+                desc: "Move left pointer: first=1, left=3, right=6",
+                first: 0,
+                left: 2,
+                right: 5,
+                triplets: [],
+                sum: 1 + 3 + 6,
+                check: "1 + 3 + 6 = 10 = 10, Found a triplet! Store it and move both pointers"
+            },
+            {
+                desc: "Found triplet [1,3,6]. Move both pointers: first=1, left=4, right=5",
+                first: 0,
+                left: 3,
+                right: 4,
+                triplets: [[1,3,6]],
+                sum: 1 + 4 + 5,
+                check: "1 + 4 + 5 = 10 = 10, Found a triplet! Store it and move both pointers"
+            },
+            {
+                desc: "Found triplet [1,4,5]. Left and right pointers now crossed, so move to next first value",
+                first: 1,
+                left: 2,
+                right: 5,
+                triplets: [[1,3,6], [1,4,5]],
+                sum: 2 + 3 + 6,
+                check: "2 + 3 + 6 = 11 > 10, so move right pointer"
+            },
+            {
+                desc: "Move right pointer: first=2, left=3, right=5",
+                first: 1,
+                left: 2,
+                right: 4,
+                triplets: [[1,3,6], [1,4,5]],
+                sum: 2 + 3 + 5,
+                check: "2 + 3 + 5 = 10 = 10, Found a triplet! Store it and move both pointers"
+            },
+            {
+                desc: "Found triplet [2,3,5]. Move both pointers: first=2, left=4, right=4",
+                first: 1,
+                left: 3,
+                right: 3,
+                triplets: [[1,3,6], [1,4,5], [2,3,5]],
+                sum: null,
+                check: "Left and right pointers have crossed, move to next first value"
+            },
+            {
+                desc: "Initialize for next first value: first=3, left=4, right=6",
+                first: 2,
+                left: 3,
+                right: 5,
+                triplets: [[1,3,6], [1,4,5], [2,3,5]],
+                sum: 3 + 4 + 6,
+                check: "3 + 4 + 6 = 13 > 10, so move right pointer"
+            },
+            {
+                desc: "Move right pointer: first=3, left=4, right=5",
+                first: 2,
+                left: 3,
+                right: 4,
+                triplets: [[1,3,6], [1,4,5], [2,3,5]],
+                sum: 3 + 4 + 5,
+                check: "3 + 4 + 5 = 12 > 10, so move right pointer"
+            },
+            {
+                desc: "Algorithm completed! Found triplets: [1,3,6], [1,4,5], [2,3,5]",
+                first: null,
+                left: null,
+                right: null,
+                triplets: [[1,3,6], [1,4,5], [2,3,5]],
+                sum: null,
+                check: "All possible combinations checked"
+            }
+        ];
+
+        let currentStep = 0;
+        const arrayContainer = document.getElementById("array-container");
+        const infoBox = document.getElementById("info-box");
+        const prevBtn = document.getElementById("prev-btn");
+        const nextBtn = document.getElementById("next-btn");
+        const stepCounter = document.getElementById("step-counter");
+
+        // Initialize the visualization
+        function initVisualization() {
+            // Create array elements
+            arrayContainer.innerHTML = "";
+            array.forEach((value, index) => {
+                const element = document.createElement("div");
+                element.className = "array-element";
+                element.textContent = value;
+                element.id = `element-${index}`;
+                arrayContainer.appendChild(element);
+            });
+            
+            updateVisualization();
+        }
+
+        // Update the visualization based on current step
+        function updateVisualization() {
+            const step = steps[currentStep];
+            
+            // Reset all elements
+            document.querySelectorAll(".array-element").forEach(el => {
+                el.className = "array-element";
+                el.innerHTML = el.textContent;
+            });
+
+            // Update pointers and highlighting
+            if (step.first !== null) {
+                const firstElement = document.getElementById(`element-${step.first}`);
+                firstElement.classList.add("highlighted");
+                firstElement.innerHTML = `${array[step.first]}<div class="pointer">first</div>`;
+            }
+            
+            if (step.left !== null) {
+                const leftElement = document.getElementById(`element-${step.left}`);
+                leftElement.classList.add("highlighted");
+                leftElement.innerHTML = `${array[step.left]}<div class="pointer">left</div>`;
+            }
+            
+            if (step.right !== null) {
+                const rightElement = document.getElementById(`element-${step.right}`);
+                rightElement.classList.add("highlighted");
+                rightElement.innerHTML = `${array[step.right]}<div class="pointer">right</div>`;
+            }
+
+            // Highlight triplets found so far
+            step.triplets.forEach(triplet => {
+                array.forEach((value, index) => {
+                    if (triplet.includes(value)) {
+                        const element = document.getElementById(`element-${index}`);
+                        // Only add triplet class if it's not already highlighted as a pointer
+                        if (index !== step.first && index !== step.left && index !== step.right) {
+                            element.classList.add("triplet");
+                        }
+                    }
+                });
+            });
+
+            // Update info box
+            infoBox.innerHTML = `
+                <p>${step.desc}</p>
+                ${step.sum !== null ? `<p>Current Sum: ${step.sum}</p>` : ''}
+                <p>${step.check}</p>
+                ${step.triplets.length > 0 ? `<p>Triplets found: ${step.triplets.map(t => '[' + t.join(',') + ']').join(', ')}</p>` : ''}
+            `;
+
+            // Update step counter
+            stepCounter.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+            
+            // Enable/disable buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+
+        // Event listeners for buttons
+        prevBtn.addEventListener("click", () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        });
+
+        nextBtn.addEventListener("click", () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+
+        // Initialize
+        initVisualization();
+    </script>
+</body>
+</html>
