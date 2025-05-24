@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linked List Reversal Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .canvas-container {
+            width: 100%;
+            margin: 20px 0;
+            position: relative;
+            min-height: 300px;
+        }
+        
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border: 1px solid #FD9F78;
+        }
+        
+        .explanation {
+            background-color: #FFF;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #FD9F78;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Linked List Reversal Visualization</h1>
+        
+        <div class="explanation" id="explanation">
+            A linked list is a linear data structure where each element (node) contains data and a reference to the next node.
+            Reversing a linked list means changing the direction of all the pointers.
+        </div>
+        
+        <div class="step-indicator" id="step-indicator">Step 1 of 6</div>
+        
+        <div class="canvas-container">
+            <canvas id="canvas" width="800" height="300"></canvas>
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('step-indicator');
+        const explanation = document.getElementById('explanation');
+        
+        // Constants for drawing
+        const NODE_RADIUS = 30;
+        const NODE_SPACING = 120;
+        const ARROW_LENGTH = 80;
+        const START_X = 120;
+        const START_Y = 150;
+        
+        // Colors
+        const PRIMARY_COLOR = '#FF4800';
+        const SECONDARY_COLOR = '#FD9F78';
+        const BLACK = '#000000';
+        const WHITE = '#FFFFFF';
+        const HIGHLIGHT_COLOR = '#FF4800';
+        
+        // Current step
+        let currentStep = 0;
+        const totalSteps = 6;
+        
+        // Explanations for each step
+        const explanations = [
+            "Initial state: We have a linked list 1→2→3→4→NULL. We'll use three pointers: prev (initially NULL), current (points to head), and next (will store the next node).",
+            "Step 1: Store the next node (2). Change current node's (1) next pointer to point to prev (NULL). Move prev to current, and current to next.",
+            "Step 2: Store the next node (3). Change current node's (2) next pointer to point to prev (1). Move prev to current, and current to next.",
+            "Step 3: Store the next node (4). Change current node's (3) next pointer to point to prev (2). Move prev to current, and current to next.",
+            "Step 4: Store the next node (NULL). Change current node's (4) next pointer to point to prev (3). Move prev to current, and current to next.",
+            "Final state: The list is reversed! The new head is now node 4, and the list goes 4→3→2→1→NULL."
+        ];
+        
+        // Function to draw a node
+        function drawNode(x, y, value, highlighted = false) {
+            // Draw circle
+            ctx.beginPath();
+            ctx.arc(x, y, NODE_RADIUS, 0, Math.PI * 2);
+            ctx.fillStyle = highlighted ? HIGHLIGHT_COLOR : PRIMARY_COLOR;
+            ctx.fill();
+            
+            // Draw border
+            ctx.strokeStyle = BLACK;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw value
+            ctx.fillStyle = WHITE;
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(value, x, y);
+        }
+        
+        // Function to draw an arrow
+        function drawArrow(fromX, fromY, toX, toY, color = BLACK, dashed = false) {
+            // Draw line
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            
+            if (dashed) {
+                ctx.setLineDash([5, 5]);
+            } else {
+                ctx.setLineDash([]);
+            }
+            
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Draw arrowhead
+            const angle = Math.atan2(toY - fromY, toX - fromX);
+            const arrowSize = 10;
+            
+            ctx.beginPath();
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(toX - arrowSize * Math.cos(angle - Math.PI/6), toY - arrowSize * Math.sin(angle - Math.PI/6));
+            ctx.lineTo(toX - arrowSize * Math.cos(angle + Math.PI/6), toY - arrowSize * Math.sin(angle + Math.PI/6));
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+        
+        // Function to draw NULL
+        function drawNull(x, y) {
+            ctx.fillStyle = BLACK;
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('NULL', x, y);
+        }
+        
+        // Function to draw a pointer
+        function drawPointer(x, y, label, color = SECONDARY_COLOR) {
+            ctx.fillStyle = color;
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, x, y - 50);
+            
+            // Draw arrow down
+            drawArrow(x, y - 40, x, y - 10, color);
+        }
+        
+        // Function to render the current step
+        function renderStep() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Update step indicator
+            stepIndicator.textContent = `Step ${currentStep + 1} of ${totalSteps}`;
+            
+            // Update explanation
+            explanation.textContent = explanations[currentStep];
+            
+            // Draw based on current step
+            switch(currentStep) {
+                case 0: // Initial state
+                    // Draw nodes
+                    drawNode(START_X, START_Y, "1");
+                    drawNode(START_X + NODE_SPACING, START_Y, "2");
+                    drawNode(START_X + NODE_SPACING * 2, START_Y, "3");
+                    drawNode(START_X + NODE_SPACING * 3, START_Y, "4");
+                    
+                    // Draw forward arrows
+                    drawArrow(START_X + NODE_RADIUS, START_Y, START_X + NODE_SPACING - NODE_RADIUS, START_Y);
+                    drawArrow(START_X + NODE_SPACING + NODE_RADIUS, START_Y, START_X + NODE_SPACING * 2 - NODE_RADIUS, START_Y);
+                    drawArrow(START_X + NODE_SPACING * 2 + NODE_RADIUS, START_Y, START_X + NODE_SPACING * 3 - NODE_RADIUS, START_Y);
+                    
+                    // Draw NULL
+                    drawArrow(START_X + NODE_SPACING * 3 + NODE_RADIUS, START_Y, START_X + NODE_SPACING * 4 - NODE_RADIUS, START_Y);
+                    drawNull(START_X + NODE_SPACING * 4, START_Y);
+                    
+                    // Draw pointers
+                    drawPointer(START_X - NODE_SPACING, START_Y, "prev (NULL)");
+                    drawPointer(START_X, START_Y, "current", HIGHLIGHT_COLOR);
+                    drawPointer(START_X + NODE_SPACING, START_Y, "next");
+                    break;
+                    
+                case 1: // Step 1
+                    // Draw nodes
+                    drawNode(START_X, START_Y, "1", true);
+                    drawNode(START_X + NODE_SPACING, START_Y, "2");
+                    drawNode(START_X + NODE_SPACING * 2, START_Y, "3");
+                    drawNode(START_X + NODE_SPACING * 3, START_Y, "4");
+                    
+                    // Draw forward arrows (except from 1)
+                    drawArrow(START_X + NODE_SPACING + NODE_RADIUS, START_Y, START_X + NODE_SPACING * 2 - NODE_RADIUS, START_Y);
+                    drawArrow(START_X + NODE_SPACING * 2 + NODE_RADIUS, START_Y, START_X + NODE_SPACING * 3 - NODE_RADIUS, START_Y);
+                    
+                    // Draw NULL
+                    drawArrow(START_X + NODE_SPACING * 3 + NODE_RADIUS, START_Y, START_X + NODE_SPACING * 4 - NODE_RADIUS, START_Y);
+                    drawNull(START_X + NODE_SPACING * 4, START_Y);
+                    
+                    // Draw reversed arrow from 1 to NULL
+                    drawArrow(START_X - NODE_RADIUS, START_Y, START_X - NODE_SPACING + NODE_RADIUS, START_Y, HIGHLIGHT_COLOR);
+                    drawNull(START_X - NODE_SPACING, START_Y);
+                    
+                    // Draw pointers
+                    drawPointer(START_X, START_Y, "prev", HIGHLIGHT_COLOR);
+                    drawPointer(START_X + NODE_SPACING, START_Y, "current", HIGHLIGHT_COLOR);
+                    drawPointer(START_X + NODE_SPACING * 2, START_Y, "next");
+                    break;
+                    
+                case 2: // Step 2
+                    // Draw nodes
+                    drawNode(START_X, START_Y, "1");
+                    drawNode(START_X + NODE_SPACING, START_Y, "2", true);
+                    drawNode(START_X + NODE_SPACING * 2, START_Y, "3");
+                    drawNode(START_X + NODE_SPACING * 3, START_Y, "4");
+                    
+                    // Draw forward arrows (except from 1 and 2)
+                    drawArrow(START_X + NODE_SPACING * 2 + NODE_RADIUS, START_Y, START_X + NODE_SPACING * 3 - NODE_RADIUS, START_Y);
+                    
+                    // Draw NULL
+                    drawArrow(START_X + NODE_SPACING * 3 + NODE_RADIUS, START_Y, START_X + NODE_SPACING * 4 - NODE_RADIUS, START_Y);
+                    drawNull(START_X + NODE_SPACING * 4, START_Y);
+                    
+                    // Draw reversed arrows
+                    drawArrow(START_X - NODE_RADIUS, START_Y, START_X - NODE_SPACING + NODE_RADIUS, START_Y);
+                    drawNull(START_X - NODE_SPACING, START_Y);
+                    drawArrow(START_X + NODE_SPACING - NODE_RADIUS, START_Y, START_X + NODE_RADIUS, START_Y, HIGHLIGHT_COLOR);
+                    
+                    // Draw pointers
+                    drawPointer(START_X + NODE_SPACING, START_Y, "prev", HIGHLIGHT_COLOR);
+                    drawPointer(START_X + NODE_SPACING * 2, START_Y, "current", HIGHLIGHT_COLOR);
+                    drawPointer(START_X + NODE_SPACING * 3, START_Y, "next");
+                    break;
+                    
+                case 3: // Step 3
+                    // Draw nodes
+                    drawNode(START_X, START_Y, "1");
+                    drawNode(START_X + NODE_SPACING, START_Y, "2");
+                    drawNode(START_X + NODE_SPACING * 2, START_Y, "3", true);
+                    drawNode(START_X + NODE_SPACING * 3, START_Y, "4");
+                    
+                    // Draw forward arrows (except from 1, 2, and 3)
+                    
+                    // Draw NULL
+                    drawArrow(START_X + NODE_SPACING * 3 + NODE_RADIUS, START_Y, START_X + NODE_SPACING * 4 - NODE_RADIUS, START_Y);
+                    drawNull(START_X + NODE_SPACING * 4, START_Y);
+                    
+                    // Draw reversed arrows
+                    drawArrow(START_X - NODE_RADIUS, START_Y, START_X - NODE_SPACING + NODE_RADIUS, START_Y);
+                    drawNull(START_X - NODE_SPACING, START_Y);
+                    drawArrow(START_X + NODE_SPACING - NODE_RADIUS, START_Y, START_X + NODE_RADIUS, START_Y);
+                    drawArrow(START_X + NODE_SPACING * 2 - NODE_RADIUS, START_Y, START_X + NODE_SPACING + NODE_RADIUS, START_Y, HIGHLIGHT_COLOR);
+                    
+                    // Draw pointers
+                    drawPointer(START_X + NODE_SPACING * 2, START_Y, "prev", HIGHLIGHT_COLOR);
+                    drawPointer(START_X + NODE_SPACING * 3, START_Y, "current", HIGHLIGHT_COLOR);
+                    drawPointer(START_X + NODE_SPACING * 4, START_Y, "next");
+                    break;
+                    
+                case 4: // Step 4
+                    // Draw nodes
+                    drawNode(START_X, START_Y, "1");
+                    drawNode(START_X + NODE_SPACING, START_Y, "2");
+                    drawNode(START_X + NODE_SPACING * 2, START_Y, "3");
+                    drawNode(START_X + NODE_SPACING * 3, START_Y, "4", true);
+                    
+                    // Draw NULL on both ends
+                    drawNull(START_X - NODE_SPACING, START_Y);
+                    drawNull(START_X + NODE_SPACING * 4, START_Y);
+                    
+                    // Draw reversed arrows
+                    drawArrow(START_X - NODE_RADIUS, START_Y, START_X - NODE_SPACING + NODE_RADIUS, START_Y);
+                    drawArrow(START_X + NODE_SPACING - NODE_RADIUS, START_Y, START_X + NODE_RADIUS, START_Y);
+                    drawArrow(START_X + NODE_SPACING * 2 - NODE_RADIUS, START_Y, START_X + NODE_SPACING + NODE_RADIUS, START_Y);
+                    drawArrow(START_X + NODE_SPACING * 3 - NODE_RADIUS, START_Y, START_X + NODE_SPACING * 2 + NODE_RADIUS, START_Y, HIGHLIGHT_COLOR);
+                    
+                    // Draw pointers
+                    drawPointer(START_X + NODE_SPACING * 3, START_Y, "prev", HIGHLIGHT_COLOR);
+                    drawPointer(START_X + NODE_SPACING * 4, START_Y, "current (NULL)", HIGHLIGHT_COLOR);
+                    break;
+                    
+                case 5: // Final state
+                    // Draw nodes
+                    drawNode(START_X, START_Y, "1");
+                    drawNode(START_X + NODE_SPACING, START_Y, "2");
+                    drawNode(START_X + NODE_SPACING * 2, START_Y, "3");
+                    drawNode(START_X + NODE_SPACING * 3, START_Y, "4");
+                    
+                    // Draw NULL on right end
+                    drawNull(START_X - NODE_SPACING, START_Y);
+                    
+                    // Draw reversed arrows (all)
+                    drawArrow(START_X - NODE_RADIUS, START_Y, START_X - NODE_SPACING + NODE_RADIUS, START_Y);
+                    drawArrow(START_X + NODE_SPACING - NODE_RADIUS, START_Y, START_X + NODE_RADIUS, START_Y);
+                    drawArrow(START_X + NODE_SPACING * 2 - NODE_RADIUS, START_Y, START_X + NODE_SPACING + NODE_RADIUS, START_Y);
+                    drawArrow(START_X + NODE_SPACING * 3 - NODE_RADIUS, START_Y, START_X + NODE_SPACING * 2 + NODE_RADIUS, START_Y);
+                    
+                    // Draw new head pointer
+                    drawPointer(START_X + NODE_SPACING * 3, START_Y - 50, "New Head", HIGHLIGHT_COLOR);
+                    break;
+            }
+        }
+        
+        // Update button states
+        function updateButtons() {
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+        }
+        
+        // Event listeners for buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                renderStep();
+                updateButtons();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                renderStep();
+                updateButtons();
+            }
+        });
+        
+        // Initial render
+        renderStep();
+        updateButtons();
+    </script>
+</body>
+</html>
