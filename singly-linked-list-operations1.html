@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Singly Linked List Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        .container {
+            width: 800px;
+            max-width: 100%;
+            position: relative;
+        }
+        .animation-container {
+            width: 100%;
+            height: 300px;
+            margin: 20px 0;
+            position: relative;
+        }
+        .node {
+            display: inline-flex;
+            position: absolute;
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+        .data-box {
+            width: 60px;
+            height: 60px;
+            background-color: #FD9F78;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #000000;
+            border-right: none;
+            border-top-left-radius: 8px;
+            border-bottom-left-radius: 8px;
+            font-weight: bold;
+            font-size: 20px;
+            color: #000000;
+        }
+        .next-box {
+            width: 60px;
+            height: 60px;
+            background-color: #FF4800;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #000000;
+            border-top-right-radius: 8px;
+            border-bottom-right-radius: 8px;
+            color: #FFFFFF;
+            font-weight: bold;
+        }
+        .arrow {
+            position: absolute;
+            height: 2px;
+            background-color: #000000;
+            transform-origin: left center;
+        }
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 10px solid #000000;
+        }
+        .null-text {
+            position: absolute;
+            font-weight: bold;
+            font-size: 20px;
+            color: #FF4800;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #FFF;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            color: #000000;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .nav-btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .step-dot {
+            width: 12px;
+            height: 12px;
+            background-color: #FD9F78;
+            border-radius: 50%;
+            margin: 0 5px;
+            cursor: pointer;
+        }
+        .step-dot.active {
+            background-color: #FF4800;
+        }
+        .label {
+            position: absolute;
+            color: #000000;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Singly Linked List Node Structure</h1>
+    
+    <div class="container">
+        <div class="animation-container" id="animationContainer"></div>
+        
+        <div class="explanation" id="explanation">
+            <p>A singly linked list is a data structure that consists of nodes.</p>
+            <p>Each node has two parts:</p>
+            <p>1. <strong>Data</strong>: Stores the actual value (shown in light orange)</p>
+            <p>2. <strong>Next</strong>: Points to the next node in the list (shown in dark orange)</p>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prevBtn" disabled>Previous</button>
+            <button class="nav-btn" id="nextBtn">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator"></div>
+    </div>
+
+    <script>
+        // Animation states
+        const states = [
+            {
+                explanation: "A singly linked list is a data structure that consists of nodes. Each node has two parts: a data part and a next pointer part.",
+                action: function() {
+                    // Clear previous animation
+                    resetAnimation();
+                }
+            },
+            {
+                explanation: "Let's create our first node with value 5. The data section holds the value 5.",
+                action: function() {
+                    createNode(0, 5);
+                }
+            },
+            {
+                explanation: "The next pointer of our first node currently points to NULL, as there are no other nodes yet.",
+                action: function() {
+                    showNullPointer(0);
+                }
+            },
+            {
+                explanation: "Now let's add a second node with value 10. The first node's 'next' pointer now points to this new node.",
+                action: function() {
+                    createNode(1, 10);
+                    connectNodes(0, 1);
+                    hideNullPointer(0);
+                }
+            },
+            {
+                explanation: "Let's add a third node with value 15. The second node's 'next' pointer now points to this new node.",
+                action: function() {
+                    createNode(2, 15);
+                    connectNodes(1, 2);
+                }
+            },
+            {
+                explanation: "Finally, let's add a fourth node with value 20. The third node's 'next' pointer points to this new node.",
+                action: function() {
+                    createNode(3, 20);
+                    connectNodes(2, 3);
+                }
+            },
+            {
+                explanation: "The last node's 'next' pointer points to NULL, indicating the end of the linked list.",
+                action: function() {
+                    showNullPointer(3);
+                }
+            },
+            {
+                explanation: "This is our complete singly linked list. To traverse the list, we start from the first node and follow the 'next' pointers until we reach NULL.",
+                action: function() {
+                    // Show the complete list
+                    addLabel(0, "Head");
+                }
+            }
+        ];
+
+        // DOM elements
+        const animationContainer = document.getElementById('animationContainer');
+        const explanationElement = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+
+        // Current state index
+        let currentState = 0;
+        
+        // Create step indicators
+        function createStepIndicators() {
+            stepIndicator.innerHTML = '';
+            for (let i = 0; i < states.length; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'step-dot' + (i === currentState ? ' active' : '');
+                dot.onclick = () => goToState(i);
+                stepIndicator.appendChild(dot);
+            }
+        }
+
+        // Update step indicators
+        function updateStepIndicators() {
+            const dots = document.querySelectorAll('.step-dot');
+            dots.forEach((dot, index) => {
+                dot.className = 'step-dot' + (index === currentState ? ' active' : '');
+            });
+        }
+
+        // Reset animation
+        function resetAnimation() {
+            animationContainer.innerHTML = '';
+        }
+
+        // Create a node at specific position
+        function createNode(position, value) {
+            const node = document.createElement('div');
+            node.className = 'node';
+            node.id = `node-${position}`;
+            node.style.left = `${150 * position}px`;
+            node.style.top = '120px';
+            
+            const dataBox = document.createElement('div');
+            dataBox.className = 'data-box';
+            dataBox.textContent = value;
+            
+            const nextBox = document.createElement('div');
+            nextBox.className = 'next-box';
+            nextBox.textContent = 'next';
+            
+            node.appendChild(dataBox);
+            node.appendChild(nextBox);
+            
+            animationContainer.appendChild(node);
+            
+            // Animate node appearance
+            setTimeout(() => {
+                node.style.opacity = 1;
+            }, 10);
+        }
+
+        // Connect two nodes with an arrow
+        function connectNodes(fromPos, toPos) {
+            const arrow = document.createElement('div');
+            arrow.className = 'arrow';
+            arrow.id = `arrow-${fromPos}-${toPos}`;
+            
+            // Position and size the arrow
+            const startX = 150 * fromPos + 120;  // End of the first node
+            const endX = 150 * toPos;            // Start of the second node
+            const width = endX - startX;
+            
+            arrow.style.left = `${startX}px`;
+            arrow.style.top = '150px';
+            arrow.style.width = `${width}px`;
+            
+            animationContainer.appendChild(arrow);
+        }
+
+        // Show NULL pointer
+        function showNullPointer(position) {
+            const nullText = document.createElement('div');
+            nullText.className = 'null-text';
+            nullText.id = `null-${position}`;
+            nullText.textContent = 'NULL';
+            nullText.style.left = `${150 * position + 150}px`;
+            nullText.style.top = '140px';
+            
+            animationContainer.appendChild(nullText);
+            
+            const arrow = document.createElement('div');
+            arrow.className = 'arrow';
+            arrow.id = `arrow-null-${position}`;
+            
+            arrow.style.left = `${150 * position + 120}px`;
+            arrow.style.top = '150px';
+            arrow.style.width = '30px';
+            
+            animationContainer.appendChild(arrow);
+        }
+
+        // Hide NULL pointer
+        function hideNullPointer(position) {
+            const nullText = document.getElementById(`null-${position}`);
+            const arrow = document.getElementById(`arrow-null-${position}`);
+            
+            if (nullText) nullText.remove();
+            if (arrow) arrow.remove();
+        }
+
+        // Add label to a node
+        function addLabel(position, text) {
+            const label = document.createElement('div');
+            label.className = 'label';
+            label.textContent = text;
+            label.style.left = `${150 * position + 30}px`;
+            label.style.top = '80px';
+            
+            animationContainer.appendChild(label);
+        }
+
+        // Go to a specific state
+        function goToState(stateIndex) {
+            if (stateIndex >= 0 && stateIndex < states.length) {
+                currentState = stateIndex;
+                explanationElement.innerHTML = `<p>${states[currentState].explanation}</p>`;
+                
+                // Reset and apply the current state's animation
+                resetAnimation();
+                states[currentState].action();
+                
+                // Update buttons
+                prevBtn.disabled = currentState === 0;
+                nextBtn.disabled = currentState === states.length - 1;
+                
+                // Update step indicators
+                updateStepIndicators();
+            }
+        }
+
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentState > 0) {
+                goToState(currentState - 1);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentState < states.length - 1) {
+                goToState(currentState + 1);
+            }
+        });
+
+        // Initialize animation
+        function initAnimation() {
+            createStepIndicators();
+            goToState(0);
+        }
+
+        // Start the animation
+        initAnimation();
+    </script>
+</body>
+</html>
