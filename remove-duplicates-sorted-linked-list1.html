@@ -1,0 +1,360 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linked List Duplicate Removal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        
+        .canvas-container {
+            margin: 20px auto;
+            position: relative;
+            width: 100%;
+            height: 300px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #FD9F78;
+            border-radius: 8px;
+            color: #000000;
+            text-align: left;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Linked List Duplicate Removal</h1>
+        
+        <div class="canvas-container">
+            <canvas id="linkedListCanvas"></canvas>
+        </div>
+        
+        <div class="explanation" id="stepExplanation">
+            <!-- Step explanation will be inserted here -->
+        </div>
+        
+        <div class="nav-buttons">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        // Constants
+        const ORANGE = '#FF4800';
+        const LIGHT_ORANGE = '#FD9F78';
+        const BLACK = '#000000';
+        const WHITE = '#FFFFFF';
+        
+        // Canvas setup
+        const canvas = document.getElementById('linkedListCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Make canvas responsive
+        function resizeCanvas() {
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // Nodes for the linked list
+        class ListNode {
+            constructor(val) {
+                this.val = val;
+                this.next = null;
+            }
+        }
+        
+        // Create the initial linked list: 1→1→2→3→3
+        function createInitialList() {
+            const head = new ListNode(1);
+            head.next = new ListNode(1);
+            head.next.next = new ListNode(2);
+            head.next.next.next = new ListNode(3);
+            head.next.next.next.next = new ListNode(3);
+            return head;
+        }
+        
+        // Animation steps
+        const steps = [
+            {
+                explanation: "This is our starting linked list: 1→1→2→3→3. We need to remove the duplicate nodes so that each value appears only once.",
+                pointerPositions: { current: 0, next: 1 },
+                nodesToRemove: [],
+                completed: false
+            },
+            {
+                explanation: "We start by comparing the first node (value 1) with the next node (also value 1). Since they're the same, we need to remove the second node.",
+                pointerPositions: { current: 0, next: 1 },
+                nodesToRemove: [],
+                completed: false
+            },
+            {
+                explanation: "We remove the duplicate by changing the 'next' pointer of the first node to skip the second node and point directly to the third node (value 2).",
+                pointerPositions: { current: 0, next: 2 },
+                nodesToRemove: [1],
+                completed: false
+            },
+            {
+                explanation: "Now we move our current pointer to the next node (value 2) and compare it with its next node (value 3). They're different, so we keep both.",
+                pointerPositions: { current: 2, next: 3 },
+                nodesToRemove: [1],
+                completed: false
+            },
+            {
+                explanation: "We move to the next pair. Current node (value 3) and its next node (also value 3). They're the same, so we'll need to remove the duplicate.",
+                pointerPositions: { current: 3, next: 4 },
+                nodesToRemove: [1],
+                completed: false
+            },
+            {
+                explanation: "We remove the duplicate by changing the 'next' pointer of the current node to skip the next node. Since there are no more nodes, it points to null.",
+                pointerPositions: { current: 3, next: null },
+                nodesToRemove: [1, 4],
+                completed: false
+            },
+            {
+                explanation: "We've now traversed the entire list and removed all duplicates. Our final list is: 1→2→3.",
+                pointerPositions: { current: null, next: null },
+                nodesToRemove: [1, 4],
+                completed: true
+            }
+        ];
+        
+        let currentStep = 0;
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepExplanation = document.getElementById('stepExplanation');
+        
+        // Draw the linked list
+        function drawLinkedList() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const step = steps[currentStep];
+            const head = createInitialList();
+            
+            // Node dimensions and positioning
+            const nodeRadius = 25;
+            const horizontalSpacing = 120;
+            const verticalCenter = canvas.height / 2;
+            const startX = 60;
+            
+            // Draw the nodes
+            let current = head;
+            let index = 0;
+            
+            // Draw all nodes
+            while (current) {
+                const x = startX + index * horizontalSpacing;
+                const y = verticalCenter;
+                
+                // Check if this node should be removed (faded)
+                const isRemoved = step.nodesToRemove.includes(index);
+                
+                // Draw node circle
+                ctx.beginPath();
+                ctx.arc(x, y, nodeRadius, 0, Math.PI * 2);
+                ctx.fillStyle = isRemoved ? '#dddddd' : WHITE;
+                ctx.fill();
+                ctx.strokeStyle = isRemoved ? '#bbbbbb' : ORANGE;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Draw node value
+                ctx.font = '20px Arial';
+                ctx.fillStyle = isRemoved ? '#bbbbbb' : BLACK;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(current.val, x, y);
+                
+                // Draw arrow to next node if not the last node
+                if (current.next) {
+                    const nextIndex = index + 1;
+                    // Skip drawing arrow to removed nodes
+                    if (!step.nodesToRemove.includes(nextIndex) || currentStep <= 1) {
+                        const startX = x + nodeRadius;
+                        const endX = startX + horizontalSpacing - 2 * nodeRadius;
+                        
+                        // Draw the line
+                        ctx.beginPath();
+                        ctx.moveTo(startX, y);
+                        ctx.lineTo(endX, y);
+                        ctx.strokeStyle = isRemoved ? '#bbbbbb' : ORANGE;
+                        ctx.stroke();
+                        
+                        // Draw the arrowhead
+                        ctx.beginPath();
+                        ctx.moveTo(endX, y);
+                        ctx.lineTo(endX - 10, y - 5);
+                        ctx.lineTo(endX - 10, y + 5);
+                        ctx.closePath();
+                        ctx.fillStyle = isRemoved ? '#bbbbbb' : ORANGE;
+                        ctx.fill();
+                    }
+                    // For steps where we've changed the next pointer, draw a curved arrow
+                    if (step.pointerPositions.current === index && 
+                        step.pointerPositions.next !== null && 
+                        step.pointerPositions.next !== index + 1) {
+                        
+                        const targetIndex = step.pointerPositions.next;
+                        const targetX = startX + targetIndex * horizontalSpacing - index * horizontalSpacing;
+                        
+                        // Draw curved arrow
+                        ctx.beginPath();
+                        ctx.moveTo(x + nodeRadius, y);
+                        ctx.bezierCurveTo(
+                            x + nodeRadius + 30, y - 50,
+                            targetX - 30, y - 50,
+                            targetX - nodeRadius, y
+                        );
+                        ctx.strokeStyle = LIGHT_ORANGE;
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                        
+                        // Draw arrowhead
+                        ctx.beginPath();
+                        ctx.moveTo(targetX - nodeRadius, y);
+                        ctx.lineTo(targetX - nodeRadius - 10, y - 10);
+                        ctx.lineTo(targetX - nodeRadius - 10, y + 10);
+                        ctx.closePath();
+                        ctx.fillStyle = LIGHT_ORANGE;
+                        ctx.fill();
+                    }
+                } else {
+                    // Draw null pointer for the last node
+                    ctx.font = '16px Arial';
+                    ctx.fillStyle = isRemoved ? '#bbbbbb' : BLACK;
+                    const nullX = x + nodeRadius + 40;
+                    ctx.fillText('null', nullX, y);
+                    
+                    // Draw line to null
+                    ctx.beginPath();
+                    ctx.moveTo(x + nodeRadius, y);
+                    ctx.lineTo(nullX - 20, y);
+                    ctx.strokeStyle = isRemoved ? '#bbbbbb' : ORANGE;
+                    ctx.stroke();
+                }
+                
+                // Highlight pointers for current step
+                if (step.pointerPositions.current === index) {
+                    // Highlight current pointer
+                    ctx.beginPath();
+                    ctx.arc(x, y, nodeRadius + 5, 0, Math.PI * 2);
+                    ctx.strokeStyle = ORANGE;
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    
+                    // Label for current pointer
+                    ctx.font = '16px Arial';
+                    ctx.fillStyle = ORANGE;
+                    ctx.fillText('current', x, y - nodeRadius - 15);
+                }
+                
+                if (step.pointerPositions.next === index) {
+                    // Highlight next pointer
+                    ctx.beginPath();
+                    ctx.arc(x, y, nodeRadius + 5, 0, Math.PI * 2);
+                    ctx.strokeStyle = LIGHT_ORANGE;
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    
+                    // Label for next pointer
+                    ctx.font = '16px Arial';
+                    ctx.fillStyle = LIGHT_ORANGE;
+                    ctx.fillText('next', x, y - nodeRadius - 15);
+                }
+                
+                current = current.next;
+                index++;
+            }
+            
+            // Update the explanation text
+            stepExplanation.textContent = step.explanation;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        // Navigation functions
+        function goToNextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                drawLinkedList();
+            }
+        }
+        
+        function goToPrevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                drawLinkedList();
+            }
+        }
+        
+        // Add event listeners
+        nextBtn.addEventListener('click', goToNextStep);
+        prevBtn.addEventListener('click', goToPrevStep);
+        
+        // Initialize the animation
+        drawLinkedList();
+    </script>
+</body>
+</html>
