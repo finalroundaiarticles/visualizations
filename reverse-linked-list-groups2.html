@@ -1,0 +1,435 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pointer Manipulation in Group Reversal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        
+        .animation-container {
+            width: 100%;
+            height: 380px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .node {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            position: absolute;
+            transition: all 0.8s ease;
+        }
+        
+        .arrow {
+            position: absolute;
+            background-color: #FF4800;
+            height: 4px;
+            transform-origin: left center;
+            transition: all 0.8s ease;
+        }
+        
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: -10px;
+            top: -8px;
+            border-left: 10px solid #FF4800;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+        }
+        
+        .pointer {
+            position: absolute;
+            padding: 5px 10px;
+            background-color: #000000;
+            color: #FFFFFF;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: all 0.8s ease;
+        }
+        
+        .pointer::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -8px;
+            border-width: 8px;
+            border-style: solid;
+            border-color: #000000 transparent transparent transparent;
+        }
+        
+        .explanation {
+            background-color: #FFF;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #FD9F78;
+            margin-top: 20px;
+            text-align: left;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .explanation p {
+            margin: 0;
+            line-height: 1.5;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .progress {
+            margin-top: 10px;
+            color: #FF4800;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pointer Manipulation in Group Reversal</h1>
+        
+        <div class="animation-container" id="animationContainer">
+            <!-- Nodes and pointers will be added dynamically via JS -->
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <p>Welcome to Group Reversal Pointer Manipulation! This animation will show how pointers work when reversing a group of nodes in a linked list. Click 'Next' to begin.</p>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="progress" id="progress">Step 1 of 6</div>
+    </div>
+
+    <script>
+        const animationContainer = document.getElementById('animationContainer');
+        const explanationElement = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressElement = document.getElementById('progress');
+        
+        let currentStep = 0;
+        const totalSteps = 6;
+        
+        // Array of nodes data
+        const nodesData = [
+            { id: 1, value: 1 },
+            { id: 2, value: 2 },
+            { id: 3, value: 3 },
+            { id: 4, value: 4 },
+            { id: 5, value: 5 }
+        ];
+        
+        // Array of steps information
+        const steps = [
+            {
+                explanation: "Starting position: We have a linked list with 5 nodes. We want to reverse a group of k=3 nodes. We have three pointers: 'prev' (null initially), 'current' (pointing to first node), and 'temp' (will be used during reversal).",
+                nodePositions: [
+                    { id: 1, x: 100, y: 150 },
+                    { id: 2, x: 220, y: 150 },
+                    { id: 3, x: 340, y: 150 },
+                    { id: 4, x: 460, y: 150 },
+                    { id: 5, x: 580, y: 150 }
+                ],
+                arrows: [
+                    { from: 1, to: 2 },
+                    { from: 2, to: 3 },
+                    { from: 3, to: 4 },
+                    { from: 4, to: 5 }
+                ],
+                pointers: [
+                    { id: 'prev', x: 100, y: 70, target: null },
+                    { id: 'current', x: 100, y: 70, target: 1 },
+                    { id: 'temp', x: 340, y: 70, target: null, hidden: true }
+                ]
+            },
+            {
+                explanation: "Step 1: Store the 'next' node (node 2) in 'temp' pointer. This preserves our link to the rest of the list before we change 'current.next'.",
+                nodePositions: [
+                    { id: 1, x: 100, y: 150 },
+                    { id: 2, x: 220, y: 150 },
+                    { id: 3, x: 340, y: 150 },
+                    { id: 4, x: 460, y: 150 },
+                    { id: 5, x: 580, y: 150 }
+                ],
+                arrows: [
+                    { from: 1, to: 2 },
+                    { from: 2, to: 3 },
+                    { from: 3, to: 4 },
+                    { from: 4, to: 5 }
+                ],
+                pointers: [
+                    { id: 'prev', x: 100, y: 70, target: null },
+                    { id: 'current', x: 100, y: 70, target: 1 },
+                    { id: 'temp', x: 220, y: 70, target: 2, hidden: false }
+                ]
+            },
+            {
+                explanation: "Step 2: Reverse the link of 'current'. Set 'current.next' to 'prev'. Now node 1 points to null (or the previous group's last node in a full implementation).",
+                nodePositions: [
+                    { id: 1, x: 100, y: 150 },
+                    { id: 2, x: 220, y: 150 },
+                    { id: 3, x: 340, y: 150 },
+                    { id: 4, x: 460, y: 150 },
+                    { id: 5, x: 580, y: 150 }
+                ],
+                arrows: [
+                    { from: 1, to: null, toX: 40, toY: 150 }, // Node 1 points to null (represented by a shorter arrow)
+                    { from: 2, to: 3 },
+                    { from: 3, to: 4 },
+                    { from: 4, to: 5 }
+                ],
+                pointers: [
+                    { id: 'prev', x: 40, y: 70, target: null },
+                    { id: 'current', x: 100, y: 70, target: 1 },
+                    { id: 'temp', x: 220, y: 70, target: 2 }
+                ]
+            },
+            {
+                explanation: "Step 3: Move 'prev' pointer to 'current', and move 'current' pointer to 'temp'. We're now ready to reverse the next node in the group.",
+                nodePositions: [
+                    { id: 1, x: 100, y: 150 },
+                    { id: 2, x: 220, y: 150 },
+                    { id: 3, x: 340, y: 150 },
+                    { id: 4, x: 460, y: 150 },
+                    { id: 5, x: 580, y: 150 }
+                ],
+                arrows: [
+                    { from: 1, to: null, toX: 40, toY: 150 },
+                    { from: 2, to: 3 },
+                    { from: 3, to: 4 },
+                    { from: 4, to: 5 }
+                ],
+                pointers: [
+                    { id: 'prev', x: 100, y: 70, target: 1 },
+                    { id: 'current', x: 220, y: 70, target: 2 },
+                    { id: 'temp', x: 340, y: 70, target: 3 }
+                ]
+            },
+            {
+                explanation: "Step 4: Repeat the process. Store node 3 in 'temp', set 'current.next' (node 2) to 'prev' (node 1), effectively reversing the second link in our group.",
+                nodePositions: [
+                    { id: 1, x: 100, y: 150 },
+                    { id: 2, x: 220, y: 150 },
+                    { id: 3, x: 340, y: 150 },
+                    { id: 4, x: 460, y: 150 },
+                    { id: 5, x: 580, y: 150 }
+                ],
+                arrows: [
+                    { from: 1, to: null, toX: 40, toY: 150 },
+                    { from: 2, to: 1 }, // Node 2 now points to Node 1
+                    { from: 3, to: 4 },
+                    { from: 4, to: 5 }
+                ],
+                pointers: [
+                    { id: 'prev', x: 100, y: 70, target: 1 },
+                    { id: 'current', x: 220, y: 70, target: 2 },
+                    { id: 'temp', x: 340, y: 70, target: 3 }
+                ]
+            },
+            {
+                explanation: "Step 5: Move pointers forward again and complete the last reversal in our group of k=3. Now nodes 3→2→1 are reversed, and node 3 connects to node 4. In a full implementation, we would continue with the next group of k nodes or finish the reversal.",
+                nodePositions: [
+                    { id: 1, x: 100, y: 150 },
+                    { id: 2, x: 220, y: 150 },
+                    { id: 3, x: 340, y: 150 },
+                    { id: 4, x: 460, y: 150 },
+                    { id: 5, x: 580, y: 150 }
+                ],
+                arrows: [
+                    { from: 1, to: null, toX: 40, toY: 150 },
+                    { from: 2, to: 1 },
+                    { from: 3, to: 2 }, // Node 3 now points to Node 2
+                    { from: 4, to: 5 }
+                ],
+                pointers: [
+                    { id: 'prev', x: 220, y: 70, target: 2 },
+                    { id: 'current', x: 340, y: 70, target: 3 },
+                    { id: 'temp', x: 460, y: 70, target: 4 }
+                ]
+            }
+        ];
+        
+        // Initialize the animation
+        function initialize() {
+            // Create nodes
+            nodesData.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'node';
+                nodeElement.id = `node-${node.id}`;
+                nodeElement.textContent = node.value;
+                animationContainer.appendChild(nodeElement);
+            });
+            
+            // Update to the first step
+            updateStep(0);
+        }
+        
+        // Update the animation to a specific step
+        function updateStep(stepIndex) {
+            const step = steps[stepIndex];
+            
+            // Update node positions
+            step.nodePositions.forEach(position => {
+                const nodeElement = document.getElementById(`node-${position.id}`);
+                nodeElement.style.left = `${position.x}px`;
+                nodeElement.style.top = `${position.y}px`;
+            });
+            
+            // Remove existing arrows
+            const existingArrows = document.querySelectorAll('.arrow');
+            existingArrows.forEach(arrow => arrow.remove());
+            
+            // Create new arrows
+            step.arrows.forEach(arrow => {
+                const arrowElement = document.createElement('div');
+                arrowElement.className = 'arrow';
+                
+                // Calculate arrow position and length
+                const fromNode = document.getElementById(`node-${arrow.from}`);
+                const fromX = parseInt(fromNode.style.left) + 30;
+                const fromY = parseInt(fromNode.style.top) + 30;
+                
+                let toX, toY, length, angle;
+                
+                if (arrow.to) {
+                    // Arrow points to another node
+                    const toNode = document.getElementById(`node-${arrow.to}`);
+                    toX = parseInt(toNode.style.left) + 30;
+                    toY = parseInt(toNode.style.top) + 30;
+                } else {
+                    // Arrow points to a specific coordinate (for null)
+                    toX = arrow.toX;
+                    toY = arrow.toY;
+                }
+                
+                // Calculate length and angle
+                const dx = toX - fromX;
+                const dy = toY - fromY;
+                length = Math.sqrt(dx * dx + dy * dy) - 30; // Subtract node radius
+                angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                // Position and rotate arrow
+                arrowElement.style.width = `${length}px`;
+                arrowElement.style.left = `${fromX}px`;
+                arrowElement.style.top = `${fromY - 2}px`; // Adjust for arrow height
+                arrowElement.style.transform = `rotate(${angle}deg)`;
+                
+                animationContainer.appendChild(arrowElement);
+            });
+            
+            // Remove existing pointers
+            const existingPointers = document.querySelectorAll('.pointer');
+            existingPointers.forEach(pointer => pointer.remove());
+            
+            // Create new pointers
+            step.pointers.forEach(pointer => {
+                if (pointer.hidden) return;
+                
+                const pointerElement = document.createElement('div');
+                pointerElement.className = 'pointer';
+                pointerElement.textContent = pointer.id;
+                
+                // Position pointer
+                pointerElement.style.left = `${pointer.x}px`;
+                pointerElement.style.top = `${pointer.y}px`;
+                
+                animationContainer.appendChild(pointerElement);
+            });
+            
+            // Update explanation
+            explanationElement.innerHTML = `<p>${step.explanation}</p>`;
+            
+            // Update progress
+            progressElement.textContent = `Step ${stepIndex + 1} of ${totalSteps}`;
+            
+            // Update button states
+            prevBtn.disabled = stepIndex === 0;
+            nextBtn.disabled = stepIndex === totalSteps - 1;
+            
+            // Update current step
+            currentStep = stepIndex;
+        }
+        
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                updateStep(currentStep - 1);
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                updateStep(currentStep + 1);
+            }
+        });
+        
+        // Initialize the animation when the page loads
+        initialize();
+    </script>
+</body>
+</html>
