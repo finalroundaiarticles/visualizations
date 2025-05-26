@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circular Linked List Operations</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        h1, h2 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .animation-container {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+            position: relative;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+        
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .operation-info {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .operation-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #000000;
+        }
+        
+        .operation-description {
+            color: #000000;
+        }
+        
+        .status-text {
+            text-align: center;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Circular Linked List Operations</h1>
+        
+        <div class="operation-info">
+            <div class="operation-title" id="operation-title">Insertion at Beginning</div>
+            <div class="operation-description" id="operation-description">
+                Adding a new node at the start of a circular linked list.
+            </div>
+        </div>
+        
+        <div class="status-text" id="status-text">Before Operation</div>
+        
+        <div class="animation-container">
+            <canvas id="animationCanvas"></canvas>
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" class="nav-button" disabled>Previous</button>
+            <button id="nextBtn" class="nav-button">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('animationCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        
+        // Operations data
+        const operations = [
+            {
+                title: "Insertion at Beginning",
+                description: "Adding a new node at the start of a circular linked list.",
+                beforeAfter: ["Before", "After"]
+            },
+            {
+                title: "Insertion at End",
+                description: "Adding a new node at the end of a circular linked list.",
+                beforeAfter: ["Before", "After"]
+            },
+            {
+                title: "Deletion of a Node",
+                description: "Removing a node (middle node) from a circular linked list.",
+                beforeAfter: ["Before", "After"]
+            }
+        ];
+        
+        // Navigation state
+        let currentOperationIndex = 0;
+        let isAfterState = false;
+        
+        // DOM elements
+        const operationTitle = document.getElementById('operation-title');
+        const operationDescription = document.getElementById('operation-description');
+        const statusText = document.getElementById('status-text');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        // Node style
+        const nodeRadius = 30;
+        const nodeColor = '#FD9F78';
+        const nodeStrokeColor = '#FF4800';
+        const nodeTextColor = '#000000';
+        const arrowColor = '#FF4800';
+        const highlightColor = '#FF4800';
+        
+        // Update UI
+        function updateUI() {
+            const operation = operations[currentOperationIndex];
+            operationTitle.textContent = operation.title;
+            operationDescription.textContent = operation.description;
+            statusText.textContent = operation.beforeAfter[isAfterState ? 1 : 0] + " Operation";
+            
+            // Update button states
+            prevBtn.disabled = (currentOperationIndex === 0 && !isAfterState);
+            nextBtn.disabled = (currentOperationIndex === operations.length - 1 && isAfterState);
+            
+            // Draw the appropriate state
+            drawLinkedList();
+        }
+        
+        // Draw arrow between nodes
+        function drawArrow(fromX, fromY, toX, toY, radius) {
+            const headLen = 15;
+            const angle = Math.atan2(toY - fromY, toX - fromX);
+            
+            // Calculate points to start and end the arrow (on the circle perimeters)
+            const startX = fromX + radius * Math.cos(angle);
+            const startY = fromY + radius * Math.sin(angle);
+            const endX = toX - radius * Math.cos(angle);
+            const endY = toY - radius * Math.sin(angle);
+            
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = arrowColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Arrow head
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(endX - headLen * Math.cos(angle - Math.PI/6), endY - headLen * Math.sin(angle - Math.PI/6));
+            ctx.lineTo(endX - headLen * Math.cos(angle + Math.PI/6), endY - headLen * Math.sin(angle + Math.PI/6));
+            ctx.closePath();
+            ctx.fillStyle = arrowColor;
+            ctx.fill();
+        }
+        
+        // Draw a node
+        function drawNode(x, y, value, isHighlighted = false) {
+            ctx.beginPath();
+            ctx.arc(x, y, nodeRadius, 0, Math.PI * 2);
+            ctx.fillStyle = nodeColor;
+            ctx.fill();
+            ctx.lineWidth = isHighlighted ? 4 : 2;
+            ctx.strokeStyle = isHighlighted ? highlightColor : nodeStrokeColor;
+            ctx.stroke();
+            
+            ctx.font = "16px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = nodeTextColor;
+            ctx.fillText(value, x, y);
+        }
+        
+        // Draw the circular linked list based on current operation and state
+        function drawLinkedList() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const centerY = canvas.height / 2;
+            let nodes = [];
+            
+            if (currentOperationIndex === 0) { // Insertion at Beginning
+                if (!isAfterState) {
+                    // Before - 3 nodes (10, 20, 30)
+                    nodes = [
+                        { x: canvas.width / 2 - 150, y: centerY, value: "10" },
+                        { x: canvas.width / 2, y: centerY, value: "20" },
+                        { x: canvas.width / 2 + 150, y: centerY, value: "30" }
+                    ];
+                } else {
+                    // After - 4 nodes (5, 10, 20, 30)
+                    nodes = [
+                        { x: canvas.width / 2 - 225, y: centerY, value: "5", highlight: true },
+                        { x: canvas.width / 2 - 75, y: centerY, value: "10" },
+                        { x: canvas.width / 2 + 75, y: centerY, value: "20" },
+                        { x: canvas.width / 2 + 225, y: centerY, value: "30" }
+                    ];
+                }
+            } else if (currentOperationIndex === 1) { // Insertion at End
+                if (!isAfterState) {
+                    // Before - 3 nodes (10, 20, 30)
+                    nodes = [
+                        { x: canvas.width / 2 - 150, y: centerY, value: "10" },
+                        { x: canvas.width / 2, y: centerY, value: "20" },
+                        { x: canvas.width / 2 + 150, y: centerY, value: "30" }
+                    ];
+                } else {
+                    // After - 4 nodes (10, 20, 30, 40)
+                    nodes = [
+                        { x: canvas.width / 2 - 225, y: centerY, value: "10" },
+                        { x: canvas.width / 2 - 75, y: centerY, value: "20" },
+                        { x: canvas.width / 2 + 75, y: centerY, value: "30" },
+                        { x: canvas.width / 2 + 225, y: centerY, value: "40", highlight: true }
+                    ];
+                }
+            } else { // Deletion of a Node
+                if (!isAfterState) {
+                    // Before - 4 nodes (10, 20, 30, 40)
+                    nodes = [
+                        { x: canvas.width / 2 - 225, y: centerY, value: "10" },
+                        { x: canvas.width / 2 - 75, y: centerY, value: "20", highlight: true },
+                        { x: canvas.width / 2 + 75, y: centerY, value: "30" },
+                        { x: canvas.width / 2 + 225, y: centerY, value: "40" }
+                    ];
+                } else {
+                    // After - 3 nodes (10, 30, 40)
+                    nodes = [
+                        { x: canvas.width / 2 - 150, y: centerY, value: "10" },
+                        { x: canvas.width / 2, y: centerY, value: "30" },
+                        { x: canvas.width / 2 + 150, y: centerY, value: "40" }
+                    ];
+                }
+            }
+            
+            // Draw the nodes
+            nodes.forEach((node, index) => {
+                drawNode(node.x, node.y, node.value, node.highlight);
+            });
+            
+            // Draw the arrows between nodes
+            for (let i = 0; i < nodes.length - 1; i++) {
+                drawArrow(nodes[i].x, nodes[i].y, nodes[i+1].x, nodes[i+1].y, nodeRadius);
+            }
+            
+            // Draw the circular arrow from last to first node
+            const lastNode = nodes[nodes.length - 1];
+            const firstNode = nodes[0];
+            
+            // Draw a curved arrow from last to first
+            const controlY = centerY - 100; // Control point for the curve
+            
+            ctx.beginPath();
+            ctx.moveTo(lastNode.x + nodeRadius, lastNode.y);
+            
+            // Calculate start and end points
+            const startAngle = Math.PI * 1.5; // Up from last node
+            const endAngle = Math.PI * 1.5; // Down to first node
+            
+            const startX = lastNode.x + nodeRadius * Math.cos(startAngle);
+            const startY = lastNode.y + nodeRadius * Math.sin(startAngle);
+            const endX = firstNode.x + nodeRadius * Math.cos(endAngle);
+            const endY = firstNode.y + nodeRadius * Math.sin(endAngle);
+            
+            // Draw curved path
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.bezierCurveTo(
+                lastNode.x, controlY,
+                firstNode.x, controlY,
+                endX, endY
+            );
+            ctx.strokeStyle = arrowColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Arrow head for the last->first connection
+            const arrowAngle = Math.PI/2; // Points downward
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(endX - 15 * Math.cos(arrowAngle - Math.PI/6), endY - 15 * Math.sin(arrowAngle - Math.PI/6));
+            ctx.lineTo(endX - 15 * Math.cos(arrowAngle + Math.PI/6), endY - 15 * Math.sin(arrowAngle + Math.PI/6));
+            ctx.closePath();
+            ctx.fillStyle = arrowColor;
+            ctx.fill();
+        }
+        
+        // Event listeners
+        prevBtn.addEventListener('click', () => {
+            if (isAfterState) {
+                isAfterState = false;
+            } else {
+                currentOperationIndex--;
+                isAfterState = true;
+            }
+            updateUI();
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (!isAfterState) {
+                isAfterState = true;
+            } else {
+                currentOperationIndex++;
+                isAfterState = false;
+            }
+            updateUI();
+        });
+        
+        // Initialize the UI
+        window.addEventListener('resize', function() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            updateUI();
+        });
+        
+        updateUI();
+    </script>
+</body>
+</html>
