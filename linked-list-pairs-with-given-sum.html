@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two Pointer Pair Finder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .controls {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input[type="number"] {
+            padding: 8px;
+            border: 2px solid #1c1d20;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            width: 80px;
+        }
+
+        button {
+            background-color: #ff4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #e63f00;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .visualization {
+            background-color: white;
+            border: 2px solid #1c1d20;
+            border-radius: 8px;
+            padding: 40px;
+            margin-bottom: 20px;
+        }
+
+        .linked-list {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .node {
+            width: 60px;
+            height: 60px;
+            border: 3px solid #1c1d20;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            background-color: white;
+            color: #1c1d20;
+            transition: all 0.3s ease;
+        }
+
+        .node.left-pointer {
+            background-color: #ff4800;
+            color: white;
+            border-color: #ff4800;
+        }
+
+        .node.right-pointer {
+            background-color: #1c1d20;
+            color: white;
+        }
+
+        .node.both-pointers {
+            background: linear-gradient(45deg, #ff4800 50%, #1c1d20 50%);
+            color: white;
+        }
+
+        .arrow {
+            font-size: 24px;
+            color: #1c1d20;
+            margin: 0 5px;
+        }
+
+        .status {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            border: 2px solid #1c1d20;
+        }
+
+        .status-line {
+            font-size: 18px;
+            margin: 5px 0;
+            color: #1c1d20;
+        }
+
+        .target {
+            font-weight: bold;
+            color: #ff4800;
+        }
+
+        .sum {
+            font-weight: bold;
+        }
+
+        .pairs-found {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: white;
+            border: 2px solid #ff4800;
+            border-radius: 8px;
+        }
+
+        .pairs-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ff4800;
+            margin-bottom: 10px;
+        }
+
+        .pair {
+            background-color: #ff4800;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            margin: 5px;
+            display: inline-block;
+            font-weight: bold;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #1c1d20;
+        }
+
+        .legend-left {
+            background-color: #ff4800;
+        }
+
+        .legend-right {
+            background-color: #1c1d20;
+        }
+
+        .step-info {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 16px;
+            color: #1c1d20;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <div class="input-group">
+                <label for="target">Target:</label>
+                <input type="number" id="target" value="10" min="1" max="20">
+            </div>
+            <button onclick="startVisualization()">Start</button>
+            <button onclick="prevStep()" id="prevBtn" disabled>Previous</button>
+            <button onclick="nextStep()" id="nextBtn" disabled>Next</button>
+            <button onclick="reset()">Reset</button>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color legend-left"></div>
+                <span>Left Pointer</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-right"></div>
+                <span>Right Pointer</span>
+            </div>
+        </div>
+
+        <div class="visualization">
+            <div class="linked-list" id="linkedList"></div>
+            
+            <div class="status" id="status">
+                <div class="status-line">Target: <span class="target" id="targetDisplay">10</span></div>
+                <div class="status-line">Left: <span id="leftValue">-</span>, Right: <span id="rightValue">-</span></div>
+                <div class="status-line">Sum: <span class="sum" id="sumValue">-</span></div>
+                <div class="status-line" id="actionText">Click Start to begin</div>
+            </div>
+
+            <div class="pairs-found" id="pairsFound" style="display: none;">
+                <div class="pairs-title">Pairs Found:</div>
+                <div id="pairsList"></div>
+            </div>
+        </div>
+
+        <div class="step-info">
+            <span id="stepCounter">Step 0 of 0</span>
+        </div>
+    </div>
+
+    <script>
+        const nodes = [1, 2, 4, 5, 6, 8, 9];
+        let currentStep = 0;
+        let steps = [];
+        let target = 10;
+        let isVisualizationActive = false;
+
+        function createLinkedList() {
+            const container = document.getElementById('linkedList');
+            container.innerHTML = '';
+            
+            nodes.forEach((value, index) => {
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.textContent = value;
+                node.id = `node-${index}`;
+                container.appendChild(node);
+                
+                if (index < nodes.length - 1) {
+                    const arrow = document.createElement('span');
+                    arrow.className = 'arrow';
+                    arrow.textContent = '↔';
+                    container.appendChild(arrow);
+                }
+            });
+        }
+
+        function generateSteps() {
+            steps = [];
+            const pairs = [];
+            let left = 0;
+            let right = nodes.length - 1;
+
+            steps.push({
+                left: left,
+                right: right,
+                leftVal: nodes[left],
+                rightVal: nodes[right],
+                sum: nodes[left] + nodes[right],
+                action: "Initialize pointers",
+                pairs: [...pairs]
+            });
+
+            while (left < right) {
+                const currentSum = nodes[left] + nodes[right];
+                
+                if (currentSum === target) {
+                    pairs.push([nodes[left], nodes[right]]);
+                    steps.push({
+                        left: left,
+                        right: right,
+                        leftVal: nodes[left],
+                        rightVal: nodes[right],
+                        sum: currentSum,
+                        action: `Found pair! (${nodes[left]}, ${nodes[right]})`,
+                        pairs: [...pairs]
+                    });
+                    left++;
+                    right--;
+                } else if (currentSum < target) {
+                    steps.push({
+                        left: left,
+                        right: right,
+                        leftVal: nodes[left],
+                        rightVal: nodes[right],
+                        sum: currentSum,
+                        action: `Sum too small, move left pointer forward`,
+                        pairs: [...pairs]
+                    });
+                    left++;
+                } else {
+                    steps.push({
+                        left: left,
+                        right: right,
+                        leftVal: nodes[left],
+                        rightVal: nodes[right],
+                        sum: currentSum,
+                        action: `Sum too large, move right pointer backward`,
+                        pairs: [...pairs]
+                    });
+                    right--;
+                }
+
+                if (left < right) {
+                    steps.push({
+                        left: left,
+                        right: right,
+                        leftVal: nodes[left],
+                        rightVal: nodes[right],
+                        sum: nodes[left] + nodes[right],
+                        action: "Continue search",
+                        pairs: [...pairs]
+                    });
+                }
+            }
+
+            steps.push({
+                left: left,
+                right: right,
+                leftVal: left < nodes.length ? nodes[left] : null,
+                rightVal: right >= 0 ? nodes[right] : null,
+                sum: null,
+                action: "Pointers met - search complete",
+                pairs: [...pairs]
+            });
+        }
+
+        function updateVisualization() {
+            if (currentStep >= steps.length) return;
+            
+            const step = steps[currentStep];
+            
+            // Reset all nodes
+            nodes.forEach((_, index) => {
+                const node = document.getElementById(`node-${index}`);
+                node.className = 'node';
+            });
+            
+            // Highlight current pointers
+            if (step.left !== null && step.left < nodes.length) {
+                const leftNode = document.getElementById(`node-${step.left}`);
+                if (step.left === step.right) {
+                    leftNode.className = 'node both-pointers';
+                } else {
+                    leftNode.className = 'node left-pointer';
+                }
+            }
+            
+            if (step.right !== null && step.right >= 0 && step.left !== step.right) {
+                const rightNode = document.getElementById(`node-${step.right}`);
+                rightNode.className = 'node right-pointer';
+            }
+            
+            // Update status
+            document.getElementById('leftValue').textContent = step.leftVal !== null ? step.leftVal : '-';
+            document.getElementById('rightValue').textContent = step.rightVal !== null ? step.rightVal : '-';
+            document.getElementById('sumValue').textContent = step.sum !== null ? step.sum : '-';
+            document.getElementById('actionText').textContent = step.action;
+            
+            // Update pairs found
+            const pairsContainer = document.getElementById('pairsFound');
+            const pairsList = document.getElementById('pairsList');
+            
+            if (step.pairs.length > 0) {
+                pairsContainer.style.display = 'block';
+                pairsList.innerHTML = step.pairs.map(pair => 
+                    `<span class="pair">(${pair[0]}, ${pair[1]})</span>`
+                ).join('');
+            } else {
+                pairsContainer.style.display = 'none';
+            }
+            
+            // Update step counter
+            document.getElementById('stepCounter').textContent = `Step ${currentStep + 1} of ${steps.length}`;
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === steps.length - 1;
+        }
+
+        function startVisualization() {
+            target = parseInt(document.getElementById('target').value);
+            document.getElementById('targetDisplay').textContent = target;
+            
+            generateSteps();
+            currentStep = 0;
+            isVisualizationActive = true;
+            
+            updateVisualization();
+            
+            document.getElementById('prevBtn').disabled = false;
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        }
+
+        function reset() {
+            currentStep = 0;
+            isVisualizationActive = false;
+            steps = [];
+            
+            // Reset all nodes
+            nodes.forEach((_, index) => {
+                const node = document.getElementById(`node-${index}`);
+                node.className = 'node';
+            });
+            
+            // Reset status
+            document.getElementById('leftValue').textContent = '-';
+            document.getElementById('rightValue').textContent = '-';
+            document.getElementById('sumValue').textContent = '-';
+            document.getElementById('actionText').textContent = 'Click Start to begin';
+            document.getElementById('stepCounter').textContent = 'Step 0 of 0';
+            
+            // Hide pairs
+            document.getElementById('pairsFound').style.display = 'none';
+            
+            // Disable navigation buttons
+            document.getElementById('prevBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = true;
+        }
+
+        // Initialize the visualization
+        createLinkedList();
+        reset();
+    </script>
+</body>
+</html>
