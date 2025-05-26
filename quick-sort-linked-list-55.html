@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linked List Quicksort Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .controls {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .btn {
+            background-color: #ff4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            background-color: #e63f00;
+        }
+
+        .btn:disabled {
+            background-color: #1c1d20;
+            cursor: not-allowed;
+        }
+
+        .step-info {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #1c1d20;
+        }
+
+        .visualization {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 300px;
+            padding: 20px;
+        }
+
+        .list-container {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .node {
+            background-color: white;
+            border: 2px solid #1c1d20;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin: 5px;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .node.pivot {
+            background-color: #ff4800;
+            color: white;
+            border-color: #ff4800;
+        }
+
+        .node.smaller {
+            background-color: #ffeb3b;
+            border-color: #f57f17;
+        }
+
+        .node.larger {
+            background-color: #e3f2fd;
+            border-color: #1976d2;
+        }
+
+        .arrow {
+            color: #1c1d20;
+            font-size: 20px;
+            margin: 0 10px;
+        }
+
+        .partition-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #1c1d20;
+            border-radius: 8px;
+            width: 100%;
+        }
+
+        .section-title {
+            color: #1c1d20;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .status {
+            text-align: center;
+            color: #1c1d20;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <button class="btn" id="prevBtn" onclick="prevStep()">Previous</button>
+            <button class="btn" id="nextBtn" onclick="nextStep()">Next</button>
+            <button class="btn" onclick="reset()">Reset</button>
+        </div>
+
+        <div class="step-info">
+            <div id="stepCounter">Step 1 of 8</div>
+            <div id="stepDescription">Initial unsorted linked list</div>
+        </div>
+
+        <div class="visualization">
+            <div id="mainList" class="list-container"></div>
+            
+            <div id="partitionView" class="partition-section" style="display: none;">
+                <div class="section-title">Partitioning</div>
+                <div class="status" id="pivotInfo"></div>
+                <div id="smallerList" class="list-container"></div>
+                <div id="pivotNode" class="list-container"></div>
+                <div id="largerList" class="list-container"></div>
+            </div>
+
+            <div class="status" id="statusText"></div>
+        </div>
+    </div>
+
+    <script>
+        // Initial list: [4, 2, 7, 1, 3]
+        let originalList = [4, 2, 7, 1, 3];
+        let currentStep = 0;
+        
+        const steps = [
+            {
+                description: "Initial unsorted linked list",
+                mainList: [4, 2, 7, 1, 3],
+                showPartition: false,
+                status: "Starting quicksort on linked list"
+            },
+            {
+                description: "Choose first element (4) as pivot",
+                mainList: [4, 2, 7, 1, 3],
+                pivot: 4,
+                showPartition: false,
+                status: "Pivot selected: 4"
+            },
+            {
+                description: "Partition: separate smaller and larger elements",
+                mainList: [],
+                showPartition: true,
+                smaller: [2, 1, 3],
+                pivot: 4,
+                larger: [7],
+                pivotInfo: "Pivot: 4",
+                status: "Elements < 4 go left, elements ≥ 4 go right"
+            },
+            {
+                description: "Recursively sort left part [2, 1, 3]",
+                mainList: [],
+                showPartition: true,
+                smaller: [2, 1, 3],
+                pivot: 4,
+                larger: [7],
+                pivotInfo: "Sorting left partition with pivot: 2",
+                status: "Choose 2 as pivot for left part"
+            },
+            {
+                description: "Partition left part: [1] + [2] + [3]",
+                mainList: [],
+                showPartition: true,
+                smaller: [1],
+                pivot: 2,
+                larger: [3],
+                pivotInfo: "Left partition result",
+                status: "Left part partitioned around pivot 2"
+            },
+            {
+                description: "Combine sorted left part: [1, 2, 3]",
+                mainList: [1, 2, 3],
+                showPartition: false,
+                status: "Left part sorted: [1, 2, 3]"
+            },
+            {
+                description: "Combine with pivot and right part",
+                mainList: [1, 2, 3, 4, 7],
+                showPartition: false,
+                status: "Combining: [1, 2, 3] + [4] + [7]"
+            },
+            {
+                description: "Final sorted linked list",
+                mainList: [1, 2, 3, 4, 7],
+                showPartition: false,
+                status: "Quicksort complete! List is now sorted."
+            }
+        ];
+
+        function renderList(container, list, pivotVal = null) {
+            container.innerHTML = '';
+            
+            if (!list || list.length === 0) {
+                container.innerHTML = '<div style="color: #1c1d20;">Empty</div>';
+                return;
+            }
+
+            list.forEach((val, index) => {
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.textContent = val;
+                
+                if (val === pivotVal) {
+                    node.classList.add('pivot');
+                }
+                
+                container.appendChild(node);
+                
+                if (index < list.length - 1) {
+                    const arrow = document.createElement('span');
+                    arrow.className = 'arrow';
+                    arrow.innerHTML = '→';
+                    container.appendChild(arrow);
+                }
+            });
+        }
+
+        function renderPartitionView(step) {
+            const partitionView = document.getElementById('partitionView');
+            const smallerList = document.getElementById('smallerList');
+            const pivotNode = document.getElementById('pivotNode');
+            const largerList = document.getElementById('largerList');
+            const pivotInfo = document.getElementById('pivotInfo');
+
+            if (step.showPartition) {
+                partitionView.style.display = 'block';
+                
+                // Render smaller elements
+                const smallerTitle = document.createElement('div');
+                smallerTitle.textContent = 'Smaller Elements:';
+                smallerTitle.style.fontWeight = 'bold';
+                smallerTitle.style.marginBottom = '10px';
+                smallerTitle.style.color = '#1c1d20';
+                smallerList.innerHTML = '';
+                smallerList.appendChild(smallerTitle);
+                
+                if (step.smaller && step.smaller.length > 0) {
+                    step.smaller.forEach((val, index) => {
+                        const node = document.createElement('div');
+                        node.className = 'node smaller';
+                        node.textContent = val;
+                        smallerList.appendChild(node);
+                        
+                        if (index < step.smaller.length - 1) {
+                            const arrow = document.createElement('span');
+                            arrow.className = 'arrow';
+                            arrow.innerHTML = '→';
+                            smallerList.appendChild(arrow);
+                        }
+                    });
+                }
+
+                // Render pivot
+                const pivotTitle = document.createElement('div');
+                pivotTitle.textContent = 'Pivot:';
+                pivotTitle.style.fontWeight = 'bold';
+                pivotTitle.style.marginBottom = '10px';
+                pivotTitle.style.color = '#1c1d20';
+                pivotNode.innerHTML = '';
+                pivotNode.appendChild(pivotTitle);
+                
+                const node = document.createElement('div');
+                node.className = 'node pivot';
+                node.textContent = step.pivot;
+                pivotNode.appendChild(node);
+
+                // Render larger elements
+                const largerTitle = document.createElement('div');
+                largerTitle.textContent = 'Larger Elements:';
+                largerTitle.style.fontWeight = 'bold';
+                largerTitle.style.marginBottom = '10px';
+                largerTitle.style.color = '#1c1d20';
+                largerList.innerHTML = '';
+                largerList.appendChild(largerTitle);
+                
+                if (step.larger && step.larger.length > 0) {
+                    step.larger.forEach((val, index) => {
+                        const node = document.createElement('div');
+                        node.className = 'node larger';
+                        node.textContent = val;
+                        largerList.appendChild(node);
+                        
+                        if (index < step.larger.length - 1) {
+                            const arrow = document.createElement('span');
+                            arrow.className = 'arrow';
+                            arrow.innerHTML = '→';
+                            largerList.appendChild(arrow);
+                        }
+                    });
+                }
+
+                if (step.pivotInfo) {
+                    pivotInfo.textContent = step.pivotInfo;
+                }
+            } else {
+                partitionView.style.display = 'none';
+            }
+        }
+
+        function render() {
+            const step = steps[currentStep];
+            const mainList = document.getElementById('mainList');
+            const stepCounter = document.getElementById('stepCounter');
+            const stepDescription = document.getElementById('stepDescription');
+            const statusText = document.getElementById('statusText');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            // Update step info
+            stepCounter.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+            stepDescription.textContent = step.description;
+            statusText.textContent = step.status;
+
+            // Render main list
+            renderList(mainList, step.mainList, step.pivot);
+
+            // Render partition view
+            renderPartitionView(step);
+
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                render();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                render();
+            }
+        }
+
+        function reset() {
+            currentStep = 0;
+            render();
+        }
+
+        // Initial render
+        render();
+    </script>
+</body>
+</html>
