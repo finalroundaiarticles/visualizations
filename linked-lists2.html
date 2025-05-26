@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arrays vs. Linked Lists Comparison</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+        
+        .comparison-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        
+        .structure {
+            width: 45%;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 15px;
+            position: relative;
+        }
+        
+        .title {
+            color: #FF4800;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        
+        .memory-block {
+            height: 60px;
+            margin: 10px 0;
+            border-radius: 5px;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+        
+        .array-block {
+            display: flex;
+            border: 2px solid #FF4800;
+        }
+        
+        .array-cell {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-right: 2px solid #FF4800;
+            font-weight: bold;
+            position: relative;
+        }
+        
+        .array-cell:last-child {
+            border-right: none;
+        }
+        
+        .array-index {
+            position: absolute;
+            top: -25px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.9em;
+        }
+        
+        .linked-node {
+            width: 60px;
+            height: 60px;
+            background-color: #FD9F78;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            position: absolute;
+            transition: all 0.5s ease;
+        }
+        
+        .pointer {
+            position: absolute;
+            height: 2px;
+            background-color: #FF4800;
+            transform-origin: left center;
+            z-index: 1;
+        }
+        
+        .pointer::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 10px solid #FF4800;
+        }
+        
+        .memory-address {
+            position: absolute;
+            font-size: 0.7em;
+            color: #000000;
+            opacity: 0.7;
+        }
+        
+        .explanation {
+            padding: 20px;
+            background-color: #FFF;
+            border-radius: 10px;
+            border: 2px solid #FD9F78;
+            margin-bottom: 20px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .highlight {
+            animation: pulse 1s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            from {
+                box-shadow: 0 0 5px 0 rgba(255, 72, 0, 0.5);
+            }
+            to {
+                box-shadow: 0 0 15px 5px rgba(255, 72, 0, 0.7);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Arrays vs. Linked Lists Comparison</h1>
+        
+        <div class="explanation" id="explanation">
+            Welcome to Arrays vs. Linked Lists Comparison! This animation shows the fundamental differences between these two data structures in terms of memory allocation and organization.
+        </div>
+        
+        <div class="comparison-container">
+            <div class="structure">
+                <div class="title">Array</div>
+                <div id="array-container">
+                    <div class="array-block memory-block">
+                        <div class="array-cell">
+                            <div class="array-index">Index 0</div>
+                            5
+                        </div>
+                        <div class="array-cell">
+                            <div class="array-index">Index 1</div>
+                            10
+                        </div>
+                        <div class="array-cell">
+                            <div class="array-index">Index 2</div>
+                            20
+                        </div>
+                    </div>
+                    <div class="memory-address" style="top: 70px; left: 10px;">Memory Address: 0x1000</div>
+                </div>
+            </div>
+            
+            <div class="structure">
+                <div class="title">Linked List</div>
+                <div id="linkedlist-container" style="height: 300px; position: relative;">
+                    <!-- Nodes will be added here by JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const explanations = [
+            "Welcome to Arrays vs. Linked Lists Comparison! This animation shows the fundamental differences between these two data structures in terms of memory allocation and organization.",
+            
+            "ARRAYS: In an array, elements are stored in contiguous (adjacent) memory locations. Each element can be accessed directly using its index.",
+            
+            "The array [5, 10, 20] occupies consecutive memory blocks. This makes random access very efficient - we can jump directly to any element using its index.",
+            
+            "LINKED LISTS: In contrast, linked lists store elements in nodes that can be scattered throughout memory. Each node contains both the data and a pointer to the next node.",
+            
+            "Notice how linked list nodes can be located anywhere in memory (at addresses 0x2500, 0x1200, and 0x3700). Each node points to the next one, forming a chain.",
+            
+            "COMPARISON: Arrays provide fast random access (O(1)) but have fixed size. Adding or removing elements may require resizing the entire array.",
+            
+            "Linked lists excel at insertions and deletions as they only require changing a few pointers. However, to access the nth element, you must traverse from the beginning.",
+            
+            "MEMORY USAGE: Arrays use memory efficiently for the elements themselves but may waste space if allocated larger than needed. Linked lists require extra memory for storing pointers."
+        ];
+
+        // Initial setup for linked list nodes
+        const linkedListContainer = document.getElementById('linkedlist-container');
+        
+        // Create linked list nodes
+        const node1 = document.createElement('div');
+        node1.className = 'linked-node';
+        node1.textContent = '5';
+        node1.style.top = '30px';
+        node1.style.left = '40px';
+        
+        const node2 = document.createElement('div');
+        node2.className = 'linked-node';
+        node2.textContent = '10';
+        node2.style.top = '120px';
+        node2.style.left = '200px';
+        
+        const node3 = document.createElement('div');
+        node3.className = 'linked-node';
+        node3.textContent = '20';
+        node3.style.top = '210px';
+        node3.style.left = '100px';
+        
+        // Create memory addresses
+        const addr1 = document.createElement('div');
+        addr1.className = 'memory-address';
+        addr1.textContent = 'Memory Address: 0x2500';
+        addr1.style.top = '95px';
+        addr1.style.left = '40px';
+        
+        const addr2 = document.createElement('div');
+        addr2.className = 'memory-address';
+        addr2.textContent = 'Memory Address: 0x1200';
+        addr2.style.top = '185px';
+        addr2.style.left = '200px';
+        
+        const addr3 = document.createElement('div');
+        addr3.className = 'memory-address';
+        addr3.textContent = 'Memory Address: 0x3700';
+        addr3.style.top = '275px';
+        addr3.style.left = '100px';
+        
+        // Create pointers
+        const pointer1 = document.createElement('div');
+        pointer1.className = 'pointer';
+        pointer1.style.width = '160px';
+        pointer1.style.top = '60px';
+        pointer1.style.left = '100px';
+        pointer1.style.transform = 'rotate(30deg)';
+        
+        const pointer2 = document.createElement('div');
+        pointer2.className = 'pointer';
+        pointer2.style.width = '120px';
+        pointer2.style.top = '150px';
+        pointer2.style.left = '200px';
+        pointer2.style.transform = 'rotate(-30deg)';
+        
+        const pointer3 = document.createElement('div');
+        pointer3.className = 'pointer';
+        pointer3.style.width = '0px';
+        pointer3.style.top = '240px';
+        pointer3.style.left = '160px';
+        pointer3.style.transform = 'rotate(0deg)';
+        pointer3.textContent = 'NULL';
+        pointer3.style.color = '#FF4800';
+        pointer3.style.fontWeight = 'bold';
+        
+        // Add all elements to the container (initially hidden)
+        linkedListContainer.appendChild(node1);
+        linkedListContainer.appendChild(node2);
+        linkedListContainer.appendChild(node3);
+        linkedListContainer.appendChild(addr1);
+        linkedListContainer.appendChild(addr2);
+        linkedListContainer.appendChild(addr3);
+        linkedListContainer.appendChild(pointer1);
+        linkedListContainer.appendChild(pointer2);
+        linkedListContainer.appendChild(pointer3);
+
+        // Initially hide linked list elements
+        const linkedListElements = [node1, node2, node3, addr1, addr2, addr3, pointer1, pointer2, pointer3];
+        linkedListElements.forEach(el => el.style.opacity = '0');
+        
+        // Navigation variables
+        let currentStep = 0;
+        const totalSteps = explanations.length;
+        
+        const explanationElement = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const arrayBlock = document.querySelector('.array-block');
+        
+        // Update function for the animation steps
+        function updateAnimation(step) {
+            // Reset any highlights
+            arrayBlock.classList.remove('highlight');
+            linkedListElements.forEach(el => el.classList.remove('highlight'));
+            
+            explanationElement.textContent = explanations[step];
+            
+            switch(step) {
+                case 0: // Initial state
+                    linkedListElements.forEach(el => el.style.opacity = '0');
+                    break;
+                    
+                case 1: // Focus on array
+                case 2:
+                    arrayBlock.classList.add('highlight');
+                    linkedListElements.forEach(el => el.style.opacity = '0');
+                    break;
+                    
+                case 3: // Introduce linked list concept
+                    arrayBlock.classList.remove('highlight');
+                    node1.style.opacity = '1';
+                    addr1.style.opacity = '1';
+                    break;
+                    
+                case 4: // Show full linked list
+                    linkedListElements.forEach(el => el.style.opacity = '1');
+                    linkedListElements.forEach(el => el.classList.add('highlight'));
+                    break;
+                    
+                case 5: // Compare random access
+                    linkedListElements.forEach(el => el.classList.remove('highlight'));
+                    arrayBlock.classList.add('highlight');
+                    break;
+                    
+                case 6: // Compare insertion/deletion
+                    arrayBlock.classList.remove('highlight');
+                    pointer1.classList.add('highlight');
+                    pointer2.classList.add('highlight');
+                    break;
+                    
+                case 7: // Compare memory usage
+                    pointer1.classList.remove('highlight');
+                    pointer2.classList.remove('highlight');
+                    arrayBlock.classList.add('highlight');
+                    node1.classList.add('highlight');
+                    node2.classList.add('highlight');
+                    node3.classList.add('highlight');
+                    break;
+            }
+            
+            // Update button states
+            prevBtn.disabled = step === 0;
+            nextBtn.disabled = step === totalSteps - 1;
+        }
+        
+        // Button event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateAnimation(currentStep);
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateAnimation(currentStep);
+            }
+        });
+        
+        // Initialize the first step
+        updateAnimation(currentStep);
+    </script>
+</body>
+</html>
