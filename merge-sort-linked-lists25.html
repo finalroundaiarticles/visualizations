@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merge Sort Linked List Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .controls {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn {
+            background-color: #ff4800;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #e64000;
+        }
+
+        .btn:disabled {
+            background-color: #1c1d20;
+            cursor: not-allowed;
+        }
+
+        .step-info {
+            color: #1c1d20;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0 20px;
+        }
+
+        .visualization-area {
+            width: 100%;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .level {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
+
+        .list-container {
+            display: flex;
+            align-items: center;
+            margin: 10px;
+        }
+
+        .node {
+            width: 50px;
+            height: 50px;
+            background-color: #ff4800;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            margin: 0 5px;
+        }
+
+        .arrow {
+            width: 30px;
+            height: 2px;
+            background-color: #1c1d20;
+            position: relative;
+            margin: 0 5px;
+        }
+
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: -5px;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid #1c1d20;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+
+        .operation-label {
+            color: #1c1d20;
+            font-weight: bold;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .merge-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+            padding: 20px;
+            border: 2px dashed #1c1d20;
+            border-radius: 10px;
+        }
+
+        .merge-inputs {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .merge-result {
+            margin-top: 20px;
+        }
+
+        .highlight {
+            background-color: #1c1d20 !important;
+        }
+
+        .split-indicator {
+            color: #ff4800;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <button class="btn" id="prevBtn" onclick="previousStep()">Previous</button>
+            <div class="step-info" id="stepInfo">Step 1 of 7</div>
+            <button class="btn" id="nextBtn" onclick="nextStep()">Next</button>
+        </div>
+        
+        <div class="visualization-area" id="visualArea">
+            <!-- Dynamic content will be inserted here -->
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 0;
+        const maxSteps = 6;
+
+        const steps = [
+            {
+                title: "Initial List",
+                content: `
+                    <div class="level">
+                        <div class="list-container">
+                            <div class="node">4</div>
+                            <div class="arrow"></div>
+                            <div class="node">2</div>
+                            <div class="arrow"></div>
+                            <div class="node">1</div>
+                            <div class="arrow"></div>
+                            <div class="node">3</div>
+                        </div>
+                    </div>
+                    <div class="operation-label">Original unsorted linked list</div>
+                `
+            },
+            {
+                title: "First Split",
+                content: `
+                    <div class="level">
+                        <div class="list-container">
+                            <div class="node">4</div>
+                            <div class="arrow"></div>
+                            <div class="node">2</div>
+                        </div>
+                        <div class="list-container">
+                            <div class="node">1</div>
+                            <div class="arrow"></div>
+                            <div class="node">3</div>
+                        </div>
+                    </div>
+                    <div class="operation-label">Split into two halves at middle</div>
+                `
+            },
+            {
+                title: "Second Split",
+                content: `
+                    <div class="level">
+                        <div class="list-container">
+                            <div class="node">4</div>
+                        </div>
+                        <div class="list-container">
+                            <div class="node">2</div>
+                        </div>
+                        <div class="list-container">
+                            <div class="node">1</div>
+                        </div>
+                        <div class="list-container">
+                            <div class="node">3</div>
+                        </div>
+                    </div>
+                    <div class="operation-label">Split each half into individual nodes</div>
+                `
+            },
+            {
+                title: "First Merge",
+                content: `
+                    <div class="merge-container">
+                        <div class="merge-inputs">
+                            <div class="list-container">
+                                <div class="node">4</div>
+                            </div>
+                            <div class="list-container">
+                                <div class="node">2</div>
+                            </div>
+                        </div>
+                        <div class="merge-result">
+                            <div class="list-container">
+                                <div class="node">2</div>
+                                <div class="arrow"></div>
+                                <div class="node">4</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="merge-container">
+                        <div class="merge-inputs">
+                            <div class="list-container">
+                                <div class="node">1</div>
+                            </div>
+                            <div class="list-container">
+                                <div class="node">3</div>
+                            </div>
+                        </div>
+                        <div class="merge-result">
+                            <div class="list-container">
+                                <div class="node">1</div>
+                                <div class="arrow"></div>
+                                <div class="node">3</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="operation-label">Merge pairs into sorted sublists</div>
+                `
+            },
+            {
+                title: "Final Merge Setup",
+                content: `
+                    <div class="level">
+                        <div class="list-container">
+                            <div class="node">2</div>
+                            <div class="arrow"></div>
+                            <div class="node">4</div>
+                        </div>
+                        <div class="list-container">
+                            <div class="node">1</div>
+                            <div class="arrow"></div>
+                            <div class="node">3</div>
+                        </div>
+                    </div>
+                    <div class="operation-label">Two sorted halves ready for final merge</div>
+                `
+            },
+            {
+                title: "Final Merge Process",
+                content: `
+                    <div class="merge-container">
+                        <div class="merge-inputs">
+                            <div class="list-container">
+                                <div class="node">2</div>
+                                <div class="arrow"></div>
+                                <div class="node">4</div>
+                            </div>
+                            <div class="list-container">
+                                <div class="node">1</div>
+                                <div class="arrow"></div>
+                                <div class="node">3</div>
+                            </div>
+                        </div>
+                        <div class="merge-result">
+                            <div class="list-container">
+                                <div class="node">1</div>
+                                <div class="arrow"></div>
+                                <div class="node">2</div>
+                                <div class="arrow"></div>
+                                <div class="node">3</div>
+                                <div class="arrow"></div>
+                                <div class="node">4</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="operation-label">Merge sorted halves into final result</div>
+                `
+            },
+            {
+                title: "Sorted Result",
+                content: `
+                    <div class="level">
+                        <div class="list-container">
+                            <div class="node highlight">1</div>
+                            <div class="arrow"></div>
+                            <div class="node highlight">2</div>
+                            <div class="arrow"></div>
+                            <div class="node highlight">3</div>
+                            <div class="arrow"></div>
+                            <div class="node highlight">4</div>
+                        </div>
+                    </div>
+                    <div class="operation-label">Final sorted linked list</div>
+                `
+            }
+        ];
+
+        function updateVisualization() {
+            const visualArea = document.getElementById('visualArea');
+            const stepInfo = document.getElementById('stepInfo');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            visualArea.innerHTML = steps[currentStep].content;
+            stepInfo.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        }
+
+        // Initialize visualization
+        updateVisualization();
+    </script>
+</body>
+</html>
