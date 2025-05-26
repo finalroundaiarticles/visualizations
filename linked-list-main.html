@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Linked List</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .controls {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        button {
+            background-color: #ff4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            transition: opacity 0.2s;
+        }
+        
+        button:hover {
+            opacity: 0.8;
+        }
+        
+        input {
+            padding: 8px 12px;
+            border: 2px solid #1c1d20;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
+        
+        .canvas {
+            background-color: white;
+            min-height: 400px;
+            border: 2px solid #1c1d20;
+            border-radius: 10px;
+            padding: 40px;
+            position: relative;
+            overflow: auto;
+        }
+        
+        .node {
+            display: inline-block;
+            background-color: white;
+            border: 2px solid #1c1d20;
+            border-radius: 8px;
+            margin: 20px;
+            position: absolute;
+            user-select: none;
+        }
+        
+        .node-data {
+            background-color: white;
+            padding: 12px 20px;
+            border-bottom: 2px solid #1c1d20;
+            font-weight: bold;
+            color: #1c1d20;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .node-next {
+            background-color: #ff4800;
+            color: white;
+            padding: 8px 20px;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .arrow {
+            position: absolute;
+            color: #ff4800;
+            font-size: 24px;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .null-indicator {
+            position: absolute;
+            color: #ff4800;
+            font-weight: bold;
+            font-size: 16px;
+            pointer-events: none;
+        }
+        
+        .type-selector {
+            margin-right: 20px;
+        }
+        
+        .type-selector select {
+            padding: 8px 12px;
+            border: 2px solid #1c1d20;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            background-color: white;
+        }
+        
+        .node.doubly .node-prev {
+            background-color: #1c1d20;
+            color: white;
+            padding: 8px 20px;
+            font-size: 12px;
+            text-align: center;
+            border-top: 2px solid #1c1d20;
+        }
+        
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            border-left: 4px solid #ff4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <div class="type-selector">
+                <select id="listType">
+                    <option value="singly">Singly Linked List</option>
+                    <option value="doubly">Doubly Linked List</option>
+                    <option value="circular">Circular Linked List</option>
+                </select>
+            </div>
+            <input type="text" id="nodeValue" placeholder="Enter value" maxlength="10">
+            <button onclick="addNode()">Add Node</button>
+            <button onclick="removeNode()">Remove Last</button>
+            <button onclick="clearAll()">Clear All</button>
+        </div>
+        
+        <div class="canvas" id="canvas">
+            <div class="info">
+                <strong>Instructions:</strong> Select list type, enter a value, and click "Add Node" to build your linked list!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let nodes = [];
+        let nodeIdCounter = 0;
+        let draggedNode = null;
+        let dragOffset = { x: 0, y: 0 };
+
+        function addNode() {
+            const input = document.getElementById('nodeValue');
+            const value = input.value.trim() || (nodes.length + 1).toString();
+            const listType = document.getElementById('listType').value;
+            
+            const node = {
+                id: nodeIdCounter++,
+                value: value,
+                x: 100 + nodes.length * 150,
+                y: 150
+            };
+            
+            nodes.push(node);
+            input.value = '';
+            renderNodes();
+        }
+
+        function removeNode() {
+            if (nodes.length > 0) {
+                nodes.pop();
+                renderNodes();
+            }
+        }
+
+        function clearAll() {
+            nodes = [];
+            renderNodes();
+        }
+
+        function renderNodes() {
+            const canvas = document.getElementById('canvas');
+            const listType = document.getElementById('listType').value;
+            
+            // Clear existing nodes and arrows
+            canvas.querySelectorAll('.node, .arrow, .null-indicator').forEach(el => el.remove());
+            
+            if (nodes.length === 0) {
+                canvas.innerHTML = '<div class="info"><strong>Instructions:</strong> Select list type, enter a value, and click "Add Node" to build your linked list!</div>';
+                return;
+            }
+
+            // Create nodes
+            nodes.forEach((node, index) => {
+                const nodeEl = document.createElement('div');
+                nodeEl.className = `node ${listType}`;
+                nodeEl.style.left = node.x + 'px';
+                nodeEl.style.top = node.y + 'px';
+                nodeEl.setAttribute('data-id', node.id);
+                
+                let nodeHTML = `<div class="node-data">${node.value}</div>`;
+                
+                if (listType === 'doubly') {
+                    nodeHTML += `<div class="node-prev">prev</div>`;
+                }
+                
+                nodeHTML += `<div class="node-next">next</div>`;
+                
+                nodeEl.innerHTML = nodeHTML;
+                
+                canvas.appendChild(nodeEl);
+                
+                // Add arrows
+                if (index < nodes.length - 1 || listType === 'circular') {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'arrow';
+                    arrow.innerHTML = '→';
+                    
+                    let targetX, targetY;
+                    if (listType === 'circular' && index === nodes.length - 1) {
+                        // Arrow from last to first
+                        targetX = nodes[0].x - 30;
+                        targetY = nodes[0].y + 20;
+                    } else {
+                        targetX = node.x + 120;
+                        targetY = node.y + 20;
+                    }
+                    
+                    arrow.style.left = targetX + 'px';
+                    arrow.style.top = targetY + 'px';
+                    canvas.appendChild(arrow);
+                }
+                
+                // Add backwards arrows for doubly linked list
+                if (listType === 'doubly' && index > 0) {
+                    const backArrow = document.createElement('div');
+                    backArrow.className = 'arrow';
+                    backArrow.innerHTML = '←';
+                    backArrow.style.left = (node.x - 30) + 'px';
+                    backArrow.style.top = (node.y + 60) + 'px';
+                    canvas.appendChild(backArrow);
+                }
+            });
+            
+            // Add null indicator for non-circular lists
+            if (listType !== 'circular' && nodes.length > 0) {
+                const lastNode = nodes[nodes.length - 1];
+                const nullEl = document.createElement('div');
+                nullEl.className = 'null-indicator';
+                nullEl.innerHTML = 'null';
+                nullEl.style.left = (lastNode.x + 150) + 'px';
+                nullEl.style.top = (lastNode.y + 20) + 'px';
+                canvas.appendChild(nullEl);
+            }
+        }
+
+        // Initialize
+        renderNodes();
+    </script>
+</body>
+</html>
