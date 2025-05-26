@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linked List Insertion Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .animation-container {
+            position: relative;
+            height: 350px;
+            margin: 30px auto;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            transition: all 1s ease;
+        }
+        
+        .pointer {
+            position: absolute;
+            background-color: #FF4800;
+            height: 3px;
+            transform-origin: left center;
+            transition: all 1s ease;
+        }
+        
+        .pointer::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            border-style: solid;
+            border-width: 5px 0 5px 10px;
+            border-color: transparent transparent transparent #FF4800;
+        }
+        
+        .step-description {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 18px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .highlight {
+            box-shadow: 0 0 15px 5px rgba(255, 72, 0, 0.7);
+        }
+        
+        .new-node {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Linked List Insertion Process</h1>
+        
+        <div class="animation-container" id="animationContainer">
+            <!-- Nodes and pointers will be created by JavaScript -->
+            <div class="step-description" id="stepDescription"></div>
+        </div>
+        
+        <div class="step-indicator">
+            Step <span id="currentStep">1</span> of 4
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prevBtn" disabled>Previous</button>
+            <button class="nav-button" id="nextBtn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('animationContainer');
+            const stepDescription = document.getElementById('stepDescription');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const currentStepEl = document.getElementById('currentStep');
+            
+            let currentStep = 1;
+            const totalSteps = 4;
+            
+            // Clear container
+            function clearContainer() {
+                // Keep the step description but remove everything else
+                const elements = container.querySelectorAll(':not(.step-description)');
+                elements.forEach(el => el.remove());
+            }
+            
+            // Create a node
+            function createNode(value, x, y, isNew = false, highlight = false) {
+                const node = document.createElement('div');
+                node.className = `node ${isNew ? 'new-node' : ''} ${highlight ? 'highlight' : ''}`;
+                node.textContent = value;
+                node.style.left = `${x}px`;
+                node.style.top = `${y}px`;
+                container.appendChild(node);
+                return node;
+            }
+            
+            // Create a pointer
+            function createPointer(fromX, fromY, toX, toY, highlight = false) {
+                const dx = toX - fromX;
+                const dy = toY - fromY;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                const pointer = document.createElement('div');
+                pointer.className = `pointer ${highlight ? 'highlight' : ''}`;
+                pointer.style.width = `${length}px`;
+                pointer.style.left = `${fromX}px`;
+                pointer.style.top = `${fromY}px`;
+                pointer.style.transform = `rotate(${angle}deg)`;
+                container.appendChild(pointer);
+                return pointer;
+            }
+            
+            // Render step 1: Initial linked list
+            function renderStep1() {
+                clearContainer();
+                
+                // Create nodes
+                const node1 = createNode('20', 150, 150);
+                const node2 = createNode('30', 450, 150);
+                
+                // Create pointers
+                createPointer(210, 150, 450, 150);
+                
+                // Set description
+                stepDescription.textContent = "Initial linked list with two nodes: 20 → 30";
+            }
+            
+            // Render step 2: Create a new node
+            function renderStep2() {
+                clearContainer();
+                
+                // Create existing nodes
+                createNode('20', 150, 150);
+                createNode('30', 450, 150);
+                
+                // Create the new node with highlight
+                createNode('25', 300, 250, true, true);
+                
+                // Create pointers
+                createPointer(210, 150, 450, 150);
+                
+                // Set description
+                stepDescription.textContent = "Create a new node with value 25";
+            }
+            
+            // Render step 3: Update the new node's pointer
+            function renderStep3() {
+                clearContainer();
+                
+                // Create nodes
+                createNode('20', 150, 150);
+                createNode('30', 450, 150);
+                const newNode = createNode('25', 300, 250, true, true);
+                
+                // Create pointers
+                createPointer(210, 150, 450, 150);
+                createPointer(360, 250, 450, 150, true); // Highlight this new pointer
+                
+                // Set description
+                stepDescription.textContent = "Set the new node's next pointer to point to node 30";
+            }
+            
+            // Render step 4: Update previous node's pointer to the new node
+            function renderStep4() {
+                clearContainer();
+                
+                // Create nodes
+                createNode('20', 150, 150, false, true);
+                createNode('30', 450, 150);
+                createNode('25', 300, 150, true);
+                
+                // Create pointers with updated positions
+                createPointer(210, 150, 300, 150, true); // Highlight this updated pointer
+                createPointer(360, 150, 450, 150);
+                
+                // Set description
+                stepDescription.textContent = "Update node 20's next pointer to point to the new node 25. Insertion complete!";
+            }
+            
+            // Render the current step
+            function renderCurrentStep() {
+                switch(currentStep) {
+                    case 1:
+                        renderStep1();
+                        break;
+                    case 2:
+                        renderStep2();
+                        break;
+                    case 3:
+                        renderStep3();
+                        break;
+                    case 4:
+                        renderStep4();
+                        break;
+                }
+                
+                // Update UI
+                currentStepEl.textContent = currentStep;
+                prevBtn.disabled = currentStep === 1;
+                nextBtn.disabled = currentStep === totalSteps;
+            }
+            
+            // Event listeners for navigation
+            prevBtn.addEventListener('click', function() {
+                if (currentStep > 1) {
+                    currentStep--;
+                    renderCurrentStep();
+                }
+            });
+            
+            nextBtn.addEventListener('click', function() {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    renderCurrentStep();
+                }
+            });
+            
+            // Initial render
+            renderCurrentStep();
+        });
+    </script>
+</body>
+</html>
