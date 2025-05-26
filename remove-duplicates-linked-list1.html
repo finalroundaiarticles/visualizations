@@ -1,0 +1,289 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linked List Duplicate Removal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        .animation-container {
+            width: 100%;
+            height: 300px;
+            margin: 30px 0;
+            position: relative;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #FFF;
+            border-left: 5px solid #FF4800;
+            border-radius: 5px;
+        }
+        .node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            position: absolute;
+            transition: all 0.5s ease;
+            color: #000000;
+        }
+        .arrow {
+            position: absolute;
+            height: 2px;
+            background-color: #000000;
+            transition: all 0.5s ease;
+        }
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid #000000;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        .crossed {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .crossed::before, .crossed::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 50px;
+            height: 4px;
+            background-color: red;
+            transform-origin: center;
+        }
+        .crossed::before {
+            transform: translate(-50%, -50%) rotate(45deg);
+        }
+        .crossed::after {
+            transform: translate(-50%, -50%) rotate(-45deg);
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-counter {
+            text-align: center;
+            color: #FF4800;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Linked List Duplicate Removal</h1>
+        
+        <div class="explanation" id="explanation">
+            This animation demonstrates how duplicates are removed from a linked list.
+            We start with the linked list: 1→2→3→2→1→4→5 and transform it to: 1→2→3→4→5
+        </div>
+        
+        <div class="animation-container" id="animation">
+            <!-- Nodes will be created by JavaScript -->
+        </div>
+        
+        <div class="step-counter" id="step-counter">Step 1 of 5</div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prev-btn" disabled>Previous</button>
+            <button class="nav-button" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const animationContainer = document.getElementById('animation');
+        const explanation = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepCounter = document.getElementById('step-counter');
+        
+        // Initial linked list data
+        const initialList = [
+            { value: 1, x: 60, y: 150 },
+            { value: 2, x: 160, y: 150 },
+            { value: 3, x: 260, y: 150 },
+            { value: 2, x: 360, y: 150, duplicate: true },
+            { value: 1, x: 460, y: 150, duplicate: true },
+            { value: 4, x: 560, y: 150 },
+            { value: 5, x: 660, y: 150 }
+        ];
+        
+        let currentStep = 0;
+        const totalSteps = 5;
+        
+        // Create nodes and arrows
+        function createInitialList() {
+            animationContainer.innerHTML = '';
+            
+            initialList.forEach((node, index) => {
+                // Create node
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'node';
+                nodeElement.id = `node-${index}`;
+                nodeElement.style.left = `${node.x}px`;
+                nodeElement.style.top = `${node.y}px`;
+                nodeElement.textContent = node.value;
+                animationContainer.appendChild(nodeElement);
+                
+                // Create cross element for duplicates
+                if (node.duplicate) {
+                    const cross = document.createElement('div');
+                    cross.className = 'crossed';
+                    cross.id = `cross-${index}`;
+                    cross.style.left = `${node.x - 5}px`;
+                    cross.style.top = `${node.y - 5}px`;
+                    animationContainer.appendChild(cross);
+                }
+                
+                // Create arrow except for the last node
+                if (index < initialList.length - 1) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'arrow';
+                    arrow.id = `arrow-${index}`;
+                    arrow.style.left = `${node.x + 40}px`;
+                    arrow.style.top = `${node.y + 20}px`;
+                    arrow.style.width = '80px';
+                    animationContainer.appendChild(arrow);
+                }
+            });
+        }
+        
+        // Step animations
+        function updateStep(step) {
+            currentStep = step;
+            stepCounter.textContent = `Step ${currentStep + 1} of ${totalSteps}`;
+            
+            // Enable/disable navigation buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+            
+            // Update explanation and animation based on current step
+            switch(currentStep) {
+                case 0:
+                    explanation.textContent = "We start with the linked list: 1→2→3→2→1→4→5. We need to remove duplicate values.";
+                    createInitialList();
+                    break;
+                case 1:
+                    explanation.textContent = "First, we identify duplicates. We see that value 2 appears twice (at positions 2 and 4).";
+                    document.getElementById('node-1').style.backgroundColor = '#FF4800';
+                    document.getElementById('node-3').style.backgroundColor = '#FF4800';
+                    break;
+                case 2:
+                    explanation.textContent = "We mark the second occurrence of 2 for removal and adjust the pointers.";
+                    document.getElementById('cross-3').style.opacity = '1';
+                    
+                    // Adjust the arrow to bypass the duplicate node
+                    document.getElementById('arrow-2').style.width = '180px';
+                    break;
+                case 3:
+                    explanation.textContent = "Similarly, we identify that value 1 appears twice (at positions 1 and 5).";
+                    document.getElementById('node-0').style.backgroundColor = '#FF4800';
+                    document.getElementById('node-4').style.backgroundColor = '#FF4800';
+                    document.getElementById('cross-4').style.opacity = '1';
+                    
+                    // Adjust the arrow to bypass the duplicate node
+                    document.getElementById('arrow-3').style.width = '180px';
+                    break;
+                case 4:
+                    explanation.textContent = "After removing all duplicates, our final linked list is: 1→2→3→4→5. Notice how all duplicates are removed while preserving the first occurrence of each value.";
+                    
+                    // Reposition the nodes to show the final linked list
+                    const nodes = [0, 1, 2, 5, 6]; // Indices of nodes in the final list
+                    const spacing = 120;
+                    
+                    nodes.forEach((nodeIndex, i) => {
+                        const x = 100 + i * spacing;
+                        document.getElementById(`node-${nodeIndex}`).style.left = `${x}px`;
+                        document.getElementById(`node-${nodeIndex}`).style.backgroundColor = '#FD9F78';
+                        
+                        // Update arrows
+                        if (i < nodes.length - 1) {
+                            const arrowId = `arrow-${nodeIndex}`;
+                            if (document.getElementById(arrowId)) {
+                                document.getElementById(arrowId).style.left = `${x + 40}px`;
+                                document.getElementById(arrowId).style.width = `${spacing - 40}px`;
+                            }
+                        }
+                    });
+                    
+                    // Hide duplicate nodes and their crosses
+                    document.getElementById('node-3').style.opacity = '0';
+                    document.getElementById('node-4').style.opacity = '0';
+                    document.getElementById('cross-3').style.opacity = '0';
+                    document.getElementById('cross-4').style.opacity = '0';
+                    break;
+            }
+        }
+        
+        // Initialize the animation
+        createInitialList();
+        updateStep(0);
+        
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                updateStep(currentStep - 1);
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                updateStep(currentStep + 1);
+            }
+        });
+    </script>
+</body>
+</html>
