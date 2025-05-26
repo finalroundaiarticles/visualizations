@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Singly Linked List Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .linked-list-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+            margin: 20px 0;
+        }
+        .node {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.5s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .node-value {
+            font-weight: bold;
+            font-size: 24px;
+            color: #000000;
+        }
+        .node-text {
+            font-size: 14px;
+            color: #000000;
+            margin-top: 5px;
+        }
+        .arrow {
+            position: absolute;
+            width: 80px;
+            height: 10px;
+            background-color: #FF4800;
+            transform-origin: left center;
+            transition: all 0.5s ease;
+        }
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: -10px;
+            top: -5px;
+            width: 0;
+            height: 0;
+            border-left: 15px solid #FF4800;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+        }
+        .head-pointer {
+            position: absolute;
+            top: 130px;
+            font-weight: bold;
+            color: #000000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .head-arrow {
+            width: 50px;
+            height: 10px;
+            background-color: #000000;
+            margin-top: 5px;
+            position: relative;
+        }
+        .head-arrow::after {
+            content: '';
+            position: absolute;
+            right: -10px;
+            top: -5px;
+            width: 0;
+            height: 0;
+            border-left: 15px solid #000000;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+        }
+        .null-text {
+            position: absolute;
+            font-weight: bold;
+            font-size: 24px;
+            color: #000000;
+        }
+        .explanation {
+            margin: 30px 0;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f8f8f8;
+            color: #000000;
+            line-height: 1.6;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 300px;
+            margin-top: 20px;
+        }
+        .nav-button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Singly Linked List Structure Visualization</h1>
+        
+        <div class="linked-list-container" id="linkedListContainer">
+            <!-- Elements will be added dynamically via JavaScript -->
+        </div>
+
+        <div class="explanation" id="explanation">
+            <!-- Explanation text will be added dynamically via JavaScript -->
+        </div>
+
+        <div class="nav-buttons">
+            <button class="nav-button" id="prevBtn" disabled>Previous</button>
+            <button class="nav-button" id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Define the steps for the animation
+        const steps = [
+            {
+                title: "Singly Linked List Basics",
+                nodes: [
+                    { value: 5, x: 100, y: 80 },
+                    { value: 10, x: 300, y: 80 },
+                    { value: 20, x: 500, y: 80 }
+                ],
+                explanation: "A singly linked list is a linear data structure where each element (node) contains data and a reference to the next node in the sequence. The list starts with a 'head' pointer that points to the first node. The last node points to 'null', indicating the end of the list."
+            },
+            {
+                title: "Node Structure",
+                nodes: [
+                    { value: 5, x: 300, y: 80 }
+                ],
+                explanation: "Each node in a singly linked list has two components: DATA (which holds the actual value) and NEXT (a pointer that references the next node in the sequence). This simple structure allows nodes to be linked together in a chain-like fashion."
+            },
+            {
+                title: "Head Pointer",
+                nodes: [
+                    { value: 5, x: 100, y: 80 },
+                    { value: 10, x: 300, y: 80 },
+                    { value: 20, x: 500, y: 80 }
+                ],
+                explanation: "The 'head' pointer always points to the first node in the linked list. It is the starting point for traversing the list. Without the head pointer, we would lose access to the entire list since nodes can only be accessed sequentially from the beginning."
+            },
+            {
+                title: "Null Termination",
+                nodes: [
+                    { value: 5, x: 100, y: 80 },
+                    { value: 10, x: 300, y: 80 },
+                    { value: 20, x: 500, y: 80 }
+                ],
+                explanation: "The last node in a singly linked list has its 'next' pointer set to NULL, indicating the end of the list. This null termination is crucial as it prevents attempts to access non-existent nodes beyond the list's end."
+            },
+            {
+                title: "Traversing a Linked List",
+                nodes: [
+                    { value: 5, x: 100, y: 80 },
+                    { value: 10, x: 300, y: 80 },
+                    { value: 20, x: 500, y: 80 }
+                ],
+                explanation: "To traverse a singly linked list, we start from the head and follow the 'next' pointers until we reach NULL. Unlike arrays, we cannot directly access elements by index - we must always start from the head and move sequentially through the nodes."
+            }
+        ];
+
+        let currentStep = 0;
+        const container = document.getElementById('linkedListContainer');
+        const explanation = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        // Function to render the current step
+        function renderStep(step) {
+            // Clear the container
+            container.innerHTML = '';
+            
+            // Add the step title and explanation
+            explanation.innerHTML = `<h3>${step.title}</h3><p>${step.explanation}</p>`;
+            
+            // Add the head pointer
+            if (step.nodes.length > 0) {
+                const headPointer = document.createElement('div');
+                headPointer.className = 'head-pointer';
+                headPointer.style.left = `${step.nodes[0].x - 50}px`;
+                
+                const headText = document.createElement('div');
+                headText.textContent = 'head';
+                
+                const headArrow = document.createElement('div');
+                headArrow.className = 'head-arrow';
+                
+                headPointer.appendChild(headText);
+                headPointer.appendChild(headArrow);
+                container.appendChild(headPointer);
+            }
+            
+            // Add nodes and arrows
+            step.nodes.forEach((node, index) => {
+                // Create node
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'node';
+                nodeElement.style.left = `${node.x}px`;
+                nodeElement.style.top = `${node.y}px`;
+                
+                const valueElement = document.createElement('div');
+                valueElement.className = 'node-value';
+                valueElement.textContent = node.value;
+                
+                const textElement = document.createElement('div');
+                textElement.className = 'node-text';
+                textElement.textContent = 'data | next';
+                
+                nodeElement.appendChild(valueElement);
+                nodeElement.appendChild(textElement);
+                container.appendChild(nodeElement);
+                
+                // Create arrow to next node if not the last node
+                if (index < step.nodes.length - 1) {
+                    const nextNode = step.nodes[index + 1];
+                    const arrowElement = document.createElement('div');
+                    arrowElement.className = 'arrow';
+                    
+                    const dx = nextNode.x - node.x - 100;
+                    const dy = nextNode.y - node.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    arrowElement.style.width = `${length}px`;
+                    arrowElement.style.left = `${node.x + 50}px`;
+                    arrowElement.style.top = `${node.y + 50}px`;
+                    arrowElement.style.transform = `rotate(${angle}deg)`;
+                    
+                    container.appendChild(arrowElement);
+                } else {
+                    // Add NULL text for the last node
+                    const nullText = document.createElement('div');
+                    nullText.className = 'null-text';
+                    nullText.textContent = 'NULL';
+                    nullText.style.left = `${node.x + 150}px`;
+                    nullText.style.top = `${node.y + 40}px`;
+                    container.appendChild(nullText);
+                    
+                    // Add arrow to NULL
+                    const arrowElement = document.createElement('div');
+                    arrowElement.className = 'arrow';
+                    arrowElement.style.width = '50px';
+                    arrowElement.style.left = `${node.x + 50}px`;
+                    arrowElement.style.top = `${node.y + 50}px`;
+                    container.appendChild(arrowElement);
+                }
+            });
+            
+            // Highlight elements based on the current step
+            if (step.title === "Node Structure") {
+                // Add additional labels for the node components
+                const nodeElement = document.querySelector('.node');
+                const dataLabel = document.createElement('div');
+                dataLabel.textContent = "DATA";
+                dataLabel.style.position = "absolute";
+                dataLabel.style.top = "-40px";
+                dataLabel.style.fontWeight = "bold";
+                dataLabel.style.color = "#FF4800";
+                
+                const nextLabel = document.createElement('div');
+                nextLabel.textContent = "NEXT";
+                nextLabel.style.position = "absolute";
+                nextLabel.style.bottom = "-40px";
+                nextLabel.style.fontWeight = "bold";
+                nextLabel.style.color = "#FF4800";
+                
+                nodeElement.appendChild(dataLabel);
+                nodeElement.appendChild(nextLabel);
+            } else if (step.title === "Head Pointer") {
+                // Highlight the head pointer
+                const headPointer = document.querySelector('.head-pointer');
+                headPointer.style.color = "#FF4800";
+                headPointer.style.fontSize = "18px";
+                headPointer.style.fontWeight = "bolder";
+            } else if (step.title === "Null Termination") {
+                // Highlight the NULL text
+                const nullText = document.querySelector('.null-text');
+                nullText.style.color = "#FF4800";
+                nullText.style.fontSize = "28px";
+                nullText.style.fontWeight = "bolder";
+            } else if (step.title === "Traversing a Linked List") {
+                // Create a traversal animation
+                setTimeout(() => {
+                    const nodes = document.querySelectorAll('.node');
+                    const arrows = document.querySelectorAll('.arrow');
+                    
+                    let i = 0;
+                    const traverse = () => {
+                        if (i < nodes.length) {
+                            nodes.forEach(node => node.style.backgroundColor = "#FD9F78");
+                            arrows.forEach(arrow => arrow.style.backgroundColor = "#FF4800");
+                            
+                            nodes[i].style.backgroundColor = "#FF4800";
+                            if (i < arrows.length) {
+                                arrows[i].style.backgroundColor = "#000000";
+                            }
+                            
+                            i++;
+                            setTimeout(traverse, 1000);
+                        }
+                    };
+                    
+                    traverse();
+                }, 500);
+            }
+        }
+
+        // Function to update button states
+        function updateButtons() {
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                renderStep(steps[currentStep]);
+                updateButtons();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                renderStep(steps[currentStep]);
+                updateButtons();
+            }
+        });
+
+        // Initialize with the first step
+        renderStep(steps[currentStep]);
+        updateButtons();
+    </script>
+</body>
+</html>
