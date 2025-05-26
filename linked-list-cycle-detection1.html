@@ -1,0 +1,417 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Floyd's Tortoise and Hare Algorithm Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #FFFFFF;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .explanation {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .visualization {
+            width: 100%;
+            height: 300px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        .arrow {
+            position: absolute;
+            height: 2px;
+            background-color: #000000;
+            transform-origin: left center;
+        }
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid #000000;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        .tortoise {
+            width: 20px;
+            height: 20px;
+            background-color: #00AA00;
+            border-radius: 50%;
+            position: absolute;
+            z-index: 10;
+            transition: all 0.8s ease;
+        }
+        .hare {
+            width: 20px;
+            height: 20px;
+            background-color: #AA0000;
+            border-radius: 50%;
+            position: absolute;
+            z-index: 10;
+            transition: all 0.5s ease;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #FD9F78;
+        }
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 0 10px;
+        }
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .phase-title {
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+            color: #FF4800;
+        }
+        .step-indicator {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Floyd's Tortoise and Hare Algorithm</h1>
+        
+        <div class="explanation">
+            Floyd's Tortoise and Hare algorithm is used to detect cycles in a linked list. It uses two pointers moving at different speeds to identify if a cycle exists and find its starting point.
+        </div>
+        
+        <div class="phase-title" id="phase-title">Phase 1: Cycle Detection</div>
+        
+        <div class="step-indicator" id="step-indicator">Step 1: Initialize tortoise and hare at the start</div>
+        
+        <div class="visualization" id="visualization">
+            <!-- Nodes and pointers will be added here via JavaScript -->
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #00AA00;"></div>
+                <span>Tortoise (Slow)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #AA0000;"></div>
+                <span>Hare (Fast)</span>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" class="btn" disabled>Previous</button>
+            <button id="nextBtn" class="btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const visualization = document.getElementById('visualization');
+            const phaseTitle = document.getElementById('phase-title');
+            const stepIndicator = document.getElementById('step-indicator');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            // Create the linked list structure (0->1->2->3->4->5->2)
+            const nodes = [
+                { id: 0, x: 100, y: 80 },
+                { id: 1, x: 200, y: 80 },
+                { id: 2, x: 300, y: 80 },
+                { id: 3, x: 400, y: 80 },
+                { id: 4, x: 400, y: 180 },
+                { id: 5, x: 300, y: 180 }
+            ];
+            
+            // Define connections (arrows)
+            const connections = [
+                { from: 0, to: 1 },
+                { from: 1, to: 2 },
+                { from: 2, to: 3 },
+                { from: 3, to: 4 },
+                { from: 4, to: 5 },
+                { from: 5, to: 2 } // This creates the cycle
+            ];
+            
+            // Animation steps
+            const steps = [
+                {
+                    phase: 1,
+                    title: "Phase 1: Cycle Detection",
+                    description: "Step 1: Initialize tortoise and hare at the start",
+                    tortoise: 0,
+                    hare: 0
+                },
+                {
+                    phase: 1,
+                    title: "Phase 1: Cycle Detection",
+                    description: "Step 2: Move tortoise 1 step, hare 2 steps",
+                    tortoise: 1,
+                    hare: 2
+                },
+                {
+                    phase: 1,
+                    title: "Phase 1: Cycle Detection",
+                    description: "Step 3: Move tortoise 1 step, hare 2 steps",
+                    tortoise: 2,
+                    hare: 4
+                },
+                {
+                    phase: 1,
+                    title: "Phase 1: Cycle Detection",
+                    description: "Step 4: Move tortoise 1 step, hare 2 steps",
+                    tortoise: 3,
+                    hare: 5
+                },
+                {
+                    phase: 1,
+                    title: "Phase 1: Cycle Detection",
+                    description: "Step 5: Move tortoise 1 step, hare 2 steps",
+                    tortoise: 4,
+                    hare: 2
+                },
+                {
+                    phase: 1,
+                    title: "Phase 1: Cycle Detection",
+                    description: "Step 6: Move tortoise 1 step, hare 2 steps",
+                    tortoise: 5,
+                    hare: 4
+                },
+                {
+                    phase: 1,
+                    title: "Phase 1: Cycle Detection",
+                    description: "Step 7: Move tortoise 1 step, hare 2 steps",
+                    tortoise: 2,
+                    hare: 5
+                },
+                {
+                    phase: 1,
+                    title: "Phase 1: Cycle Detection",
+                    description: "Step 8: Move tortoise 1 step, hare 2 steps",
+                    tortoise: 3,
+                    hare: 2
+                },
+                {
+                    phase: 1,
+                    title: "Phase 1: Cycle Detection",
+                    description: "Step 9: Move tortoise 1 step, hare 2 steps",
+                    tortoise: 4,
+                    hare: 4
+                },
+                {
+                    phase: 1,
+                    title: "Phase 1: Cycle Detection",
+                    description: "Step 10: Tortoise and hare meet! Cycle detected at node 4",
+                    tortoise: 4,
+                    hare: 4,
+                    highlight: 4
+                },
+                {
+                    phase: 2,
+                    title: "Phase 2: Finding Cycle Start",
+                    description: "Step 1: Reset tortoise to start, keep hare at meeting point",
+                    tortoise: 0,
+                    hare: 4
+                },
+                {
+                    phase: 2,
+                    title: "Phase 2: Finding Cycle Start",
+                    description: "Step 2: Move both pointers at same speed (1 step)",
+                    tortoise: 1,
+                    hare: 5
+                },
+                {
+                    phase: 2,
+                    title: "Phase 2: Finding Cycle Start",
+                    description: "Step 3: Move both pointers at same speed (1 step)",
+                    tortoise: 2,
+                    hare: 2
+                },
+                {
+                    phase: 2,
+                    title: "Phase 2: Finding Cycle Start",
+                    description: "Step 4: They meet at node 2! This is the start of the cycle",
+                    tortoise: 2,
+                    hare: 2,
+                    highlight: 2
+                }
+            ];
+            
+            let currentStep = 0;
+            
+            // Create the nodes and arrows
+            function drawGraph() {
+                visualization.innerHTML = '';
+                
+                // Draw the arrows first (so they appear behind the nodes)
+                connections.forEach(conn => {
+                    const fromNode = nodes[conn.from];
+                    const toNode = nodes[conn.to];
+                    
+                    // Calculate distance and angle
+                    const dx = toNode.x - fromNode.x;
+                    const dy = toNode.y - fromNode.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    // Create arrow
+                    const arrow = document.createElement('div');
+                    arrow.className = 'arrow';
+                    arrow.style.width = (distance - 40) + 'px';
+                    arrow.style.left = (fromNode.x + 20) + 'px';
+                    arrow.style.top = (fromNode.y + 20) + 'px';
+                    arrow.style.transform = `rotate(${angle}deg)`;
+                    
+                    visualization.appendChild(arrow);
+                });
+                
+                // Draw the nodes
+                nodes.forEach(node => {
+                    const nodeElement = document.createElement('div');
+                    nodeElement.className = 'node';
+                    nodeElement.textContent = node.id;
+                    nodeElement.style.left = (node.x) + 'px';
+                    nodeElement.style.top = (node.y) + 'px';
+                    nodeElement.id = 'node-' + node.id;
+                    
+                    visualization.appendChild(nodeElement);
+                });
+                
+                // Add tortoise and hare
+                const tortoise = document.createElement('div');
+                tortoise.className = 'tortoise';
+                tortoise.id = 'tortoise';
+                visualization.appendChild(tortoise);
+                
+                const hare = document.createElement('div');
+                hare.className = 'hare';
+                hare.id = 'hare';
+                visualization.appendChild(hare);
+                
+                updateStep();
+            }
+            
+            function updateStep() {
+                const step = steps[currentStep];
+                
+                // Update phase and step text
+                phaseTitle.textContent = step.title;
+                stepIndicator.textContent = step.description;
+                
+                // Reset all node colors
+                nodes.forEach(node => {
+                    const nodeElement = document.getElementById('node-' + node.id);
+                    nodeElement.style.backgroundColor = '#FD9F78';
+                    nodeElement.style.borderColor = '#FF4800';
+                });
+                
+                // Highlight node if needed
+                if (step.highlight !== undefined) {
+                    const highlightNode = document.getElementById('node-' + step.highlight);
+                    highlightNode.style.backgroundColor = '#FFFF00';
+                    highlightNode.style.borderColor = '#FF4800';
+                }
+                
+                // Position tortoise and hare
+                const tortoiseNode = nodes[step.tortoise];
+                const hareNode = nodes[step.hare];
+                
+                const tortoise = document.getElementById('tortoise');
+                tortoise.style.left = (tortoiseNode.x + 10) + 'px';
+                tortoise.style.top = (tortoiseNode.y - 25) + 'px';
+                
+                const hare = document.getElementById('hare');
+                hare.style.left = (hareNode.x + 30) + 'px';
+                hare.style.top = (hareNode.y - 25) + 'px';
+                
+                // Update buttons
+                prevBtn.disabled = currentStep === 0;
+                nextBtn.disabled = currentStep === steps.length - 1;
+            }
+            
+            // Event listeners
+            prevBtn.addEventListener('click', function() {
+                if (currentStep > 0) {
+                    currentStep--;
+                    updateStep();
+                }
+            });
+            
+            nextBtn.addEventListener('click', function() {
+                if (currentStep < steps.length - 1) {
+                    currentStep++;
+                    updateStep();
+                }
+            });
+            
+            // Initialize the visualization
+            drawGraph();
+        });
+    </script>
+</body>
+</html>
