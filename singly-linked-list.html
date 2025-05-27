@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Singly Linked List Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            color: #1c1d20;
+            overflow: hidden;
+        }
+        
+        #canvas {
+            display: block;
+            cursor: grab;
+            background: white;
+        }
+        
+        #canvas:active {
+            cursor: grabbing;
+        }
+        
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            z-index: 100;
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        button {
+            background: #ff4800;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #e04000;
+            transform: translateY(-1px);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        input {
+            border: 2px solid #1c1d20;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            width: 60px;
+            text-align: center;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #ff4800;
+        }
+        
+        .message {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff4800;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .message.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="controls">
+        <div class="control-group">
+            <input type="number" id="valueInput" placeholder="Value" value="10">
+            <button onclick="insertAtBeginning()">Insert at Beginning</button>
+            <button onclick="insertAtEnd()">Insert at End</button>
+        </div>
+        <div class="control-group">
+            <input type="number" id="posInput" placeholder="Pos" value="0">
+            <button onclick="insertAtPosition()">Insert at Position</button>
+        </div>
+        <div class="control-group">
+            <button onclick="deleteFromBeginning()">Delete Beginning</button>
+            <button onclick="deleteFromEnd()">Delete End</button>
+        </div>
+        <div class="control-group">
+            <input type="number" id="deleteValueInput" placeholder="Value">
+            <button onclick="deleteByValue()">Delete by Value</button>
+        </div>
+        <div class="control-group">
+            <input type="number" id="searchInput" placeholder="Value">
+            <button onclick="search()">Search</button>
+        </div>
+    </div>
+    
+    <div id="message" class="message"></div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            draw();
+        });
+
+        class Node {
+            constructor(data) {
+                this.data = data;
+                this.next = null;
+                this.x = 0;
+                this.y = 0;
+                this.targetX = 0;
+                this.targetY = 0;
+                this.isDragging = false;
+                this.highlight = false;
+                this.animationProgress = 0;
+            }
+        }
+
+        class SinglyLinkedList {
+            constructor() {
+                this.head = null;
+                this.nodes = [];
+            }
+            
+            insertAtBeginning(data) {
+                const newNode = new Node(data);
+                newNode.next = this.head;
+                this.head = newNode;
+                this.nodes.unshift(newNode);
+                this.updatePositions();
+                return `Inserted ${data} at the beginning`;
+            }
+            
+            insertAtEnd(data) {
+                const newNode = new Node(data);
+                
+                if (!this.head) {
+                    this.head = newNode;
+                    this.nodes.push(newNode);
+                } else {
+                    let current = this.head;
+                    while (current.next) {
+                        current = current.next;
+                    }
+                    current.next = newNode;
+                    this.nodes.push(newNode);
+                }
+                this.updatePositions();
+                return `Inserted ${data} at the end`;
+            }
+            
+            insertAtPosition(data, position) {
+                if (position === 0) {
+                    return this.insertAtBeginning(data);
+                }
+                
+                if (position > this.nodes.length) {
+                    return "Position out of bounds";
+                }
+                
+                const newNode = new Node(data);
+                let current = this.head;
+                
+                for (let i = 0; i < position - 1; i++) {
+                    if (!current) return "Position out of bounds";
+                    current = current.next;
+                }
+                
+                newNode.next = current.next;
+                current.next = newNode;
+                this.nodes.splice(position, 0, newNode);
+                this.updatePositions();
+                return `Inserted ${data} at position ${position}`;
+            }
+            
+            deleteFromBeginning() {
+                if (!this.head) return "List is empty";
+                
+                const deletedData = this.head.data;
+                this.head = this.head.next;
+                this.nodes.shift();
+                this.updatePositions();
+                return `Deleted ${deletedData} from beginning`;
+            }
+            
+            deleteFromEnd() {
+                if (!this.head) return "List is empty";
+                
+                if (!this.head.next) {
+                    const deletedData = this.head.data;
+                    this.head = null;
+                    this.nodes = [];
+                    return `Deleted ${deletedData} from end`;
+                }
+                
+                let current = this.head;
+                while (current.next.next) {
+                    current = current.next;
+                }
+                
+                const deletedData = current.next.data;
+                current.next = null;
+                this.nodes.pop();
+                this.updatePositions();
+                return `Deleted ${deletedData} from end`;
+            }
+            
+            deleteByValue(data) {
+                if (!this.head) return "List is empty";
+                
+                if (this.head.data == data) {
+                    this.head = this.head.next;
+                    this.nodes.shift();
+                    this.updatePositions();
+                    return `Deleted ${data} from the list`;
+                }
+                
+                let current = this.head;
+                let index = 1;
+                while (current.next) {
+                    if (current.next.data == data) {
+                        current.next = current.next.next;
+                        this.nodes.splice(index, 1);
+                        this.updatePositions();
+                        return `Deleted ${data} from the list`;
+                    }
+                    current = current.next;
+                    index++;
+                }
+                
+                return `Value ${data} not found in the list`;
+            }
+            
+            search(data) {
+                let current = this.head;
+                let position = 0;
+                
+                // Clear previous highlights
+                this.nodes.forEach(node => node.highlight = false);
+                
+                while (current) {
+                    if (current.data == data) {
+                        current.highlight = true;
+                        setTimeout(() => current.highlight = false, 2000);
+                        return `Found ${data} at position ${position}`;
+                    }
+                    current = current.next;
+                    position++;
+                }
+                
+                return `Value ${data} not found in the list`;
+            }
+            
+            updatePositions() {
+                const startX = 150;
+                const startY = canvas.height / 2;
+                const spacing = 120;
+                
+                this.nodes.forEach((node, index) => {
+                    node.targetX = startX + index * spacing;
+                    node.targetY = startY;
+                    node.animationProgress = 0;
+                });
+            }
+        }
+
+        const linkedList = new SinglyLinkedList();
+        
+        // Initialize with some nodes
+        linkedList.insertAtEnd(10);
+        linkedList.insertAtEnd(20);
+        linkedList.insertAtEnd(30);
+
+        let draggedNode = null;
+        let mouseX = 0;
+        let mouseY = 0;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        function animate() {
+            linkedList.nodes.forEach(node => {
+                if (!node.isDragging) {
+                    const dx = node.targetX - node.x;
+                    const dy = node.targetY - node.y;
+                    node.x += dx * 0.1;
+                    node.y += dy * 0.1;
+                }
+                
+                if (node.animationProgress < 1) {
+                    node.animationProgress += 0.05;
+                }
+            });
+            
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw connections
+            linkedList.nodes.forEach((node, index) => {
+                if (node.next) {
+                    const nextNode = linkedList.nodes[index + 1];
+                    if (nextNode) {
+                        drawArrow(node.x + 25, node.y, nextNode.x - 25, nextNode.y);
+                    }
+                }
+            });
+            
+            // Draw nodes
+            linkedList.nodes.forEach(node => {
+                drawNode(node);
+            });
+            
+            // Draw NULL at the end
+            if (linkedList.nodes.length > 0) {
+                const lastNode = linkedList.nodes[linkedList.nodes.length - 1];
+                drawNull(lastNode.x + 60, lastNode.y);
+                drawArrow(lastNode.x + 25, lastNode.y, lastNode.x + 40, lastNode.y);
+            }
+        }
+
+        function drawNode(node) {
+            const radius = 25;
+            const alpha = Math.min(node.animationProgress, 1);
+            
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            
+            // Node circle
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = node.highlight ? '#ff4800' : (node.isDragging ? '#e04000' : '#1c1d20');
+            ctx.fill();
+            ctx.strokeStyle = node.highlight ? '#1c1d20' : '#ff4800';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Node value
+            ctx.fillStyle = node.highlight ? 'white' : (node.isDragging ? 'white' : 'white');
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.data, node.x, node.y);
+            
+            ctx.restore();
+        }
+
+        function drawArrow(x1, y1, x2, y2) {
+            ctx.strokeStyle = '#1c1d20';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            
+            // Arrowhead
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+            const headLength = 10;
+            
+            ctx.beginPath();
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - headLength * Math.cos(angle - Math.PI / 6), y2 - headLength * Math.sin(angle - Math.PI / 6));
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - headLength * Math.cos(angle + Math.PI / 6), y2 - headLength * Math.sin(angle + Math.PI / 6));
+            ctx.stroke();
+        }
+
+        function drawNull(x, y) {
+            ctx.fillStyle = '#ff4800';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('NULL', x, y);
+        }
+
+        function showMessage(text) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.classList.add('show');
+            setTimeout(() => messageEl.classList.remove('show'), 3000);
+        }
+
+        // Mouse events
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+            
+            linkedList.nodes.forEach(node => {
+                const distance = Math.sqrt((mouseX - node.x) ** 2 + (mouseY - node.y) ** 2);
+                if (distance < 25) {
+                    draggedNode = node;
+                    node.isDragging = true;
+                    offsetX = mouseX - node.x;
+                    offsetY = mouseY - node.y;
+                }
+            });
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+            
+            if (draggedNode) {
+                draggedNode.x = mouseX - offsetX;
+                draggedNode.y = mouseY - offsetY;
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            if (draggedNode) {
+                draggedNode.isDragging = false;
+                setTimeout(() => {
+                    draggedNode.targetX = draggedNode.x;
+                    draggedNode.targetY = draggedNode.y;
+                }, 100);
+                draggedNode = null;
+            }
+        });
+
+        // Control functions
+        function insertAtBeginning() {
+            const value = document.getElementById('valueInput').value;
+            if (value === '') return;
+            const message = linkedList.insertAtBeginning(parseInt(value));
+            showMessage(message);
+        }
+
+        function insertAtEnd() {
+            const value = document.getElementById('valueInput').value;
+            if (value === '') return;
+            const message = linkedList.insertAtEnd(parseInt(value));
+            showMessage(message);
+        }
+
+        function insertAtPosition() {
+            const value = document.getElementById('valueInput').value;
+            const position = document.getElementById('posInput').value;
+            if (value === '' || position === '') return;
+            const message = linkedList.insertAtPosition(parseInt(value), parseInt(position));
+            showMessage(message);
+        }
+
+        function deleteFromBeginning() {
+            const message = linkedList.deleteFromBeginning();
+            showMessage(message);
+        }
+
+        function deleteFromEnd() {
+            const message = linkedList.deleteFromEnd();
+            showMessage(message);
+        }
+
+        function deleteByValue() {
+            const value = document.getElementById('deleteValueInput').value;
+            if (value === '') return;
+            const message = linkedList.deleteByValue(parseInt(value));
+            showMessage(message);
+        }
+
+        function search() {
+            const value = document.getElementById('searchInput').value;
+            if (value === '') return;
+            const message = linkedList.search(parseInt(value));
+            showMessage(message);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
