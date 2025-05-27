@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circular Linked List Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            color: #1c1d20;
+            overflow: hidden;
+        }
+        
+        #canvas {
+            display: block;
+            cursor: grab;
+            background: white;
+        }
+        
+        #canvas:active {
+            cursor: grabbing;
+        }
+        
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            z-index: 100;
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        button {
+            background: #ff4800;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #e04000;
+            transform: translateY(-1px);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        input {
+            border: 2px solid #1c1d20;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            width: 60px;
+            text-align: center;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #ff4800;
+        }
+        
+        .message {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff4800;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .message.show {
+            opacity: 1;
+        }
+        
+        .info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="controls">
+        <div class="control-group">
+            <input type="number" id="valueInput" placeholder="Value" value="10">
+            <button onclick="insertAtBeginning()">Insert at Beginning</button>
+            <button onclick="insertAtEnd()">Insert at End</button>
+        </div>
+        <div class="control-group">
+            <input type="number" id="deleteInput" placeholder="Value">
+            <button onclick="deleteNode()">Delete Node</button>
+        </div>
+        <div class="control-group">
+            <input type="number" id="searchInput" placeholder="Value">
+            <button onclick="search()">Search</button>
+        </div>
+        <div class="control-group">
+            <button onclick="display()">Display List</button>
+        </div>
+    </div>
+    
+    <div class="info">
+        <div><strong>LAST:</strong> <span id="lastValue">30</span></div>
+        <div><strong>SIZE:</strong> <span id="sizeValue">3</span></div>
+    </div>
+    
+    <div id="message" class="message"></div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            updatePositions();
+            draw();
+        });
+
+        class Node {
+            constructor(data) {
+                this.data = data;
+                this.next = null;
+                this.x = 0;
+                this.y = 0;
+                this.targetX = 0;
+                this.targetY = 0;
+                this.isDragging = false;
+                this.highlight = false;
+                this.animationProgress = 0;
+            }
+        }
+
+        class CircularLinkedList {
+            constructor() {
+                this.last = null;
+                this.nodes = [];
+            }
+            
+            insertAtBeginning(data) {
+                const newNode = new Node(data);
+                
+                if (this.last === null) {
+                    this.last = newNode;
+                    newNode.next = newNode;
+                    this.nodes = [newNode];
+                } else {
+                    newNode.next = this.last.next;
+                    this.last.next = newNode;
+                    this.nodes.unshift(newNode);
+                }
+                
+                updatePositions();
+                updateInfo();
+                return `Inserted ${data} at the beginning`;
+            }
+            
+            insertAtEnd(data) {
+                const newNode = new Node(data);
+                
+                if (this.last === null) {
+                    this.last = newNode;
+                    newNode.next = newNode;
+                    this.nodes = [newNode];
+                } else {
+                    newNode.next = this.last.next;
+                    this.last.next = newNode;
+                    this.last = newNode;
+                    this.nodes.push(newNode);
+                }
+                
+                updatePositions();
+                updateInfo();
+                return `Inserted ${data} at the end`;
+            }
+            
+            deleteNode(key) {
+                if (this.last === null) {
+                    return "List is empty";
+                }
+                
+                // If there's only one node
+                if (this.last.next === this.last && this.last.data == key) {
+                    this.last = null;
+                    this.nodes = [];
+                    updatePositions();
+                    updateInfo();
+                    return `Deleted ${key} from the list`;
+                }
+                
+                let current = this.last.next;
+                let prev = this.last;
+                let index = 0;
+                
+                while (true) {
+                    if (current.data == key) {
+                        if (current === this.last) {
+                            this.last = prev;
+                        }
+                        prev.next = current.next;
+                        this.nodes.splice(index, 1);
+                        updatePositions();
+                        updateInfo();
+                        return `Deleted ${key} from the list`;
+                    }
+                    
+                    prev = current;
+                    current = current.next;
+                    index++;
+                    
+                    if (current === this.last.next) {
+                        break;
+                    }
+                }
+                
+                return `Key ${key} not found`;
+            }
+            
+            search(key) {
+                if (this.last === null) {
+                    return "List is empty";
+                }
+                
+                // Clear previous highlights
+                this.nodes.forEach(node => node.highlight = false);
+                
+                let current = this.last.next;
+                let position = 0;
+                
+                while (true) {
+                    if (current.data == key) {
+                        current.highlight = true;
+                        setTimeout(() => current.highlight = false, 2000);
+                        return `Found ${key} at position ${position}`;
+                    }
+                    
+                    current = current.next;
+                    position++;
+                    
+                    if (current === this.last.next) {
+                        break;
+                    }
+                }
+                
+                return `Key ${key} not found`;
+            }
+            
+            display() {
+                if (this.last === null) {
+                    return "List is empty";
+                }
+                
+                const values = this.nodes.map(node => node.data);
+                return `Circular List: ${values.join(' -> ')} -> (back to start)`;
+            }
+        }
+
+        const circularList = new CircularLinkedList();
+        
+        // Initialize with some nodes
+        circularList.insertAtEnd(10);
+        circularList.insertAtEnd(20);
+        circularList.insertAtEnd(30);
+
+        let draggedNode = null;
+        let mouseX = 0;
+        let mouseY = 0;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        function updatePositions() {
+            if (circularList.nodes.length === 0) return;
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 150;
+            const angleStep = (2 * Math.PI) / circularList.nodes.length;
+            
+            circularList.nodes.forEach((node, index) => {
+                const angle = index * angleStep - Math.PI / 2; // Start from top
+                node.targetX = centerX + radius * Math.cos(angle);
+                node.targetY = centerY + radius * Math.sin(angle);
+                node.animationProgress = 0;
+            });
+        }
+
+        function updateInfo() {
+            document.getElementById('lastValue').textContent = circularList.last ? circularList.last.data : 'NULL';
+            document.getElementById('sizeValue').textContent = circularList.nodes.length;
+        }
+
+        function animate() {
+            circularList.nodes.forEach(node => {
+                if (!node.isDragging) {
+                    const dx = node.targetX - node.x;
+                    const dy = node.targetY - node.y;
+                    node.x += dx * 0.1;
+                    node.y += dy * 0.1;
+                }
+                
+                if (node.animationProgress < 1) {
+                    node.animationProgress += 0.05;
+                }
+            });
+            
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (circularList.nodes.length === 0) return;
+            
+            // Draw circular connections
+            circularList.nodes.forEach((node, index) => {
+                const nextIndex = (index + 1) % circularList.nodes.length;
+                const nextNode = circularList.nodes[nextIndex];
+                
+                if (nextNode) {
+                    drawCurvedArrow(node, nextNode, index === circularList.nodes.length - 1);
+                }
+            });
+            
+            // Draw nodes
+            circularList.nodes.forEach(node => {
+                drawNode(node);
+            });
+            
+            // Draw last pointer
+            if (circularList.last) {
+                drawPointer(circularList.last.x, circularList.last.y - 60, 'LAST', '#ff4800');
+            }
+            
+            // Draw center circle to show circular nature
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 5, 0, 2 * Math.PI);
+            ctx.fillStyle = '#ff4800';
+            ctx.fill();
+            ctx.strokeStyle = '#1c1d20';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function drawNode(node) {
+            const radius = 25;
+            const alpha = Math.min(node.animationProgress, 1);
+            
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            
+            // Node circle
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = node.highlight ? '#ff4800' : (node.isDragging ? '#e04000' : '#1c1d20');
+            ctx.fill();
+            ctx.strokeStyle = node.highlight ? '#1c1d20' : '#ff4800';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Node value
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.data, node.x, node.y);
+            
+            ctx.restore();
+        }
+
+        function drawCurvedArrow(fromNode, toNode, isLastToFirst) {
+            const dx = toNode.x - fromNode.x;
+            const dy = toNode.y - fromNode.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // Calculate control point for curve
+            const midX = (fromNode.x + toNode.x) / 2;
+            const midY = (fromNode.y + toNode.y) / 2;
+            
+            // Offset control point based on whether it's the closing connection
+            const curveOffset = isLastToFirst ? 80 : 30;
+            const perpX = -dy / distance * curveOffset;
+            const perpY = dx / distance * curveOffset;
+            
+            const controlX = midX + perpX;
+            const controlY = midY + perpY;
+            
+            // Draw curved path
+            ctx.beginPath();
+            ctx.moveTo(fromNode.x + 20 * dx / distance, fromNode.y + 20 * dy / distance);
+            ctx.quadraticCurveTo(controlX, controlY, toNode.x - 20 * dx / distance, toNode.y - 20 * dy / distance);
+            ctx.strokeStyle = isLastToFirst ? '#ff4800' : '#1c1d20';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw arrowhead
+            const endX = toNode.x - 25 * dx / distance;
+            const endY = toNode.y - 25 * dy / distance;
+            
+            // Calculate arrow direction from control point to end
+            const arrowDx = endX - controlX;
+            const arrowDy = endY - controlY;
+            const arrowDistance = Math.sqrt(arrowDx * arrowDx + arrowDy * arrowDy);
+            
+            if (arrowDistance > 0) {
+                const angle = Math.atan2(arrowDy, arrowDx);
+                const headLength = 10;
+                
+                ctx.beginPath();
+                ctx.moveTo(endX, endY);
+                ctx.lineTo(endX - headLength * Math.cos(angle - Math.PI / 6), endY - headLength * Math.sin(angle - Math.PI / 6));
+                ctx.moveTo(endX, endY);
+                ctx.lineTo(endX - headLength * Math.cos(angle + Math.PI / 6), endY - headLength * Math.sin(angle + Math.PI / 6));
+                ctx.strokeStyle = isLastToFirst ? '#ff4800' : '#1c1d20';
+                ctx.stroke();
+            }
+        }
+
+        function drawPointer(x, y, label, color) {
+            ctx.fillStyle = color;
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, x, y);
+            
+            // Arrow pointing down
+            ctx.beginPath();
+            ctx.moveTo(x, y + 5);
+            ctx.lineTo(x, y + 25);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Arrowhead
+            ctx.beginPath();
+            ctx.moveTo(x, y + 25);
+            ctx.lineTo(x - 5, y + 20);
+            ctx.moveTo(x, y + 25);
+            ctx.lineTo(x + 5, y + 20);
+            ctx.stroke();
+        }
+
+        function showMessage(text) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.classList.add('show');
+            setTimeout(() => messageEl.classList.remove('show'), 3000);
+        }
+
+        // Mouse events
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+            
+            circularList.nodes.forEach(node => {
+                const distance = Math.sqrt((mouseX - node.x) ** 2 + (mouseY - node.y) ** 2);
+                if (distance < 25) {
+                    draggedNode = node;
+                    node.isDragging = true;
+                    offsetX = mouseX - node.x;
+                    offsetY = mouseY - node.y;
+                }
+            });
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+            
+            if (draggedNode) {
+                draggedNode.x = mouseX - offsetX;
+                draggedNode.y = mouseY - offsetY;
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            if (draggedNode) {
+                draggedNode.isDragging = false;
+                setTimeout(() => {
+                    draggedNode.targetX = draggedNode.x;
+                    draggedNode.targetY = draggedNode.y;
+                }, 100);
+                draggedNode = null;
+            }
+        });
+
+        // Control functions
+        function insertAtBeginning() {
+            const value = document.getElementById('valueInput').value;
+            if (value === '') return;
+            const message = circularList.insertAtBeginning(parseInt(value));
+            showMessage(message);
+        }
+
+        function insertAtEnd() {
+            const value = document.getElementById('valueInput').value;
+            if (value === '') return;
+            const message = circularList.insertAtEnd(parseInt(value));
+            showMessage(message);
+        }
+
+        function deleteNode() {
+            const value = document.getElementById('deleteInput').value;
+            if (value === '') return;
+            const message = circularList.deleteNode(parseInt(value));
+            showMessage(message);
+        }
+
+        function search() {
+            const value = document.getElementById('searchInput').value;
+            if (value === '') return;
+            const message = circularList.search(parseInt(value));
+            showMessage(message);
+        }
+
+        function display() {
+            const message = circularList.display();
+            showMessage(message);
+        }
+
+        // Initialize
+        updatePositions();
+        updateInfo();
+        animate();
+    </script>
+</body>
+</html>
