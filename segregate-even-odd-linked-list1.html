@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linked List Segregation Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #000000;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .description {
+            margin-bottom: 30px;
+            line-height: 1.6;
+            text-align: center;
+        }
+        .visualization {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 20px;
+            overflow: hidden;
+        }
+        .node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            font-weight: bold;
+            transition: all 1s ease;
+        }
+        .even-node {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .odd-node {
+            background-color: #FD9F78;
+            color: #000000;
+        }
+        .arrow {
+            position: absolute;
+            height: 2px;
+            background-color: #000000;
+            transform-origin: left center;
+            transition: all 1s ease;
+        }
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid #000000;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-info {
+            margin-top: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Linked List Segregation Visualization</h1>
+        
+        <div class="description">
+            <p>This visualization demonstrates how to segregate a linked list by moving all even nodes to the beginning and all odd nodes to the end, while maintaining the relative order of nodes within each group.</p>
+        </div>
+        
+        <div class="visualization" id="visualization"></div>
+        
+        <div class="step-info" id="stepInfo">Step 1: Original linked list with nodes 1 → 2 → 3 → 4 → 5 → 6</div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const visualization = document.getElementById('visualization');
+        const stepInfo = document.getElementById('stepInfo');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        const nodes = [
+            { id: 1, value: 1, isEven: false },
+            { id: 2, value: 2, isEven: true },
+            { id: 3, value: 3, isEven: false },
+            { id: 4, value: 4, isEven: true },
+            { id: 5, value: 5, isEven: false },
+            { id: 6, value: 6, isEven: true }
+        ];
+        
+        let currentStep = 1;
+        const totalSteps = 5;
+        
+        function createNode(node, index, total) {
+            const nodeElement = document.createElement('div');
+            nodeElement.className = `node ${node.isEven ? 'even-node' : 'odd-node'}`;
+            nodeElement.id = `node-${node.id}`;
+            nodeElement.textContent = node.value;
+            
+            const horizontalSpacing = visualization.offsetWidth / (total + 1);
+            nodeElement.style.left = `${horizontalSpacing * (index + 1) - 20}px`;
+            nodeElement.style.top = '100px';
+            
+            return nodeElement;
+        }
+        
+        function createArrow(fromNodeId, toNodeId) {
+            const fromNode = document.getElementById(`node-${fromNodeId}`);
+            const toNode = document.getElementById(`node-${toNodeId}`);
+            
+            if (!fromNode || !toNode) return null;
+            
+            const arrow = document.createElement('div');
+            arrow.className = 'arrow';
+            arrow.id = `arrow-${fromNodeId}-${toNodeId}`;
+            
+            const fromRect = fromNode.getBoundingClientRect();
+            const toRect = toNode.getBoundingClientRect();
+            const visRect = visualization.getBoundingClientRect();
+            
+            const fromX = fromRect.left + fromRect.width / 2 - visRect.left;
+            const fromY = fromRect.top + fromRect.height / 2 - visRect.top;
+            const toX = toRect.left + toRect.width / 2 - visRect.left;
+            const toY = toRect.top + toRect.height / 2 - visRect.top;
+            
+            const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+            const angle = Math.atan2(toY - fromY, toX - fromX);
+            
+            arrow.style.width = `${length - 40}px`;
+            arrow.style.left = `${fromX + 20}px`;
+            arrow.style.top = `${fromY}px`;
+            arrow.style.transform = `rotate(${angle}rad)`;
+            
+            return arrow;
+        }
+        
+        function clearVisualization() {
+            visualization.innerHTML = '';
+        }
+        
+        function setupInitialLinkedList() {
+            clearVisualization();
+            
+            nodes.forEach((node, index) => {
+                visualization.appendChild(createNode(node, index, nodes.length));
+            });
+            
+            for (let i = 0; i < nodes.length - 1; i++) {
+                const arrow = createArrow(nodes[i].id, nodes[i + 1].id);
+                if (arrow) visualization.appendChild(arrow);
+            }
+            
+            stepInfo.textContent = "Step 1: Original linked list with nodes 1 → 2 → 3 → 4 → 5 → 6";
+        }
+        
+        function showHighlightingEvenNodes() {
+            clearVisualization();
+            
+            nodes.forEach((node, index) => {
+                const nodeElement = createNode(node, index, nodes.length);
+                if (node.isEven) {
+                    nodeElement.style.boxShadow = '0 0 10px 5px rgba(255, 72, 0, 0.7)';
+                }
+                visualization.appendChild(nodeElement);
+            });
+            
+            for (let i = 0; i < nodes.length - 1; i++) {
+                const arrow = createArrow(nodes[i].id, nodes[i + 1].id);
+                if (arrow) visualization.appendChild(arrow);
+            }
+            
+            stepInfo.textContent = "Step 2: Identify even nodes (2, 4, 6) and odd nodes (1, 3, 5)";
+        }
+        
+        function showMovingEvenNodesToFront() {
+            clearVisualization();
+            
+            const reorderedNodes = [
+                nodes[1], // 2
+                nodes[3], // 4
+                nodes[5], // 6
+                nodes[0], // 1
+                nodes[2], // 3
+                nodes[4]  // 5
+            ];
+            
+            reorderedNodes.forEach((node, index) => {
+                const nodeElement = createNode(node, index, reorderedNodes.length);
+                if (index < 3) {
+                    nodeElement.style.top = '50px';
+                } else {
+                    nodeElement.style.top = '150px';
+                }
+                visualization.appendChild(nodeElement);
+            });
+            
+            stepInfo.textContent = "Step 3: Moving even nodes to the front and odd nodes to the back";
+        }
+        
+        function showReconnectingNodes() {
+            clearVisualization();
+            
+            const reorderedNodes = [
+                nodes[1], // 2
+                nodes[3], // 4
+                nodes[5], // 6
+                nodes[0], // 1
+                nodes[2], // 3
+                nodes[4]  // 5
+            ];
+            
+            reorderedNodes.forEach((node, index) => {
+                visualization.appendChild(createNode(node, index, reorderedNodes.length));
+            });
+            
+            for (let i = 0; i < reorderedNodes.length - 1; i++) {
+                const arrow = createArrow(reorderedNodes[i].id, reorderedNodes[i + 1].id);
+                if (arrow) {
+                    arrow.style.backgroundColor = "#FF4800";
+                    arrow.style.height = "3px";
+                    visualization.appendChild(arrow);
+                }
+            }
+            
+            stepInfo.textContent = "Step 4: Reconnecting nodes in the new order";
+        }
+        
+        function showFinalResult() {
+            clearVisualization();
+            
+            const reorderedNodes = [
+                nodes[1], // 2
+                nodes[3], // 4
+                nodes[5], // 6
+                nodes[0], // 1
+                nodes[2], // 3
+                nodes[4]  // 5
+            ];
+            
+            reorderedNodes.forEach((node, index) => {
+                visualization.appendChild(createNode(node, index, reorderedNodes.length));
+            });
+            
+            for (let i = 0; i < reorderedNodes.length - 1; i++) {
+                const arrow = createArrow(reorderedNodes[i].id, reorderedNodes[i + 1].id);
+                if (arrow) visualization.appendChild(arrow);
+            }
+            
+            stepInfo.textContent = "Step 5: Final segregated linked list: 2 → 4 → 6 → 1 → 3 → 5";
+        }
+        
+        function renderStep(step) {
+            switch(step) {
+                case 1:
+                    setupInitialLinkedList();
+                    break;
+                case 2:
+                    showHighlightingEvenNodes();
+                    break;
+                case 3:
+                    showMovingEvenNodesToFront();
+                    break;
+                case 4:
+                    showReconnectingNodes();
+                    break;
+                case 5:
+                    showFinalResult();
+                    break;
+            }
+            
+            prevBtn.disabled = step === 1;
+            nextBtn.disabled = step === totalSteps;
+        }
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                renderStep(currentStep);
+            }
+        });
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                renderStep(currentStep);
+            }
+        });
+        
+        // Initialize visualization
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                renderStep(currentStep);
+            }, 100); // Small delay to ensure DOM is fully rendered
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            renderStep(currentStep);
+        });
+    </script>
+</body>
+</html>
