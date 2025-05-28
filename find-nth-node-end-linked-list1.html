@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linked List with Nth Node from End</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        .explanation {
+            margin-bottom: 30px;
+            color: #000000;
+            line-height: 1.6;
+        }
+        .linked-list-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 150px;
+            margin: 30px 0;
+            position: relative;
+        }
+        .node {
+            width: 60px;
+            height: 60px;
+            background-color: #FD9F78;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 40px;
+            position: relative;
+            font-weight: bold;
+            font-size: 24px;
+            color: #000000;
+            transition: all 0.5s ease;
+        }
+        .node.highlighted {
+            background-color: #FF4800;
+            transform: scale(1.2);
+            color: #FFFFFF;
+            box-shadow: 0 0 15px rgba(255, 72, 0, 0.7);
+        }
+        .arrow {
+            position: absolute;
+            width: 40px;
+            height: 2px;
+            background-color: #000000;
+            top: 50%;
+            margin-top: -1px;
+        }
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid #000000;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        .explanation-text {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            color: #000000;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 300px;
+            margin-top: 30px;
+        }
+        .nav-btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .counter {
+            color: #000000;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .node-label {
+            position: absolute;
+            top: -30px;
+            width: 100%;
+            text-align: center;
+            font-size: 14px;
+            color: #000000;
+        }
+        .position-marker {
+            position: absolute;
+            bottom: -30px;
+            width: 100%;
+            text-align: center;
+            font-size: 14px;
+            color: #FF4800;
+            font-weight: bold;
+        }
+        .steps-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Linked List: Finding the Nth Node from End</h1>
+        
+        <div class="explanation">
+            <p>A linked list is a linear data structure where each element (called a node) contains a value and a reference to the next node. In this animation, we'll learn how to find the Nth node from the end of a linked list.</p>
+        </div>
+        
+        <div class="linked-list-container" id="linkedList">
+            <!-- Nodes will be created by JavaScript -->
+        </div>
+        
+        <div class="explanation-text" id="explanationText">
+            <!-- Explanation will be updated by JavaScript -->
+        </div>
+        
+        <div class="steps-container">
+            <div class="counter" id="stepCounter">Step 1 of 5</div>
+            <div class="navigation">
+                <button class="nav-btn" id="prevBtn" disabled>Previous</button>
+                <button class="nav-btn" id="nextBtn">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Animation state
+        let currentStep = 1;
+        const totalSteps = 5;
+        
+        // DOM elements
+        const linkedListContainer = document.getElementById('linkedList');
+        const explanationText = document.getElementById('explanationText');
+        const stepCounter = document.getElementById('stepCounter');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        // Create linked list nodes
+        function createLinkedList() {
+            linkedListContainer.innerHTML = '';
+            
+            const values = [1, 2, 3, 4, 5];
+            
+            for (let i = 0; i < values.length; i++) {
+                // Create node
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.id = `node-${i+1}`;
+                node.textContent = values[i];
+                
+                // Add node label
+                const nodeLabel = document.createElement('div');
+                nodeLabel.className = 'node-label';
+                nodeLabel.textContent = `Node ${i+1}`;
+                node.appendChild(nodeLabel);
+                
+                // Add position marker (empty initially)
+                const posMarker = document.createElement('div');
+                posMarker.className = 'position-marker';
+                posMarker.id = `marker-${i+1}`;
+                node.appendChild(posMarker);
+                
+                linkedListContainer.appendChild(node);
+                
+                // Create arrow (except for the last node)
+                if (i < values.length - 1) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'arrow';
+                    arrow.style.left = `${(i+1) * 100 + 30}px`;
+                    linkedListContainer.appendChild(arrow);
+                }
+            }
+        }
+        
+        // Update the animation based on the current step
+        function updateAnimation() {
+            // Reset all nodes
+            document.querySelectorAll('.node').forEach(node => {
+                node.classList.remove('highlighted');
+            });
+            
+            // Reset all markers
+            document.querySelectorAll('.position-marker').forEach(marker => {
+                marker.textContent = '';
+            });
+            
+            stepCounter.textContent = `Step ${currentStep} of ${totalSteps}`;
+            
+            switch(currentStep) {
+                case 1:
+                    explanationText.innerHTML = `<p>We have a linked list with 5 nodes. We want to find the <strong>2nd node from the end</strong>.</p>
+                    <p>In this example, the 2nd node from the end would be the node with value 4.</p>`;
+                    break;
+                    
+                case 2:
+                    explanationText.innerHTML = `<p>To find the Nth node from the end, we can use the "two-pointer" technique.</p>
+                    <p>First, we'll place two pointers at the start of the list: a "slow" pointer and a "fast" pointer.</p>`;
+                    document.getElementById('node-1').classList.add('highlighted');
+                    document.getElementById('marker-1').textContent = 'Slow & Fast';
+                    break;
+                    
+                case 3:
+                    explanationText.innerHTML = `<p>We'll advance the "fast" pointer N nodes ahead (in our case, 2 nodes ahead).</p>
+                    <p>This creates a "gap" of N nodes between the two pointers.</p>`;
+                    document.getElementById('node-1').classList.add('highlighted');
+                    document.getElementById('marker-1').textContent = 'Slow';
+                    document.getElementById('node-3').classList.add('highlighted');
+                    document.getElementById('marker-3').textContent = 'Fast';
+                    break;
+                    
+                case 4:
+                    explanationText.innerHTML = `<p>Now, we move both pointers forward at the same pace until the "fast" pointer reaches the end of the list.</p>
+                    <p>When the fast pointer reaches the end, the slow pointer will be at the Nth node from the end!</p>`;
+                    document.getElementById('node-3').classList.add('highlighted');
+                    document.getElementById('marker-3').textContent = 'Slow';
+                    document.getElementById('node-5').classList.add('highlighted');
+                    document.getElementById('marker-5').textContent = 'Fast';
+                    break;
+                    
+                case 5:
+                    explanationText.innerHTML = `<p>The fast pointer has reached the end, and the slow pointer is at the 2nd node from the end (Node 4).</p>
+                    <p>We've successfully found the 2nd node from the end, which has the value 4!</p>`;
+                    document.getElementById('node-4').classList.add('highlighted');
+                    document.getElementById('marker-4').textContent = '2nd from end!';
+                    break;
+            }
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === totalSteps;
+        }
+        
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateAnimation();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateAnimation();
+            }
+        });
+        
+        // Initialize the animation
+        createLinkedList();
+        updateAnimation();
+    </script>
+</body>
+</html>
