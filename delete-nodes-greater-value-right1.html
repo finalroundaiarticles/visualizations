@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linked List Transformation Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        
+        .canvas-container {
+            position: relative;
+            margin: 20px auto;
+            height: 400px;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #FFFFFF;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .description {
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            margin-top: 15px;
+            color: #000000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Linked List Transformation Visualization</h1>
+        
+        <div class="description">
+            <p>This visualization demonstrates how a linked list transforms from:</p>
+            <p><strong>12 → 15 → 10 → 11 → 5 → 6 → 2 → 3</strong></p>
+            <p>to:</p>
+            <p><strong>15 → 11 → 6 → 3</strong></p>
+            <p>The pattern is removing every alternate node from the original list.</p>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="linkedListCanvas"></canvas>
+        </div>
+        
+        <div class="step-indicator" id="stepInfo">Step 1: Original Linked List</div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('linkedListCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepInfo = document.getElementById('stepInfo');
+        
+        // Set canvas dimensions
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        
+        // Colors
+        const primaryColor = '#FF4800';
+        const secondaryColor = '#FD9F78';
+        const blackColor = '#000000';
+        const whiteColor = '#FFFFFF';
+        const fadedColor = '#CCCCCC';
+        
+        // Node class
+        class Node {
+            constructor(value, x, y) {
+                this.value = value;
+                this.x = x;
+                this.y = y;
+                this.nextX = 0;
+                this.nextY = 0;
+                this.state = 'active'; // active, deleted, or highlighted
+            }
+            
+            draw() {
+                // Draw circle
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 25, 0, Math.PI * 2);
+                
+                if (this.state === 'active') {
+                    ctx.fillStyle = secondaryColor;
+                } else if (this.state === 'deleted') {
+                    ctx.fillStyle = fadedColor;
+                } else if (this.state === 'highlighted') {
+                    ctx.fillStyle = primaryColor;
+                }
+                
+                ctx.fill();
+                ctx.strokeStyle = blackColor;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Draw value
+                ctx.font = '16px Arial';
+                ctx.fillStyle = blackColor;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.value, this.x, this.y);
+                
+                // Draw arrow if not deleted
+                if (this.state !== 'deleted' && this.nextX !== 0) {
+                    drawArrow(this.x + 25, this.y, this.nextX - 25, this.nextY);
+                }
+                
+                // Draw X if deleted
+                if (this.state === 'deleted') {
+                    ctx.beginPath();
+                    ctx.strokeStyle = primaryColor;
+                    ctx.lineWidth = 3;
+                    ctx.moveTo(this.x - 15, this.y - 15);
+                    ctx.lineTo(this.x + 15, this.y + 15);
+                    ctx.moveTo(this.x + 15, this.y - 15);
+                    ctx.lineTo(this.x - 15, this.y + 15);
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        // Draw arrow function
+        function drawArrow(fromX, fromY, toX, toY) {
+            const headLength = 10;
+            const angle = Math.atan2(toY - fromY, toX - fromX);
+            
+            // Draw line
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.strokeStyle = primaryColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw arrowhead
+            ctx.beginPath();
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(
+                toX - headLength * Math.cos(angle - Math.PI / 6),
+                toY - headLength * Math.sin(angle - Math.PI / 6)
+            );
+            ctx.lineTo(
+                toX - headLength * Math.cos(angle + Math.PI / 6),
+                toY - headLength * Math.sin(angle + Math.PI / 6)
+            );
+            ctx.closePath();
+            ctx.fillStyle = primaryColor;
+            ctx.fill();
+        }
+        
+        // Initial linked list
+        const originalValues = [12, 15, 10, 11, 5, 6, 2, 3];
+        let nodes = [];
+        
+        // Animation steps
+        let currentStep = 0;
+        const totalSteps = 9; // Original list + each node deletion + final list
+        
+        // Create nodes
+        function createNodes() {
+            nodes = [];
+            const spacing = canvas.width / (originalValues.length + 1);
+            const y = canvas.height / 2;
+            
+            for (let i = 0; i < originalValues.length; i++) {
+                const x = spacing * (i + 1);
+                nodes.push(new Node(originalValues[i], x, y));
+                
+                // Set next node position
+                if (i < originalValues.length - 1) {
+                    nodes[i].nextX = spacing * (i + 2);
+                    nodes[i].nextY = y;
+                }
+            }
+        }
+        
+        // Update step info
+        function updateStepInfo() {
+            if (currentStep === 0) {
+                stepInfo.textContent = "Step 1: Original Linked List";
+            } else if (currentStep < totalSteps - 1) {
+                const nodeIndex = currentStep - 1;
+                stepInfo.textContent = `Step ${currentStep + 1}: Removing node with value ${originalValues[nodeIndex * 2]}`;
+            } else {
+                stepInfo.textContent = `Step ${currentStep + 1}: Final Linked List`;
+            }
+        }
+        
+        // Draw current state
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (currentStep === 0) {
+                // Original list
+                for (let node of nodes) {
+                    node.state = 'active';
+                    node.draw();
+                }
+            } else if (currentStep < totalSteps - 1) {
+                // Intermediate steps - removing alternate nodes
+                for (let i = 0; i < nodes.length; i++) {
+                    // Node to delete in this step
+                    const nodeToDeleteIndex = (currentStep - 1) * 2;
+                    
+                    if (i === nodeToDeleteIndex) {
+                        nodes[i].state = 'deleted';
+                    } else if (i < nodeToDeleteIndex) {
+                        if (i % 2 === 0) {
+                            nodes[i].state = 'deleted';
+                        } else {
+                            nodes[i].state = 'active';
+                            
+                            // Update next pointers
+                            if (i < nodes.length - 2) {
+                                if (i + 2 <= nodeToDeleteIndex) {
+                                    // Already processed
+                                    nodes[i].nextX = (i + 3 < nodes.length) ? nodes[i + 3].x : 0;
+                                    nodes[i].nextY = (i + 3 < nodes.length) ? nodes[i + 3].y : 0;
+                                } else {
+                                    // Not yet processed
+                                    nodes[i].nextX = nodes[i + 2].x;
+                                    nodes[i].nextY = nodes[i + 2].y;
+                                }
+                            } else {
+                                nodes[i].nextX = 0;
+                                nodes[i].nextY = 0;
+                            }
+                        }
+                    } else {
+                        // Not yet processed
+                        nodes[i].state = 'active';
+                    }
+                    
+                    nodes[i].draw();
+                }
+                
+                // Highlight the node currently being processed
+                if ((currentStep - 1) * 2 < nodes.length) {
+                    nodes[(currentStep - 1) * 2].state = 'highlighted';
+                    nodes[(currentStep - 1) * 2].draw();
+                }
+            } else {
+                // Final list - only odd-indexed nodes
+                for (let i = 0; i < nodes.length; i++) {
+                    if (i % 2 === 0) {
+                        nodes[i].state = 'deleted';
+                    } else {
+                        nodes[i].state = 'highlighted';
+                        
+                        // Update next pointers for final list
+                        if (i < nodes.length - 2) {
+                            nodes[i].nextX = nodes[i + 2].x;
+                            nodes[i].nextY = nodes[i + 2].y;
+                        } else {
+                            nodes[i].nextX = 0;
+                            nodes[i].nextY = 0;
+                        }
+                    }
+                    
+                    nodes[i].draw();
+                }
+            }
+        }
+        
+        // Initialize
+        function init() {
+            createNodes();
+            draw();
+            updateStepInfo();
+        }
+        
+        // Event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStepInfo();
+                draw();
+                
+                prevBtn.disabled = currentStep === 0;
+                nextBtn.disabled = false;
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateStepInfo();
+                draw();
+                
+                prevBtn.disabled = false;
+                nextBtn.disabled = currentStep === totalSteps - 1;
+            }
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            createNodes();
+            draw();
+        });
+        
+        // Start animation
+        init();
+    </script>
+</body>
+</html>
