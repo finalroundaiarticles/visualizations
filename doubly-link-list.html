@@ -16,12 +16,16 @@
             background-color: white;
             color: #1c1d20;
             overflow: hidden;
+            width: 794px;
+            height: 600px;
         }
         
         #canvas {
             display: block;
             cursor: grab;
             background: white;
+            width: 794px;
+            height: 600px;
         }
         
         #canvas:active {
@@ -30,33 +34,34 @@
         
         .controls {
             position: absolute;
-            top: 20px;
-            left: 20px;
+            top: 10px;
+            left: 10px;
             display: flex;
-            gap: 10px;
+            gap: 5px;
             flex-wrap: wrap;
             z-index: 100;
+            max-width: 570px;
         }
         
         .control-group {
             display: flex;
-            gap: 5px;
+            gap: 3px;
             align-items: center;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 8px 12px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 5px 8px;
+            border-radius: 6px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         }
         
         button {
             background: #ff4800;
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
+            padding: 5px 10px;
+            border-radius: 4px;
             cursor: pointer;
             font-family: Arial, sans-serif;
-            font-size: 12px;
+            font-size: 10px;
             font-weight: bold;
             transition: all 0.2s;
         }
@@ -72,11 +77,11 @@
         
         input {
             border: 2px solid #1c1d20;
-            padding: 6px 10px;
-            border-radius: 4px;
+            padding: 4px 6px;
+            border-radius: 3px;
             font-family: Arial, sans-serif;
-            font-size: 12px;
-            width: 60px;
+            font-size: 10px;
+            width: 45px;
             text-align: center;
         }
         
@@ -87,17 +92,19 @@
         
         .message {
             position: absolute;
-            bottom: 20px;
+            bottom: 10px;
             left: 50%;
             transform: translateX(-50%);
             background: #ff4800;
             color: white;
-            padding: 10px 20px;
-            border-radius: 6px;
+            padding: 8px 15px;
+            border-radius: 4px;
             font-family: Arial, sans-serif;
-            font-size: 14px;
+            font-size: 12px;
             opacity: 0;
             transition: opacity 0.3s;
+            max-width: 400px;
+            text-align: center;
         }
         
         .message.show {
@@ -106,14 +113,14 @@
         
         .pointers {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px;
+            border-radius: 6px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
             font-family: Arial, sans-serif;
-            font-size: 12px;
+            font-size: 10px;
         }
     </style>
 </head>
@@ -123,25 +130,25 @@
     <div class="controls">
         <div class="control-group">
             <input type="number" id="valueInput" placeholder="Value" value="10">
-            <button onclick="insertAtBeginning()">Insert at Beginning</button>
-            <button onclick="insertAtEnd()">Insert at End</button>
+            <button onclick="insertAtBeginning()">Insert Begin</button>
+            <button onclick="insertAtEnd()">Insert End</button>
         </div>
         <div class="control-group">
             <input type="number" id="posInput" placeholder="Pos" value="0">
-            <button onclick="insertAtPosition()">Insert at Position</button>
-            <button onclick="deleteAtPosition()">Delete at Position</button>
+            <button onclick="insertAtPosition()">Insert Pos</button>
+            <button onclick="deleteAtPosition()">Delete Pos</button>
         </div>
         <div class="control-group">
             <input type="number" id="deleteValueInput" placeholder="Value">
-            <button onclick="deleteByValue()">Delete by Value</button>
+            <button onclick="deleteByValue()">Delete Val</button>
         </div>
         <div class="control-group">
             <input type="number" id="searchInput" placeholder="Value">
             <button onclick="search()">Search</button>
         </div>
         <div class="control-group">
-            <button onclick="displayForward()">Display Forward</button>
-            <button onclick="displayBackward()">Display Backward</button>
+            <button onclick="displayForward()">Forward</button>
+            <button onclick="displayBackward()">Backward</button>
         </div>
     </div>
     
@@ -157,14 +164,8 @@
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            draw();
-        });
+        canvas.width = 794;
+        canvas.height = 600;
 
         class Node {
             constructor(data) {
@@ -316,13 +317,18 @@
             }
             
             updatePositions() {
-                const startX = 200;
-                const startY = canvas.height / 2;
-                const spacing = 150;
+                const centerY = canvas.height / 2;
+                const availableWidth = canvas.width - 100; // Leave margin
+                const maxNodesPerRow = Math.floor(availableWidth / 120);
                 
                 this.nodes.forEach((node, index) => {
-                    node.targetX = startX + index * spacing;
-                    node.targetY = startY;
+                    const row = Math.floor(index / maxNodesPerRow);
+                    const col = index % maxNodesPerRow;
+                    const spacing = Math.min(120, availableWidth / maxNodesPerRow);
+                    const startX = (canvas.width - (Math.min(this.nodes.length, maxNodesPerRow) - 1) * spacing) / 2;
+                    
+                    node.targetX = startX + col * spacing;
+                    node.targetY = centerY + row * 100;
                     node.animationProgress = 0;
                 });
             }
@@ -372,17 +378,19 @@
             doublyLinkedList.nodes.forEach((node, index) => {
                 // Next arrows
                 if (node.next) {
-                    const nextNode = doublyLinkedList.nodes[index + 1];
-                    if (nextNode) {
-                        drawArrow(node.x + 30, node.y - 10, nextNode.x - 30, nextNode.y - 10, '#1c1d20');
+                    const nextIndex = doublyLinkedList.nodes.findIndex(n => n === node.next);
+                    if (nextIndex !== -1) {
+                        const nextNode = doublyLinkedList.nodes[nextIndex];
+                        drawArrow(node.x + 25, node.y - 8, nextNode.x - 25, nextNode.y - 8, '#1c1d20');
                     }
                 }
                 
                 // Previous arrows
                 if (node.prev) {
-                    const prevNode = doublyLinkedList.nodes[index - 1];
-                    if (prevNode) {
-                        drawArrow(node.x - 30, node.y + 10, prevNode.x + 30, prevNode.y + 10, '#ff4800');
+                    const prevIndex = doublyLinkedList.nodes.findIndex(n => n === node.prev);
+                    if (prevIndex !== -1) {
+                        const prevNode = doublyLinkedList.nodes[prevIndex];
+                        drawArrow(node.x - 25, node.y + 8, prevNode.x + 25, prevNode.y + 8, '#ff4800');
                     }
                 }
             });
@@ -394,15 +402,15 @@
             
             // Draw head and tail pointers
             if (doublyLinkedList.head) {
-                drawPointer(doublyLinkedList.head.x, doublyLinkedList.head.y - 60, 'HEAD', '#ff4800');
+                drawPointer(doublyLinkedList.head.x, doublyLinkedList.head.y - 50, 'HEAD', '#ff4800');
             }
             if (doublyLinkedList.tail && doublyLinkedList.tail !== doublyLinkedList.head) {
-                drawPointer(doublyLinkedList.tail.x, doublyLinkedList.tail.y - 60, 'TAIL', '#ff4800');
+                drawPointer(doublyLinkedList.tail.x, doublyLinkedList.tail.y - 50, 'TAIL', '#ff4800');
             }
         }
 
         function drawNode(node) {
-            const radius = 30;
+            const radius = 25;
             const alpha = Math.min(node.animationProgress, 1);
             
             ctx.save();
@@ -414,21 +422,21 @@
             ctx.fillStyle = node.highlight ? '#ff4800' : (node.isDragging ? '#e04000' : '#1c1d20');
             ctx.fill();
             ctx.strokeStyle = node.highlight ? '#1c1d20' : '#ff4800';
-            ctx.lineWidth = 3;
+            ctx.lineWidth = 2;
             ctx.stroke();
             
             // Node value
             ctx.fillStyle = 'white';
-            ctx.font = 'bold 18px Arial';
+            ctx.font = 'bold 14px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(node.data, node.x, node.y);
             
             // Prev and Next indicators
             ctx.fillStyle = node.highlight ? 'white' : '#ff4800';
-            ctx.font = 'bold 10px Arial';
-            ctx.fillText('PREV', node.x - 15, node.y + 45);
-            ctx.fillText('NEXT', node.x + 15, node.y + 45);
+            ctx.font = 'bold 8px Arial';
+            ctx.fillText('PREV', node.x - 12, node.y + 35);
+            ctx.fillText('NEXT', node.x + 12, node.y + 35);
             
             ctx.restore();
         }
@@ -443,7 +451,7 @@
             
             // Arrowhead
             const angle = Math.atan2(y2 - y1, x2 - x1);
-            const headLength = 10;
+            const headLength = 8;
             
             ctx.beginPath();
             ctx.moveTo(x2, y2);
@@ -455,24 +463,24 @@
 
         function drawPointer(x, y, label, color) {
             ctx.fillStyle = color;
-            ctx.font = 'bold 14px Arial';
+            ctx.font = 'bold 12px Arial';
             ctx.textAlign = 'center';
             ctx.fillText(label, x, y);
             
             // Arrow pointing down
             ctx.beginPath();
-            ctx.moveTo(x, y + 5);
-            ctx.lineTo(x, y + 25);
+            ctx.moveTo(x, y + 3);
+            ctx.lineTo(x, y + 20);
             ctx.strokeStyle = color;
             ctx.lineWidth = 2;
             ctx.stroke();
             
             // Arrowhead
             ctx.beginPath();
-            ctx.moveTo(x, y + 25);
-            ctx.lineTo(x - 5, y + 20);
-            ctx.moveTo(x, y + 25);
-            ctx.lineTo(x + 5, y + 20);
+            ctx.moveTo(x, y + 20);
+            ctx.lineTo(x - 4, y + 16);
+            ctx.moveTo(x, y + 20);
+            ctx.lineTo(x + 4, y + 16);
             ctx.stroke();
         }
 
@@ -491,7 +499,7 @@
             
             doublyLinkedList.nodes.forEach(node => {
                 const distance = Math.sqrt((mouseX - node.x) ** 2 + (mouseY - node.y) ** 2);
-                if (distance < 30) {
+                if (distance < 25) {
                     draggedNode = node;
                     node.isDragging = true;
                     offsetX = mouseX - node.x;
@@ -571,7 +579,7 @@
             showMessage(message);
         }
 
-        function displayBackward() {
+        function displaybackward() {
             const message = doublyLinkedList.displayBackward();
             showMessage(message);
         }
