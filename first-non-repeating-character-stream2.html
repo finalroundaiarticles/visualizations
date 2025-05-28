@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue-based Algorithm Comparison</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .comparison {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .algorithm {
+            width: 48%;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .algorithm h2 {
+            color: #FF4800;
+            margin-top: 0;
+            text-align: center;
+        }
+        .step {
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: rgba(253, 159, 120, 0.1);
+        }
+        .step-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .data-structure {
+            display: flex;
+            margin-bottom: 10px;
+            justify-content: center;
+        }
+        .character {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 5px;
+            background-color: #FFFFFF;
+            position: relative;
+        }
+        .character.highlighted {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .character.processed {
+            background-color: #FD9F78;
+            color: #000000;
+        }
+        .frequency-map {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .freq-item {
+            display: flex;
+            margin-right: 15px;
+            margin-bottom: 5px;
+            align-items: center;
+        }
+        .freq-key {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #FD9F78;
+        }
+        .freq-value {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-left: none;
+            background-color: #FFFFFF;
+        }
+        .first-non-repeating {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: rgba(255, 72, 0, 0.1);
+            border-radius: 5px;
+            text-align: center;
+        }
+        .result {
+            font-weight: bold;
+            color: #FF4800;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+        }
+        .index-marker {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: #000000;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: rgba(253, 159, 120, 0.1);
+            border-radius: 5px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Queue-based Algorithm Comparison</h1>
+        
+        <div class="explanation">
+            <p>This animation compares two approaches to find the first non-repeating character in a string:</p>
+            <p><strong>Brute Force Approach:</strong> Scan the entire string for each character to check if it's unique.</p>
+            <p><strong>Optimized Queue Approach:</strong> Use a queue to track potential candidates while processing the string just once.</p>
+            <p>We'll see how these algorithms handle the example string "abac" step by step.</p>
+        </div>
+        
+        <div class="comparison" id="comparison">
+            <div class="algorithm">
+                <h2>Brute Force Approach</h2>
+                <div class="step">
+                    <div class="step-title">Input String:</div>
+                    <div class="data-structure" id="brute-string">
+                        <!-- Characters will be inserted here -->
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-title">Frequency Map:</div>
+                    <div class="frequency-map" id="brute-frequency">
+                        <!-- Frequency map will be inserted here -->
+                    </div>
+                </div>
+                <div class="first-non-repeating">
+                    First non-repeating character: <span class="result" id="brute-result">Processing...</span>
+                </div>
+            </div>
+
+            <div class="algorithm">
+                <h2>Optimized Queue Approach</h2>
+                <div class="step">
+                    <div class="step-title">Input String:</div>
+                    <div class="data-structure" id="queue-string">
+                        <!-- Characters will be inserted here -->
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-title">Queue:</div>
+                    <div class="data-structure" id="queue">
+                        <!-- Queue elements will be inserted here -->
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-title">Frequency Map:</div>
+                    <div class="frequency-map" id="queue-frequency">
+                        <!-- Frequency map will be inserted here -->
+                    </div>
+                </div>
+                <div class="first-non-repeating">
+                    First non-repeating character: <span class="result" id="queue-result">Processing...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <button class="nav-btn" id="prevBtn" disabled>Previous</button>
+            <button class="nav-btn" id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const inputString = "abac";
+        let currentStep = 0;
+        const totalSteps = inputString.length + 1;  // Processing each character + final result
+        
+        // Initialize the display
+        function initializeDisplay() {
+            const bruteString = document.getElementById('brute-string');
+            const queueString = document.getElementById('queue-string');
+            
+            for (let i = 0; i < inputString.length; i++) {
+                const charDiv1 = document.createElement('div');
+                charDiv1.className = 'character';
+                charDiv1.innerHTML = inputString[i];
+                
+                const indexMarker1 = document.createElement('div');
+                indexMarker1.className = 'index-marker';
+                indexMarker1.innerText = i;
+                charDiv1.appendChild(indexMarker1);
+                
+                bruteString.appendChild(charDiv1);
+                
+                const charDiv2 = document.createElement('div');
+                charDiv2.className = 'character';
+                charDiv2.innerHTML = inputString[i];
+                
+                const indexMarker2 = document.createElement('div');
+                indexMarker2.className = 'index-marker';
+                indexMarker2.innerText = i;
+                charDiv2.appendChild(indexMarker2);
+                
+                queueString.appendChild(charDiv2);
+            }
+            
+            updateDisplay();
+        }
+        
+        // Update the display based on the current step
+        function updateDisplay() {
+            // Reset everything
+            document.querySelectorAll('.character').forEach(char => {
+                char.classList.remove('highlighted', 'processed');
+            });
+            
+            document.getElementById('brute-frequency').innerHTML = '';
+            document.getElementById('queue-frequency').innerHTML = '';
+            document.getElementById('queue').innerHTML = '';
+            
+            document.getElementById('brute-result').textContent = 'Processing...';
+            document.getElementById('queue-result').textContent = 'Processing...';
+            
+            if (currentStep === 0) {
+                // Initial state
+                return;
+            }
+            
+            // Update for steps 1 to string length
+            const bruteFreqMap = {};
+            const queueFreqMap = {};
+            const queue = [];
+            
+            for (let i = 0; i < currentStep; i++) {
+                const char = inputString[i];
+                
+                // Update brute force visualization
+                document.querySelectorAll('#brute-string .character')[i].classList.add('processed');
+                
+                if (bruteFreqMap[char]) {
+                    bruteFreqMap[char]++;
+                } else {
+                    bruteFreqMap[char] = 1;
+                }
+                
+                // Update queue approach visualization
+                document.querySelectorAll('#queue-string .character')[i].classList.add('processed');
+                
+                if (queueFreqMap[char]) {
+                    queueFreqMap[char]++;
+                    
+                    // Remove from queue if it becomes repeating
+                    const index = queue.indexOf(char);
+                    if (index !== -1) {
+                        queue.splice(index, 1);
+                    }
+                } else {
+                    queueFreqMap[char] = 1;
+                    queue.push(char);
+                }
+            }
+            
+            // Display frequency maps
+            for (const char in bruteFreqMap) {
+                const freqItem = document.createElement('div');
+                freqItem.className = 'freq-item';
+                
+                const freqKey = document.createElement('div');
+                freqKey.className = 'freq-key';
+                freqKey.textContent = char;
+                
+                const freqValue = document.createElement('div');
+                freqValue.className = 'freq-value';
+                freqValue.textContent = bruteFreqMap[char];
+                
+                freqItem.appendChild(freqKey);
+                freqItem.appendChild(freqValue);
+                
+                document.getElementById('brute-frequency').appendChild(freqItem);
+            }
+            
+            for (const char in queueFreqMap) {
+                const freqItem = document.createElement('div');
+                freqItem.className = 'freq-item';
+                
+                const freqKey = document.createElement('div');
+                freqKey.className = 'freq-key';
+                freqKey.textContent = char;
+                
+                const freqValue = document.createElement('div');
+                freqValue.className = 'freq-value';
+                freqValue.textContent = queueFreqMap[char];
+                
+                freqItem.appendChild(freqKey);
+                freqItem.appendChild(freqValue);
+                
+                document.getElementById('queue-frequency').appendChild(freqItem);
+            }
+            
+            // Display queue
+            for (const char of queue) {
+                const queueItem = document.createElement('div');
+                queueItem.className = 'character';
+                queueItem.textContent = char;
+                document.getElementById('queue').appendChild(queueItem);
+            }
+            
+            // Check for the first non-repeating character (brute force)
+            if (currentStep === totalSteps - 1) {
+                let bruteResult = '#';
+                for (let i = 0; i < inputString.length; i++) {
+                    const char = inputString[i];
+                    if (bruteFreqMap[char] === 1) {
+                        bruteResult = char;
+                        document.querySelectorAll('#brute-string .character')[i].classList.add('highlighted');
+                        break;
+                    }
+                }
+                document.getElementById('brute-result').textContent = bruteResult;
+                
+                // Queue approach result
+                const queueResult = queue.length > 0 ? queue[0] : '#';
+                document.getElementById('queue-result').textContent = queueResult;
+                
+                // Highlight the result in the original string for queue approach
+                if (queueResult !== '#') {
+                    const index = inputString.indexOf(queueResult);
+                    document.querySelectorAll('#queue-string .character')[index].classList.add('highlighted');
+                }
+            }
+        }
+        
+        // Navigation button handlers
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateDisplay();
+                document.getElementById('nextBtn').disabled = false;
+                if (currentStep === 0) {
+                    document.getElementById('prevBtn').disabled = true;
+                }
+            }
+        });
+        
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateDisplay();
+                document.getElementById('prevBtn').disabled = false;
+                if (currentStep === totalSteps - 1) {
+                    document.getElementById('nextBtn').disabled = true;
+                }
+            }
+        });
+        
+        // Initialize the visualization
+        initializeDisplay();
+    </script>
+</body>
+</html>
