@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Representation of Input Lists</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        
+        .animation-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .list-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: center;
+            transition: opacity 0.5s ease-in-out;
+        }
+        
+        .list-row {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        
+        .node {
+            width: 50px;
+            height: 50px;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            margin: 0 5px;
+        }
+        
+        .arrow {
+            width: 30px;
+            height: 2px;
+            background-color: #FF4800;
+            position: relative;
+        }
+        
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 10px solid #FF4800;
+        }
+        
+        .list-label {
+            font-weight: bold;
+            margin-right: 15px;
+            color: #FF4800;
+            min-width: 60px;
+        }
+        
+        .null {
+            color: #FF4800;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #FF4800;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Visual Representation of Input Lists</h1>
+    
+    <div class="container">
+        <div class="animation-container" id="animation-container">
+            <!-- Animation will be inserted here by JavaScript -->
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <!-- Explanation will be inserted here by JavaScript -->
+        </div>
+        
+        <div class="step-indicator" id="step-indicator">
+            Step 1 of 3
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prev-button" disabled>Previous</button>
+            <button class="nav-button" id="next-button">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const steps = [
+            {
+                title: "List 1: [1→4→5]",
+                content: `
+                    <div class="list-container">
+                        <div class="list-row">
+                            <span class="list-label">List 1:</span>
+                            <div class="node">1</div>
+                            <div class="arrow"></div>
+                            <div class="node">4</div>
+                            <div class="arrow"></div>
+                            <div class="node">5</div>
+                            <div class="null">→ NULL</div>
+                        </div>
+                    </div>
+                `,
+                explanation: "Here's the first linked list with three nodes. Each node contains a value (1, 4, and 5) and points to the next node in sequence. The last node (5) points to NULL, indicating the end of the list."
+            },
+            {
+                title: "List 2: [1→3→4]",
+                content: `
+                    <div class="list-container">
+                        <div class="list-row">
+                            <span class="list-label">List 2:</span>
+                            <div class="node">1</div>
+                            <div class="arrow"></div>
+                            <div class="node">3</div>
+                            <div class="arrow"></div>
+                            <div class="node">4</div>
+                            <div class="null">→ NULL</div>
+                        </div>
+                    </div>
+                `,
+                explanation: "This is the second linked list with three nodes. Each node contains a value (1, 3, and 4) and points to the next node. Similar to the first list, the last node (4) points to NULL, marking the end of this list."
+            },
+            {
+                title: "List 3: [2→6]",
+                content: `
+                    <div class="list-container">
+                        <div class="list-row">
+                            <span class="list-label">List 3:</span>
+                            <div class="node">2</div>
+                            <div class="arrow"></div>
+                            <div class="node">6</div>
+                            <div class="null">→ NULL</div>
+                        </div>
+                    </div>
+                `,
+                explanation: "The third linked list has two nodes with values 2 and 6. The last node (6) points to NULL, indicating the end of the list. This list is shorter than the previous two lists."
+            },
+            {
+                title: "All Three Lists",
+                content: `
+                    <div class="list-container">
+                        <div class="list-row">
+                            <span class="list-label">List 1:</span>
+                            <div class="node">1</div>
+                            <div class="arrow"></div>
+                            <div class="node">4</div>
+                            <div class="arrow"></div>
+                            <div class="node">5</div>
+                            <div class="null">→ NULL</div>
+                        </div>
+                        <div class="list-row">
+                            <span class="list-label">List 2:</span>
+                            <div class="node">1</div>
+                            <div class="arrow"></div>
+                            <div class="node">3</div>
+                            <div class="arrow"></div>
+                            <div class="node">4</div>
+                            <div class="null">→ NULL</div>
+                        </div>
+                        <div class="list-row">
+                            <span class="list-label">List 3:</span>
+                            <div class="node">2</div>
+                            <div class="arrow"></div>
+                            <div class="node">6</div>
+                            <div class="null">→ NULL</div>
+                        </div>
+                    </div>
+                `,
+                explanation: "Here we can see all three linked lists together. Each list is a separate chain of nodes connected by pointers. In a linked list data structure, each node contains a value and a reference (or pointer) to the next node in the sequence. The last node in each list points to NULL, which indicates the end of the list."
+            }
+        ];
+
+        let currentStep = 0;
+        const animationContainer = document.getElementById('animation-container');
+        const explanation = document.getElementById('explanation');
+        const stepIndicator = document.getElementById('step-indicator');
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+
+        function updateStep() {
+            animationContainer.innerHTML = steps[currentStep].content;
+            explanation.innerHTML = `<p>${steps[currentStep].explanation}</p>`;
+            stepIndicator.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+            
+            prevButton.disabled = currentStep === 0;
+            nextButton.disabled = currentStep === steps.length - 1;
+        }
+
+        prevButton.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        });
+
+        nextButton.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateStep();
+            }
+        });
+
+        // Initialize the first step
+        updateStep();
+    </script>
+</body>
+</html>
