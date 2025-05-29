@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Tree Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        .navigation {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .canvas-container {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+            position: relative;
+        }
+        canvas {
+            border: 1px solid #FD9F78;
+            border-radius: 8px;
+        }
+        .explanation {
+            text-align: left;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #FD9F78;
+            background-color: rgba(253, 159, 120, 0.1);
+        }
+        .step-counter {
+            font-weight: bold;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Tree Visualization</h1>
+        
+        <div class="explanation" id="explanation">
+            <p>A binary tree is a tree data structure in which each node has at most two children, referred to as the left child and the right child.</p>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="treeCanvas" width="900" height="400"></canvas>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <span class="step-counter" id="stepCounter">Step 1 of 5</span>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepCounter = document.getElementById('stepCounter');
+        const explanation = document.getElementById('explanation');
+        
+        let currentStep = 1;
+        const totalSteps = 5;
+        
+        // Define the tree nodes
+        const nodes = [
+            { id: 3, x: 450, y: 80, left: 9, right: 20, visible: false },
+            { id: 9, x: 300, y: 180, left: null, right: null, visible: false },
+            { id: 20, x: 600, y: 180, left: 15, right: 7, visible: false },
+            { id: 15, x: 525, y: 280, left: null, right: null, visible: false },
+            { id: 7, x: 675, y: 280, left: null, right: null, visible: false }
+        ];
+        
+        // Explanation for each step
+        const explanations = [
+            `<p>A binary tree is a tree data structure in which each node has at most two children, referred to as the left child and the right child.</p>
+             <p>Let's build a binary tree step by step with the following nodes: 3 (root), 9, 20, 15, and 7.</p>`,
+            
+            `<p>Step 1: We start with the root node.</p>
+             <p>Node 3 is our root node, which is the topmost node of the tree. Every binary tree has exactly one root node.</p>`,
+            
+            `<p>Step 2: We add the children of the root node.</p>
+             <p>Node 9 is the left child of the root node 3.</p>
+             <p>Node 20 is the right child of the root node 3.</p>`,
+            
+            `<p>Step 3: We add the left child of node 20.</p>
+             <p>Node 15 is the left child of node 20.</p>`,
+            
+            `<p>Step 4: We add the right child of node 20.</p>
+             <p>Node 7 is the right child of node 20.</p>
+             <p>Now our binary tree is complete!</p>`
+        ];
+        
+        // Function to draw a node
+        function drawNode(x, y, value) {
+            // Draw circle
+            ctx.beginPath();
+            ctx.arc(x, y, 30, 0, Math.PI * 2);
+            ctx.fillStyle = '#FD9F78';
+            ctx.fill();
+            ctx.strokeStyle = '#FF4800';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // Draw text
+            ctx.font = 'bold 20px Arial';
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(value, x, y);
+        }
+        
+        // Function to draw an edge between two nodes
+        function drawEdge(x1, y1, x2, y2) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1 + 30); // Start from bottom of the first node
+            ctx.lineTo(x2, y2 - 30); // End at top of the second node
+            ctx.strokeStyle = '#FF4800';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        // Function to draw the tree based on current step
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Show nodes based on current step
+            if (currentStep >= 1) nodes[0].visible = true; // Root node
+            if (currentStep >= 2) {
+                nodes[1].visible = true; // Left child of root
+                nodes[2].visible = true; // Right child of root
+            }
+            if (currentStep >= 3) nodes[3].visible = true; // Left child of node 20
+            if (currentStep >= 4) nodes[4].visible = true; // Right child of node 20
+            
+            // Draw edges first (so they appear behind nodes)
+            for (const node of nodes) {
+                if (!node.visible) continue;
+                
+                // Find the node's children and draw edges to them
+                for (const childId of [node.left, node.right]) {
+                    if (childId !== null) {
+                        const childNode = nodes.find(n => n.id === childId);
+                        if (childNode && childNode.visible) {
+                            drawEdge(node.x, node.y, childNode.x, childNode.y);
+                        }
+                    }
+                }
+            }
+            
+            // Draw nodes
+            for (const node of nodes) {
+                if (node.visible) {
+                    drawNode(node.x, node.y, node.id);
+                }
+            }
+            
+            // Update explanation
+            explanation.innerHTML = explanations[currentStep - 1];
+            
+            // Update step counter
+            stepCounter.textContent = `Step ${currentStep} of ${totalSteps}`;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === totalSteps;
+        }
+        
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                drawTree();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                drawTree();
+            }
+        });
+        
+        // Initial render
+        drawTree();
+        
+        // Responsive canvas
+        window.addEventListener('resize', () => {
+            // Redraw the tree when window is resized
+            drawTree();
+        });
+    </script>
+</body>
+</html>
