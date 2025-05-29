@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recursive DFS Level Order Traversal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        #animation-container {
+            width: 100%;
+            height: 500px;
+            border: 2px solid #FD9F78;
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tree-node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        
+        .tree-node.active {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.2);
+        }
+        
+        .tree-node.visited {
+            background-color: #FFFFFF;
+            border: 2px solid #FF4800;
+            color: #000000;
+        }
+        
+        .tree-edge {
+            position: absolute;
+            background-color: #000000;
+            transform-origin: 0 0;
+            height: 2px;
+        }
+        
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 10px solid #FF4800;
+            opacity: 0;
+        }
+        
+        .result-container {
+            margin-top: 20px;
+            padding: 10px;
+            border: 2px solid #FD9F78;
+            border-radius: 5px;
+        }
+        
+        .result-array {
+            display: flex;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .level-array {
+            display: flex;
+            margin-right: 10px;
+            margin-bottom: 5px;
+        }
+        
+        .array-item {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 5px;
+            font-weight: bold;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            padding: 10px;
+            border: 2px solid #FD9F78;
+            border-radius: 5px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+        }
+        
+        .step-counter {
+            margin: 0 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Recursive DFS Level Order Traversal</h1>
+        
+        <div id="animation-container"></div>
+        
+        <div class="result-container">
+            <h3>Result Array:</h3>
+            <div class="result-array" id="result-array"></div>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <p>Starting the recursive DFS level order traversal...</p>
+        </div>
+        
+        <div class="controls">
+            <button id="prev-btn" class="nav-btn" disabled>Previous</button>
+            <div class="step-counter">Step: <span id="step-counter">1</span> / <span id="total-steps">15</span></div>
+            <button id="next-btn" class="nav-btn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        const animationContainer = document.getElementById('animation-container');
+        const resultArrayContainer = document.getElementById('result-array');
+        const explanationContainer = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepCounter = document.getElementById('step-counter');
+        
+        // Tree node positions
+        const nodePositions = {
+            '3': { x: 380, y: 50 },
+            '9': { x: 280, y: 150 },
+            '20': { x: 480, y: 150 },
+            '15': { x: 430, y: 250 },
+            '7': { x: 530, y: 250 }
+        };
+        
+        // Tree edges
+        const edges = [
+            { from: '3', to: '9' },
+            { from: '3', to: '20' },
+            { from: '20', to: '15' },
+            { from: '20', to: '7' }
+        ];
+        
+        // Animation steps
+        const steps = [
+            { 
+                action: "init", 
+                explanation: "Starting the recursive DFS level order traversal. We'll explore the tree depth-first but organize nodes by level.",
+                result: []
+            },
+            { 
+                action: "call", 
+                node: "3", 
+                level: 0,
+                explanation: "Call dfs(root=3, level=0). Since level=0 doesn't exist in our result array yet, we'll create it.",
+                result: [[]]
+            },
+            { 
+                action: "add", 
+                node: "3", 
+                level: 0,
+                explanation: "Add node 3 to level 0 in our result array.",
+                result: [["3"]]
+            },
+            { 
+                action: "call", 
+                node: "9", 
+                level: 1,
+                explanation: "Recursive call to left child: dfs(node=9, level=1). Since level=1 doesn't exist yet, we create it.",
+                result: [["3"], []]
+            },
+            { 
+                action: "add", 
+                node: "9", 
+                level: 1,
+                explanation: "Add node 9 to level 1 in our result array.",
+                result: [["3"], ["9"]]
+            },
+            { 
+                action: "return", 
+                node: "9",
+                explanation: "Node 9 has no children, so we return from this recursive call.",
+                result: [["3"], ["9"]]
+            },
+            { 
+                action: "call", 
+                node: "20", 
+                level: 1,
+                explanation: "Recursive call to right child: dfs(node=20, level=1). Level 1 already exists.",
+                result: [["3"], ["9"]]
+            },
+            { 
+                action: "add", 
+                node: "20", 
+                level: 1,
+                explanation: "Add node 20 to level 1 in our result array.",
+                result: [["3"], ["9", "20"]]
+            },
+            { 
+                action: "call", 
+                node: "15", 
+                level: 2,
+                explanation: "Recursive call to left child of 20: dfs(node=15, level=2). Since level=2 doesn't exist yet, we create it.",
+                result: [["3"], ["9", "20"], []]
+            },
+            { 
+                action: "add", 
+                node: "15", 
+                level: 2,
+                explanation: "Add node 15 to level 2 in our result array.",
+                result: [["3"], ["9", "20"], ["15"]]
+            },
+            { 
+                action: "return", 
+                node: "15",
+                explanation: "Node 15 has no children, so we return from this recursive call.",
+                result: [["3"], ["9", "20"], ["15"]]
+            },
+            { 
+                action: "call", 
+                node: "7", 
+                level: 2,
+                explanation: "Recursive call to right child of 20: dfs(node=7, level=2). Level 2 already exists.",
+                result: [["3"], ["9", "20"], ["15"]]
+            },
+            { 
+                action: "add", 
+                node: "7", 
+                level: 2,
+                explanation: "Add node 7 to level 2 in our result array.",
+                result: [["3"], ["9", "20"], ["15", "7"]]
+            },
+            { 
+                action: "return", 
+                node: "7",
+                explanation: "Node 7 has no children, so we return from this recursive call.",
+                result: [["3"], ["9", "20"], ["15", "7"]]
+            },
+            { 
+                action: "complete",
+                explanation: "All nodes have been processed. The final result array contains nodes organized by level: [[3], [9, 20], [15, 7]]",
+                result: [["3"], ["9", "20"], ["15", "7"]]
+            }
+        ];
+        
+        let currentStep = 0;
+        const totalSteps = steps.length;
+        document.getElementById('total-steps').textContent = totalSteps;
+        
+        // Initialize tree
+        function initializeTree() {
+            // Create nodes
+            for (const nodeValue in nodePositions) {
+                const node = document.createElement('div');
+                node.className = 'tree-node';
+                node.id = `node-${nodeValue}`;
+                node.textContent = nodeValue;
+                node.style.left = `${nodePositions[nodeValue].x}px`;
+                node.style.top = `${nodePositions[nodeValue].y}px`;
+                animationContainer.appendChild(node);
+            }
+            
+            // Create edges
+            edges.forEach((edge, index) => {
+                const fromPos = nodePositions[edge.from];
+                const toPos = nodePositions[edge.to];
+                
+                const edgeElem = document.createElement('div');
+                edgeElem.className = 'tree-edge';
+                edgeElem.id = `edge-${index}`;
+                
+                const length = Math.sqrt(
+                    Math.pow(toPos.x - fromPos.x, 2) + 
+                    Math.pow(toPos.y - fromPos.y, 2)
+                );
+                
+                const angle = Math.atan2(
+                    toPos.y - fromPos.y,
+                    toPos.x - fromPos.x
+                );
+                
+                edgeElem.style.width = `${length}px`;
+                edgeElem.style.left = `${fromPos.x + 20}px`;
+                edgeElem.style.top = `${fromPos.y + 20}px`;
+                edgeElem.style.transform = `rotate(${angle}rad)`;
+                
+                animationContainer.appendChild(edgeElem);
+            });
+        }
+        
+        // Create arrows for visualizing recursive calls
+        function createArrow(fromNodeId, toNodeId) {
+            const fromNode = document.getElementById(`node-${fromNodeId}`);
+            const toNode = document.getElementById(`node-${toNodeId}`);
+            
+            const fromRect = fromNode.getBoundingClientRect();
+            const toRect = toNode.getBoundingClientRect();
+            
+            const containerRect = animationContainer.getBoundingClientRect();
+            
+            const arrow = document.createElement('div');
+            arrow.className = 'arrow';
+            arrow.id = `arrow-${fromNodeId}-${toNodeId}`;
+            
+            // Calculate position
+            const fromX = fromRect.left - containerRect.left + fromRect.width / 2;
+            const fromY = fromRect.top - containerRect.top + fromRect.height / 2;
+            const toX = toRect.left - containerRect.left + toRect.width / 2;
+            const toY = toRect.top - containerRect.top + toRect.height / 2;
+            
+            const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
+            
+            // Position arrow at midpoint of path
+            const midX = (fromX + toX) / 2;
+            const midY = (fromY + toY) / 2;
+            
+            arrow.style.left = `${midX}px`;
+            arrow.style.top = `${midY}px`;
+            arrow.style.transform = `rotate(${angle + 90}deg)`;
+            
+            animationContainer.appendChild(arrow);
+            
+            // Animate arrow
+            setTimeout(() => {
+                arrow.style.opacity = '1';
+            }, 100);
+            
+            return arrow;
+        }
+        
+        // Update result array visualization
+        function updateResultArray(resultArray) {
+            resultArrayContainer.innerHTML = '';
+            
+            resultArray.forEach((level, levelIndex) => {
+                const levelDiv = document.createElement('div');
+                levelDiv.className = 'level-array';
+                
+                const levelLabel = document.createElement('span');
+                levelLabel.textContent = `Level ${levelIndex}: `;
+                levelDiv.appendChild(levelLabel);
+                
+                level.forEach(nodeValue => {
+                    const item = document.createElement('div');
+                    item.className = 'array-item';
+                    item.textContent = nodeValue;
+                    levelDiv.appendChild(item);
+                });
+                
+                resultArrayContainer.appendChild(levelDiv);
+            });
+        }
+        
+        // Reset all nodes to initial state
+        function resetNodes() {
+            document.querySelectorAll('.tree-node').forEach(node => {
+                node.className = 'tree-node';
+            });
+            
+            document.querySelectorAll('.arrow').forEach(arrow => {
+                arrow.remove();
+            });
+        }
+        
+        // Perform animation step
+        function performStep(step) {
+            resetNodes();
+            explanationContainer.innerHTML = `<p>${step.explanation}</p>`;
+            updateResultArray(step.result);
+            
+            if (step.action === "init") {
+                // Initial state, nothing to highlight
+            } 
+            else if (step.action === "call") {
+                const node = document.getElementById(`node-${step.node}`);
+                node.className = 'tree-node active';
+                
+                // If not the root node, create an arrow from parent
+                if (step.node !== "3") {
+                    // Find parent based on edges
+                    const parentEdge = edges.find(edge => edge.to === step.node);
+                    if (parentEdge) {
+                        createArrow(parentEdge.from, step.node);
+                    }
+                }
+            } 
+            else if (step.action === "add") {
+                const node = document.getElementById(`node-${step.node}`);
+                node.className = 'tree-node active';
+            } 
+            else if (step.action === "return") {
+                const node = document.getElementById(`node-${step.node}`);
+                node.className = 'tree-node visited';
+            } 
+            else if (step.action === "complete") {
+                // Highlight all nodes as visited
+                document.querySelectorAll('.tree-node').forEach(node => {
+                    node.className = 'tree-node visited';
+                });
+            }
+        }
+        
+        // Navigation functions
+        function goToNextStep() {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                stepCounter.textContent = currentStep + 1;
+                performStep(steps[currentStep]);
+                prevBtn.disabled = false;
+                
+                if (currentStep === totalSteps - 1) {
+                    nextBtn.disabled = true;
+                }
+            }
+        }
+        
+        function goToPrevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                stepCounter.textContent = currentStep + 1;
+                performStep(steps[currentStep]);
+                nextBtn.disabled = false;
+                
+                if (currentStep === 0) {
+                    prevBtn.disabled = true;
+                }
+            }
+        }
+        
+        // Initialize the visualization
+        initializeTree();
+        performStep(steps[0]);
+        
+        // Set up event listeners for navigation
+        nextBtn.addEventListener('click', goToNextStep);
+        prevBtn.addEventListener('click', goToPrevStep);
+    </script>
+</body>
+</html>
