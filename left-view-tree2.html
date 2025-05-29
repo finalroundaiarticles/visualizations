@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DFS vs BFS: Left View of a Tree</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .comparison-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .algorithm-section {
+            width: 48%;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #FF4800;
+            text-align: center;
+            margin-top: 0;
+        }
+        .canvas-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+        }
+        .info-box {
+            background-color: #FD9F78;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .steps-container {
+            height: 120px;
+            overflow-y: auto;
+            border: 1px solid #FD9F78;
+            padding: 10px;
+            margin-top: 15px;
+            border-radius: 5px;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .current-step {
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .explanation {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border-left: 4px solid #FF4800;
+        }
+        .left-view-node {
+            font-weight: bold;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DFS vs BFS: Left View of a Tree</h1>
+        
+        <div class="comparison-container">
+            <div class="algorithm-section">
+                <h2>Depth-First Search (DFS)</h2>
+                <div class="canvas-container">
+                    <canvas id="dfsCanvas" width="400" height="300"></canvas>
+                </div>
+                <div class="info-box">
+                    DFS explores as far as possible along each branch before backtracking.
+                </div>
+                <div class="steps-container" id="dfsSteps">
+                    <p>DFS traversal steps will appear here.</p>
+                </div>
+            </div>
+            
+            <div class="algorithm-section">
+                <h2>Breadth-First Search (BFS)</h2>
+                <div class="canvas-container">
+                    <canvas id="bfsCanvas" width="400" height="300"></canvas>
+                </div>
+                <div class="info-box">
+                    BFS explores all nodes at the present depth before moving to nodes at the next depth level.
+                </div>
+                <div class="steps-container" id="bfsSteps">
+                    <p>BFS traversal steps will appear here.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="current-step" id="currentStep">Step 0 of 0</div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="explanation">
+            <p><strong>Left View of a Tree:</strong> The left view of a binary tree is the set of nodes visible when the tree is viewed from the left side.</p>
+            <p>This animation demonstrates how both DFS (preorder traversal) and BFS (level order traversal) can be used to find the left view of a binary tree, with different approaches and efficiencies.</p>
+        </div>
+    </div>
+
+    <script>
+        // Tree node class
+        class TreeNode {
+            constructor(val) {
+                this.val = val;
+                this.left = null;
+                this.right = null;
+                this.x = 0;
+                this.y = 0;
+                this.isLeftView = false;
+                this.highlighted = false;
+                this.visited = false;
+            }
+        }
+
+        // Create a sample binary tree
+        function createTree() {
+            const root = new TreeNode(1);
+            root.left = new TreeNode(2);
+            root.right = new TreeNode(3);
+            root.left.left = new TreeNode(4);
+            root.left.right = new TreeNode(5);
+            root.right.right = new TreeNode(6);
+            root.left.right.left = new TreeNode(7);
+            return root;
+        }
+
+        // Set coordinates for tree visualization
+        function setCoordinates(node, x, y, horizontalSpacing, levelHeight) {
+            if (!node) return;
+            
+            node.x = x;
+            node.y = y;
+            
+            setCoordinates(node.left, x - horizontalSpacing / 2, y + levelHeight, horizontalSpacing / 2, levelHeight);
+            setCoordinates(node.right, x + horizontalSpacing / 2, y + levelHeight, horizontalSpacing / 2, levelHeight);
+        }
+
+        // Draw a node
+        function drawNode(ctx, node, highlightColor = null) {
+            const radius = 20;
+            
+            // Draw circle
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI);
+            
+            if (node.isLeftView) {
+                ctx.fillStyle = "#FF4800"; // Left view nodes are highlighted
+            } else if (node.highlighted) {
+                ctx.fillStyle = highlightColor || "#FD9F78"; // Currently visited node
+            } else if (node.visited) {
+                ctx.fillStyle = "#f0f0f0"; // Visited nodes
+            } else {
+                ctx.fillStyle = "#FFFFFF"; // Unvisited nodes
+            }
+            
+            ctx.fill();
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw node value
+            ctx.fillStyle = "#000000";
+            ctx.font = "16px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(node.val, node.x, node.y);
+        }
+
+        // Draw edge between nodes
+        function drawEdge(ctx, parent, child) {
+            if (!parent || !child) return;
+            
+            ctx.beginPath();
+            ctx.moveTo(parent.x, parent.y + 20); // Start from bottom of parent node
+            ctx.lineTo(child.x, child.y - 20); // End at top of child node
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        // Draw the entire tree
+        function drawTree(ctx, root) {
+            if (!root) return;
+            
+            // Draw edges first (so they appear behind nodes)
+            const drawEdges = (node) => {
+                if (!node) return;
+                if (node.left) {
+                    drawEdge(ctx, node, node.left);
+                    drawEdges(node.left);
+                }
+                if (node.right) {
+                    drawEdge(ctx, node, node.right);
+                    drawEdges(node.right);
+                }
+            };
+            
+            drawEdges(root);
+            
+            // Then draw all nodes
+            const drawNodes = (node) => {
+                if (!node) return;
+                drawNode(ctx, node);
+                drawNodes(node.left);
+                drawNodes(node.right);
+            };
+            
+            drawNodes(root);
+        }
+
+        // Clear canvas
+        function clearCanvas(ctx, width, height) {
+            ctx.clearRect(0, 0, width, height);
+        }
+
+        // Generate DFS steps
+        function generateDFSSteps(root) {
+            const steps = [];
+            const leftViewMap = new Map(); // Map to track left-most node at each level
+            
+            function dfs(node, level, isLeftView) {
+                if (!node) return;
+                
+                // If this is the first node we've seen at this level, it's part of the left view
+                if (!leftViewMap.has(level)) {
+                    leftViewMap.set(level, node);
+                    isLeftView = true;
+                }
+                
+                // Add the current step
+                steps.push({
+                    node: node,
+                    level: level,
+                    isLeftView: isLeftView
+                });
+                
+                // DFS always goes left first, then right
+                dfs(node.left, level + 1, false);
+                dfs(node.right, level + 1, false);
+            }
+            
+            dfs(root, 0, false);
+            
+            // Convert leftViewMap to array for final result
+            const leftViewNodes = Array.from(leftViewMap.values());
+            
+            return { steps, leftViewNodes };
+        }
+
+        // Generate BFS steps
+        function generateBFSSteps(root) {
+            const steps = [];
+            const leftViewNodes = [];
+            
+            if (!root) return { steps, leftViewNodes };
+            
+            const queue = [{ node: root, level: 0 }];
+            let currentLevel = -1;
+            
+            while (queue.length > 0) {
+                const { node, level } = queue.shift();
+                
+                // If we're starting a new level, this node is part of the left view
+                const isLeftView = level > currentLevel;
+                if (isLeftView) {
+                    currentLevel = level;
+                    leftViewNodes.push(node);
+                }
+                
+                steps.push({
+                    node: node,
+                    level: level,
+                    isLeftView: isLeftView
+                });
+                
+                // Enqueue children
+                if (node.left) {
+                    queue.push({ node: node.left, level: level + 1 });
+                }
+                if (node.right) {
+                    queue.push({ node: node.right, level: level + 1 });
+                }
+            }
+            
+            return { steps, leftViewNodes };
+        }
+
+        // Animation controller
+        class AnimationController {
+            constructor(dfsTree, bfsTree, dfsCanvas, bfsCanvas) {
+                this.dfsTree = dfsTree;
+                this.bfsTree = bfsTree;
+                this.dfsCanvas = dfsCanvas;
+                this.bfsContext = bfsCanvas.getContext('2d');
+                this.dfsContext = dfsCanvas.getContext('2d');
+                
+                // Generate steps for both algorithms
+                const dfsResult = generateDFSSteps(dfsTree);
+                const bfsResult = generateBFSSteps(bfsTree);
+                
+                this.dfsSteps = dfsResult.steps;
+                this.bfsSteps = bfsResult.steps;
+                
+                this.dfsLeftViewNodes = dfsResult.leftViewNodes;
+                this.bfsLeftViewNodes = bfsResult.leftViewNodes;
+                
+                this.currentStepIndex = -1;
+                this.totalSteps = Math.max(this.dfsSteps.length, this.bfsSteps.length);
+                
+                // Initialize with trees drawn
+                this.initializeTrees();
+            }
+            
+            initializeTrees() {
+                // Draw initial trees
+                clearCanvas(this.dfsContext, this.dfsCanvas.width, this.dfsCanvas.height);
+                clearCanvas(this.bfsContext, this.bfsCanvas.width, this.bfsCanvas.height);
+                
+                drawTree(this.dfsContext, this.dfsTree);
+                drawTree(this.bfsContext, this.bfsTree);
+                
+                // Clear step containers
+                document.getElementById('dfsSteps').innerHTML = '';
+                document.getElementById('bfsSteps').innerHTML = '';
+                
+                // Reset all nodes
+                this.resetAllNodes(this.dfsTree);
+                this.resetAllNodes(this.bfsTree);
+                
+                // Update step counter
+                document.getElementById('currentStep').textContent = `Step 0 of ${this.totalSteps}`;
+            }
+            
+            resetAllNodes(node) {
+                if (!node) return;
+                node.highlighted = false;
+                node.visited = false;
+                node.isLeftView = false;
+                this.resetAllNodes(node.left);
+                this.resetAllNodes(node.right);
+            }
+            
+            nextStep() {
+                if (this.currentStepIndex < this.totalSteps - 1) {
+                    this.currentStepIndex++;
+                    this.renderStep();
+                    return true;
+                }
+                return false;
+            }
+            
+            prevStep() {
+                if (this.currentStepIndex > 0) {
+                    this.currentStepIndex--;
+                    this.renderStepBackward();
+                    return true;
+                } else if (this.currentStepIndex === 0) {
+                    this.currentStepIndex--;
+                    this.initializeTrees();
+                    return true;
+                }
+                return false;
+            }
+            
+            renderStep() {
+                // Reset all node states for visualization
+                this.resetAllNodes(this.dfsTree);
+                this.resetAllNodes(this.bfsTree);
+                
+                // Apply all steps up to current index
+                for (let i = 0; i <= this.currentStepIndex; i++) {
+                    // DFS steps
+                    if (i < this.dfsSteps.length) {
+                        const dfsStep = this.dfsSteps[i];
+                        const dfsNode = dfsStep.node;
+                        
+                        dfsNode.visited = true;
+                        if (dfsStep.isLeftView) {
+                            dfsNode.isLeftView = true;
+                        }
+                        
+                        // Highlight current node
+                        if (i === this.currentStepIndex) {
+                            dfsNode.highlighted = true;
+                        }
+                    }
+                    
+                    // BFS steps
+                    if (i < this.bfsSteps.length) {
+                        const bfsStep = this.bfsSteps[i];
+                        const bfsNode = bfsStep.node;
+                        
+                        bfsNode.visited = true;
+                        if (bfsStep.isLeftView) {
+                            bfsNode.isLeftView = true;
+                        }
+                        
+                        // Highlight current node
+                        if (i === this.currentStepIndex) {
+                            bfsNode.highlighted = true;
+                        }
+                    }
+                }
+                
+                // Redraw trees
+                clearCanvas(this.dfsContext, this.dfsCanvas.width, this.dfsCanvas.height);
+                clearCanvas(this.bfsContext, this.bfsCanvas.width, this.bfsCanvas.height);
+                
+                drawTree(this.dfsContext, this.dfsTree);
+                drawTree(this.bfsContext, this.bfsTree);
+                
+                // Update step descriptions
+                this.updateStepDescriptions();
+                
+                // Update step counter
+                document.getElementById('currentStep').textContent = `Step ${this.currentStepIndex + 1} of ${this.totalSteps}`;
+            }
+            
+            renderStepBackward() {
+                // Simply re-render from the beginning up to the current step
+                this.renderStep();
+            }
+            
+            updateStepDescriptions() {
+                const dfsStepsElement = document.getElementById('dfsSteps');
+                const bfsStepsElement = document.getElementById('bfsSteps');
+                
+                // Clear previous steps
+                dfsStepsElement.innerHTML = '';
+                bfsStepsElement.innerHTML = '';
+                
+                // Add DFS steps up to current index
+                for (let i = 0; i <= Math.min(this.currentStepIndex, this.dfsSteps.length - 1); i++) {
+                    const step = this.dfsSteps[i];
+                    const stepElement = document.createElement('p');
+                    
+                    if (step.isLeftView) {
+                        stepElement.innerHTML = `Step ${i + 1}: Visit node <span class="left-view-node">${step.node.val}</span> (Level ${step.level}) - Left View Node!`;
+                    } else {
+                        stepElement.textContent = `Step ${i + 1}: Visit node ${step.node.val} (Level ${step.level})`;
+                    }
+                    
+                    if (i === this.currentStepIndex) {
+                        stepElement.style.fontWeight = 'bold';
+                    }
+                    
+                    dfsStepsElement.appendChild(stepElement);
+                }
+                
+                // Add BFS steps up to current index
+                for (let i = 0; i <= Math.min(this.currentStepIndex, this.bfsSteps.length - 1); i++) {
+                    const step = this.bfsSteps[i];
+                    const stepElement = document.createElement('p');
+                    
+                    if (step.isLeftView) {
+                        stepElement.innerHTML = `Step ${i + 1}: Visit node <span class="left-view-node">${step.node.val}</span> (Level ${step.level}) - Left View Node!`;
+                    } else {
+                        stepElement.textContent = `Step ${i + 1}: Visit node ${step.node.val} (Level ${step.level})`;
+                    }
+                    
+                    if (i === this.currentStepIndex) {
+                        stepElement.style.fontWeight = 'bold';
+                    }
+                    
+                    bfsStepsElement.appendChild(stepElement);
+                }
+                
+                // Scroll to the bottom of step containers
+                dfsStepsElement.scrollTop = dfsStepsElement.scrollHeight;
+                bfsStepsElement.scrollTop = bfsStepsElement.scrollHeight;
+            }
+        }
+
+        // Initialize the animation when the page loads
+        window.onload = function() {
+            const dfsCanvas = document.getElementById('dfsCanvas');
+            const bfsCanvas = document.getElementById('bfsCanvas');
+            const dfsContext = dfsCanvas.getContext('2d');
+            const bfsContext = bfsCanvas.getContext('2d');
+            
+            // Create identical trees for both algorithms
+            const dfsTree = createTree();
+            const bfsTree = createTree();
+            
+            // Set coordinates for visualization
+            setCoordinates(dfsTree, dfsCanvas.width / 2, 50, 160, 60);
+            setCoordinates(bfsTree, bfsCanvas.width / 2, 50, 160, 60);
+            
+            // Initialize animation controller
+            const animationController = new AnimationController(dfsTree, bfsTree, dfsCanvas, bfsCanvas);
+            
+            // Set up navigation buttons
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.addEventListener('click', function() {
+                const success = animationController.prevStep();
+                nextBtn.disabled = false;
+                prevBtn.disabled = animationController.currentStepIndex < 0;
+            });
+            
+            nextBtn.addEventListener('click', function() {
+                const success = animationController.nextStep();
+                prevBtn.disabled = false;
+                nextBtn.disabled = animationController.currentStepIndex >= animationController.totalSteps - 1;
+            });
+        };
+    </script>
+</body>
+</html>
