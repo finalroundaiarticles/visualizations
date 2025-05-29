@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Postorder Traversal Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+        }
+        .tree-container {
+            position: relative;
+            width: 600px;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+        .node {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 20px;
+            color: #000000;
+            border: 2px solid #000000;
+            transition: all 0.3s ease;
+        }
+        .node.active {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.2);
+        }
+        .edge {
+            position: absolute;
+            background-color: #000000;
+            transform-origin: 0 0;
+        }
+        .step-counter {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .step-counter.visible {
+            opacity: 1;
+        }
+        .explanation {
+            background-color: #FFFFFF;
+            border: 2px solid #FF4800;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <h1>Postorder Traversal Visualization</h1>
+    <div class="container">
+        <div class="explanation" id="explanation">
+            <p>Postorder traversal visits nodes in the following order: <strong>left subtree → right subtree → root</strong>.</p>
+            <p>Click "Next" to see each step of the traversal process.</p>
+        </div>
+        <div class="tree-container" id="tree-container">
+            <!-- Nodes will be added by JavaScript -->
+        </div>
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Tree structure and positions
+        const nodes = [
+            { id: 1, value: 1, x: 300, y: 50 }, // Root
+            { id: 2, value: 2, x: 200, y: 150 }, // Left child of root
+            { id: 3, value: 3, x: 400, y: 150 }, // Right child of root
+            { id: 4, value: 4, x: 150, y: 250 }, // Left child of 2
+            { id: 5, value: 5, x: 250, y: 250 }  // Right child of 2
+        ];
+        
+        const edges = [
+            { from: 1, to: 2 },
+            { from: 1, to: 3 },
+            { from: 2, to: 4 },
+            { from: 2, to: 5 }
+        ];
+
+        // Postorder traversal steps
+        const traversalSteps = [
+            { node: 4, description: "Visit node 4 (left child of node 2)" },
+            { node: 5, description: "Visit node 5 (right child of node 2)" },
+            { node: 2, description: "Visit node 2 (after visiting its left and right children)" },
+            { node: 3, description: "Visit node 3 (right child of root)" },
+            { node: 1, description: "Finally, visit node 1 (root node, after visiting all children)" }
+        ];
+
+        let currentStep = -1;
+        const treeContainer = document.getElementById('tree-container');
+        const explanation = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const nodeElements = {};
+        const stepCounters = {};
+
+        // Initialize the tree visualization
+        function initializeTree() {
+            // Create edges (lines)
+            edges.forEach(edge => {
+                const fromNode = nodes.find(n => n.id === edge.from);
+                const toNode = nodes.find(n => n.id === edge.to);
+                
+                const deltaX = toNode.x - fromNode.x;
+                const deltaY = toNode.y - fromNode.y;
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                const angle = Math.atan2(deltaY, deltaX);
+                
+                const edgeElement = document.createElement('div');
+                edgeElement.className = 'edge';
+                edgeElement.style.width = `${distance}px`;
+                edgeElement.style.height = '2px';
+                edgeElement.style.left = `${fromNode.x + 25}px`;
+                edgeElement.style.top = `${fromNode.y + 25}px`;
+                edgeElement.style.transform = `rotate(${angle}rad)`;
+                
+                treeContainer.appendChild(edgeElement);
+            });
+            
+            // Create nodes (circles)
+            nodes.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'node';
+                nodeElement.textContent = node.value;
+                nodeElement.style.left = `${node.x}px`;
+                nodeElement.style.top = `${node.y}px`;
+                treeContainer.appendChild(nodeElement);
+                nodeElements[node.id] = nodeElement;
+                
+                // Create step counter for each node
+                const stepCounter = document.createElement('div');
+                stepCounter.className = 'step-counter';
+                stepCounter.style.left = `${node.x + 40}px`;
+                stepCounter.style.top = `${node.y - 10}px`;
+                treeContainer.appendChild(stepCounter);
+                stepCounters[node.id] = stepCounter;
+            });
+        }
+
+        // Update the visualization for the current step
+        function updateVisualization() {
+            // Reset all nodes
+            nodes.forEach(node => {
+                nodeElements[node.id].classList.remove('active');
+            });
+            
+            // Update nodes and step counters for steps up to the current one
+            for (let i = 0; i <= currentStep; i++) {
+                const step = traversalSteps[i];
+                if (i === currentStep) {
+                    nodeElements[step.node].classList.add('active');
+                }
+                
+                stepCounters[step.node].textContent = i + 1;
+                stepCounters[step.node].classList.add('visible');
+            }
+            
+            // Hide step counters for future steps
+            for (let i = currentStep + 1; i < traversalSteps.length; i++) {
+                const step = traversalSteps[i];
+                stepCounters[step.node].classList.remove('visible');
+            }
+            
+            // Update explanation
+            if (currentStep >= 0) {
+                const currentTraversalStep = traversalSteps[currentStep];
+                explanation.innerHTML = `<p><strong>Step ${currentStep + 1}:</strong> ${currentTraversalStep.description}</p>`;
+                
+                if (currentStep === traversalSteps.length - 1) {
+                    explanation.innerHTML += `<p>Traversal complete! The final order is: 4 → 5 → 2 → 3 → 1</p>`;
+                }
+            } else {
+                explanation.innerHTML = `<p>Postorder traversal visits nodes in the following order: <strong>left subtree → right subtree → root</strong>.</p>
+                <p>Click "Next" to see each step of the traversal process.</p>`;
+            }
+            
+            // Update button states
+            prevBtn.disabled = currentStep <= -1;
+            nextBtn.disabled = currentStep >= traversalSteps.length - 1;
+        }
+
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > -1) {
+                currentStep--;
+                updateVisualization();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < traversalSteps.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+
+        // Initialize the visualization
+        initializeTree();
+        updateVisualization();
+    </script>
+</body>
+</html>
