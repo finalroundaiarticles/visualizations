@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue-Based Level Order Traversal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .animation-container {
+            width: 100%;
+            height: 500px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            position: relative;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .frame {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .frame.active {
+            opacity: 1;
+        }
+        
+        .tree {
+            width: 100%;
+            height: 200px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .node {
+            width: 40px;
+            height: 40px;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            font-weight: bold;
+            color: #000000;
+        }
+        
+        .node.highlighted {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .edge {
+            height: 2px;
+            background-color: #FF4800;
+            position: absolute;
+            transform-origin: 0 0;
+        }
+        
+        .queue-container {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        
+        .queue-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #FF4800;
+        }
+        
+        .queue {
+            height: 60px;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            background-color: rgba(253, 159, 120, 0.1);
+        }
+        
+        .queue-item {
+            width: 40px;
+            height: 40px;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
+        .result-container {
+            width: 100%;
+        }
+        
+        .result-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #FF4800;
+        }
+        
+        .result {
+            height: 60px;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            background-color: rgba(253, 159, 120, 0.1);
+        }
+        
+        .result-item {
+            width: 40px;
+            height: 40px;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
+        .description {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 200px;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .frame-counter {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        .dot {
+            width: 12px;
+            height: 12px;
+            background-color: #FD9F78;
+            border-radius: 50%;
+            margin: 0 5px;
+            cursor: pointer;
+        }
+        
+        .dot.active {
+            background-color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Queue-Based Level Order Traversal</h1>
+        
+        <div class="animation-container">
+            <!-- Frame 1: Initial State -->
+            <div class="frame" id="frame1">
+                <h2>Initial State - Root Node Added to Queue</h2>
+                
+                <div class="tree">
+                    <div class="node" style="top: 20px; left: 50%;">3</div>
+                    <div class="edge" style="top: 40px; left: calc(50% + 10px); width: 60px; transform: rotate(45deg);"></div>
+                    <div class="edge" style="top: 40px; left: calc(50% - 10px); width: 60px; transform: rotate(135deg);"></div>
+                    
+                    <div class="node" style="top: 80px; left: calc(50% - 80px);">9</div>
+                    <div class="node" style="top: 80px; left: calc(50% + 80px);">20</div>
+                    
+                    <div class="edge" style="top: 100px; left: calc(50% + 70px); width: 40px; transform: rotate(45deg);"></div>
+                    <div class="edge" style="top: 100px; left: calc(50% + 90px); width: 40px; transform: rotate(135deg);"></div>
+                    
+                    <div class="node" style="top: 140px; left: calc(50% + 40px);">15</div>
+                    <div class="node" style="top: 140px; left: calc(50% + 120px);">7</div>
+                </div>
+                
+                <div class="queue-container">
+                    <div class="queue-label">Queue:</div>
+                    <div class="queue">
+                        <div class="queue-item">3</div>
+                    </div>
+                </div>
+                
+                <div class="result-container">
+                    <div class="result-label">Result Array:</div>
+                    <div class="result">
+                        <!-- Empty initially -->
+                    </div>
+                </div>
+                
+                <div class="description">
+                    We start by adding the root node (3) to the queue. The result array is empty.
+                </div>
+            </div>
+            
+            <!-- Frame 2: Processing Level 0 -->
+            <div class="frame" id="frame2">
+                <h2>Processing Level 0 - Root Node</h2>
+                
+                <div class="tree">
+                    <div class="node highlighted" style="top: 20px; left: 50%;">3</div>
+                    <div class="edge" style="top: 40px; left: calc(50% + 10px); width: 60px; transform: rotate(45deg);"></div>
+                    <div class="edge" style="top: 40px; left: calc(50% - 10px); width: 60px; transform: rotate(135deg);"></div>
+                    
+                    <div class="node" style="top: 80px; left: calc(50% - 80px);">9</div>
+                    <div class="node" style="top: 80px; left: calc(50% + 80px);">20</div>
+                    
+                    <div class="edge" style="top: 100px; left: calc(50% + 70px); width: 40px; transform: rotate(45deg);"></div>
+                    <div class="edge" style="top: 100px; left: calc(50% + 90px); width: 40px; transform: rotate(135deg);"></div>
+                    
+                    <div class="node" style="top: 140px; left: calc(50% + 40px);">15</div>
+                    <div class="node" style="top: 140px; left: calc(50% + 120px);">7</div>
+                </div>
+                
+                <div class="queue-container">
+                    <div class="queue-label">Queue:</div>
+                    <div class="queue">
+                        <div class="queue-item">9</div>
+                        <div class="queue-item">20</div>
+                    </div>
+                </div>
+                
+                <div class="result-container">
+                    <div class="result-label">Result Array:</div>
+                    <div class="result">
+                        <div class="result-item">3</div>
+                    </div>
+                </div>
+                
+                <div class="description">
+                    We dequeue the root node (3) and add it to our result array. 
+                    Then we add its children (9 and 20) to the queue.
+                </div>
+            </div>
+            
+            <!-- Frame 3: Processing Level 1 -->
+            <div class="frame" id="frame3">
+                <h2>Processing Level 1 - Second Level Nodes</h2>
+                
+                <div class="tree">
+                    <div class="node" style="top: 20px; left: 50%;">3</div>
+                    <div class="edge" style="top: 40px; left: calc(50% + 10px); width: 60px; transform: rotate(45deg);"></div>
+                    <div class="edge" style="top: 40px; left: calc(50% - 10px); width: 60px; transform: rotate(135deg);"></div>
+                    
+                    <div class="node highlighted" style="top: 80px; left: calc(50% - 80px);">9</div>
+                    <div class="node highlighted" style="top: 80px; left: calc(50% + 80px);">20</div>
+                    
+                    <div class="edge" style="top: 100px; left: calc(50% + 70px); width: 40px; transform: rotate(45deg);"></div>
+                    <div class="edge" style="top: 100px; left: calc(50% + 90px); width: 40px; transform: rotate(135deg);"></div>
+                    
+                    <div class="node" style="top: 140px; left: calc(50% + 40px);">15</div>
+                    <div class="node" style="top: 140px; left: calc(50% + 120px);">7</div>
+                </div>
+                
+                <div class="queue-container">
+                    <div class="queue-label">Queue:</div>
+                    <div class="queue">
+                        <div class="queue-item">15</div>
+                        <div class="queue-item">7</div>
+                    </div>
+                </div>
+                
+                <div class="result-container">
+                    <div class="result-label">Result Array:</div>
+                    <div class="result">
+                        <div class="result-item">3</div>
+                        <div class="result-item">9</div>
+                        <div class="result-item">20</div>
+                    </div>
+                </div>
+                
+                <div class="description">
+                    We dequeue nodes 9 and 20 (level 1) and add them to our result array.
+                    Node 9 has no children, but node 20 has children (15 and 7), so we add them to the queue.
+                </div>
+            </div>
+            
+            <!-- Frame 4: Processing Level 2 -->
+            <div class="frame" id="frame4">
+                <h2>Processing Level 2 - Third Level Nodes</h2>
+                
+                <div class="tree">
+                    <div class="node" style="top: 20px; left: 50%;">3</div>
+                    <div class="edge" style="top: 40px; left: calc(50% + 10px); width: 60px; transform: rotate(45deg);"></div>
+                    <div class="edge" style="top: 40px; left: calc(50% - 10px); width: 60px; transform: rotate(135deg);"></div>
+                    
+                    <div class="node" style="top: 80px; left: calc(50% - 80px);">9</div>
+                    <div class="node" style="top: 80px; left: calc(50% + 80px);">20</div>
+                    
+                    <div class="edge" style="top: 100px; left: calc(50% + 70px); width: 40px; transform: rotate(45deg);"></div>
+                    <div class="edge" style="top: 100px; left: calc(50% + 90px); width: 40px; transform: rotate(135deg);"></div>
+                    
+                    <div class="node highlighted" style="top: 140px; left: calc(50% + 40px);">15</div>
+                    <div class="node highlighted" style="top: 140px; left: calc(50% + 120px);">7</div>
+                </div>
+                
+                <div class="queue-container">
+                    <div class="queue-label">Queue:</div>
+                    <div class="queue">
+                        <!-- Empty after processing all nodes -->
+                    </div>
+                </div>
+                
+                <div class="result-container">
+                    <div class="result-label">Result Array:</div>
+                    <div class="result">
+                        <div class="result-item">3</div>
+                        <div class="result-item">9</div>
+                        <div class="result-item">20</div>
+                        <div class="result-item">15</div>
+                        <div class="result-item">7</div>
+                    </div>
+                </div>
+                
+                <div class="description">
+                    We dequeue nodes 15 and 7 (level 2) and add them to our result array.
+                    Neither has children, so we add nothing to the queue.
+                    The queue is now empty, so the traversal is complete.
+                </div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prevBtn" disabled>Previous</button>
+            <button class="nav-btn" id="nextBtn">Next</button>
+        </div>
+        
+        <div class="frame-counter">
+            <div class="dot active" data-frame="1"></div>
+            <div class="dot" data-frame="2"></div>
+            <div class="dot" data-frame="3"></div>
+            <div class="dot" data-frame="4"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentFrame = 1;
+        const totalFrames = 4;
+        
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dots = document.querySelectorAll('.dot');
+        
+        function showFrame(frameNumber) {
+            // Hide all frames
+            document.querySelectorAll('.frame').forEach(frame => {
+                frame.classList.remove('active');
+            });
+            
+            // Show the selected frame
+            document.getElementById(`frame${frameNumber}`).classList.add('active');
+            
+            // Update dots
+            dots.forEach(dot => {
+                dot.classList.remove('active');
+            });
+            dots[frameNumber - 1].classList.add('active');
+            
+            // Update button states
+            prevBtn.disabled = frameNumber === 1;
+            nextBtn.disabled = frameNumber === totalFrames;
+            
+            currentFrame = frameNumber;
+        }
+        
+        // Initial setup
+        showFrame(1);
+        
+        // Event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentFrame > 1) {
+                showFrame(currentFrame - 1);
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentFrame < totalFrames) {
+                showFrame(currentFrame + 1);
+            }
+        });
+        
+        dots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                const frameNumber = parseInt(dot.getAttribute('data-frame'));
+                showFrame(frameNumber);
+            });
+        });
+    </script>
+</body>
+</html>
