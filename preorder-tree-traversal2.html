@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stack-based Iterative Preorder Traversal Visualization</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #FFFFFF;
+      color: #000000;
+      padding: 20px;
+      text-align: center;
+      margin: 0;
+    }
+
+    h1 {
+      color: #FF4800;
+      margin-bottom: 30px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .controls {
+      margin: 20px 0;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    button {
+      background-color: #FF4800;
+      color: #FFFFFF;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #FD9F78;
+    }
+
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+
+    .visualization {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+
+    .tree-container {
+      width: 45%;
+      position: relative;
+    }
+
+    .stack-result-container {
+      width: 45%;
+      text-align: left;
+      padding: 10px;
+      border-left: 2px solid #FF4800;
+    }
+
+    .node {
+      width: 40px;
+      height: 40px;
+      background-color: #FF4800;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      font-weight: bold;
+      transition: all 0.5s;
+    }
+
+    .node.active {
+      background-color: #FD9F78;
+      transform: scale(1.2);
+    }
+
+    .edge {
+      position: absolute;
+      background-color: #000000;
+      height: 2px;
+      transform-origin: 0 0;
+    }
+
+    .stack-box, .result-box {
+      border: 2px solid #FF4800;
+      padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+    }
+
+    .stack-item, .result-item {
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      background-color: #FD9F78;
+      color: #000000;
+      border-radius: 50%;
+      margin: 5px;
+      text-align: center;
+      line-height: 30px;
+      font-weight: bold;
+    }
+
+    .step-description {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #FF4800;
+      border-radius: 5px;
+      background-color: #FFF;
+      color: #000000;
+    }
+
+    .step-counter {
+      color: #FF4800;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Stack-based Iterative Preorder Traversal</h1>
+    
+    <div class="controls">
+      <button id="prevBtn" disabled>Previous</button>
+      <button id="nextBtn">Next</button>
+    </div>
+    
+    <div class="step-counter">Step <span id="currentStep">0</span> of <span id="totalSteps">0</span></div>
+    
+    <div class="visualization">
+      <div class="tree-container" id="treeContainer"></div>
+      <div class="stack-result-container">
+        <h3>Stack</h3>
+        <div class="stack-box" id="stackBox"></div>
+        <h3>Result Array</h3>
+        <div class="result-box" id="resultBox"></div>
+        <div class="step-description" id="stepDescription"></div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Tree structure
+    const tree = {
+      value: 'A',
+      left: {
+        value: 'B',
+        left: {
+          value: 'D',
+          left: null,
+          right: null
+        },
+        right: {
+          value: 'E',
+          left: null,
+          right: null
+        }
+      },
+      right: {
+        value: 'C',
+        left: {
+          value: 'F',
+          left: null,
+          right: null
+        },
+        right: null
+      }
+    };
+
+    // Steps for the animation
+    const steps = [
+      {
+        description: "Initial state: We have a binary tree and start with an empty stack and result array. Preorder traversal visits nodes in the order: root, left subtree, right subtree.",
+        activeNode: null,
+        stack: [],
+        result: []
+      },
+      {
+        description: "Push the root node 'A' onto the stack.",
+        activeNode: 'A',
+        stack: ['A'],
+        result: []
+      },
+      {
+        description: "Pop 'A' from the stack and add it to the result array.",
+        activeNode: 'A',
+        stack: [],
+        result: ['A']
+      },
+      {
+        description: "Push 'A's right child ('C') and then left child ('B') onto the stack. We push right first so that left will be processed first (since stack is LIFO).",
+        activeNode: 'A',
+        stack: ['C', 'B'],
+        result: ['A']
+      },
+      {
+        description: "Pop 'B' from the stack and add it to the result array.",
+        activeNode: 'B',
+        stack: ['C'],
+        result: ['A', 'B']
+      },
+      {
+        description: "Push 'B's right child ('E') and then left child ('D') onto the stack.",
+        activeNode: 'B',
+        stack: ['C', 'E', 'D'],
+        result: ['A', 'B']
+      },
+      {
+        description: "Pop 'D' from the stack and add it to the result array.",
+        activeNode: 'D',
+        stack: ['C', 'E'],
+        result: ['A', 'B', 'D']
+      },
+      {
+        description: "'D' has no children, so we don't push any new nodes.",
+        activeNode: 'D',
+        stack: ['C', 'E'],
+        result: ['A', 'B', 'D']
+      },
+      {
+        description: "Pop 'E' from the stack and add it to the result array.",
+        activeNode: 'E',
+        stack: ['C'],
+        result: ['A', 'B', 'D', 'E']
+      },
+      {
+        description: "'E' has no children, so we don't push any new nodes.",
+        activeNode: 'E',
+        stack: ['C'],
+        result: ['A', 'B', 'D', 'E']
+      },
+      {
+        description: "Pop 'C' from the stack and add it to the result array.",
+        activeNode: 'C',
+        stack: [],
+        result: ['A', 'B', 'D', 'E', 'C']
+      },
+      {
+        description: "Push 'C's left child ('F') onto the stack. 'C' has no right child.",
+        activeNode: 'C',
+        stack: ['F'],
+        result: ['A', 'B', 'D', 'E', 'C']
+      },
+      {
+        description: "Pop 'F' from the stack and add it to the result array.",
+        activeNode: 'F',
+        stack: [],
+        result: ['A', 'B', 'D', 'E', 'C', 'F']
+      },
+      {
+        description: "'F' has no children, so we don't push any new nodes.",
+        activeNode: 'F',
+        stack: [],
+        result: ['A', 'B', 'D', 'E', 'C', 'F']
+      },
+      {
+        description: "The stack is empty, so we're done! The final preorder traversal is: A, B, D, E, C, F.",
+        activeNode: null,
+        stack: [],
+        result: ['A', 'B', 'D', 'E', 'C', 'F']
+      }
+    ];
+
+    // Node positions for the tree visualization
+    const nodePositions = {
+      'A': { x: 200, y: 50 },
+      'B': { x: 125, y: 120 },
+      'C': { x: 275, y: 120 },
+      'D': { x: 75, y: 190 },
+      'E': { x: 175, y: 190 },
+      'F': { x: 225, y: 190 }
+    };
+
+    let currentStepIndex = 0;
+
+    // DOM elements
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const currentStepEl = document.getElementById('currentStep');
+    const totalStepsEl = document.getElementById('totalSteps');
+    const treeContainer = document.getElementById('treeContainer');
+    const stackBox = document.getElementById('stackBox');
+    const resultBox = document.getElementById('resultBox');
+    const stepDescription = document.getElementById('stepDescription');
+
+    // Initialize the visualization
+    function init() {
+      drawTree();
+      totalStepsEl.textContent = steps.length;
+      updateStep();
+    }
+
+    // Draw the binary tree
+    function drawTree() {
+      // Create nodes
+      for (const nodeValue in nodePositions) {
+        const node = document.createElement('div');
+        node.className = 'node';
+        node.id = `node-${nodeValue}`;
+        node.textContent = nodeValue;
+        node.style.left = `${nodePositions[nodeValue].x}px`;
+        node.style.top = `${nodePositions[nodeValue].y}px`;
+        treeContainer.appendChild(node);
+      }
+
+      // Create edges
+      createEdge('A', 'B');
+      createEdge('A', 'C');
+      createEdge('B', 'D');
+      createEdge('B', 'E');
+      createEdge('C', 'F');
+    }
+
+    // Create an edge between two nodes
+    function createEdge(from, to) {
+      const fromPos = nodePositions[from];
+      const toPos = nodePositions[to];
+      
+      const dx = toPos.x - fromPos.x;
+      const dy = toPos.y - fromPos.y;
+      const length = Math.sqrt(dx * dx + dy * dy);
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      
+      const edge = document.createElement('div');
+      edge.className = 'edge';
+      edge.style.width = `${length}px`;
+      edge.style.left = `${fromPos.x + 20}px`;
+      edge.style.top = `${fromPos.y + 20}px`;
+      edge.style.transform = `rotate(${angle}deg)`;
+      
+      treeContainer.appendChild(edge);
+    }
+
+    // Update the visualization for the current step
+    function updateStep() {
+      const step = steps[currentStepIndex];
+      
+      // Update step counter
+      currentStepEl.textContent = currentStepIndex + 1;
+      
+      // Update buttons
+      prevBtn.disabled = currentStepIndex === 0;
+      nextBtn.disabled = currentStepIndex === steps.length - 1;
+      
+      // Reset active nodes
+      document.querySelectorAll('.node').forEach(node => {
+        node.classList.remove('active');
+      });
+      
+      // Highlight active node
+      if (step.activeNode) {
+        document.getElementById(`node-${step.activeNode}`).classList.add('active');
+      }
+      
+      // Update stack display
+      stackBox.innerHTML = '';
+      if (step.stack.length === 0) {
+        stackBox.textContent = 'Empty';
+      } else {
+        step.stack.forEach(item => {
+          const stackItem = document.createElement('div');
+          stackItem.className = 'stack-item';
+          stackItem.textContent = item;
+          stackBox.appendChild(stackItem);
+        });
+      }
+      
+      // Update result array
+      resultBox.innerHTML = '';
+      if (step.result.length === 0) {
+        resultBox.textContent = 'Empty';
+      } else {
+        step.result.forEach(item => {
+          const resultItem = document.createElement('div');
+          resultItem.className = 'result-item';
+          resultItem.textContent = item;
+          resultBox.appendChild(resultItem);
+        });
+      }
+      
+      // Update step description
+      stepDescription.textContent = step.description;
+    }
+
+    // Event listeners
+    prevBtn.addEventListener('click', () => {
+      if (currentStepIndex > 0) {
+        currentStepIndex--;
+        updateStep();
+      }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (currentStepIndex < steps.length - 1) {
+        currentStepIndex++;
+        updateStep();
+      }
+    });
+
+    // Initialize the visualization
+    init();
+  </script>
+</body>
+</html>
