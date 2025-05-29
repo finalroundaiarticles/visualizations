@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Level Order Traversal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: white;
+            overflow: hidden;
+        }
+        
+        #canvas {
+            display: block;
+            cursor: grab;
+        }
+        
+        #canvas:active {
+            cursor: grabbing;
+        }
+        
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+        
+        button {
+            background: #ff4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #e03d00;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            background: #1c1d20;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .queue-display {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(28, 29, 32, 0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+        }
+        
+        .queue-item {
+            display: inline-block;
+            background: #ff4800;
+            color: white;
+            padding: 8px 12px;
+            margin: 2px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .result-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(28, 29, 32, 0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+            max-width: 300px;
+        }
+        
+        .level-group {
+            margin: 5px 0;
+            padding: 8px;
+            background: rgba(255, 72, 0, 0.2);
+            border-radius: 4px;
+            border-left: 3px solid #ff4800;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="controls">
+        <button onclick="startTraversal()">Start Traversal</button>
+        <button onclick="resetVisualization()">Reset</button>
+        <button onclick="generateNewTree()">New Tree</button>
+    </div>
+    
+    <div class="queue-display" id="queueDisplay">
+        <div><strong>Queue:</strong></div>
+        <div id="queueContent">Empty</div>
+    </div>
+    
+    <div class="result-display" id="resultDisplay">
+        <div><strong>Level Order Result:</strong></div>
+        <div id="resultContent">Click Start to begin</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            drawTree();
+        });
+
+        class TreeNode {
+            constructor(val, x, y) {
+                this.val = val;
+                this.left = null;
+                this.right = null;
+                this.x = x;
+                this.y = y;
+                this.radius = 25;
+                this.isHighlighted = false;
+                this.isProcessed = false;
+                this.isDragging = false;
+            }
+        }
+
+        let root = null;
+        let nodes = [];
+        let queue = [];
+        let result = [];
+        let isTraversing = false;
+        let currentStep = 0;
+        let dragOffset = { x: 0, y: 0 };
+        let isDragging = false;
+        let draggedNode = null;
+
+        function createSampleTree() {
+            root = new TreeNode(1, canvas.width / 2, 100);
+            root.left = new TreeNode(2, canvas.width / 2 - 150, 200);
+            root.right = new TreeNode(3, canvas.width / 2 + 150, 200);
+            root.left.left = new TreeNode(4, canvas.width / 2 - 250, 300);
+            root.left.right = new TreeNode(5, canvas.width / 2 - 50, 300);
+            root.right.left = new TreeNode(6, canvas.width / 2 + 50, 300);
+            root.right.right = new TreeNode(7, canvas.width / 2 + 250, 300);
+            
+            nodes = [root, root.left, root.right, root.left.left, root.left.right, root.right.left, root.right.right];
+        }
+
+        function generateNewTree() {
+            resetVisualization();
+            const values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].sort(() => Math.random() - 0.5).slice(0, 7);
+            
+            root = new TreeNode(values[0], canvas.width / 2, 100);
+            root.left = new TreeNode(values[1], canvas.width / 2 - 150, 200);
+            root.right = new TreeNode(values[2], canvas.width / 2 + 150, 200);
+            root.left.left = new TreeNode(values[3], canvas.width / 2 - 250, 300);
+            root.left.right = new TreeNode(values[4], canvas.width / 2 - 50, 300);
+            root.right.left = new TreeNode(values[5], canvas.width / 2 + 50, 300);
+            root.right.right = new TreeNode(values[6], canvas.width / 2 + 250, 300);
+            
+            nodes = [root, root.left, root.right, root.left.left, root.left.right, root.right.left, root.right.right];
+            drawTree();
+        }
+
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (!root) return;
+            
+            // Draw connections first
+            drawConnections(root);
+            
+            // Draw nodes
+            nodes.forEach(node => drawNode(node));
+        }
+
+        function drawConnections(node) {
+            if (!node) return;
+            
+            ctx.strokeStyle = '#1c1d20';
+            ctx.lineWidth = 2;
+            
+            if (node.left) {
+                ctx.beginPath();
+                ctx.moveTo(node.x, node.y);
+                ctx.lineTo(node.left.x, node.left.y);
+                ctx.stroke();
+                drawConnections(node.left);
+            }
+            
+            if (node.right) {
+                ctx.beginPath();
+                ctx.moveTo(node.x, node.y);
+                ctx.lineTo(node.right.x, node.right.y);
+                ctx.stroke();
+                drawConnections(node.right);
+            }
+        }
+
+        function drawNode(node) {
+            ctx.fillStyle = node.isProcessed ? '#1c1d20' : (node.isHighlighted ? '#ff4800' : 'white');
+            ctx.strokeStyle = '#1c1d20';
+            ctx.lineWidth = 3;
+            
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, node.radius, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+            
+            ctx.fillStyle = node.isProcessed ? 'white' : (node.isHighlighted ? 'white' : '#1c1d20');
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.val.toString(), node.x, node.y);
+        }
+
+        function updateQueueDisplay() {
+            const queueContent = document.getElementById('queueContent');
+            if (queue.length === 0) {
+                queueContent.textContent = 'Empty';
+            } else {
+                queueContent.innerHTML = queue.map(node => 
+                    `<span class="queue-item">${node.val}</span>`
+                ).join('');
+            }
+        }
+
+        function updateResultDisplay() {
+            const resultContent = document.getElementById('resultContent');
+            if (result.length === 0) {
+                resultContent.textContent = 'Click Start to begin';
+            } else {
+                resultContent.innerHTML = result.map((level, index) => 
+                    `<div class="level-group">Level ${index + 1}: [${level.join(', ')}]</div>`
+                ).join('');
+            }
+        }
+
+        async function startTraversal() {
+            if (isTraversing) return;
+            
+            resetVisualization();
+            isTraversing = true;
+            
+            if (!root) return;
+            
+            queue = [root];
+            result = [];
+            
+            while (queue.length > 0) {
+                const levelSize = queue.length;
+                const currentLevel = [];
+                
+                // Highlight all nodes in current level
+                for (let i = 0; i < levelSize; i++) {
+                    queue[i].isHighlighted = true;
+                }
+                
+                updateQueueDisplay();
+                drawTree();
+                await sleep(1000);
+                
+                // Process all nodes at current level
+                for (let i = 0; i < levelSize; i++) {
+                    const node = queue.shift();
+                    currentLevel.push(node.val);
+                    
+                    node.isHighlighted = false;
+                    node.isProcessed = true;
+                    
+                    // Add children to queue
+                    if (node.left) queue.push(node.left);
+                    if (node.right) queue.push(node.right);
+                    
+                    updateQueueDisplay();
+                    drawTree();
+                    await sleep(800);
+                }
+                
+                result.push(currentLevel);
+                updateResultDisplay();
+                await sleep(500);
+            }
+            
+            isTraversing = false;
+        }
+
+        function resetVisualization() {
+            isTraversing = false;
+            queue = [];
+            result = [];
+            currentStep = 0;
+            
+            nodes.forEach(node => {
+                node.isHighlighted = false;
+                node.isProcessed = false;
+            });
+            
+            updateQueueDisplay();
+            updateResultDisplay();
+            drawTree();
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Mouse interaction for dragging nodes
+        canvas.addEventListener('mousedown', (e) => {
+            if (isTraversing) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            for (let node of nodes) {
+                const distance = Math.sqrt((mouseX - node.x) ** 2 + (mouseY - node.y) ** 2);
+                if (distance <= node.radius) {
+                    isDragging = true;
+                    draggedNode = node;
+                    dragOffset.x = mouseX - node.x;
+                    dragOffset.y = mouseY - node.y;
+                    canvas.style.cursor = 'grabbing';
+                    break;
+                }
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            if (isDragging && draggedNode) {
+                draggedNode.x = mouseX - dragOffset.x;
+                draggedNode.y = mouseY - dragOffset.y;
+                drawTree();
+            } else if (!isTraversing) {
+                let overNode = false;
+                for (let node of nodes) {
+                    const distance = Math.sqrt((mouseX - node.x) ** 2 + (mouseY - node.y) ** 2);
+                    if (distance <= node.radius) {
+                        overNode = true;
+                        break;
+                    }
+                }
+                canvas.style.cursor = overNode ? 'grab' : 'default';
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+            draggedNode = null;
+            canvas.style.cursor = 'default';
+        });
+
+        // Initialize
+        createSampleTree();
+        drawTree();
+        updateQueueDisplay();
+        updateResultDisplay();
+    </script>
+</body>
+</html>
