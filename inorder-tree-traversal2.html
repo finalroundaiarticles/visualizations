@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iterative Stack-Based Traversal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .visualization {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .tree-container {
+            width: 60%;
+            position: relative;
+        }
+        .stack-container {
+            width: 35%;
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            padding: 10px;
+            min-height: 300px;
+        }
+        .stack-title {
+            text-align: center;
+            font-weight: bold;
+            color: #FF4800;
+            margin-bottom: 10px;
+        }
+        .stack {
+            display: flex;
+            flex-direction: column-reverse;
+            min-height: 250px;
+        }
+        .stack-item {
+            background-color: #FD9F78;
+            color: #000000;
+            margin: 5px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .explanation {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+        }
+        .node {
+            width: 40px;
+            height: 40px;
+            background-color: #FF4800;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #FFFFFF;
+            font-weight: bold;
+            position: absolute;
+            transition: all 0.3s ease;
+        }
+        .link {
+            position: absolute;
+            background-color: #000000;
+            height: 2px;
+            transform-origin: 0 0;
+        }
+        .active {
+            background-color: #FD9F78;
+        }
+        .processed {
+            background-color: #000000;
+        }
+        .status-message {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+            height: 20px;
+            color: #FF4800;
+        }
+        .step-counter {
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .output-container {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .output-title {
+            font-weight: bold;
+            color: #FF4800;
+            margin-bottom: 10px;
+        }
+        .output {
+            font-family: monospace;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Iterative Stack-Based Inorder Traversal</h1>
+        
+        <div class="explanation">
+            <p>Inorder traversal visits nodes in the order: left subtree, current node, right subtree. In an iterative approach using a stack, we simulate the recursive call stack. The algorithm pushes nodes onto the stack while traversing left, processes nodes when popping them, and then moves to the right child.</p>
+        </div>
+
+        <div class="step-counter">Step: <span id="step-number">1</span> / <span id="total-steps">0</span></div>
+        <div class="status-message" id="status-message"></div>
+        
+        <div class="visualization">
+            <div class="tree-container" id="tree-container">
+                <!-- Tree will be rendered here -->
+            </div>
+            
+            <div class="stack-container">
+                <div class="stack-title">Stack</div>
+                <div class="stack" id="stack">
+                    <!-- Stack items will be added here -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="output-container">
+            <div class="output-title">Inorder Traversal Output:</div>
+            <div class="output" id="output"></div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
+            <button class="nav-btn" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Define the binary tree
+        const tree = {
+            value: 'A',
+            left: {
+                value: 'B',
+                left: {
+                    value: 'D',
+                    left: null,
+                    right: null
+                },
+                right: {
+                    value: 'E',
+                    left: null,
+                    right: null
+                }
+            },
+            right: {
+                value: 'C',
+                left: {
+                    value: 'F',
+                    left: null,
+                    right: null
+                },
+                right: {
+                    value: 'G',
+                    left: null,
+                    right: null
+                }
+            }
+        };
+
+        // Tree node positions
+        const nodePositions = {
+            'A': { x: 50, y: 10 },
+            'B': { x: 30, y: 25 },
+            'C': { x: 70, y: 25 },
+            'D': { x: 20, y: 40 },
+            'E': { x: 40, y: 40 },
+            'F': { x: 60, y: 40 },
+            'G': { x: 80, y: 40 }
+        };
+
+        // Animation steps
+        const steps = [
+            { action: 'init', message: 'Initialize empty stack and start from the root node A' },
+            { action: 'push', node: 'A', message: 'Push root node A to stack and move to left child' },
+            { action: 'push', node: 'B', message: 'Push node B to stack and move to left child' },
+            { action: 'push', node: 'D', message: 'Push node D to stack (D has no left child)' },
+            { action: 'pop', node: 'D', output: 'D', message: 'Pop and process node D, output: D' },
+            { action: 'moveRight', from: 'D', to: null, message: 'D has no right child, so return to parent' },
+            { action: 'pop', node: 'B', output: 'B', message: 'Pop and process node B, output: B' },
+            { action: 'moveRight', from: 'B', to: 'E', message: 'Move to right child of B, which is E' },
+            { action: 'push', node: 'E', message: 'Push node E to stack (E has no left child)' },
+            { action: 'pop', node: 'E', output: 'E', message: 'Pop and process node E, output: E' },
+            { action: 'moveRight', from: 'E', to: null, message: 'E has no right child, so return to parent' },
+            { action: 'pop', node: 'A', output: 'A', message: 'Pop and process node A, output: A' },
+            { action: 'moveRight', from: 'A', to: 'C', message: 'Move to right child of A, which is C' },
+            { action: 'push', node: 'C', message: 'Push node C to stack and move to left child' },
+            { action: 'push', node: 'F', message: 'Push node F to stack (F has no left child)' },
+            { action: 'pop', node: 'F', output: 'F', message: 'Pop and process node F, output: F' },
+            { action: 'moveRight', from: 'F', to: null, message: 'F has no right child, so return to parent' },
+            { action: 'pop', node: 'C', output: 'C', message: 'Pop and process node C, output: C' },
+            { action: 'moveRight', from: 'C', to: 'G', message: 'Move to right child of C, which is G' },
+            { action: 'push', node: 'G', message: 'Push node G to stack (G has no left child)' },
+            { action: 'pop', node: 'G', output: 'G', message: 'Pop and process node G, output: G' },
+            { action: 'moveRight', from: 'G', to: null, message: 'G has no right child, so return to parent' },
+            { action: 'complete', message: 'Traversal complete! Final output: D B E A F C G' }
+        ];
+
+        let currentStep = 0;
+        let stackContents = [];
+        let output = '';
+
+        // DOM elements
+        const treeContainer = document.getElementById('tree-container');
+        const stackElement = document.getElementById('stack');
+        const outputElement = document.getElementById('output');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepNumberElement = document.getElementById('step-number');
+        const totalStepsElement = document.getElementById('total-steps');
+        const statusMessageElement = document.getElementById('status-message');
+
+        totalStepsElement.textContent = steps.length;
+
+        // Initialize the tree visualization
+        function initializeTree() {
+            // Clear tree container
+            treeContainer.innerHTML = '';
+            
+            // Create links first (so they appear behind nodes)
+            createLink('A', 'B');
+            createLink('A', 'C');
+            createLink('B', 'D');
+            createLink('B', 'E');
+            createLink('C', 'F');
+            createLink('C', 'G');
+            
+            // Create nodes
+            Object.keys(nodePositions).forEach(value => {
+                createNode(value);
+            });
+        }
+
+        // Create a tree node
+        function createNode(value) {
+            const node = document.createElement('div');
+            node.className = 'node';
+            node.id = `node-${value}`;
+            node.textContent = value;
+            
+            const pos = nodePositions[value];
+            node.style.left = `${pos.x}%`;
+            node.style.top = `${pos.y}%`;
+            
+            treeContainer.appendChild(node);
+        }
+
+        // Create a link between parent and child nodes
+        function createLink(parent, child) {
+            const link = document.createElement('div');
+            link.className = 'link';
+            link.id = `link-${parent}-${child}`;
+            
+            const parentPos = nodePositions[parent];
+            const childPos = nodePositions[child];
+            
+            // Calculate the position and rotation of the link
+            const x1 = parentPos.x;
+            const y1 = parentPos.y;
+            const x2 = childPos.x;
+            const y2 = childPos.y;
+            
+            const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+            
+            link.style.width = `${length}%`;
+            link.style.left = `${x1}%`;
+            link.style.top = `${y1}%`;
+            link.style.transform = `rotate(${angle}rad)`;
+            
+            treeContainer.appendChild(link);
+        }
+
+        // Update the stack visualization
+        function updateStack() {
+            stackElement.innerHTML = '';
+            for (const value of stackContents) {
+                const item = document.createElement('div');
+                item.className = 'stack-item';
+                item.textContent = value;
+                stackElement.appendChild(item);
+            }
+        }
+
+        // Reset all node states
+        function resetNodesState() {
+            document.querySelectorAll('.node').forEach(node => {
+                node.classList.remove('active', 'processed');
+            });
+        }
+
+        // Apply step animation
+        function applyStep(step) {
+            resetNodesState();
+            
+            statusMessageElement.textContent = step.message;
+            
+            if (step.action === 'push') {
+                // Add node to stack
+                stackContents.push(step.node);
+                updateStack();
+                
+                // Highlight the node
+                const node = document.getElementById(`node-${step.node}`);
+                if (node) node.classList.add('active');
+            } 
+            else if (step.action === 'pop') {
+                // Remove from stack
+                stackContents.pop();
+                updateStack();
+                
+                // Mark node as processed
+                const node = document.getElementById(`node-${step.node}`);
+                if (node) node.classList.add('processed');
+                
+                // Update output
+                if (step.output) {
+                    output += (output ? ' ' : '') + step.output;
+                    outputElement.textContent = output;
+                }
+            }
+            else if (step.action === 'moveRight') {
+                if (step.from && step.to) {
+                    // Highlight from and to nodes
+                    const fromNode = document.getElementById(`node-${step.from}`);
+                    const toNode = document.getElementById(`node-${step.to}`);
+                    if (fromNode) fromNode.classList.add('processed');
+                    if (toNode) toNode.classList.add('active');
+                } else if (step.from) {
+                    // Just highlight from node
+                    const fromNode = document.getElementById(`node-${step.from}`);
+                    if (fromNode) fromNode.classList.add('processed');
+                }
+            }
+            else if (step.action === 'complete') {
+                // Final state, all nodes processed
+                document.querySelectorAll('.node').forEach(node => {
+                    node.classList.add('processed');
+                });
+            }
+        }
+
+        // Go to previous step
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                stepNumberElement.textContent = currentStep + 1;
+                
+                // Reset to beginning and replay all steps up to current
+                resetState();
+                for (let i = 0; i <= currentStep; i++) {
+                    applyStep(steps[i]);
+                }
+                
+                nextBtn.disabled = false;
+                if (currentStep === 0) {
+                    prevBtn.disabled = true;
+                }
+            }
+        }
+
+        // Go to next step
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                stepNumberElement.textContent = currentStep + 1;
+                applyStep(steps[currentStep]);
+                
+                prevBtn.disabled = false;
+                if (currentStep === steps.length - 1) {
+                    nextBtn.disabled = true;
+                }
+            }
+        }
+
+        // Reset the state to start
+        function resetState() {
+            stackContents = [];
+            output = '';
+            updateStack();
+            outputElement.textContent = '';
+            resetNodesState();
+        }
+
+        // Initialize the visualization
+        function initialize() {
+            initializeTree();
+            resetState();
+            applyStep(steps[currentStep]);
+            
+            prevBtn.disabled = true;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+
+        // Event listeners
+        prevBtn.addEventListener('click', prevStep);
+        nextBtn.addEventListener('click', nextStep);
+
+        // Initialize when the page loads
+        initialize();
+    </script>
+</body>
+</html>
