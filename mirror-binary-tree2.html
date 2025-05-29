@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>In-place Mirroring Process</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            margin-bottom: 20px;
+        }
+        
+        .animation-container {
+            position: relative;
+            height: 450px;
+            margin: 20px 0;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        
+        .tree-node {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            transition: all 0.8s ease;
+        }
+        
+        .tree-node.highlighted {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            box-shadow: 0 0 10px rgba(255, 72, 0, 0.7);
+        }
+        
+        .tree-edge {
+            position: absolute;
+            background-color: #000000;
+            height: 2px;
+            transform-origin: 0 0;
+            transition: all 0.8s ease;
+        }
+        
+        .swap-arrow {
+            position: absolute;
+            height: 15px;
+            width: 15px;
+            border-radius: 50%;
+            background-color: #FF4800;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .swap-arrow::before {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 12px solid #FF4800;
+            top: -8px;
+            left: -0.5px;
+        }
+        
+        .step-indicator {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #FD9F78;
+            border-radius: 8px;
+            color: #000000;
+            font-size: 18px;
+        }
+        
+        .navigation {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .nav-button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            text-align: left;
+            background-color: #f8f8f8;
+            border-left: 5px solid #FF4800;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>In-place Mirroring Process of a Binary Tree</h1>
+        
+        <div class="step-indicator" id="stepIndicator">
+            Step 1: Original Tree Structure
+        </div>
+        
+        <div class="animation-container" id="animationContainer">
+            <!-- Tree nodes and edges will be added by JavaScript -->
+        </div>
+        
+        <div class="explanation" id="explanation">
+            We start with a binary tree. The in-place mirroring process will swap the left and right children of each node, effectively creating a mirror image of the original tree.
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prevButton" disabled>Previous</button>
+            <button class="nav-button" id="nextButton">Next</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('animationContainer');
+            const stepIndicator = document.getElementById('stepIndicator');
+            const explanation = document.getElementById('explanation');
+            const prevButton = document.getElementById('prevButton');
+            const nextButton = document.getElementById('nextButton');
+            
+            // Tree nodes data
+            const nodes = [
+                { id: 1, value: 'A', x: 450, y: 50 },
+                { id: 2, value: 'B', x: 300, y: 150 },
+                { id: 3, value: 'C', x: 600, y: 150 },
+                { id: 4, value: 'D', x: 200, y: 250 },
+                { id: 5, value: 'E', x: 400, y: 250 },
+                { id: 6, value: 'F', x: 500, y: 250 },
+                { id: 7, value: 'G', x: 700, y: 250 }
+            ];
+            
+            // Tree edges data
+            const edges = [
+                { from: 1, to: 2 },
+                { from: 1, to: 3 },
+                { from: 2, to: 4 },
+                { from: 2, to: 5 },
+                { from: 3, to: 6 },
+                { from: 3, to: 7 }
+            ];
+            
+            // Create nodes
+            nodes.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'tree-node';
+                nodeElement.id = `node-${node.id}`;
+                nodeElement.innerText = node.value;
+                nodeElement.style.left = `${node.x - 25}px`;
+                nodeElement.style.top = `${node.y - 25}px`;
+                container.appendChild(nodeElement);
+            });
+            
+            // Create edges
+            edges.forEach(edge => {
+                const fromNode = nodes.find(n => n.id === edge.from);
+                const toNode = nodes.find(n => n.id === edge.to);
+                
+                const edgeElement = document.createElement('div');
+                edgeElement.className = 'tree-edge';
+                edgeElement.id = `edge-${edge.from}-${edge.to}`;
+                
+                // Calculate edge position and rotation
+                const dx = toNode.x - fromNode.x;
+                const dy = toNode.y - fromNode.y;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                edgeElement.style.width = `${length}px`;
+                edgeElement.style.left = `${fromNode.x}px`;
+                edgeElement.style.top = `${fromNode.y}px`;
+                edgeElement.style.transform = `rotate(${angle}deg)`;
+                
+                container.appendChild(edgeElement);
+            });
+            
+            // Create swap arrows
+            for (let i = 1; i <= 3; i++) {
+                const arrowLeft = document.createElement('div');
+                arrowLeft.className = 'swap-arrow';
+                arrowLeft.id = `arrow-left-${i}`;
+                arrowLeft.style.transform = 'rotate(135deg)';
+                
+                const arrowRight = document.createElement('div');
+                arrowRight.className = 'swap-arrow';
+                arrowRight.id = `arrow-right-${i}`;
+                arrowRight.style.transform = 'rotate(-135deg)';
+                
+                container.appendChild(arrowLeft);
+                container.appendChild(arrowRight);
+            }
+            
+            // Position arrows
+            document.getElementById('arrow-left-1').style.left = '380px';
+            document.getElementById('arrow-left-1').style.top = '100px';
+            document.getElementById('arrow-right-1').style.left = '520px';
+            document.getElementById('arrow-right-1').style.top = '100px';
+            
+            document.getElementById('arrow-left-2').style.left = '230px';
+            document.getElementById('arrow-left-2').style.top = '200px';
+            document.getElementById('arrow-right-2').style.left = '370px';
+            document.getElementById('arrow-right-2').style.top = '200px';
+            
+            document.getElementById('arrow-left-3').style.left = '530px';
+            document.getElementById('arrow-left-3').style.top = '200px';
+            document.getElementById('arrow-right-3').style.left = '670px';
+            document.getElementById('arrow-right-3').style.top = '200px';
+            
+            // Animation steps
+            const steps = [
+                {
+                    title: "Step 1: Original Tree Structure",
+                    explanation: "We start with a binary tree. The in-place mirroring process will swap the left and right children of each node, effectively creating a mirror image of the original tree.",
+                    action: () => {
+                        // Reset all nodes to original positions
+                        nodes.forEach(node => {
+                            const nodeElement = document.getElementById(`node-${node.id}`);
+                            nodeElement.style.left = `${node.x - 25}px`;
+                            nodeElement.style.top = `${node.y - 25}px`;
+                            nodeElement.classList.remove('highlighted');
+                        });
+                        
+                        // Hide all arrows
+                        for (let i = 1; i <= 3; i++) {
+                            document.getElementById(`arrow-left-${i}`).style.opacity = '0';
+                            document.getElementById(`arrow-right-${i}`).style.opacity = '0';
+                        }
+                    }
+                },
+                {
+                    title: "Step 2: Start at Root Node",
+                    explanation: "The mirroring process starts at the root node. We'll first highlight the root and its children before swapping them.",
+                    action: () => {
+                        document.getElementById('node-1').classList.add('highlighted');
+                        document.getElementById('node-2').classList.add('highlighted');
+                        document.getElementById('node-3').classList.add('highlighted');
+                    }
+                },
+                {
+                    title: "Step 3: Swapping Root's Children",
+                    explanation: "Now we swap the left and right children of the root node. This is the first step in creating the mirror image.",
+                    action: () => {
+                        // Show arrows
+                        document.getElementById('arrow-left-1').style.opacity = '1';
+                        document.getElementById('arrow-right-1').style.opacity = '1';
+                        
+                        // Animate the swap
+                        setTimeout(() => {
+                            const nodeB = document.getElementById('node-2');
+                            const nodeC = document.getElementById('node-3');
+                            const edgeAB = document.getElementById('edge-1-2');
+                            const edgeAC = document.getElementById('edge-1-3');
+                            
+                            // Swap node positions
+                            nodeB.style.left = `${600 - 25}px`;
+                            nodeB.style.top = `${150 - 25}px`;
+                            nodeC.style.left = `${300 - 25}px`;
+                            nodeC.style.top = `${150 - 25}px`;
+                            
+                            // Update edges
+                            const newAngleAB = Math.atan2(150 - 50, 600 - 450) * 180 / Math.PI;
+                            const newLengthAB = Math.sqrt((600 - 450) ** 2 + (150 - 50) ** 2);
+                            edgeAB.style.width = `${newLengthAB}px`;
+                            edgeAB.style.transform = `rotate(${newAngleAB}deg)`;
+                            
+                            const newAngleAC = Math.atan2(150 - 50, 300 - 450) * 180 / Math.PI;
+                            const newLengthAC = Math.sqrt((300 - 450) ** 2 + (150 - 50) ** 2);
+                            edgeAC.style.width = `${newLengthAC}px`;
+                            edgeAC.style.transform = `rotate(${newAngleAC}deg)`;
+                        }, 300);
+                    }
+                },
+                {
+                    title: "Step 4: Move to Left Subtree",
+                    explanation: "Now we move to the left subtree (which was originally the right subtree) and prepare to mirror it. We'll highlight the nodes to be swapped.",
+                    action: () => {
+                        // Hide root level arrows
+                        document.getElementById('arrow-left-1').style.opacity = '0';
+                        document.getElementById('arrow-right-1').style.opacity = '0';
+                        
+                        // Reset root highlight
+                        document.getElementById('node-1').classList.remove('highlighted');
+                        
+                        // Highlight C and its children
+                        document.getElementById('node-3').classList.add('highlighted');
+                        document.getElementById('node-6').classList.add('highlighted');
+                        document.getElementById('node-7').classList.add('highlighted');
+                        
+                        // Move children of C to follow it
+                        const nodeF = document.getElementById('node-6');
+                        const nodeG = document.getElementById('node-7');
+                        const edgeCF = document.getElementById('edge-3-6');
+                        const edgeCG = document.getElementById('edge-3-7');
+                        
+                        nodeF.style.left = `${200 - 25}px`;
+                        nodeF.style.top = `${250 - 25}px`;
+                        nodeG.style.left = `${400 - 25}px`;
+                        nodeG.style.top = `${250 - 25}px`;
+                        
+                        // Update edges
+                        const newAngleCF = Math.atan2(250 - 150, 200 - 300) * 180 / Math.PI;
+                        const newLengthCF = Math.sqrt((200 - 300) ** 2 + (250 - 150) ** 2);
+                        edgeCF.style.width = `${newLengthCF}px`;
+                        edgeCF.style.transform = `rotate(${newAngleCF}deg)`;
+                        
+                        const newAngleCG = Math.atan2(250 - 150, 400 - 300) * 180 / Math.PI;
+                        const newLengthCG = Math.sqrt((400 - 300) ** 2 + (250 - 150) ** 2);
+                        edgeCG.style.width = `${newLengthCG}px`;
+                        edgeCG.style.transform = `rotate(${newAngleCG}deg)`;
+                    }
+                },
+                {
+                    title: "Step 5: Swapping in Left Subtree",
+                    explanation: "We swap the children of node C (which is now on the left side of the root). This continues the mirroring process down the tree.",
+                    action: () => {
+                        // Show left subtree arrows
+                        document.getElementById('arrow-left-2').style.opacity = '1';
+                        document.getElementById('arrow-right-2').style.opacity = '1';
+                        
+                        // Animate the swap
+                        setTimeout(() => {
+                            const nodeF = document.getElementById('node-6');
+                            const nodeG = document.getElementById('node-7');
+                            const edgeCF = document.getElementById('edge-3-6');
+                            const edgeCG = document.getElementById('edge-3-7');
+                            
+                            // Swap node positions
+                            nodeF.style.left = `${400 - 25}px`;
+                            nodeF.style.top = `${250 - 25}px`;
+                            nodeG.style.left = `${200 - 25}px`;
+                            nodeG.style.top = `${250 - 25}px`;
+                            
+                            // Update edges
+                            const newAngleCF = Math.atan2(250 - 150, 400 - 300) * 180 / Math.PI;
+                            const newLengthCF = Math.sqrt((400 - 300) ** 2 + (250 - 150) ** 2);
+                            edgeCF.style.width = `${newLengthCF}px`;
+                            edgeCF.style.transform = `rotate(${newAngleCF}deg)`;
+                            
+                            const newAngleCG = Math.atan2(250 - 150, 200 - 300) * 180 / Math.PI;
+                            const newLengthCG = Math.sqrt((200 - 300) ** 2 + (250 - 150) ** 2);
+                            edgeCG.style.width = `${newLengthCG}px`;
+                            edgeCG.style.transform = `rotate(${newAngleCG}deg)`;
+                        }, 300);
+                    }
+                },
+                {
+                    title: "Step 6: Move to Right Subtree",
+                    explanation: "Next, we move to the right subtree (which was originally the left subtree) and prepare to mirror it. We'll highlight the nodes to be swapped.",
+                    action: () => {
+                        // Hide left subtree arrows
+                        document.getElementById('arrow-left-2').style.opacity = '0';
+                        document.getElementById('arrow-right-2').style.opacity = '0';
+                        
+                        // Reset left subtree highlights
+                        document.getElementById('node-3').classList.remove('highlighted');
+                        document.getElementById('node-6').classList.remove('highlighted');
+                        document.getElementById('node-7').classList.remove('highlighted');
+                        
+                        // Highlight B and its children
+                        document.getElementById('node-2').classList.add('highlighted');
+                        document.getElementById('node-4').classList.add('highlighted');
+                        document.getElementById('node-5').classList.add('highlighted');
+                        
+                        // Move children of B to follow it
+                        const nodeD = document.getElementById('node-4');
+                        const nodeE = document.getElementById('node-5');
+                        const edgeBD = document.getElementById('edge-2-4');
+                        const edgeBE = document.getElementById('edge-2-5');
+                        
+                        nodeD.style.left = `${500 - 25}px`;
+                        nodeD.style.top = `${250 - 25}px`;
+                        nodeE.style.left = `${700 - 25}px`;
+                        nodeE.style.top = `${250 - 25}px`;
+                        
+                        // Update edges
+                        const newAngleBD = Math.atan2(250 - 150, 500 - 600) * 180 / Math.PI;
+                        const newLengthBD = Math.sqrt((500 - 600) ** 2 + (250 - 150) ** 2);
+                        edgeBD.style.width = `${newLengthBD}px`;
+                        edgeBD.style.transform = `rotate(${newAngleBD}deg)`;
+                        
+                        const newAngleBE = Math.atan2(250 - 150, 700 - 600) * 180 / Math.PI;
+                        const newLengthBE = Math.sqrt((700 - 600) ** 2 + (250 - 150) ** 2);
+                        edgeBE.style.width = `${newLengthBE}px`;
+                        edgeBE.style.transform = `rotate(${newAngleBE}deg)`;
+                    }
+                },
+                {
+                    title: "Step 7: Swapping in Right Subtree",
+                    explanation: "We swap the children of node B (which is now on the right side of the root). This completes the mirroring process for all levels of the tree.",
+                    action: () => {
+                        // Show right subtree arrows
+                        document.getElementById('arrow-left-3').style.opacity = '1';
+                        document.getElementById('arrow-right-3').style.opacity = '1';
+                        
+                        // Animate the swap
+                        setTimeout(() => {
+                            const nodeD = document.getElementById('node-4');
+                            const nodeE = document.getElementById('node-5');
+                            const edgeBD = document.getElementById('edge-2-4');
+                            const edgeBE = document.getElementById('edge-2-5');
+                            
+                            // Swap node positions
+                            nodeD.style.left = `${700 - 25}px`;
+                            nodeD.style.top = `${250 - 25}px`;
+                            nodeE.style.left = `${500 - 25}px`;
+                            nodeE.style.top = `${250 - 25}px`;
+                            
+                            // Update edges
+                            const newAngleBD = Math.atan2(250 - 150, 700 - 600) * 180 / Math.PI;
+                            const newLengthBD = Math.sqrt((700 - 600) ** 2 + (250 - 150) ** 2);
+                            edgeBD.style.width = `${newLengthBD}px`;
+                            edgeBD.style.transform = `rotate(${newAngleBD}deg)`;
+                            
+                            const newAngleBE = Math.atan2(250 - 150, 500 - 600) * 180 / Math.PI;
+                            const newLengthBE = Math.sqrt((500 - 600) ** 2 + (250 - 150) ** 2);
+                            edgeBE.style.width = `${newLengthBE}px`;
+                            edgeBE.style.transform = `rotate(${newAngleBE}deg)`;
+                        }, 300);
+                    }
+                },
+                {
+                    title: "Step 8: Complete Mirrored Tree",
+                    explanation: "The tree is now completely mirrored! Each node's left child has been swapped with its right child throughout the entire tree. This transformation has been done in-place, meaning we didn't create a new tree but modified the existing one.",
+                    action: () => {
+                        // Hide right subtree arrows
+                        document.getElementById('arrow-left-3').style.opacity = '0';
+                        document.getElementById('arrow-right-3').style.opacity = '0';
+                        
+                        // Remove all highlights to show final state
+                        document.querySelectorAll('.tree-node').forEach(node => {
+                            node.classList.remove('highlighted');
+                        });
+                        
+                        // Highlight all nodes briefly to show completion
+                        setTimeout(() => {
+                            document.querySelectorAll('.tree-node').forEach(node => {
+                                node.classList.add('highlighted');
+                            });
+                            
+                            setTimeout(() => {
+                                document.querySelectorAll('.tree-node').forEach(node => {
+                                    node.classList.remove('highlighted');
+                                });
+                            }, 800);
+                        }, 300);
+                    }
+                }
+            ];
+            
+            let currentStep = 0;
+            
+            // Initialize the first step
+            steps[currentStep].action();
+            
+            // Next button click handler
+            nextButton.addEventListener('click', () => {
+                if (currentStep < steps.length - 1) {
+                    currentStep++;
+                    stepIndicator.textContent = steps[currentStep].title;
+                    explanation.textContent = steps[currentStep].explanation;
+                    steps[currentStep].action();
+                    
+                    prevButton.disabled = false;
+                    if (currentStep === steps.length - 1) {
+                        nextButton.disabled = true;
+                    }
+                }
+            });
+            
+            // Previous button click handler
+            prevButton.addEventListener('click', () => {
+                if (currentStep > 0) {
+                    currentStep--;
+                    stepIndicator.textContent = steps[currentStep].title;
+                    explanation.textContent = steps[currentStep].explanation;
+                    steps[currentStep].action();
+                    
+                    nextButton.disabled = false;
+                    if (currentStep === 0) {
+                        prevButton.disabled = true;
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
