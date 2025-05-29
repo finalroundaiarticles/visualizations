@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Tree Left View Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        #treeCanvas {
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .explanation {
+            color: #000000;
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #FD9F78;
+        }
+
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Tree Left View Visualization</h1>
+        <canvas id="treeCanvas" width="700" height="400"></canvas>
+        <div class="explanation" id="explanation"></div>
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Tree node class
+        class TreeNode {
+            constructor(val) {
+                this.val = val;
+                this.left = null;
+                this.right = null;
+            }
+        }
+
+        // Create a sample binary tree
+        function createSampleTree() {
+            let root = new TreeNode(1);
+            root.left = new TreeNode(2);
+            root.right = new TreeNode(3);
+            root.left.left = new TreeNode(4);
+            root.left.right = new TreeNode(5);
+            root.right.right = new TreeNode(6);
+            return root;
+        }
+
+        // Animation variables
+        const tree = createSampleTree();
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        const explanationDiv = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        let currentStep = 0;
+        const totalSteps = 5;
+        
+        // Colors
+        const colors = {
+            primary: '#FF4800',
+            secondary: '#FD9F78',
+            black: '#000000',
+            white: '#FFFFFF',
+            highlighted: '#FF4800',
+            normal: '#FD9F78',
+            line: '#000000'
+        };
+
+        // Steps explanations
+        const steps = [
+            "This is a binary tree with nodes 1, 2, 3, 4, 5, and 6. We want to find its left view.",
+            "The left view of a binary tree is the set of nodes visible when looking at the tree from the left side.",
+            "First level: Node 1 is the leftmost node, so it's part of the left view.",
+            "Second level: Node 2 is the leftmost node on the second level, so it's part of the left view.",
+            "Third level: Node 4 is the leftmost node on the third level, so it's part of the left view. The final left view is [1, 2, 4]."
+        ];
+
+        // Draw the tree
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Set up coordinates
+            const startX = canvas.width / 2;
+            const startY = 50;
+            const levelHeight = 80;
+            const initialWidth = 180;
+            
+            // Draw the tree recursively
+            drawNode(tree, startX, startY, initialWidth, 1);
+            
+            // Update explanation
+            explanationDiv.textContent = steps[currentStep];
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+        }
+
+        // Draw a node and its children
+        function drawNode(node, x, y, width, level) {
+            if (!node) return;
+            
+            // Determine if this node is part of the left view based on current step
+            let isHighlighted = false;
+            
+            if (currentStep >= 2 && level === 1 && node.val === 1) {
+                isHighlighted = true;
+            } else if (currentStep >= 3 && level === 2 && node.val === 2) {
+                isHighlighted = true;
+            } else if (currentStep >= 4 && level === 3 && node.val === 4) {
+                isHighlighted = true;
+            }
+            
+            // Draw connecting lines first (behind nodes)
+            if (node.left) {
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x - width/2, y + 80);
+                ctx.strokeStyle = colors.line;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+            
+            if (node.right) {
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + width/2, y + 80);
+                ctx.strokeStyle = colors.line;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+            
+            // Draw the node
+            ctx.beginPath();
+            ctx.arc(x, y, 25, 0, Math.PI * 2);
+            ctx.fillStyle = isHighlighted ? colors.highlighted : colors.secondary;
+            ctx.fill();
+            ctx.strokeStyle = colors.black;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw node value
+            ctx.fillStyle = colors.white;
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.val, x, y);
+            
+            // Draw left and right children
+            if (node.left) {
+                drawNode(node.left, x - width/2, y + 80, width/2, level + 1);
+            }
+            
+            if (node.right) {
+                drawNode(node.right, x + width/2, y + 80, width/2, level + 1);
+            }
+        }
+
+        // Handle navigation
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                drawTree();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                drawTree();
+            }
+        });
+
+        // Initial drawing
+        drawTree();
+    </script>
+</body>
+</html>
