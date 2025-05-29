@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tree Height Examples</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .tree-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+            flex-wrap: wrap;
+        }
+        .tree-example {
+            text-align: center;
+            width: 200px;
+            margin-bottom: 30px;
+        }
+        .tree-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #FF4800;
+        }
+        .tree-height {
+            font-weight: bold;
+            margin-top: 10px;
+            color: #000000;
+            background-color: #FD9F78;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .canvas-container {
+            height: 200px;
+            position: relative;
+        }
+        canvas {
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .explanation {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #FFF;
+            border-left: 5px solid #FF4800;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .explanation h2 {
+            color: #FF4800;
+            margin-top: 0;
+        }
+        .page-indicator {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tree Height Examples</h1>
+
+        <div class="explanation">
+            <h2>Understanding Tree Height</h2>
+            <p id="explanation-text">
+                Tree height measures the longest path from the root to any leaf node. The height of a tree is the maximum level of any node in the tree.
+            </p>
+        </div>
+
+        <div class="tree-container" id="tree-container">
+            <!-- Tree examples will be rendered here -->
+        </div>
+
+        <div class="navigation">
+            <button class="nav-button" id="prev-btn" disabled>Previous</button>
+            <button class="nav-button" id="next-btn">Next</button>
+        </div>
+        <div class="page-indicator" id="page-indicator">Page 1 of 4</div>
+    </div>
+
+    <script>
+        const examples = [
+            {
+                title: "Empty Tree",
+                height: -1,
+                explanation: "An empty tree has no nodes at all, so its height is defined as -1.",
+                draw: function(ctx, width, height) {
+                    ctx.fillStyle = "#000000";
+                    ctx.font = "14px Arial";
+                    ctx.textAlign = "center";
+                    ctx.fillText("Empty Tree", width/2, height/2);
+                    ctx.strokeStyle = "#FD9F78";
+                    ctx.strokeRect(width/4, height/3, width/2, height/3);
+                }
+            },
+            {
+                title: "Single Node Tree",
+                height: 0,
+                explanation: "A tree with just a root node has a height of 0. There is no path from root to leaf because the root is the leaf.",
+                draw: function(ctx, width, height) {
+                    const centerX = width/2;
+                    const centerY = height/2;
+                    const radius = 20;
+                    
+                    // Draw node
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                    ctx.fillStyle = "#FF4800";
+                    ctx.fill();
+                    
+                    // Draw label
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.font = "14px Arial";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText("R", centerX, centerY);
+                }
+            },
+            {
+                title: "Root with One Child",
+                height: 1,
+                explanation: "A tree with a root and one child has a height of 1. The path from root to leaf is 1 edge long.",
+                draw: function(ctx, width, height) {
+                    const centerX = width/2;
+                    const rootY = height/3;
+                    const childY = 2*height/3;
+                    const radius = 20;
+                    
+                    // Draw line from root to child
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, rootY + radius);
+                    ctx.lineTo(centerX, childY - radius);
+                    ctx.strokeStyle = "#000000";
+                    ctx.stroke();
+                    
+                    // Draw root node
+                    ctx.beginPath();
+                    ctx.arc(centerX, rootY, radius, 0, 2 * Math.PI);
+                    ctx.fillStyle = "#FF4800";
+                    ctx.fill();
+                    
+                    // Draw child node
+                    ctx.beginPath();
+                    ctx.arc(centerX, childY, radius, 0, 2 * Math.PI);
+                    ctx.fillStyle = "#FD9F78";
+                    ctx.fill();
+                    
+                    // Draw labels
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.font = "14px Arial";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText("R", centerX, rootY);
+                    ctx.fillText("C", centerX, childY);
+                }
+            },
+            {
+                title: "Multi-level Tree",
+                height: 2,
+                explanation: "This tree has a root, children, and grandchildren, with a height of 2. The longest path from root to any leaf is 2 edges.",
+                draw: function(ctx, width, height) {
+                    const centerX = width/2;
+                    const rootY = height/4;
+                    const childY = height/2;
+                    const grandchildY = 3*height/4;
+                    const radius = 15;
+                    
+                    // Draw lines from root to children
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, rootY + radius);
+                    ctx.lineTo(centerX - 40, childY - radius);
+                    ctx.moveTo(centerX, rootY + radius);
+                    ctx.lineTo(centerX + 40, childY - radius);
+                    ctx.strokeStyle = "#000000";
+                    ctx.stroke();
+                    
+                    // Draw lines from children to grandchildren
+                    ctx.beginPath();
+                    ctx.moveTo(centerX - 40, childY + radius);
+                    ctx.lineTo(centerX - 60, grandchildY - radius);
+                    ctx.moveTo(centerX - 40, childY + radius);
+                    ctx.lineTo(centerX - 20, grandchildY - radius);
+                    ctx.moveTo(centerX + 40, childY + radius);
+                    ctx.lineTo(centerX + 60, grandchildY - radius);
+                    ctx.strokeStyle = "#000000";
+                    ctx.stroke();
+                    
+                    // Draw root node
+                    ctx.beginPath();
+                    ctx.arc(centerX, rootY, radius, 0, 2 * Math.PI);
+                    ctx.fillStyle = "#FF4800";
+                    ctx.fill();
+                    
+                    // Draw child nodes
+                    ctx.beginPath();
+                    ctx.arc(centerX - 40, childY, radius, 0, 2 * Math.PI);
+                    ctx.fillStyle = "#FD9F78";
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.arc(centerX + 40, childY, radius, 0, 2 * Math.PI);
+                    ctx.fillStyle = "#FD9F78";
+                    ctx.fill();
+                    
+                    // Draw grandchild nodes
+                    ctx.beginPath();
+                    ctx.arc(centerX - 60, grandchildY, radius, 0, 2 * Math.PI);
+                    ctx.fillStyle = "#FD9F78";
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.arc(centerX - 20, grandchildY, radius, 0, 2 * Math.PI);
+                    ctx.fillStyle = "#FD9F78";
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.arc(centerX + 60, grandchildY, radius, 0, 2 * Math.PI);
+                    ctx.fillStyle = "#FD9F78";
+                    ctx.fill();
+                    
+                    // Draw labels
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.font = "12px Arial";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText("R", centerX, rootY);
+                    ctx.fillText("C1", centerX - 40, childY);
+                    ctx.fillText("C2", centerX + 40, childY);
+                    ctx.fillText("G1", centerX - 60, grandchildY);
+                    ctx.fillText("G2", centerX - 20, grandchildY);
+                    ctx.fillText("G3", centerX + 60, grandchildY);
+                }
+            }
+        ];
+
+        let currentPage = 0;
+        const treeContainer = document.getElementById('tree-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const explanationText = document.getElementById('explanation-text');
+        const pageIndicator = document.getElementById('page-indicator');
+
+        function renderTree() {
+            treeContainer.innerHTML = '';
+            const example = examples[currentPage];
+            
+            // Update explanation
+            explanationText.textContent = example.explanation;
+            
+            // Create example div
+            const exampleDiv = document.createElement('div');
+            exampleDiv.className = 'tree-example';
+            exampleDiv.style.width = '100%';
+            
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'tree-title';
+            titleDiv.textContent = example.title;
+            exampleDiv.appendChild(titleDiv);
+            
+            const canvasContainer = document.createElement('div');
+            canvasContainer.className = 'canvas-container';
+            canvasContainer.style.width = '100%';
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = 300;
+            canvas.height = 300;
+            canvas.style.margin = '0 auto';
+            canvas.style.display = 'block';
+            canvasContainer.appendChild(canvas);
+            exampleDiv.appendChild(canvasContainer);
+            
+            const heightDiv = document.createElement('div');
+            heightDiv.className = 'tree-height';
+            heightDiv.textContent = `Height: ${example.height}`;
+            exampleDiv.appendChild(heightDiv);
+            
+            treeContainer.appendChild(exampleDiv);
+            
+            // Draw the tree
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            example.draw(ctx, canvas.width, canvas.height);
+            
+            // Update page indicator
+            pageIndicator.textContent = `Page ${currentPage + 1} of ${examples.length}`;
+            
+            // Update button states
+            prevBtn.disabled = currentPage === 0;
+            nextBtn.disabled = currentPage === examples.length - 1;
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 0) {
+                currentPage--;
+                renderTree();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentPage < examples.length - 1) {
+                currentPage++;
+                renderTree();
+            }
+        });
+
+        // Initial render
+        renderTree();
+    </script>
+</body>
+</html>
