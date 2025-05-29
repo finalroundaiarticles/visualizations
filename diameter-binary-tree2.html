@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tree Height and Diameter Optimization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 900px;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        #canvas-container {
+            width: 100%;
+            height: 500px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        canvas {
+            background-color: #FFFFFF;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .explanation {
+            background-color: #FFFFFF;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .step-counter {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #000000;
+            font-weight: bold;
+        }
+        
+        .info-box {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            padding: 10px;
+            max-width: 200px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tree Height and Diameter Optimization</h1>
+        
+        <div id="canvas-container">
+            <canvas id="treeCanvas" width="900" height="500"></canvas>
+            <div id="infoBox" class="info-box"></div>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <p>This visualization demonstrates how to calculate both the height and diameter of a binary tree in a single traversal.</p>
+        </div>
+        
+        <div class="step-counter" id="stepCounter">Step 0 of 0</div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        const infoBox = document.getElementById('infoBox');
+        const explanationBox = document.getElementById('explanation');
+        const stepCounter = document.getElementById('stepCounter');
+        const nextBtn = document.getElementById('nextBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        
+        // Colors
+        const NODE_COLOR = '#FF4800';
+        const HIGHLIGHT_COLOR = '#FD9F78';
+        const TEXT_COLOR = '#000000';
+        const LINE_COLOR = '#000000';
+        
+        // Tree structure
+        const tree = {
+            val: 1,
+            left: {
+                val: 2,
+                left: {
+                    val: 4,
+                    left: null,
+                    right: null
+                },
+                right: {
+                    val: 5,
+                    left: null,
+                    right: null
+                }
+            },
+            right: {
+                val: 3,
+                left: null,
+                right: {
+                    val: 6,
+                    left: null,
+                    right: null
+                }
+            }
+        };
+        
+        // Steps for the animation
+        const steps = [
+            {
+                title: "Initial Tree",
+                node: null,
+                highlight: null,
+                explanation: "We'll calculate both the height and diameter of this binary tree in a single traversal. The key insight is that for each node, we need to know the height of its left and right subtrees, as these values help us calculate both the tree height and possible diameters."
+            },
+            {
+                title: "Post-order Traversal",
+                node: null,
+                highlight: null,
+                explanation: "We'll use post-order traversal (left subtree, right subtree, then node) to calculate heights bottom-up. For each node, we'll return its height to its parent, while also updating the maximum diameter found so far."
+            },
+            {
+                title: "Node 4",
+                node: "4",
+                highlight: "4",
+                explanation: "Starting with node 4 (a leaf node):\n- Left height = 0 (no left child)\n- Right height = 0 (no right child)\n- Node height = max(0, 0) + 1 = 1\n- Diameter through this node = 0 + 0 = 0",
+                leftHeight: 0,
+                rightHeight: 0,
+                nodeHeight: 1,
+                maxDiameter: 0
+            },
+            {
+                title: "Node 5",
+                node: "5",
+                highlight: "5",
+                explanation: "For node 5 (another leaf node):\n- Left height = 0 (no left child)\n- Right height = 0 (no right child)\n- Node height = max(0, 0) + 1 = 1\n- Diameter through this node = 0 + 0 = 0",
+                leftHeight: 0,
+                rightHeight: 0,
+                nodeHeight: 1,
+                maxDiameter: 0
+            },
+            {
+                title: "Node 2",
+                node: "2",
+                highlight: "2",
+                explanation: "For node 2:\n- Left height = 1 (from node 4)\n- Right height = 1 (from node 5)\n- Node height = max(1, 1) + 1 = 2\n- Diameter through this node = 1 + 1 = 2\n- Update max diameter to 2",
+                leftHeight: 1,
+                rightHeight: 1,
+                nodeHeight: 2,
+                maxDiameter: 2
+            },
+            {
+                title: "Node 6",
+                node: "6",
+                highlight: "6",
+                explanation: "For node 6 (a leaf node):\n- Left height = 0 (no left child)\n- Right height = 0 (no right child)\n- Node height = max(0, 0) + 1 = 1\n- Diameter through this node = 0 + 0 = 0\n- Max diameter remains 2",
+                leftHeight: 0,
+                rightHeight: 0,
+                nodeHeight: 1,
+                maxDiameter: 2
+            },
+            {
+                title: "Node 3",
+                node: "3",
+                highlight: "3",
+                explanation: "For node 3:\n- Left height = 0 (no left child)\n- Right height = 1 (from node 6)\n- Node height = max(0, 1) + 1 = 2\n- Diameter through this node = 0 + 1 = 1\n- Max diameter remains 2",
+                leftHeight: 0,
+                rightHeight: 1,
+                nodeHeight: 2,
+                maxDiameter: 2
+            },
+            {
+                title: "Node 1 (Root)",
+                node: "1",
+                highlight: "1",
+                explanation: "For the root node:\n- Left height = 2 (from node 2)\n- Right height = 2 (from node 3)\n- Node height = max(2, 2) + 1 = 3\n- Diameter through this node = 2 + 2 = 4\n- Update max diameter to 4",
+                leftHeight: 2,
+                rightHeight: 2,
+                nodeHeight: 3,
+                maxDiameter: 4
+            },
+            {
+                title: "Final Result",
+                node: null,
+                highlight: null,
+                explanation: "After a single post-order traversal:\n- The height of the tree is 3\n- The diameter of the tree is 4\n\nThis approach is efficient because we calculate both values in a single pass, with O(n) time complexity where n is the number of nodes."
+            }
+        ];
+        
+        let currentStep = 0;
+        
+        // Draw the tree
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const rootX = canvas.width / 2;
+            const rootY = 80;
+            const levelHeight = 100;
+            const spreadFactor = 160;
+            
+            drawNode(tree, rootX, rootY, 0, spreadFactor, levelHeight);
+            
+            // Update explanation and step counter
+            explanationBox.innerHTML = `<p>${steps[currentStep].explanation}</p>`;
+            stepCounter.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+            
+            // Show info box if we're on a node calculation step
+            if (steps[currentStep].node) {
+                const nodeValue = steps[currentStep].node;
+                const nodePos = findNodePosition(tree, nodeValue, rootX, rootY, 0, spreadFactor, levelHeight);
+                
+                if (nodePos) {
+                    showInfoBox(nodePos.x, nodePos.y, steps[currentStep]);
+                }
+            } else {
+                infoBox.style.display = 'none';
+            }
+        }
+        
+        function drawNode(node, x, y, level, spreadFactor, levelHeight) {
+            if (!node) return;
+            
+            const radius = 25;
+            const leftX = x - spreadFactor / (level + 1);
+            const rightX = x + spreadFactor / (level + 1);
+            const childY = y + levelHeight;
+            
+            // Draw lines to children
+            ctx.beginPath();
+            ctx.strokeStyle = LINE_COLOR;
+            ctx.lineWidth = 2;
+            
+            if (node.left) {
+                ctx.moveTo(x, y);
+                ctx.lineTo(leftX, childY);
+            }
+            
+            if (node.right) {
+                ctx.moveTo(x, y);
+                ctx.lineTo(rightX, childY);
+            }
+            
+            ctx.stroke();
+            
+            // Draw the node
+            ctx.beginPath();
+            
+            // Highlight the current node
+            if (steps[currentStep].highlight && steps[currentStep].highlight == node.val) {
+                ctx.fillStyle = HIGHLIGHT_COLOR;
+            } else {
+                ctx.fillStyle = NODE_COLOR;
+            }
+            
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw the value
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.val, x, y);
+            
+            // Recursively draw children
+            if (node.left) {
+                drawNode(node.left, leftX, childY, level + 1, spreadFactor, levelHeight);
+            }
+            
+            if (node.right) {
+                drawNode(node.right, rightX, childY, level + 1, spreadFactor, levelHeight);
+            }
+        }
+        
+        function findNodePosition(node, nodeValue, x, y, level, spreadFactor, levelHeight) {
+            if (!node) return null;
+            
+            if (node.val == nodeValue) {
+                return { x, y };
+            }
+            
+            const leftX = x - spreadFactor / (level + 1);
+            const rightX = x + spreadFactor / (level + 1);
+            const childY = y + levelHeight;
+            
+            const leftResult = findNodePosition(node.left, nodeValue, leftX, childY, level + 1, spreadFactor, levelHeight);
+            if (leftResult) return leftResult;
+            
+            return findNodePosition(node.right, nodeValue, rightX, childY, level + 1, spreadFactor, levelHeight);
+        }
+        
+        function showInfoBox(x, y, stepData) {
+            infoBox.style.display = 'block';
+            infoBox.style.left = `${x + 40}px`;
+            infoBox.style.top = `${y - 30}px`;
+            
+            infoBox.innerHTML = `
+                <strong>Node ${stepData.node}</strong><br>
+                Left height: ${stepData.leftHeight}<br>
+                Right height: ${stepData.rightHeight}<br>
+                Node height: ${stepData.nodeHeight}<br>
+                Max diameter: ${stepData.maxDiameter}
+            `;
+        }
+        
+        // Event listeners for navigation buttons
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                drawTree();
+            }
+        });
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                drawTree();
+            }
+        });
+        
+        // Initial draw
+        drawTree();
+    </script>
+</body>
+</html>
