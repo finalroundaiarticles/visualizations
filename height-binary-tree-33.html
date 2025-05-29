@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Tree Height Visualization</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        #canvas {
+            border: none;
+            cursor: grab;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        #canvas:active {
+            cursor: grabbing;
+        }
+        
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background-color: #ff4800;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #e63e00;
+        }
+        
+        .info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #1c1d20;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
+        
+        .level-indicator {
+            position: absolute;
+            left: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            color: #1c1d20;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button onclick="resetTree()">Reset Tree</button>
+        <button onclick="animateTraversal()">Animate Algorithm</button>
+        <button onclick="addRandomNode()">Add Random Node</button>
+        <button onclick="clearTree()">Clear Tree</button>
+    </div>
+    
+    <div class="info">
+        <div>Tree Height: <span id="height">2</span></div>
+        <div>Total Nodes: <span id="nodeCount">5</span></div>
+        <div>Algorithm: Iterative BFS</div>
+    </div>
+    
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size
+        canvas.width = window.innerWidth - 40;
+        canvas.height = window.innerHeight - 40;
+        
+        // Tree structure
+        class TreeNode {
+            constructor(val, x = 0, y = 0) {
+                this.val = val;
+                this.left = null;
+                this.right = null;
+                this.x = x;
+                this.y = y;
+                this.radius = 20;
+                this.level = 0;
+                this.highlighted = false;
+                this.processed = false;
+            }
+        }
+        
+        let root = null;
+        let draggedNode = null;
+        let dragOffset = { x: 0, y: 0 };
+        let animationStep = 0;
+        let isAnimating = false;
+        let animationQueue = [];
+        let levelIndicators = [];
+        
+        // Initialize with example tree
+        function initializeTree() {
+            root = new TreeNode(1, canvas.width / 2, 60);
+            root.left = new TreeNode(2, canvas.width / 2 - 80, 140);
+            root.right = new TreeNode(3, canvas.width / 2 + 80, 140);
+            root.left.left = new TreeNode(4, canvas.width / 2 - 140, 220);
+            root.left.right = new TreeNode(5, canvas.width / 2 - 20, 220);
+            
+            calculateLevels(root, 0);
+            updateInfo();
+        }
+        
+        function calculateLevels(node, level) {
+            if (!node) return;
+            node.level = level;
+            calculateLevels(node.left, level + 1);
+            calculateLevels(node.right, level + 1);
+        }
+        
+        function calculateHeight(root) {
+            if (!root) return -1;
+            
+            const queue = [root];
+            let height = -1;
+            
+            while (queue.length > 0) {
+                const levelSize = queue.length;
+                height++;
+                
+                for (let i = 0; i < levelSize; i++) {
+                    const node = queue.shift();
+                    
+                    if (node.left) queue.push(node.left);
+                    if (node.right) queue.push(node.right);
+                }
+            }
+            
+            return height;
+        }
+        
+        function countNodes(node) {
+            if (!node) return 0;
+            return 1 + countNodes(node.left) + countNodes(node.right);
+        }
+        
+        function updateInfo() {
+            document.getElementById('height').textContent = calculateHeight(root);
+            document.getElementById('nodeCount').textContent = countNodes(root);
+        }
+        
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw level indicators
+            levelIndicators.forEach(indicator => {
+                ctx.fillStyle = '#1c1d20';
+                ctx.font = '12px Arial';
+                ctx.fillText(`Level ${indicator.level}`, 10, indicator.y + 5);
+            });
+            
+            if (root) {
+                drawConnections(root);
+                drawNodes(root);
+            }
+        }
+        
+        function drawConnections(node) {
+            if (!node) return;
+            
+            ctx.strokeStyle = '#1c1d20';
+            ctx.lineWidth = 2;
+            
+            if (node.left) {
+                ctx.beginPath();
+                ctx.moveTo(node.x, node.y);
+                ctx.lineTo(node.left.x, node.left.y);
+                ctx.stroke();
+                drawConnections(node.left);
+            }
+            
+            if (node.right) {
+                ctx.beginPath();
+                ctx.moveTo(node.x, node.y);
+                ctx.lineTo(node.right.x, node.right.y);
+                ctx.stroke();
+                drawConnections(node.right);
+            }
+        }
+        
+        function drawNodes(node) {
+            if (!node) return;
+            
+            // Draw node circle
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, node.radius, 0, 2 * Math.PI);
+            
+            if (node.processed && isAnimating) {
+                ctx.fillStyle = '#1c1d20';
+            } else if (node.highlighted && isAnimating) {
+                ctx.fillStyle = '#ff4800';
+            } else {
+                ctx.fillStyle = '#ff4800';
+            }
+            
+            ctx.fill();
+            ctx.strokeStyle = '#1c1d20';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw node value
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.val.toString(), node.x, node.y);
+            
+            drawNodes(node.left);
+            drawNodes(node.right);
+        }
+        
+        function findNodeAt(x, y, node = root) {
+            if (!node) return null;
+            
+            const distance = Math.sqrt((x - node.x) ** 2 + (y - node.y) ** 2);
+            if (distance <= node.radius) {
+                return node;
+            }
+            
+            return findNodeAt(x, y, node.left) || findNodeAt(x, y, node.right);
+        }
+        
+        function updateLevelIndicators() {
+            levelIndicators = [];
+            if (!root) return;
+            
+            const levels = new Set();
+            function collectLevels(node, level, y) {
+                if (!node) return;
+                levels.add({ level, y });
+                collectLevels(node.left, level + 1, y + 100);
+                collectLevels(node.right, level + 1, y + 100);
+            }
+            
+            collectLevels(root, 0, root.y);
+            levelIndicators = Array.from(levels);
+        }
+        
+        function resetTree() {
+            isAnimating = false;
+            clearAllHighlights();
+            initializeTree();
+            updateLevelIndicators();
+            drawTree();
+        }
+        
+        function clearAllHighlights() {
+            function clearNode(node) {
+                if (!node) return;
+                node.highlighted = false;
+                node.processed = false;
+                clearNode(node.left);
+                clearNode(node.right);
+            }
+            clearNode(root);
+        }
+        
+        function animateTraversal() {
+            if (!root || isAnimating) return;
+            
+            isAnimating = true;
+            clearAllHighlights();
+            
+            const queue = [root];
+            const steps = [];
+            let height = -1;
+            
+            while (queue.length > 0) {
+                const levelSize = queue.length;
+                height++;
+                const currentLevel = [];
+                
+                for (let i = 0; i < levelSize; i++) {
+                    const node = queue.shift();
+                    currentLevel.push(node);
+                    
+                    if (node.left) queue.push(node.left);
+                    if (node.right) queue.push(node.right);
+                }
+                
+                steps.push({ level: height, nodes: currentLevel });
+            }
+            
+            let stepIndex = 0;
+            let nodeIndex = 0;
+            
+            function animateStep() {
+                if (stepIndex >= steps.length) {
+                    isAnimating = false;
+                    return;
+                }
+                
+                const currentStep = steps[stepIndex];
+                
+                if (nodeIndex < currentStep.nodes.length) {
+                    // Highlight current node
+                    if (nodeIndex > 0) {
+                        currentStep.nodes[nodeIndex - 1].highlighted = false;
+                        currentStep.nodes[nodeIndex - 1].processed = true;
+                    }
+                    currentStep.nodes[nodeIndex].highlighted = true;
+                    nodeIndex++;
+                } else {
+                    // Mark all nodes in level as processed
+                    currentStep.nodes.forEach(node => {
+                        node.highlighted = false;
+                        node.processed = true;
+                    });
+                    stepIndex++;
+                    nodeIndex = 0;
+                }
+                
+                drawTree();
+                
+                if (stepIndex < steps.length || nodeIndex < currentStep.nodes.length) {
+                    setTimeout(animateStep, 800);
+                } else {
+                    isAnimating = false;
+                }
+            }
+            
+            animateStep();
+        }
+        
+        function addRandomNode() {
+            if (!root) {
+                initializeTree();
+                return;
+            }
+            
+            const nodes = [];
+            function collectNodes(node) {
+                if (!node) return;
+                nodes.push(node);
+                collectNodes(node.left);
+                collectNodes(node.right);
+            }
+            collectNodes(root);
+            
+            const parentNode = nodes[Math.floor(Math.random() * nodes.length)];
+            const newValue = Math.floor(Math.random() * 100) + 1;
+            
+            if (!parentNode.left && Math.random() < 0.5) {
+                parentNode.left = new TreeNode(newValue, parentNode.x - 50, parentNode.y + 80);
+            } else if (!parentNode.right) {
+                parentNode.right = new TreeNode(newValue, parentNode.x + 50, parentNode.y + 80);
+            } else if (!parentNode.left) {
+                parentNode.left = new TreeNode(newValue, parentNode.x - 50, parentNode.y + 80);
+            }
+            
+            calculateLevels(root, 0);
+            updateInfo();
+            updateLevelIndicators();
+            drawTree();
+        }
+        
+        function clearTree() {
+            root = null;
+            isAnimating = false;
+            levelIndicators = [];
+            updateInfo();
+            drawTree();
+        }
+        
+        // Mouse events
+        canvas.addEventListener('mousedown', (e) => {
+            if (isAnimating) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            draggedNode = findNodeAt(x, y);
+            if (draggedNode) {
+                dragOffset.x = x - draggedNode.x;
+                dragOffset.y = y - draggedNode.y;
+            }
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (draggedNode && !isAnimating) {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                draggedNode.x = x - dragOffset.x;
+                draggedNode.y = y - dragOffset.y;
+                
+                drawTree();
+            }
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            if (draggedNode) {
+                updateLevelIndicators();
+            }
+            draggedNode = null;
+        });
+        
+        // Initialize
+        initializeTree();
+        updateLevelIndicators();
+        drawTree();
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth - 40;
+            canvas.height = window.innerHeight - 40;
+            drawTree();
+        });
+    </script>
+</body>
+</html>
