@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Tree Right View</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        .canvas-container {
+            margin: 20px auto;
+            position: relative;
+            height: 400px;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f8f8;
+            border-radius: 5px;
+            color: #000000;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            width: 100%;
+        }
+        .btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #FD9F78;
+        }
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .dot {
+            height: 10px;
+            width: 10px;
+            background-color: #bbb;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 5px;
+        }
+        .dot.active {
+            background-color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Tree Right View</h1>
+        
+        <div class="canvas-container">
+            <canvas id="treeCanvas" width="800" height="400"></canvas>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            Welcome to the Binary Tree Right View visualization. Click "Next" to begin the explanation.
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" class="btn" disabled>Previous</button>
+            <button id="nextBtn" class="btn">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator"></div>
+    </div>
+
+    <script>
+        // Canvas and context
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Steps for the animation
+        const steps = [
+            {
+                title: "Introduction to Binary Tree",
+                explanation: "A binary tree is a tree data structure where each node has at most two children, referred to as left child and right child.",
+                render: drawInitialTree
+            },
+            {
+                title: "Node Structure",
+                explanation: "Each node contains a value and references to its left and right children. In our example, we have nodes with values 1, 2, 3, 4, 5, and 6.",
+                render: drawTreeWithLabels
+            },
+            {
+                title: "What is the Right View?",
+                explanation: "The right view of a binary tree is the set of nodes visible when looking at the tree from the right side. It shows the rightmost node at each level of the tree.",
+                render: drawTreeWithRightView
+            },
+            {
+                title: "Right View Identification",
+                explanation: "In our example, the right view consists of nodes [1, 3, 6]. Node 1 is visible at the first level, node 3 at the second level, and node 6 at the third level.",
+                render: highlightRightView
+            },
+            {
+                title: "Understanding Right View",
+                explanation: "To find the right view, we perform a level order traversal and keep track of the last node at each level. These last nodes form the right view of the tree.",
+                render: animateRightView
+            }
+        ];
+        
+        // Current step
+        let currentStep = 0;
+        
+        // Tree structure
+        const tree = {
+            value: 1,
+            left: {
+                value: 2,
+                left: {
+                    value: 4,
+                    left: null,
+                    right: null
+                },
+                right: {
+                    value: 5,
+                    left: null,
+                    right: null
+                }
+            },
+            right: {
+                value: 3,
+                left: null,
+                right: {
+                    value: 6,
+                    left: null,
+                    right: null
+                }
+            }
+        };
+        
+        // Initialize the step indicator
+        function initStepIndicator() {
+            const stepIndicator = document.getElementById('stepIndicator');
+            stepIndicator.innerHTML = '';
+            
+            for (let i = 0; i < steps.length; i++) {
+                const dot = document.createElement('span');
+                dot.className = i === currentStep ? 'dot active' : 'dot';
+                stepIndicator.appendChild(dot);
+            }
+        }
+        
+        // Update step indicator
+        function updateStepIndicator() {
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((dot, index) => {
+                dot.className = index === currentStep ? 'dot active' : 'dot';
+            });
+        }
+        
+        // Navigation functions
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateStep();
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        }
+        
+        // Update the current step
+        function updateStep() {
+            document.getElementById('explanation').textContent = steps[currentStep].explanation;
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === steps.length - 1;
+            updateStepIndicator();
+            
+            // Clear canvas and render current step
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            steps[currentStep].render();
+        }
+        
+        // Event listeners for buttons
+        document.getElementById('nextBtn').addEventListener('click', nextStep);
+        document.getElementById('prevBtn').addEventListener('click', prevStep);
+        
+        // Drawing functions
+        function drawNode(x, y, value, highlight = false, rightView = false) {
+            // Node circle
+            ctx.beginPath();
+            ctx.arc(x, y, 25, 0, Math.PI * 2);
+            
+            if (rightView) {
+                ctx.fillStyle = '#FF4800';  // Right view nodes
+            } else if (highlight) {
+                ctx.fillStyle = '#FD9F78';  // Highlighted nodes
+            } else {
+                ctx.fillStyle = '#FFFFFF';  // Regular nodes
+            }
+            
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Node value
+            ctx.fillStyle = '#000000';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(value, x, y);
+        }
+        
+        function drawLine(x1, y1, x2, y2) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        function drawInitialTree() {
+            // Level 1 (Root)
+            drawNode(400, 50, 1);
+            
+            // Level 2
+            drawNode(300, 150, 2);
+            drawNode(500, 150, 3);
+            
+            // Connect level 1 to level 2
+            drawLine(385, 70, 315, 130);
+            drawLine(415, 70, 485, 130);
+            
+            // Level 3
+            drawNode(250, 250, 4);
+            drawNode(350, 250, 5);
+            drawNode(550, 250, 6);
+            
+            // Connect level 2 to level 3
+            drawLine(285, 170, 265, 230);
+            drawLine(315, 170, 335, 230);
+            drawLine(515, 170, 535, 230);
+        }
+        
+        function drawTreeWithLabels() {
+            drawInitialTree();
+            
+            // Add labels
+            ctx.fillStyle = '#000000';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            
+            ctx.fillText("Root", 400, 20);
+            ctx.fillText("Left Child", 300, 120);
+            ctx.fillText("Right Child", 500, 120);
+            
+            ctx.fillText("Left Child of 2", 250, 220);
+            ctx.fillText("Right Child of 2", 350, 220);
+            ctx.fillText("Right Child of 3", 550, 220);
+        }
+        
+        function drawTreeWithRightView() {
+            // Level 1 (Root)
+            drawNode(400, 50, 1, false, true);
+            
+            // Level 2
+            drawNode(300, 150, 2);
+            drawNode(500, 150, 3, false, true);
+            
+            // Connect level 1 to level 2
+            drawLine(385, 70, 315, 130);
+            drawLine(415, 70, 485, 130);
+            
+            // Level 3
+            drawNode(250, 250, 4);
+            drawNode(350, 250, 5);
+            drawNode(550, 250, 6, false, true);
+            
+            // Connect level 2 to level 3
+            drawLine(285, 170, 265, 230);
+            drawLine(315, 170, 335, 230);
+            drawLine(515, 170, 535, 230);
+            
+            // Add right view explanation
+            ctx.fillStyle = '#000000';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText("Right View: [1, 3, 6]", 400, 320);
+            
+            // Drawing the right side view line
+            ctx.beginPath();
+            ctx.setLineDash([5, 3]);
+            ctx.moveTo(600, 20);
+            ctx.lineTo(600, 300);
+            ctx.strokeStyle = '#FF4800';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Arrow indicating right view direction
+            ctx.beginPath();
+            ctx.moveTo(650, 150);
+            ctx.lineTo(620, 150);
+            ctx.lineTo(630, 140);
+            ctx.moveTo(620, 150);
+            ctx.lineTo(630, 160);
+            ctx.strokeStyle = '#FF4800';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#FF4800';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText("Viewing from right", 655, 155);
+        }
+        
+        function highlightRightView() {
+            // Draw regular tree first
+            drawInitialTree();
+            
+            // Then highlight the right view nodes
+            drawNode(400, 50, 1, false, true);
+            drawNode(500, 150, 3, false, true);
+            drawNode(550, 250, 6, false, true);
+            
+            // Add right view explanation
+            ctx.fillStyle = '#000000';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText("Right View: [1, 3, 6]", 400, 320);
+            
+            // Drawing the right side view line
+            ctx.beginPath();
+            ctx.setLineDash([5, 3]);
+            ctx.moveTo(600, 20);
+            ctx.lineTo(600, 300);
+            ctx.strokeStyle = '#FF4800';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Level indicators
+            ctx.beginPath();
+            ctx.setLineDash([5, 3]);
+            ctx.moveTo(150, 50);
+            ctx.lineTo(600, 50);
+            ctx.strokeStyle = '#999999';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(150, 150);
+            ctx.lineTo(600, 150);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(150, 250);
+            ctx.lineTo(600, 250);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            ctx.fillStyle = '#999999';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText("Level 1", 155, 55);
+            ctx.fillText("Level 2", 155, 155);
+            ctx.fillText("Level 3", 155, 255);
+        }
+        
+        function animateRightView() {
+            // Start with the full tree
+            drawInitialTree();
+            
+            // Right view nodes with special highlight
+            drawNode(400, 50, 1, false, true);
+            drawNode(500, 150, 3, false, true);
+            drawNode(550, 250, 6, false, true);
+            
+            // Arrows connecting right view nodes
+            ctx.beginPath();
+            ctx.moveTo(415, 70);
+            ctx.lineTo(485, 130);
+            ctx.strokeStyle = '#FF4800';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(515, 170);
+            ctx.lineTo(535, 230);
+            ctx.strokeStyle = '#FF4800';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // Arrows
+            drawArrow(430, 95, '#FF4800');
+            drawArrow(525, 200, '#FF4800');
+            
+            // Level indicators
+            ctx.beginPath();
+            ctx.setLineDash([5, 3]);
+            ctx.moveTo(150, 50);
+            ctx.lineTo(600, 50);
+            ctx.strokeStyle = '#999999';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(150, 150);
+            ctx.lineTo(600, 150);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(150, 250);
+            ctx.lineTo(600, 250);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            ctx.fillStyle = '#999999';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText("Level 1", 155, 55);
+            ctx.fillText("Level 2", 155, 155);
+            ctx.fillText("Level 3", 155, 255);
+            
+            // Right view list
+            ctx.fillStyle = '#000000';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText("Right View: [1, 3, 6]", 400, 320);
+            
+            // Drawing the right side view line
+            ctx.beginPath();
+            ctx.setLineDash([5, 3]);
+            ctx.moveTo(600, 20);
+            ctx.lineTo(600, 300);
+            ctx.strokeStyle = '#FF4800';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        
+        function drawArrow(y, angle, color) {
+            ctx.save();
+            ctx.translate(450, y);
+            ctx.rotate(angle * Math.PI / 180);
+            
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(-10, -5);
+            ctx.lineTo(-10, 5);
+            ctx.closePath();
+            
+            ctx.fillStyle = color;
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        
+        // Initialize
+        initStepIndicator();
+        updateStep();
+    </script>
+</body>
+</html>
