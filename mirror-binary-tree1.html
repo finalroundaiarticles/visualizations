@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Original and Mirror Tree Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            max-width: 1000px;
+            margin-bottom: 30px;
+        }
+        
+        .tree-container {
+            width: 45%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 0 15px;
+            position: relative;
+        }
+        
+        .tree-title {
+            font-size: 20px;
+            color: #FF4800;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .canvas-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .description {
+            background-color: #FD9F78;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            color: #000000;
+            max-width: 800px;
+            line-height: 1.6;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        
+        .step {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin: 0 5px;
+            background-color: #ccc;
+        }
+        
+        .step.active {
+            background-color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <h1>Original and Mirror Tree Visualization</h1>
+    
+    <div class="description" id="description">
+        Let's understand what a mirror tree is. A mirror tree is created by swapping the left and right children for every node in the original tree. This demonstration shows how an original tree transforms into its mirror image.
+    </div>
+    
+    <div class="container">
+        <div class="tree-container">
+            <div class="tree-title">Original Tree</div>
+            <div class="canvas-container">
+                <canvas id="originalCanvas"></canvas>
+            </div>
+        </div>
+        
+        <div class="tree-container">
+            <div class="tree-title">Mirror Tree</div>
+            <div class="canvas-container">
+                <canvas id="mirrorCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="step-indicator">
+        <div class="step active" id="step1"></div>
+        <div class="step" id="step2"></div>
+        <div class="step" id="step3"></div>
+    </div>
+    
+    <div class="navigation">
+        <button class="nav-btn" id="prevBtn" disabled>Previous</button>
+        <button class="nav-btn" id="nextBtn">Next</button>
+    </div>
+
+    <script>
+        // Define the tree structure
+        const originalTree = {
+            value: 1,
+            left: {
+                value: 2,
+                left: { value: 4, left: null, right: null },
+                right: { value: 5, left: null, right: null }
+            },
+            right: {
+                value: 3,
+                left: null,
+                right: null
+            }
+        };
+
+        // Create the mirror tree by swapping left and right children
+        function createMirrorTree(node) {
+            if (!node) return null;
+            
+            const mirrorNode = {
+                value: node.value,
+                left: createMirrorTree(node.right),
+                right: createMirrorTree(node.left)
+            };
+            
+            return mirrorNode;
+        }
+
+        const mirrorTree = createMirrorTree(originalTree);
+
+        // Get the canvas elements
+        const originalCanvas = document.getElementById('originalCanvas');
+        const mirrorCanvas = document.getElementById('mirrorCanvas');
+        const originalCtx = originalCanvas.getContext('2d');
+        const mirrorCtx = mirrorCanvas.getContext('2d');
+
+        // Setup canvas dimensions
+        function setupCanvas(canvas) {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+            
+            return { width: rect.width, height: rect.height };
+        }
+
+        const originalDimensions = setupCanvas(originalCanvas);
+        const mirrorDimensions = setupCanvas(mirrorCanvas);
+
+        // Define animation steps
+        let currentStep = 1;
+        const totalSteps = 3;
+
+        // Function to draw a node
+        function drawNode(ctx, x, y, value, highlighted = false) {
+            ctx.beginPath();
+            ctx.arc(x, y, 20, 0, Math.PI * 2);
+            ctx.fillStyle = highlighted ? '#FF4800' : '#FD9F78';
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(value, x, y);
+        }
+
+        // Function to draw an edge between nodes
+        function drawEdge(ctx, x1, y1, x2, y2, highlighted = false) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = highlighted ? '#FF4800' : '#000000';
+            ctx.lineWidth = highlighted ? 3 : 2;
+            ctx.stroke();
+        }
+
+        // Function to draw the entire tree
+        function drawTree(ctx, node, x, y, horizontalSpacing, depth, maxDepth, highlight = null) {
+            if (!node) return;
+            
+            // Calculate spacing for next level
+            const newHorizontalSpacing = horizontalSpacing / 2;
+            const verticalSpacing = 80;
+            
+            // Draw current node
+            const isHighlighted = highlight && highlight.includes(node.value);
+            drawNode(ctx, x, y, node.value, isHighlighted);
+            
+            // Draw left subtree
+            if (node.left) {
+                const leftX = x - horizontalSpacing;
+                const leftY = y + verticalSpacing;
+                
+                const isEdgeHighlighted = isHighlighted && highlight.includes(node.left.value);
+                drawEdge(ctx, x, y + 20, leftX, leftY - 20, isEdgeHighlighted);
+                drawTree(ctx, node.left, leftX, leftY, newHorizontalSpacing, depth + 1, maxDepth, highlight);
+            }
+            
+            // Draw right subtree
+            if (node.right) {
+                const rightX = x + horizontalSpacing;
+                const rightY = y + verticalSpacing;
+                
+                const isEdgeHighlighted = isHighlighted && highlight.includes(node.right.value);
+                drawEdge(ctx, x, y + 20, rightX, rightY - 20, isEdgeHighlighted);
+                drawTree(ctx, node.right, rightX, rightY, newHorizontalSpacing, depth + 1, maxDepth, highlight);
+            }
+        }
+
+        // Function to clear the canvas
+        function clearCanvas(ctx, width, height) {
+            ctx.clearRect(0, 0, width, height);
+        }
+
+        // Animation function based on current step
+        function render() {
+            clearCanvas(originalCtx, originalDimensions.width, originalDimensions.height);
+            clearCanvas(mirrorCtx, mirrorDimensions.width, mirrorDimensions.height);
+            
+            switch(currentStep) {
+                case 1:
+                    // Initial state - show both trees
+                    document.getElementById('description').textContent = 
+                        "Let's understand what a mirror tree is. A mirror tree is created by swapping the left and right children for every node in the original tree. Here we have an original tree with node 1 as root with children 2 and 3, where 2 has children 4 and 5.";
+                    
+                    // Draw original tree
+                    drawTree(originalCtx, originalTree, originalDimensions.width / 2, 50, 100, 0, 2);
+                    
+                    // Mirror tree is empty at this stage
+                    drawNode(mirrorCtx, mirrorDimensions.width / 2, 50, 1);
+                    break;
+                    
+                case 2:
+                    // Show the transformation at root level
+                    document.getElementById('description').textContent = 
+                        "To create a mirror tree, we swap the left and right children of each node. First, we swap the children of the root node (1). Node 2 becomes the right child and node 3 becomes the left child.";
+                    
+                    // Draw original tree with highlight on the swap at root
+                    drawTree(originalCtx, originalTree, originalDimensions.width / 2, 50, 100, 0, 2, [1, 2, 3]);
+                    
+                    // Draw partial mirror tree with just the root swap
+                    const partialMirror = {
+                        value: 1,
+                        left: { value: 3, left: null, right: null },
+                        right: {
+                            value: 2,
+                            left: null, // Not yet mirrored
+                            right: null
+                        }
+                    };
+                    drawTree(mirrorCtx, partialMirror, mirrorDimensions.width / 2, 50, 100, 0, 2, [1, 2, 3]);
+                    break;
+                    
+                case 3:
+                    // Complete the mirror transformation
+                    document.getElementById('description').textContent = 
+                        "We continue this process for all nodes. For node 2, we swap its children: 4 and 5. In the mirror tree, node 4 becomes the right child and node 5 becomes the left child of node 2. The complete mirror tree is now created!";
+                    
+                    // Draw original tree
+                    drawTree(originalCtx, originalTree, originalDimensions.width / 2, 50, 100, 0, 2);
+                    
+                    // Draw complete mirror tree
+                    drawTree(mirrorCtx, mirrorTree, mirrorDimensions.width / 2, 50, 100, 0, 2, [2, 4, 5]);
+                    break;
+            }
+            
+            // Update step indicators
+            document.querySelectorAll('.step').forEach((step, index) => {
+                step.classList.toggle('active', index + 1 === currentStep);
+            });
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentStep === 1;
+            document.getElementById('nextBtn').disabled = currentStep === totalSteps;
+        }
+
+        // Navigation button event listeners
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                render();
+            }
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                render();
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            setupCanvas(originalCanvas);
+            setupCanvas(mirrorCanvas);
+            render();
+        });
+
+        // Initial render
+        render();
+    </script>
+</body>
+</html>
