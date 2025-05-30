@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BFS Level-Order Traversal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #FF4800;
+            margin-bottom: 20px;
+        }
+
+        #container {
+            width: 800px;
+            height: 500px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .node {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            border: 2px solid #FF4800;
+            transition: all 0.3s ease;
+        }
+
+        .node.highlighted {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.2);
+        }
+
+        .edge {
+            position: absolute;
+            background-color: #FF4800;
+            height: 2px;
+            transform-origin: 0 0;
+        }
+
+        .queue-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .queue-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #000000;
+        }
+
+        .queue {
+            display: flex;
+            flex-direction: row;
+            border: 2px solid #FF4800;
+            padding: 10px;
+            border-radius: 5px;
+            min-width: 300px;
+            min-height: 50px;
+            align-items: center;
+        }
+
+        .queue-item {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            margin-right: 10px;
+            border: 1px solid #FF4800;
+        }
+
+        .result-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .result-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #000000;
+        }
+
+        .result {
+            display: flex;
+            flex-direction: row;
+            border: 2px solid #FF4800;
+            padding: 10px;
+            border-radius: 5px;
+            min-width: 300px;
+            min-height: 50px;
+            align-items: center;
+        }
+
+        .result-item {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            margin-right: 10px;
+            border: 1px solid #FF4800;
+        }
+
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #FD9F78;
+        }
+
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>BFS Level-Order Traversal</h1>
+    
+    <div id="container"></div>
+    
+    <div class="queue-container">
+        <div class="queue-label">Queue:</div>
+        <div class="queue" id="queue"></div>
+    </div>
+    
+    <div class="result-container">
+        <div class="result-label">Level Order Traversal Result:</div>
+        <div class="result" id="result"></div>
+    </div>
+    
+    <div class="explanation" id="explanation">
+        Welcome to BFS Level-Order Traversal! Click "Next" to start the animation and see how BFS processes a tree level by level.
+    </div>
+    
+    <div class="navigation">
+        <button class="btn" id="prevBtn" disabled>Previous</button>
+        <button class="btn" id="nextBtn">Next</button>
+    </div>
+
+    <script>
+        // Tree structure
+        const tree = {
+            value: 4,
+            left: {
+                value: 2,
+                left: null,
+                right: {
+                    value: 3,
+                    left: null,
+                    right: null
+                }
+            },
+            right: {
+                value: 6,
+                left: null,
+                right: {
+                    value: 7,
+                    left: null,
+                    right: null
+                }
+            }
+        };
+
+        // Create nodes and edges
+        const container = document.getElementById('container');
+        const queueContainer = document.getElementById('queue');
+        const resultContainer = document.getElementById('result');
+        const explanationContainer = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        const nodes = {};
+        const edges = [];
+        
+        function createNode(value, x, y) {
+            const node = document.createElement('div');
+            node.className = 'node';
+            node.textContent = value;
+            node.style.left = `${x}px`;
+            node.style.top = `${y}px`;
+            container.appendChild(node);
+            nodes[value] = node;
+            return node;
+        }
+        
+        function createEdge(from, to) {
+            const fromX = parseInt(from.style.left) + 25;
+            const fromY = parseInt(from.style.top) + 25;
+            const toX = parseInt(to.style.left) + 25;
+            const toY = parseInt(to.style.top) + 25;
+            
+            const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+            const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
+            
+            const edge = document.createElement('div');
+            edge.className = 'edge';
+            edge.style.width = `${length}px`;
+            edge.style.left = `${fromX}px`;
+            edge.style.top = `${fromY}px`;
+            edge.style.transform = `rotate(${angle}deg)`;
+            
+            container.appendChild(edge);
+            edges.push(edge);
+            return edge;
+        }
+        
+        // Create the tree visualization
+        function createTree() {
+            // Root node at the center top
+            const root = createNode(4, 375, 50);
+            
+            // Level 1 nodes
+            const node2 = createNode(2, 250, 150);
+            const node6 = createNode(6, 500, 150);
+            
+            // Level 2 nodes
+            const node3 = createNode(3, 300, 250);
+            const node7 = createNode(7, 550, 250);
+            
+            // Create edges
+            createEdge(root, node2);
+            createEdge(root, node6);
+            createEdge(node2, node3);
+            createEdge(node6, node7);
+        }
+        
+        createTree();
+        
+        // Animation steps
+        const steps = [
+            {
+                explanation: "We start BFS by adding the root node (4) to our queue.",
+                queue: [4],
+                result: [],
+                highlighted: [4]
+            },
+            {
+                explanation: "We dequeue node 4, process it (add to result), and enqueue its children (2 and 6).",
+                queue: [2, 6],
+                result: [4],
+                highlighted: [2, 6]
+            },
+            {
+                explanation: "We dequeue node 2, process it, and enqueue its child (3). Node 6 remains in the queue.",
+                queue: [6, 3],
+                result: [4, 2],
+                highlighted: [3]
+            },
+            {
+                explanation: "We dequeue node 6, process it, and enqueue its child (7). Node 3 remains in the queue.",
+                queue: [3, 7],
+                result: [4, 2, 6],
+                highlighted: [7]
+            },
+            {
+                explanation: "We dequeue node 3 and process it. Node 7 remains in the queue.",
+                queue: [7],
+                result: [4, 2, 6, 3],
+                highlighted: [3]
+            },
+            {
+                explanation: "We dequeue node 7 and process it. Our queue is now empty.",
+                queue: [],
+                result: [4, 2, 6, 3, 7],
+                highlighted: [7]
+            },
+            {
+                explanation: "BFS Level-Order Traversal is complete! The final result is [4, 2, 6, 3, 7], which represents the nodes visited level by level from top to bottom, left to right.",
+                queue: [],
+                result: [4, 2, 6, 3, 7],
+                highlighted: []
+            }
+        ];
+        
+        let currentStep = 0;
+        
+        function updateVisualization() {
+            // Reset all node highlights
+            Object.values(nodes).forEach(node => {
+                node.classList.remove('highlighted');
+            });
+            
+            const step = steps[currentStep];
+            
+            // Update highlighted nodes
+            step.highlighted.forEach(value => {
+                if (nodes[value]) {
+                    nodes[value].classList.add('highlighted');
+                }
+            });
+            
+            // Update queue
+            queueContainer.innerHTML = '';
+            step.queue.forEach(value => {
+                const queueItem = document.createElement('div');
+                queueItem.className = 'queue-item';
+                queueItem.textContent = value;
+                queueContainer.appendChild(queueItem);
+            });
+            
+            // Update result
+            resultContainer.innerHTML = '';
+            step.result.forEach(value => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item';
+                resultItem.textContent = value;
+                resultContainer.appendChild(resultItem);
+            });
+            
+            // Update explanation
+            explanationContainer.textContent = step.explanation;
+            
+            // Update buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+        
+        // Initialize visualization
+        updateVisualization();
+    </script>
+</body>
+</html>
