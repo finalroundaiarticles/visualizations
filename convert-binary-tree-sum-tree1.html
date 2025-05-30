@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Tree to Sum Tree Transformation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px auto;
+            max-width: 1000px;
+        }
+        
+        .tree-container {
+            width: 45%;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .tree-title {
+            text-align: center;
+            color: #FF4800;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        #binary-tree-canvas, #sum-tree-canvas {
+            width: 100%;
+            height: 400px;
+        }
+        
+        .explanation {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px auto;
+            max-width: 800px;
+        }
+        
+        .explanation-title {
+            font-weight: bold;
+            color: #FF4800;
+            margin-bottom: 10px;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .arrow {
+            position: absolute;
+            top: 50%;
+            left: 100%;
+            transform: translate(-50%, -50%);
+            font-size: 30px;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <h1>Binary Tree to Sum Tree Transformation</h1>
+    
+    <div class="container">
+        <div class="tree-container">
+            <div class="tree-title">Original Binary Tree</div>
+            <canvas id="binary-tree-canvas"></canvas>
+            <div class="arrow">→</div>
+        </div>
+        <div class="tree-container">
+            <div class="tree-title">Sum Tree</div>
+            <canvas id="sum-tree-canvas"></canvas>
+        </div>
+    </div>
+    
+    <div class="explanation">
+        <div class="explanation-title">What is a Sum Tree?</div>
+        <div id="current-explanation">
+            In a Sum Tree, the value of each node is equal to the sum of all the values in its left and right subtrees.
+            If a node has no children, its sum tree value is 0 (as there are no subtrees to sum).
+        </div>
+    </div>
+    
+    <div class="navigation">
+        <button id="prev-btn" class="nav-button" disabled>Previous</button>
+        <button id="next-btn" class="nav-button">Next</button>
+    </div>
+
+    <script>
+        // Tree Node class
+        class TreeNode {
+            constructor(value) {
+                this.value = value;
+                this.left = null;
+                this.right = null;
+                this.x = 0;
+                this.y = 0;
+            }
+        }
+        
+        // Create example binary tree
+        function createBinaryTree() {
+            const root = new TreeNode(10);
+            root.left = new TreeNode(2);
+            root.right = new TreeNode(6);
+            root.left.left = new TreeNode(8);
+            root.left.right = new TreeNode(4);
+            root.right.left = new TreeNode(7);
+            root.right.right = new TreeNode(5);
+            return root;
+        }
+        
+        // Create sum tree based on original tree
+        function createSumTree(root) {
+            if (!root) return null;
+            
+            const sumRoot = new TreeNode(getSumValue(root));
+            
+            if (root.left) {
+                sumRoot.left = new TreeNode(getSumValue(root.left));
+                if (root.left.left || root.left.right) {
+                    sumRoot.left.left = createSumTree(root.left.left);
+                    sumRoot.left.right = createSumTree(root.left.right);
+                }
+            }
+            
+            if (root.right) {
+                sumRoot.right = new TreeNode(getSumValue(root.right));
+                if (root.right.left || root.right.right) {
+                    sumRoot.right.left = createSumTree(root.right.left);
+                    sumRoot.right.right = createSumTree(root.right.right);
+                }
+            }
+            
+            return sumRoot;
+        }
+        
+        // Calculate sum value for a node
+        function getSumValue(node) {
+            if (!node) return 0;
+            
+            let sum = 0;
+            if (node.left) {
+                sum += node.left.value;
+                sum += getSubtreeSum(node.left.left) + getSubtreeSum(node.left.right);
+            }
+            
+            if (node.right) {
+                sum += node.right.value;
+                sum += getSubtreeSum(node.right.left) + getSubtreeSum(node.right.right);
+            }
+            
+            return sum;
+        }
+        
+        // Get sum of all nodes in a subtree
+        function getSubtreeSum(node) {
+            if (!node) return 0;
+            return node.value + getSubtreeSum(node.left) + getSubtreeSum(node.right);
+        }
+        
+        // Calculate positions for tree nodes
+        function calculatePositions(node, level, xOffset, width) {
+            if (!node) return;
+            
+            node.x = xOffset;
+            node.y = level * 80 + 50;
+            
+            const nextWidth = width / 2;
+            if (node.left) {
+                calculatePositions(node.left, level + 1, xOffset - nextWidth, nextWidth);
+            }
+            
+            if (node.right) {
+                calculatePositions(node.right, level + 1, xOffset + nextWidth, nextWidth);
+            }
+        }
+        
+        // Draw a tree on canvas
+        function drawTree(ctx, root, highlighted = []) {
+            if (!root) return;
+            
+            // Draw edges first
+            drawEdges(ctx, root);
+            
+            // Then draw nodes
+            drawNodes(ctx, root, highlighted);
+        }
+        
+        // Draw edges between nodes
+        function drawEdges(ctx, node) {
+            if (!node) return;
+            
+            if (node.left) {
+                ctx.beginPath();
+                ctx.moveTo(node.x, node.y);
+                ctx.lineTo(node.left.x, node.left.y);
+                ctx.strokeStyle = '#FD9F78';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                drawEdges(ctx, node.left);
+            }
+            
+            if (node.right) {
+                ctx.beginPath();
+                ctx.moveTo(node.x, node.y);
+                ctx.lineTo(node.right.x, node.right.y);
+                ctx.strokeStyle = '#FD9F78';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                drawEdges(ctx, node.right);
+            }
+        }
+        
+        // Draw nodes
+        function drawNodes(ctx, node, highlighted) {
+            if (!node) return;
+            
+            const isHighlighted = highlighted.includes(node);
+            
+            // Draw circle
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 25, 0, Math.PI * 2);
+            ctx.fillStyle = isHighlighted ? '#FF4800' : '#FD9F78';
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw value
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.value, node.x, node.y);
+            
+            // Recursively draw child nodes
+            if (node.left) {
+                drawNodes(ctx, node.left, highlighted);
+            }
+            
+            if (node.right) {
+                drawNodes(ctx, node.right, highlighted);
+            }
+        }
+        
+        // Step data for animation
+        const steps = [
+            {
+                title: "Introduction to Sum Tree",
+                explanation: "In a Sum Tree, the value of each node is equal to the sum of all the values in its left and right subtrees. If a node has no children, its sum tree value is 0 (as there are no subtrees to sum).",
+                binaryHighlight: [],
+                sumHighlight: []
+            },
+            {
+                title: "Leaf Nodes Transformation",
+                explanation: "For leaf nodes (nodes with no children), the sum tree value is 0 since they don't have any subtrees to sum.",
+                binaryHighlight: [7, 8, 9, 10, 13, 14],
+                sumHighlight: [7, 8, 9, 10, 13, 14]
+            },
+            {
+                title: "Parent Nodes Transformation - Level 2",
+                explanation: "For nodes at level 2 (parents of leaf nodes), the sum tree value is the sum of their children's original values. For example, node with value 2 becomes 8+4=12 in the sum tree.",
+                binaryHighlight: [2, 3],
+                sumHighlight: [2, 3]
+            },
+            {
+                title: "Root Node Transformation",
+                explanation: "The root node's value becomes the sum of all values in its left and right subtrees. This includes the children's values and their subtrees.",
+                binaryHighlight: [1],
+                sumHighlight: [1]
+            },
+            {
+                title: "Complete Transformation",
+                explanation: "Now we have completely transformed the original binary tree into a sum tree. Each node's value represents the sum of all nodes in its subtrees from the original tree.",
+                binaryHighlight: [],
+                sumHighlight: []
+            }
+        ];
+        
+        // Initialize trees and canvases
+        let currentStep = 0;
+        let binaryTree = createBinaryTree();
+        let sumTree = createSumTree(binaryTree);
+        
+        // Get canvas contexts
+        const binaryTreeCanvas = document.getElementById('binary-tree-canvas');
+        const sumTreeCanvas = document.getElementById('sum-tree-canvas');
+        const binaryCtx = binaryTreeCanvas.getContext('2d');
+        const sumCtx = sumTreeCanvas.getContext('2d');
+        
+        // Handle canvas scaling for high-DPI displays
+        function setupCanvas(canvas) {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            const ctx = canvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+            return ctx;
+        }
+        
+        // Map node values to nodes for highlighting
+        function mapNodesToValues(node, map = {}, index = 1) {
+            if (!node) return map;
+            
+            map[index] = node;
+            
+            if (node.left) {
+                mapNodesToValues(node.left, map, 2 * index);
+            }
+            
+            if (node.right) {
+                mapNodesToValues(node.right, map, 2 * index + 1);
+            }
+            
+            return map;
+        }
+        
+        // Function to update the visualization
+        function updateVisualization() {
+            // Clear canvases
+            binaryTreeCanvas.width = binaryTreeCanvas.width;
+            sumTreeCanvas.width = sumTreeCanvas.width;
+            
+            // Setup canvases
+            const binaryCtx = setupCanvas(binaryTreeCanvas);
+            const sumCtx = setupCanvas(sumTreeCanvas);
+            
+            // Calculate positions
+            calculatePositions(binaryTree, 0, binaryTreeCanvas.width / 2, binaryTreeCanvas.width / 4);
+            calculatePositions(sumTree, 0, sumTreeCanvas.width / 2, sumTreeCanvas.width / 4);
+            
+            // Map nodes to indices for highlighting
+            const binaryNodeMap = mapNodesToValues(binaryTree);
+            const sumNodeMap = mapNodesToValues(sumTree);
+            
+            // Get highlighted nodes
+            const binaryHighlighted = steps[currentStep].binaryHighlight.map(idx => binaryNodeMap[idx]).filter(Boolean);
+            const sumHighlighted = steps[currentStep].sumHighlight.map(idx => sumNodeMap[idx]).filter(Boolean);
+            
+            // Draw trees
+            drawTree(binaryCtx, binaryTree, binaryHighlighted);
+            drawTree(sumCtx, sumTree, sumHighlighted);
+            
+            // Update explanation
+            document.getElementById('current-explanation').textContent = steps[currentStep].explanation;
+            
+            // Update navigation buttons
+            document.getElementById('prev-btn').disabled = currentStep === 0;
+            document.getElementById('next-btn').disabled = currentStep === steps.length - 1;
+        }
+        
+        // Navigation event handlers
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        });
+        
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+        
+        // Initialize visualization
+        window.onload = function() {
+            // Set canvas dimensions based on container size
+            binaryTreeCanvas.style.width = '100%';
+            binaryTreeCanvas.style.height = '400px';
+            sumTreeCanvas.style.width = '100%';
+            sumTreeCanvas.style.height = '400px';
+            
+            updateVisualization();
+        };
+        
+        // Handle window resize
+        window.addEventListener('resize', updateVisualization);
+    </script>
+</body>
+</html>
