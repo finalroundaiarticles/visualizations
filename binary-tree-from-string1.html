@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Tree Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        #canvas-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        canvas {
+            border: 2px solid #FD9F78;
+            border-radius: 5px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .explanation {
+            background-color: #FFFFFF;
+            border: 2px solid #FD9F78;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .explanation h2 {
+            color: #FF4800;
+            margin-top: 0;
+        }
+        
+        .explanation p {
+            color: #000000;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Tree Visualization</h1>
+        
+        <div id="canvas-container">
+            <canvas id="treeCanvas" width="800" height="400"></canvas>
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="explanation">
+            <h2>Binary Tree Explanation - Step <span id="stepNumber">1</span></h2>
+            <p id="explanation">Welcome to the Binary Tree Visualization for the input '4(2(3)(1))(6(5))'. In this animation, we'll build the tree step by step. Click 'Next' to begin.</p>
+        </div>
+    </div>
+
+    <script>
+        class TreeNode {
+            constructor(value) {
+                this.value = value;
+                this.left = null;
+                this.right = null;
+                this.x = 0;
+                this.y = 0;
+                this.highlighted = false;
+            }
+        }
+
+        // Create the binary tree from the input string
+        function createTree() {
+            const root = new TreeNode(4);
+            root.left = new TreeNode(2);
+            root.left.left = new TreeNode(3);
+            root.left.right = new TreeNode(1);
+            root.right = new TreeNode(6);
+            root.right.left = new TreeNode(5);
+            return root;
+        }
+
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const explanationText = document.getElementById('explanation');
+        const stepNumberText = document.getElementById('stepNumber');
+
+        let currentStep = 0;
+        const root = createTree();
+        let nodeToShow = [];
+
+        const steps = [
+            {
+                nodes: [], // Start with empty tree
+                explanation: "Let's visualize the binary tree from the input '4(2(3)(1))(6(5))'. We'll start by placing the root node."
+            },
+            {
+                nodes: [root], // Show just the root
+                explanation: "First, we identify the root node with value 4. In a binary tree, each node can have at most two children - a left child and a right child."
+            },
+            {
+                nodes: [root, root.left], // Root and left child
+                explanation: "Next, we add the left child of the root. This node has value 2. According to our input, node 2 is the left child of node 4."
+            },
+            {
+                nodes: [root, root.left, root.left.left], // Root, left child, and left-left child
+                explanation: "Now, we add the left child of node 2. This node has value 3. According to our input, node 3 is the left child of node 2."
+            },
+            {
+                nodes: [root, root.left, root.left.left, root.left.right], // Add left-right child
+                explanation: "Next, we add the right child of node 2. This node has value 1. According to our input, node 1 is the right child of node 2."
+            },
+            {
+                nodes: [root, root.left, root.left.left, root.left.right, root.right], // Add right child of root
+                explanation: "Now, we add the right child of the root. This node has value 6. According to our input, node 6 is the right child of node 4."
+            },
+            {
+                nodes: [root, root.left, root.left.left, root.left.right, root.right, root.right.left], // Complete tree
+                explanation: "Finally, we add the left child of node 6. This node has value 5. According to our input, node 5 is the left child of node 6. The binary tree construction is now complete!"
+            },
+            {
+                nodes: [root, root.left, root.left.left, root.left.right, root.right, root.right.left],
+                explanation: "This is our final binary tree from the input '4(2(3)(1))(6(5))'. It has a root node 4, with left subtree containing nodes 2, 3, and 1, and right subtree containing nodes 6 and 5. Each node is positioned to reflect the tree structure."
+            }
+        ];
+
+        // Position calculation for tree layout
+        function calculatePositions(node, level, xOffset, xSpace) {
+            if (!node) return;
+            
+            node.y = level * 80 + 50;
+            node.x = xOffset;
+            
+            if (node.left) {
+                calculatePositions(node.left, level + 1, xOffset - xSpace / Math.pow(2, level), xSpace);
+            }
+            
+            if (node.right) {
+                calculatePositions(node.right, level + 1, xOffset + xSpace / Math.pow(2, level), xSpace);
+            }
+        }
+
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Calculate positions for the complete tree
+            calculatePositions(root, 0, canvas.width / 2, canvas.width / 2);
+            
+            // Draw edges first
+            for (let i = 0; i < nodeToShow.length; i++) {
+                const node = nodeToShow[i];
+                
+                if (node.left && nodeToShow.includes(node.left)) {
+                    drawEdge(node, node.left);
+                }
+                
+                if (node.right && nodeToShow.includes(node.right)) {
+                    drawEdge(node, node.right);
+                }
+            }
+            
+            // Draw nodes on top
+            for (let i = 0; i < nodeToShow.length; i++) {
+                drawNode(nodeToShow[i], nodeToShow[i] === nodeToShow[nodeToShow.length - 1]);
+            }
+        }
+
+        function drawNode(node, highlighted) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 25, 0, Math.PI * 2);
+            ctx.fillStyle = highlighted ? '#FF4800' : '#FD9F78';
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.value, node.x, node.y);
+        }
+
+        function drawEdge(parent, child) {
+            ctx.beginPath();
+            ctx.moveTo(parent.x, parent.y + 25); // Bottom of parent node
+            ctx.lineTo(child.x, child.y - 25); // Top of child node
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function updateStep(step) {
+            currentStep = step;
+            nodeToShow = steps[step].nodes;
+            explanationText.textContent = steps[step].explanation;
+            stepNumberText.textContent = step + 1;
+            
+            prevBtn.disabled = step === 0;
+            nextBtn.disabled = step === steps.length - 1;
+            
+            drawTree();
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                updateStep(currentStep - 1);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                updateStep(currentStep + 1);
+            }
+        });
+
+        // Initial render
+        updateStep(0);
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            canvas.width = canvas.parentElement.clientWidth;
+            drawTree();
+        });
+
+        // Set initial size
+        canvas.width = canvas.parentElement.clientWidth;
+        drawTree();
+    </script>
+</body>
+</html>
