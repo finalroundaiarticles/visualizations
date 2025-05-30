@@ -1,0 +1,327 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linked List Addition Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            margin-bottom: 20px;
+        }
+        
+        .animation-container {
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+            min-height: 350px;
+        }
+        
+        .explanation {
+            background-color: #FD9F78;
+            color: #FFFFFF;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .node {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            border-radius: 50%;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            text-align: center;
+            margin: 0 15px;
+            position: relative;
+            font-weight: bold;
+        }
+        
+        .arrow {
+            display: inline-block;
+            width: 30px;
+            border-top: 2px solid #000000;
+            position: relative;
+            top: -15px;
+        }
+        
+        .arrow::after {
+            content: "";
+            position: absolute;
+            right: 0;
+            top: -5px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid #000000;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        
+        .linked-list {
+            margin: 20px 0;
+        }
+        
+        .carry {
+            position: absolute;
+            font-size: 14px;
+            color: #FF4800;
+            font-weight: bold;
+        }
+        
+        .operation {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+        
+        .button-container {
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .calculation {
+            margin: 20px 0;
+            font-size: 18px;
+            display: none;
+        }
+        
+        .highlight {
+            animation: highlight 1s ease-in-out;
+        }
+        
+        @keyframes highlight {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        
+        .plus-sign {
+            font-size: 24px;
+            margin: 0 5px;
+            font-weight: bold;
+        }
+        
+        .equals-sign {
+            font-size: 24px;
+            margin: 0 5px;
+            font-weight: bold;
+        }
+        
+        .result-node {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            border-radius: 50%;
+            background-color: #000000;
+            color: #FFFFFF;
+            text-align: center;
+            margin: 0 15px;
+            position: relative;
+            font-weight: bold;
+        }
+        
+        .step-counter {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Adding Two Linked Lists</h1>
+        
+        <div class="animation-container">
+            <div class="step-counter">Step <span id="step-number">1</span> of 4</div>
+            
+            <div class="linked-list" id="list1">
+                <div class="node">2</div>
+                <div class="arrow"></div>
+                <div class="node">4</div>
+                <div class="arrow"></div>
+                <div class="node">3</div>
+            </div>
+            
+            <div class="operation">+</div>
+            
+            <div class="linked-list" id="list2">
+                <div class="node">5</div>
+                <div class="arrow"></div>
+                <div class="node">6</div>
+                <div class="arrow"></div>
+                <div class="node">4</div>
+            </div>
+            
+            <div class="operation">=</div>
+            
+            <div class="linked-list" id="result">
+                <!-- Result nodes will be added here -->
+            </div>
+            
+            <div class="calculation" id="calculation"></div>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            We have two linked lists representing numbers: [2,4,3] and [5,6,4]. Each node represents a digit, and the digits are stored in reverse order. This means the first linked list represents 342 and the second represents 465. We'll add them digit by digit.
+        </div>
+        
+        <div class="button-container">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        const list1 = [2, 4, 3];
+        const list2 = [5, 6, 4];
+        const result = [7, 0, 8];
+        
+        let currentStep = 1;
+        const totalSteps = 4;
+        
+        const stepNumber = document.getElementById('step-number');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const explanationEl = document.getElementById('explanation');
+        const resultEl = document.getElementById('result');
+        const calculationEl = document.getElementById('calculation');
+        
+        const explanations = [
+            "We have two linked lists representing numbers: [2,4,3] and [5,6,4]. Each node represents a digit, and the digits are stored in reverse order. This means the first linked list represents 342 and the second represents 465. We'll add them digit by digit.",
+            
+            "Step 1: Add the first digits: 2 + 5 = 7. There is no carry, so we create a new node with value 7 in our result linked list.",
+            
+            "Step 2: Add the second digits: 4 + 6 = 10. Since the sum is greater than 9, we keep 0 in the current position and carry 1 to the next addition.",
+            
+            "Step 3: Add the third digits and the carry: 3 + 4 + 1 = 8. This gives us our final node with value 8 in our result linked list. The final result is [7,0,8], which represents 807 (the sum of 342 + 465)."
+        ];
+        
+        function updateUI() {
+            stepNumber.textContent = currentStep;
+            
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === totalSteps;
+            
+            explanationEl.textContent = explanations[currentStep - 1];
+            
+            // Reset highlights
+            const allNodes = document.querySelectorAll('.node, .result-node');
+            allNodes.forEach(node => {
+                node.classList.remove('highlight');
+            });
+            
+            // Clear carry indicators
+            const carries = document.querySelectorAll('.carry');
+            carries.forEach(carry => carry.remove());
+            
+            // Handle each step's specific animation
+            if (currentStep === 1) {
+                resultEl.innerHTML = '';
+                calculationEl.style.display = 'none';
+            } else if (currentStep === 2) {
+                // Highlight first nodes and show calculation
+                document.querySelectorAll('#list1 .node')[0].classList.add('highlight');
+                document.querySelectorAll('#list2 .node')[0].classList.add('highlight');
+                
+                resultEl.innerHTML = '<div class="result-node highlight">7</div>';
+                
+                calculationEl.style.display = 'block';
+                calculationEl.innerHTML = '2 + 5 = 7';
+            } else if (currentStep === 3) {
+                // Highlight second nodes and show calculation with carry
+                document.querySelectorAll('#list1 .node')[1].classList.add('highlight');
+                document.querySelectorAll('#list2 .node')[1].classList.add('highlight');
+                
+                resultEl.innerHTML = '<div class="result-node">7</div><div class="arrow"></div><div class="result-node highlight">0</div>';
+                
+                // Add carry indicator
+                const secondNodeList1 = document.querySelectorAll('#list1 .node')[1];
+                const carry = document.createElement('div');
+                carry.className = 'carry';
+                carry.textContent = '1';
+                carry.style.top = '-20px';
+                carry.style.left = (secondNodeList1.offsetLeft + 30) + 'px';
+                document.querySelector('.animation-container').appendChild(carry);
+                
+                calculationEl.style.display = 'block';
+                calculationEl.innerHTML = '4 + 6 = 10 → Write 0, carry 1';
+            } else if (currentStep === 4) {
+                // Highlight third nodes and show calculation with carry
+                document.querySelectorAll('#list1 .node')[2].classList.add('highlight');
+                document.querySelectorAll('#list2 .node')[2].classList.add('highlight');
+                
+                resultEl.innerHTML = '<div class="result-node">7</div><div class="arrow"></div><div class="result-node">0</div><div class="arrow"></div><div class="result-node highlight">8</div>';
+                
+                calculationEl.style.display = 'block';
+                calculationEl.innerHTML = '3 + 4 + 1(carry) = 8';
+            }
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateUI();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateUI();
+            }
+        });
+        
+        // Initialize UI
+        updateUI();
+    </script>
+</body>
+</html>
