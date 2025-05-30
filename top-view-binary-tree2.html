@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top View Formation Process</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .animation-container {
+            width: 100%;
+            height: 500px;
+            position: relative;
+            margin: 20px 0;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #FFF;
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+        }
+        
+        .node {
+            width: 40px;
+            height: 40px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        
+        .node.highlight {
+            background-color: #000000;
+            transform: scale(1.2);
+        }
+        
+        .edge {
+            position: absolute;
+            background-color: #FD9F78;
+            height: 2px;
+            transform-origin: 0 0;
+        }
+        
+        .horizontal-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background-color: #FD9F78;
+            opacity: 0.5;
+        }
+        
+        .hd-label {
+            position: absolute;
+            left: 10px;
+            color: #000000;
+            font-weight: bold;
+        }
+        
+        .result-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        
+        .top-view {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        
+        .top-view-node {
+            width: 40px;
+            height: 40px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Top View Formation Process</h1>
+        
+        <div class="step-indicator" id="stepIndicator">Step 1: Tree Visualization</div>
+        
+        <div class="animation-container" id="animationContainer">
+            <!-- Nodes and edges will be added by JavaScript -->
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <p>We start with a binary tree and our goal is to find its top view.</p>
+            <p>The top view consists of nodes visible from the top, meaning for each horizontal distance, we take the first node encountered in level-order traversal.</p>
+        </div>
+        
+        <div class="result-container" id="resultContainer" style="display: none;">
+            <h3>Final Top View:</h3>
+            <div class="top-view" id="topView">
+                <!-- Top view nodes will be added by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Define our tree structure
+        const tree = {
+            value: 1,
+            left: {
+                value: 2,
+                left: {
+                    value: 4,
+                    left: null,
+                    right: null
+                },
+                right: null
+            },
+            right: {
+                value: 3,
+                left: null,
+                right: {
+                    value: 7,
+                    left: null,
+                    right: null
+                }
+            }
+        };
+        
+        // Define horizontal distances
+        const hdValues = {
+            '1': 0,
+            '2': -1,
+            '3': 1,
+            '4': -2,
+            '7': 2
+        };
+        
+        const nodePositions = {
+            '1': { x: 500, y: 60 },
+            '2': { x: 300, y: 150 },
+            '3': { x: 700, y: 150 },
+            '4': { x: 200, y: 240 },
+            '7': { x: 800, y: 240 }
+        };
+        
+        const topViewResult = [4, 2, 1, 3, 7];
+        const hdOrder = [-2, -1, 0, 1, 2];
+        
+        let currentStep = 0;
+        const totalSteps = 8;
+        
+        const container = document.getElementById('animationContainer');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        const explanation = document.getElementById('explanation');
+        const resultContainer = document.getElementById('resultContainer');
+        const topViewContainer = document.getElementById('topView');
+        
+        // Initialize the animation
+        function initAnimation() {
+            // Create the tree structure
+            createTree(tree, container);
+            
+            prevBtn.addEventListener('click', goPrevious);
+            nextBtn.addEventListener('click', goNext);
+            
+            updateStep();
+        }
+        
+        function createTree(node, container, parentX = null, parentY = null, value = null) {
+            if (!node) return;
+            
+            const nodeValue = value || node.value;
+            const position = nodePositions[nodeValue];
+            
+            // Create node element
+            const nodeElem = document.createElement('div');
+            nodeElem.className = 'node';
+            nodeElem.id = `node-${nodeValue}`;
+            nodeElem.textContent = nodeValue;
+            nodeElem.style.left = `${position.x}px`;
+            nodeElem.style.top = `${position.y}px`;
+            container.appendChild(nodeElem);
+            
+            // Create edge if not root
+            if (parentX !== null && parentY !== null) {
+                const dx = position.x - parentX;
+                const dy = position.y - parentY;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                const edge = document.createElement('div');
+                edge.className = 'edge';
+                edge.style.width = `${length}px`;
+                edge.style.left = `${parentX + 20}px`;
+                edge.style.top = `${parentY + 20}px`;
+                edge.style.transform = `rotate(${angle}deg)`;
+                container.appendChild(edge);
+            }
+            
+            // Create children
+            if (node.left) {
+                createTree(node.left, container, position.x, position.y, node.left.value);
+            }
+            
+            if (node.right) {
+                createTree(node.right, container, position.x, position.y, node.right.value);
+            }
+        }
+        
+        function updateStep() {
+            // Clear any previous highlights
+            const nodes = document.querySelectorAll('.node');
+            nodes.forEach(node => node.classList.remove('highlight'));
+            
+            // Remove previous horizontal lines
+            const existingLines = document.querySelectorAll('.horizontal-line, .hd-label');
+            existingLines.forEach(line => line.remove());
+            
+            stepIndicator.textContent = `Step ${currentStep + 1} of ${totalSteps}`;
+            
+            switch(currentStep) {
+                case 0:
+                    explanation.innerHTML = `<p>This is our binary tree. We want to find its top view.</p>
+                                           <p>The top view consists of nodes visible from the top, meaning for each horizontal distance, we take the first node encountered in level-order traversal.</p>`;
+                    break;
+                case 1:
+                    explanation.innerHTML = `<p>To determine the top view, we assign horizontal distances (HD) to each node.</p>
+                                           <p>Root node has HD = 0. Moving left decreases HD by 1, moving right increases HD by 1.</p>`;
+                    
+                    // Create horizontal distance lines
+                    createHDLines();
+                    break;
+                case 2:
+                    explanation.innerHTML = `<p>Now we perform a level-order traversal (breadth-first) of the tree.</p>
+                                           <p>For each horizontal distance, we take the first node we encounter.</p>`;
+                    
+                    createHDLines();
+                    break;
+                case 3:
+                    explanation.innerHTML = `<p>First level: We visit node 1 (root) with HD = 0.</p>
+                                           <p>Since this is the first node with HD = 0, it will be in our top view.</p>`;
+                    
+                    document.getElementById('node-1').classList.add('highlight');
+                    createHDLines();
+                    
+                    // Start building top view
+                    updateTopView([1]);
+                    break;
+                case 4:
+                    explanation.innerHTML = `<p>Second level: We visit nodes 2 (HD = -1) and 3 (HD = 1) from left to right.</p>
+                                           <p>These are the first nodes we've seen at these horizontal distances, so they will be in our top view.</p>`;
+                    
+                    document.getElementById('node-2').classList.add('highlight');
+                    document.getElementById('node-3').classList.add('highlight');
+                    createHDLines();
+                    
+                    updateTopView([4, 2, 1, 3, 7], [2, 1, 3]);
+                    break;
+                case 5:
+                    explanation.innerHTML = `<p>Third level: We visit nodes 4 (HD = -2) and 7 (HD = 2).</p>
+                                           <p>These are also the first nodes we've seen at these horizontal distances, so they will be included in our top view.</p>`;
+                    
+                    document.getElementById('node-4').classList.add('highlight');
+                    document.getElementById('node-7').classList.add('highlight');
+                    createHDLines();
+                    
+                    updateTopView([4, 2, 1, 3, 7], [4, 2, 1, 3, 7]);
+                    break;
+                case 6:
+                    explanation.innerHTML = `<p>Now that we have traversed the entire tree, our top view is complete.</p>
+                                           <p>For horizontal distances -2, -1, 0, 1, 2, we have nodes 4, 2, 1, 3, 7 respectively.</p>`;
+                    
+                    createHDLines();
+                    updateTopView(topViewResult, topViewResult);
+                    break;
+                case 7:
+                    explanation.innerHTML = `<p>Final Top View: [4, 2, 1, 3, 7]</p>
+                                           <p>These are the nodes visible from the top view of the tree, sorted by their horizontal distances from left to right.</p>`;
+                    
+                    resultContainer.style.display = 'flex';
+                    createHDLines();
+                    
+                    // Show final top view
+                    topViewContainer.innerHTML = '';
+                    topViewResult.forEach(value => {
+                        const node = document.createElement('div');
+                        node.className = 'top-view-node';
+                        node.textContent = value;
+                        topViewContainer.appendChild(node);
+                    });
+                    break;
+            }
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+        }
+        
+        function createHDLines() {
+            const hdValues = [-2, -1, 0, 1, 2];
+            const yPos = 350;
+            
+            hdValues.forEach((hd, index) => {
+                const xPos = 200 + (index * 150);
+                
+                // Create horizontal line
+                const line = document.createElement('div');
+                line.className = 'horizontal-line';
+                line.style.top = `${yPos}px`;
+                line.style.left = `${xPos - 50}px`;
+                line.style.width = '100px';
+                container.appendChild(line);
+                
+                // Create HD label
+                const label = document.createElement('div');
+                label.className = 'hd-label';
+                label.textContent = `HD = ${hd}`;
+                label.style.top = `${yPos - 30}px`;
+                label.style.left = `${xPos}px`;
+                container.appendChild(label);
+            });
+        }
+        
+        function updateTopView(allNodes, visibleNodes = []) {
+            if (currentStep < 3) return;
+            
+            // Clear any previous top view
+            const existingTopView = document.getElementById('currentTopView');
+            if (existingTopView) existingTopView.remove();
+            
+            const topViewDiv = document.createElement('div');
+            topViewDiv.id = 'currentTopView';
+            topViewDiv.style.position = 'absolute';
+            topViewDiv.style.bottom = '20px';
+            topViewDiv.style.left = '50%';
+            topViewDiv.style.transform = 'translateX(-50%)';
+            topViewDiv.style.display = 'flex';
+            topViewDiv.style.gap = '10px';
+            topViewDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+            topViewDiv.style.padding = '10px';
+            topViewDiv.style.borderRadius = '5px';
+            topViewDiv.style.border = '1px solid #FD9F78';
+            
+            const label = document.createElement('div');
+            label.textContent = 'Current Top View:';
+            label.style.marginRight = '10px';
+            label.style.fontWeight = 'bold';
+            topViewDiv.appendChild(label);
+            
+            allNodes.forEach(value => {
+                const node = document.createElement('div');
+                node.style.width = '30px';
+                node.style.height = '30px';
+                node.style.borderRadius = '50%';
+                node.style.display = 'flex';
+                node.style.alignItems = 'center';
+                node.style.justifyContent = 'center';
+                node.style.fontWeight = 'bold';
+                
+                if (visibleNodes.includes(value)) {
+                    node.style.backgroundColor = '#FF4800';
+                    node.style.color = '#FFFFFF';
+                } else {
+                    node.style.backgroundColor = '#FFFFFF';
+                    node.style.color = '#FF4800';
+                    node.style.border = '1px dashed #FF4800';
+                }
+                
+                node.textContent = value;
+                topViewDiv.appendChild(node);
+            });
+            
+            container.appendChild(topViewDiv);
+        }
+        
+        function goPrevious() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        }
+        
+        function goNext() {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateStep();
+            }
+        }
+        
+        // Initialize the animation when the page loads
+        window.onload = initAnimation;
+    </script>
+</body>
+</html>
