@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bottom View Tree Traversal</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        #canvas {
+            border: none;
+            cursor: grab;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        #canvas:active {
+            cursor: grabbing;
+        }
+        
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+        
+        button {
+            background-color: #ff4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #e63e00;
+        }
+        
+        .result {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background-color: #1c1d20;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: Arial, monospace;
+            font-size: 16px;
+        }
+        
+        .hd-indicator {
+            position: absolute;
+            background-color: #ff4800;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button onclick="startVisualization()">Start Bottom View</button>
+        <button onclick="resetVisualization()">Reset</button>
+        <button onclick="toggleHorizontalDistance()">Toggle HD</button>
+    </div>
+    
+    <canvas id="canvas" width="900" height="600"></canvas>
+    
+    <div class="result" id="result">
+        Bottom View Result: Click "Start Bottom View" to begin
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Tree structure: 1 / \  2   3 / \ / \ 4  5 6  7
+        const tree = {
+            val: 1,
+            left: {
+                val: 2,
+                left: {
+                    val: 4,
+                    left: null,
+                    right: null
+                },
+                right: {
+                    val: 5,
+                    left: null,
+                    right: null
+                }
+            },
+            right: {
+                val: 3,
+                left: {
+                    val: 6,
+                    left: null,
+                    right: null
+                },
+                right: {
+                    val: 7,
+                    left: null,
+                    right: null
+                }
+            }
+        };
+        
+        let nodes = [];
+        let isDragging = false;
+        let dragNode = null;
+        let dragOffset = { x: 0, y: 0 };
+        let animationStep = 0;
+        let isAnimating = false;
+        let showHD = false;
+        let hdMap = new Map();
+        let processedNodes = new Set();
+        let currentlyProcessing = null;
+        
+        // Initialize node positions with horizontal distances
+        function initializeNodes() {
+            nodes = [
+                { node: tree, x: 450, y: 80, hd: 0, id: 'root' },
+                { node: tree.left, x: 300, y: 180, hd: -1, id: 'left' },
+                { node: tree.right, x: 600, y: 180, hd: 1, id: 'right' },
+                { node: tree.left.left, x: 200, y: 280, hd: -2, id: 'leftleft' },
+                { node: tree.left.right, x: 400, y: 280, hd: 0, id: 'leftright' },
+                { node: tree.right.left, x: 500, y: 280, hd: 0, id: 'rightleft' },
+                { node: tree.right.right, x: 700, y: 280, hd: 2, id: 'rightright' }
+            ];
+        }
+        
+        function drawNode(x, y, value, hd, isHighlighted = false, isProcessed = false, isInBottomView = false) {
+            // Draw circle
+            ctx.beginPath();
+            ctx.arc(x, y, 25, 0, 2 * Math.PI);
+            
+            if (isInBottomView) {
+                ctx.fillStyle = '#ff4800';
+            } else if (isProcessed) {
+                ctx.fillStyle = '#ff8c66';
+            } else if (isHighlighted) {
+                ctx.fillStyle = '#ffb399';
+            } else {
+                ctx.fillStyle = '#1c1d20';
+            }
+            ctx.fill();
+            
+            // Draw border
+            ctx.strokeStyle = isHighlighted ? '#ff4800' : (isInBottomView ? '#ff4800' : '#666');
+            ctx.lineWidth = (isHighlighted || isInBottomView) ? 3 : 2;
+            ctx.stroke();
+            
+            // Draw value
+            ctx.fillStyle = (isInBottomView || isProcessed) ? 'white' : (isHighlighted ? '#1c1d20' : 'white');
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(value.toString(), x, y);
+            
+            // Draw horizontal distance if enabled
+            if (showHD) {
+                ctx.fillStyle = '#ff4800';
+                ctx.fillRect(x - 15, y - 45, 30, 20);
+                ctx.fillStyle = 'white';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`HD:${hd}`, x, y - 35);
+            }
+        }
+        
+        function drawConnection(x1, y1, x2, y2) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = '#1c1d20';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        function drawBottomViewLine() {
+            if (hdMap.size === 0) return;
+            
+            const sortedHDs = Array.from(hdMap.keys()).sort((a, b) => a - b);
+            const bottomNodes = sortedHDs.map(hd => {
+                const nodeData = nodes.find(n => n.hd === hd && n.node.val === hdMap.get(hd));
+                return nodeData;
+            }).filter(n => n);
+            
+            if (bottomNodes.length < 2) return;
+            
+            // Draw line connecting bottom view nodes
+            ctx.beginPath();
+            ctx.moveTo(bottomNodes[0].x, bottomNodes[0].y + 40);
+            for (let i = 1; i < bottomNodes.length; i++) {
+                ctx.lineTo(bottomNodes[i].x, bottomNodes[i].y + 40);
+            }
+            ctx.strokeStyle = '#ff4800';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            
+            // Draw arrows
+            for (let i = 0; i < bottomNodes.length - 1; i++) {
+                const x1 = bottomNodes[i].x;
+                const x2 = bottomNodes[i + 1].x;
+                const y = bottomNodes[i].y + 40;
+                const midX = (x1 + x2) / 2;
+                
+                ctx.fillStyle = '#ff4800';
+                ctx.beginPath();
+                ctx.moveTo(midX - 5, y - 5);
+                ctx.lineTo(midX + 5, y);
+                ctx.lineTo(midX - 5, y + 5);
+                ctx.fill();
+            }
+        }
+        
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw connections
+            drawConnection(nodes[0].x, nodes[0].y, nodes[1].x, nodes[1].y); // 1-2
+            drawConnection(nodes[0].x, nodes[0].y, nodes[2].x, nodes[2].y); // 1-3
+            drawConnection(nodes[1].x, nodes[1].y, nodes[3].x, nodes[3].y); // 2-4
+            drawConnection(nodes[1].x, nodes[1].y, nodes[4].x, nodes[4].y); // 2-5
+            drawConnection(nodes[2].x, nodes[2].y, nodes[5].x, nodes[5].y); // 3-6
+            drawConnection(nodes[2].x, nodes[2].y, nodes[6].x, nodes[6].y); // 3-7
+            
+            // Draw nodes
+            nodes.forEach((nodeData, index) => {
+                const isHighlighted = currentlyProcessing === index;
+                const isProcessed = processedNodes.has(index);
+                const isInBottomView = hdMap.has(nodeData.hd) && hdMap.get(nodeData.hd) === nodeData.node.val;
+                
+                drawNode(nodeData.x, nodeData.y, nodeData.node.val, nodeData.hd, 
+                        isHighlighted, isProcessed, isInBottomView);
+            });
+            
+            // Draw bottom view connecting line
+            if (isAnimating || hdMap.size > 0) {
+                drawBottomViewLine();
+            }
+        }
+        
+        function bottomView(root) {
+            if (!root) return [];
+            
+            const queue = [[root, 0, 0]]; // [node, hd, nodeIndex]
+            const nodeIndexMap = new Map();
+            
+            // Create mapping of nodes to indices
+            nodes.forEach((nodeData, index) => {
+                nodeIndexMap.set(nodeData.node, index);
+            });
+            
+            const map = new Map();
+            const steps = [];
+            
+            while (queue.length > 0) {
+                const [node, hd, nodeIndex] = queue.shift();
+                
+                // Record this step
+                steps.push({
+                    nodeIndex: nodeIndexMap.get(node),
+                    hd: hd,
+                    value: node.val,
+                    mapState: new Map(map)
+                });
+                
+                map.set(hd, node.val);
+                
+                if (node.left) {
+                    queue.push([node.left, hd - 1, nodeIndexMap.get(node.left)]);
+                }
+                if (node.right) {
+                    queue.push([node.right, hd + 1, nodeIndexMap.get(node.right)]);
+                }
+            }
+            
+            const result = [];
+            const sortedKeys = Array.from(map.keys()).sort((a, b) => a - b);
+            for (const key of sortedKeys) {
+                result.push(map.get(key));
+            }
+            
+            return { result, steps, finalMap: map };
+        }
+        
+        async function startVisualization() {
+            if (isAnimating) return;
+            
+            isAnimating = true;
+            hdMap.clear();
+            processedNodes.clear();
+            currentlyProcessing = null;
+            
+            const { result, steps, finalMap } = bottomView(tree);
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = 'Processing nodes level by level...';
+            
+            for (let i = 0; i < steps.length; i++) {
+                const step = steps[i];
+                currentlyProcessing = step.nodeIndex;
+                hdMap = new Map(step.mapState);
+                hdMap.set(step.hd, step.value);
+                
+                drawTree();
+                
+                const mapString = Array.from(hdMap.entries())
+                    .sort(([a], [b]) => a - b)
+                    .map(([hd, val]) => `HD ${hd}: ${val}`)
+                    .join(', ');
+                
+                resultDiv.innerHTML = `Processing node ${step.value} at HD ${step.hd}<br>
+                                     Map: {${mapString}}`;
+                
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                processedNodes.add(step.nodeIndex);
+                currentlyProcessing = null;
+            }
+            
+            hdMap = finalMap;
+            drawTree();
+            
+            const finalResult = Array.from(finalMap.entries())
+                .sort(([a], [b]) => a - b)
+                .map(([, val]) => val);
+            
+            resultDiv.innerHTML = `Bottom View Complete!<br>
+                                 Final Result: [${finalResult.join(', ')}]`;
+            
+            isAnimating = false;
+        }
+        
+        function resetVisualization() {
+            isAnimating = false;
+            hdMap.clear();
+            processedNodes.clear();
+            currentlyProcessing = null;
+            drawTree();
+            document.getElementById('result').innerHTML = 'Bottom View Result: Click "Start Bottom View" to begin';
+        }
+        
+        function toggleHorizontalDistance() {
+            showHD = !showHD;
+            drawTree();
+        }
+        
+        // Mouse event handlers
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            for (let nodeData of nodes) {
+                const distance = Math.sqrt((mouseX - nodeData.x) ** 2 + (mouseY - nodeData.y) ** 2);
+                if (distance <= 25) {
+                    isDragging = true;
+                    dragNode = nodeData;
+                    dragOffset.x = mouseX - nodeData.x;
+                    dragOffset.y = mouseY - nodeData.y;
+                    break;
+                }
+            }
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging && dragNode) {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                
+                dragNode.x = mouseX - dragOffset.x;
+                dragNode.y = mouseY - dragOffset.y;
+                
+                drawTree();
+            }
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+            dragNode = null;
+        });
+        
+        // Initialize
+        initializeNodes();
+        drawTree();
+    </script>
+</body>
+</html>
