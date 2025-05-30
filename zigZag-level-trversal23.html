@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zigzag Tree Traversal</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        #canvas {
+            border: none;
+            cursor: grab;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        #canvas:active {
+            cursor: grabbing;
+        }
+        
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+        
+        button {
+            background-color: #ff4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #e63e00;
+        }
+        
+        .result {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background-color: #1c1d20;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: Arial, monospace;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button onclick="startVisualization()">Start Zigzag Traversal</button>
+        <button onclick="resetVisualization()">Reset</button>
+    </div>
+    
+    <canvas id="canvas" width="800" height="600"></canvas>
+    
+    <div class="result" id="result">
+        Zigzag Result: Click "Start Zigzag Traversal" to begin
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Tree structure
+        const tree = {
+            val: 3,
+            left: {
+                val: 9,
+                left: null,
+                right: null
+            },
+            right: {
+                val: 20,
+                left: {
+                    val: 15,
+                    left: null,
+                    right: null
+                },
+                right: {
+                    val: 7,
+                    left: null,
+                    right: null
+                }
+            }
+        };
+        
+        let nodes = [];
+        let isDragging = false;
+        let dragNode = null;
+        let dragOffset = { x: 0, y: 0 };
+        let animationStep = 0;
+        let isAnimating = false;
+        let traversalResult = [];
+        
+        // Initialize node positions
+        function initializeNodes() {
+            nodes = [
+                { node: tree, x: 400, y: 80, level: 0 },
+                { node: tree.left, x: 250, y: 180, level: 1 },
+                { node: tree.right, x: 550, y: 180, level: 1 },
+                { node: tree.right.left, x: 450, y: 280, level: 2 },
+                { node: tree.right.right, x: 650, y: 280, level: 2 }
+            ];
+        }
+        
+        function drawNode(x, y, value, isHighlighted = false, isProcessed = false) {
+            // Draw circle
+            ctx.beginPath();
+            ctx.arc(x, y, 25, 0, 2 * Math.PI);
+            
+            if (isProcessed) {
+                ctx.fillStyle = '#ff4800';
+            } else if (isHighlighted) {
+                ctx.fillStyle = '#ff8c66';
+            } else {
+                ctx.fillStyle = '#1c1d20';
+            }
+            ctx.fill();
+            
+            // Draw border
+            ctx.strokeStyle = isHighlighted ? '#ff4800' : '#666';
+            ctx.lineWidth = isHighlighted ? 3 : 2;
+            ctx.stroke();
+            
+            // Draw value
+            ctx.fillStyle = isProcessed ? 'white' : (isHighlighted ? '#1c1d20' : 'white');
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(value.toString(), x, y);
+        }
+        
+        function drawConnection(x1, y1, x2, y2) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = '#1c1d20';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw connections
+            const root = nodes[0];
+            const leftChild = nodes[1];
+            const rightChild = nodes[2];
+            const leftGrandchild = nodes[3];
+            const rightGrandchild = nodes[4];
+            
+            drawConnection(root.x, root.y, leftChild.x, leftChild.y);
+            drawConnection(root.x, root.y, rightChild.x, rightChild.y);
+            drawConnection(rightChild.x, rightChild.y, leftGrandchild.x, leftGrandchild.y);
+            drawConnection(rightChild.x, rightChild.y, rightGrandchild.x, rightGrandchild.y);
+            
+            // Draw nodes
+            nodes.forEach((nodeData, index) => {
+                const isHighlighted = isAnimating && isCurrentlyProcessing(index);
+                const isProcessed = isAnimating && hasBeenProcessed(index);
+                drawNode(nodeData.x, nodeData.y, nodeData.node.val, isHighlighted, isProcessed);
+            });
+        }
+        
+        function isCurrentlyProcessing(nodeIndex) {
+            // Logic to determine if this node is currently being processed
+            const levels = [
+                [0],      // Level 0: node 3
+                [1, 2],   // Level 1: nodes 9, 20
+                [3, 4]    // Level 2: nodes 15, 7
+            ];
+            
+            if (animationStep < levels.length) {
+                return levels[animationStep].includes(nodeIndex);
+            }
+            return false;
+        }
+        
+        function hasBeenProcessed(nodeIndex) {
+            const levels = [
+                [0],      // Level 0: node 3
+                [1, 2],   // Level 1: nodes 9, 20
+                [3, 4]    // Level 2: nodes 15, 7
+            ];
+            
+            for (let i = 0; i < animationStep; i++) {
+                if (levels[i] && levels[i].includes(nodeIndex)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        function zigzagLevelOrder(root) {
+            if (!root) return [];
+            
+            const result = [];
+            const queue = [root];
+            let leftToRight = true;
+            
+            while (queue.length > 0) {
+                const levelSize = queue.length;
+                const levelDeque = [];
+                
+                for (let i = 0; i < levelSize; i++) {
+                    const node = queue.shift();
+                    
+                    if (leftToRight) {
+                        levelDeque.push(node.val);
+                    } else {
+                        levelDeque.unshift(node.val);
+                    }
+                    
+                    if (node.left) queue.push(node.left);
+                    if (node.right) queue.push(node.right);
+                }
+                
+                result.push([...levelDeque]);
+                leftToRight = !leftToRight;
+            }
+            
+            return result;
+        }
+        
+        async function startVisualization() {
+            if (isAnimating) return;
+            
+            isAnimating = true;
+            animationStep = 0;
+            traversalResult = zigzagLevelOrder(tree);
+            
+            const resultDiv = document.getElementById('result');
+            
+            for (let level = 0; level < traversalResult.length; level++) {
+                animationStep = level;
+                drawTree();
+                
+                const direction = level % 2 === 0 ? 'Left to Right' : 'Right to Left';
+                resultDiv.innerHTML = `Level ${level} (${direction}): [${traversalResult[level].join(', ')}]<br>
+                                     Current Result: ${JSON.stringify(traversalResult.slice(0, level + 1))}`;
+                
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+            
+            animationStep = traversalResult.length;
+            drawTree();
+            resultDiv.innerHTML = `Final Zigzag Result: ${JSON.stringify(traversalResult)}`;
+            isAnimating = false;
+        }
+        
+        function resetVisualization() {
+            isAnimating = false;
+            animationStep = 0;
+            traversalResult = [];
+            drawTree();
+            document.getElementById('result').innerHTML = 'Zigzag Result: Click "Start Zigzag Traversal" to begin';
+        }
+        
+        // Mouse event handlers
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            for (let nodeData of nodes) {
+                const distance = Math.sqrt((mouseX - nodeData.x) ** 2 + (mouseY - nodeData.y) ** 2);
+                if (distance <= 25) {
+                    isDragging = true;
+                    dragNode = nodeData;
+                    dragOffset.x = mouseX - nodeData.x;
+                    dragOffset.y = mouseY - nodeData.y;
+                    break;
+                }
+            }
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging && dragNode) {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                
+                dragNode.x = mouseX - dragOffset.x;
+                dragNode.y = mouseY - dragOffset.y;
+                
+                drawTree();
+            }
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+            dragNode = null;
+        });
+        
+        // Initialize
+        initializeNodes();
+        drawTree();
+    </script>
+</body>
+</html>
