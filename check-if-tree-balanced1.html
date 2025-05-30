@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balanced vs. Unbalanced Trees</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .slide {
+            display: none;
+            animation-duration: 1s;
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        .fade-in {
+            animation-name: fadeIn;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .trees-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+        
+        .tree-diagram {
+            width: 45%;
+            min-width: 300px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .tree-title {
+            text-align: center;
+            color: #FF4800;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        
+        canvas {
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #FD9F78;
+            border-radius: 10px;
+            color: #000000;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Balanced vs. Unbalanced Trees</h1>
+        
+        <div class="slide active fade-in" id="slide1">
+            <div class="trees-container">
+                <div class="tree-diagram">
+                    <div class="tree-title">Balanced Tree</div>
+                    <canvas id="balancedTreeCanvas" width="400" height="300"></canvas>
+                </div>
+                <div class="tree-diagram">
+                    <div class="tree-title">Unbalanced Tree</div>
+                    <canvas id="unbalancedTreeCanvas" width="400" height="300"></canvas>
+                </div>
+            </div>
+            <div class="explanation">
+                <p><strong>Balanced vs. Unbalanced Trees:</strong> In a balanced tree (left), the height difference between left and right subtrees of any node is at most 1. This balance ensures efficient operations with O(log n) time complexity. In contrast, an unbalanced tree (right) has a significant height difference between subtrees, causing some operations to approach O(n) time complexity in worst cases.</p>
+            </div>
+        </div>
+
+        <div class="slide" id="slide2">
+            <div class="trees-container">
+                <div class="tree-diagram">
+                    <div class="tree-title">Balanced Tree - Height Analysis</div>
+                    <canvas id="balancedTreeHeightCanvas" width="400" height="300"></canvas>
+                </div>
+                <div class="tree-diagram">
+                    <div class="tree-title">Unbalanced Tree - Height Analysis</div>
+                    <canvas id="unbalancedTreeHeightCanvas" width="400" height="300"></canvas>
+                </div>
+            </div>
+            <div class="explanation">
+                <p><strong>Height Analysis:</strong> Notice how the balanced tree has a more even distribution of heights. The maximum height is 3, and most paths from root to leaf have similar lengths. In the unbalanced tree, one branch extends to height 4 while another stops at height 1, creating inefficiency for operations that might need to traverse the longer path.</p>
+            </div>
+        </div>
+
+        <div class="slide" id="slide3">
+            <div class="trees-container">
+                <div class="tree-diagram">
+                    <div class="tree-title">Balanced Tree - Balance Factors</div>
+                    <canvas id="balancedTreeFactorCanvas" width="400" height="300"></canvas>
+                </div>
+                <div class="tree-diagram">
+                    <div class="tree-title">Unbalanced Tree - Balance Factors</div>
+                    <canvas id="unbalancedTreeFactorCanvas" width="400" height="300"></canvas>
+                </div>
+            </div>
+            <div class="explanation">
+                <p><strong>Balance Factors:</strong> The balance factor of a node is the height of its right subtree minus the height of its left subtree. In a balanced tree (like an AVL tree), this factor must be -1, 0, or 1 for every node. Notice how the unbalanced tree has nodes with balance factors outside this range, indicating the imbalance that affects performance.</p>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <button class="nav-btn" id="prevBtn" disabled>Previous</button>
+            <button class="nav-btn" id="nextBtn">Next</button>
+        </div>
+        <div class="indicator">
+            Slide <span id="currentSlide">1</span> of <span id="totalSlides">3</span>
+        </div>
+    </div>
+
+    <script>
+        // Slide navigation
+        let currentSlideIndex = 1;
+        const totalSlides = 3;
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const currentSlideSpan = document.getElementById('currentSlide');
+
+        function showSlide(index) {
+            // Hide all slides
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active', 'fade-in');
+            });
+            
+            // Show the current slide
+            const currentSlide = document.getElementById(`slide${index}`);
+            currentSlide.classList.add('active', 'fade-in');
+            
+            // Update navigation buttons
+            prevBtn.disabled = index === 1;
+            nextBtn.disabled = index === totalSlides;
+            
+            // Update slide indicator
+            currentSlideSpan.textContent = index;
+            
+            // Draw trees based on current slide
+            if (index === 1) {
+                drawInitialTrees();
+            } else if (index === 2) {
+                drawTreesWithHeight();
+            } else if (index === 3) {
+                drawTreesWithBalanceFactors();
+            }
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentSlideIndex > 1) {
+                currentSlideIndex--;
+                showSlide(currentSlideIndex);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentSlideIndex < totalSlides) {
+                currentSlideIndex++;
+                showSlide(currentSlideIndex);
+            }
+        });
+
+        // Tree drawing functions
+        function drawNode(ctx, x, y, radius, value, color, textColor) {
+            // Draw circle
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw text
+            ctx.font = '14px Arial';
+            ctx.fillStyle = textColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(value, x, y);
+        }
+
+        function drawEdge(ctx, x1, y1, x2, y2) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function drawBalancedTree(canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw edges first (so they appear behind nodes)
+            // Root to children
+            drawEdge(ctx, 200, 50, 100, 120);
+            drawEdge(ctx, 200, 50, 300, 120);
+            
+            // Second level to third level
+            drawEdge(ctx, 100, 120, 50, 190);
+            drawEdge(ctx, 100, 120, 150, 190);
+            drawEdge(ctx, 300, 120, 250, 190);
+            drawEdge(ctx, 300, 120, 350, 190);
+
+            // Third level to fourth level (left side)
+            drawEdge(ctx, 50, 190, 25, 260);
+            drawEdge(ctx, 50, 190, 75, 260);
+            
+            // Draw nodes
+            drawNode(ctx, 200, 50, 20, "50", "#FF4800", "#FFFFFF"); // Root
+            
+            // Second level
+            drawNode(ctx, 100, 120, 20, "25", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 300, 120, 20, "75", "#FF4800", "#FFFFFF");
+            
+            // Third level
+            drawNode(ctx, 50, 190, 20, "15", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 150, 190, 20, "35", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 250, 190, 20, "60", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 350, 190, 20, "85", "#FF4800", "#FFFFFF");
+            
+            // Fourth level (only on left branch for this example)
+            drawNode(ctx, 25, 260, 20, "10", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 75, 260, 20, "20", "#FF4800", "#FFFFFF");
+        }
+
+        function drawUnbalancedTree(canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw edges
+            // Root to children
+            drawEdge(ctx, 200, 50, 300, 120);
+            
+            // Right branch
+            drawEdge(ctx, 300, 120, 350, 190);
+            drawEdge(ctx, 350, 190, 375, 260);
+            drawEdge(ctx, 375, 260, 390, 330);
+            
+            // Left branch from second level
+            drawEdge(ctx, 300, 120, 250, 190);
+
+            // Draw nodes
+            drawNode(ctx, 200, 50, 20, "50", "#FF4800", "#FFFFFF"); // Root
+            
+            // Right branch
+            drawNode(ctx, 300, 120, 20, "75", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 350, 190, 20, "85", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 375, 260, 20, "95", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 390, 330, 20, "100", "#FF4800", "#FFFFFF");
+            
+            // Left branch
+            drawNode(ctx, 250, 190, 20, "60", "#FF4800", "#FFFFFF");
+        }
+
+        function drawBalancedTreeWithHeight(canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw edges first
+            // Root to children
+            drawEdge(ctx, 200, 50, 100, 120);
+            drawEdge(ctx, 200, 50, 300, 120);
+            
+            // Second level to third level
+            drawEdge(ctx, 100, 120, 50, 190);
+            drawEdge(ctx, 100, 120, 150, 190);
+            drawEdge(ctx, 300, 120, 250, 190);
+            drawEdge(ctx, 300, 120, 350, 190);
+
+            // Third level to fourth level (left side)
+            drawEdge(ctx, 50, 190, 25, 260);
+            drawEdge(ctx, 50, 190, 75, 260);
+            
+            // Draw nodes
+            drawNode(ctx, 200, 50, 20, "50", "#FF4800", "#FFFFFF"); // Root
+            
+            // Second level
+            drawNode(ctx, 100, 120, 20, "25", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 300, 120, 20, "75", "#FF4800", "#FFFFFF");
+            
+            // Third level
+            drawNode(ctx, 50, 190, 20, "15", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 150, 190, 20, "35", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 250, 190, 20, "60", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 350, 190, 20, "85", "#FF4800", "#FFFFFF");
+            
+            // Fourth level (only on left branch for this example)
+            drawNode(ctx, 25, 260, 20, "10", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 75, 260, 20, "20", "#FF4800", "#FFFFFF");
+
+            // Add height labels
+            ctx.font = '12px Arial';
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'center';
+            
+            // Root height (h=3)
+            ctx.fillText("h=3", 230, 50);
+            
+            // Level 1 heights
+            ctx.fillText("h=2", 70, 120);
+            ctx.fillText("h=1", 330, 120);
+            
+            // Level 2 heights
+            ctx.fillText("h=1", 20, 190);
+            ctx.fillText("h=0", 180, 190);
+            ctx.fillText("h=0", 220, 190);
+            ctx.fillText("h=0", 380, 190);
+            
+            // Level 3 heights
+            ctx.fillText("h=0", 10, 260);
+            ctx.fillText("h=0", 100, 260);
+            
+            // Add animation to highlight balanced nature
+            setTimeout(() => {
+                // Highlight the balanced subtrees with similar heights
+                ctx.beginPath();
+                ctx.arc(100, 120, 100, 0, Math.PI * 2);
+                ctx.strokeStyle = '#FD9F78';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.arc(300, 120, 80, 0, Math.PI * 2);
+                ctx.strokeStyle = '#FD9F78';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Add note about balance
+                ctx.fillStyle = '#FF4800';
+                ctx.font = 'bold 14px Arial';
+                ctx.fillText("Height difference ≤ 1", 200, 290);
+            }, 500);
+        }
+
+        function drawUnbalancedTreeWithHeight(canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw edges
+            // Root to children
+            drawEdge(ctx, 200, 50, 300, 120);
+            
+            // Right branch
+            drawEdge(ctx, 300, 120, 350, 190);
+            drawEdge(ctx, 350, 190, 375, 260);
+            drawEdge(ctx, 375, 260, 390, 330);
+            
+            // Left branch from second level
+            drawEdge(ctx, 300, 120, 250, 190);
+
+            // Draw nodes
+            drawNode(ctx, 200, 50, 20, "50", "#FF4800", "#FFFFFF"); // Root
+            
+            // Right branch
+            drawNode(ctx, 300, 120, 20, "75", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 350, 190, 20, "85", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 375, 260, 20, "95", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 390, 330, 20, "100", "#FF4800", "#FFFFFF");
+            
+            // Left branch
+            drawNode(ctx, 250, 190, 20, "60", "#FF4800", "#FFFFFF");
+
+            // Add height labels
+            ctx.font = '12px Arial';
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'center';
+            
+            // Root height (h=4)
+            ctx.fillText("h=4", 230, 50);
+            
+            // Level 1 height
+            ctx.fillText("h=3", 330, 120);
+            
+            // Level 2 heights
+            ctx.fillText("h=0", 220, 190);
+            ctx.fillText("h=2", 380, 190);
+            
+            // Level 3 height
+            ctx.fillText("h=1", 345, 260);
+            
+            // Level 4 height
+            ctx.fillText("h=0", 420, 330);
+            
+            // Add animation to highlight unbalanced nature
+            setTimeout(() => {
+                // Highlight the significant height difference
+                ctx.beginPath();
+                ctx.moveTo(200, 50);
+                ctx.lineTo(250, 190);
+                ctx.strokeStyle = '#FD9F78';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                ctx.fillText("Height = 1", 210, 130);
+                
+                ctx.beginPath();
+                ctx.moveTo(200, 50);
+                ctx.lineTo(390, 330);
+                ctx.strokeStyle = '#FD9F78';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                ctx.fillText("Height = 4", 290, 220);
+                
+                // Add note about imbalance
+                ctx.fillStyle = '#FF4800';
+                ctx.font = 'bold 14px Arial';
+                ctx.fillText("Height difference = 3", 200, 290);
+            }, 500);
+        }
+
+        function drawBalancedTreeWithBalanceFactors(canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw edges first
+            // Root to children
+            drawEdge(ctx, 200, 50, 100, 120);
+            drawEdge(ctx, 200, 50, 300, 120);
+            
+            // Second level to third level
+            drawEdge(ctx, 100, 120, 50, 190);
+            drawEdge(ctx, 100, 120, 150, 190);
+            drawEdge(ctx, 300, 120, 250, 190);
+            drawEdge(ctx, 300, 120, 350, 190);
+
+            // Third level to fourth level (left side)
+            drawEdge(ctx, 50, 190, 25, 260);
+            drawEdge(ctx, 50, 190, 75, 260);
+            
+            // Draw nodes
+            drawNode(ctx, 200, 50, 20, "50", "#FF4800", "#FFFFFF"); // Root
+            
+            // Second level
+            drawNode(ctx, 100, 120, 20, "25", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 300, 120, 20, "75", "#FF4800", "#FFFFFF");
+            
+            // Third level
+            drawNode(ctx, 50, 190, 20, "15", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 150, 190, 20, "35", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 250, 190, 20, "60", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 350, 190, 20, "85", "#FF4800", "#FFFFFF");
+            
+            // Fourth level (only on left branch for this example)
+            drawNode(ctx, 25, 260, 20, "10", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 75, 260, 20, "20", "#FF4800", "#FFFFFF");
+
+            // Add balance factor labels
+            ctx.font = '12px Arial';
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'center';
+            
+            // Animate balance factors appearing
+            setTimeout(() => {
+                // Root balance factor
+                ctx.fillStyle = '#FF4800';
+                ctx.fillText("BF: -1", 240, 40);
+                
+                // Level 1 balance factors
+                ctx.fillText("BF: -1", 60, 110);
+                ctx.fillText("BF: 0", 340, 110);
+                
+                // Level 2 balance factors
+                ctx.fillText("BF: 0", 10, 180);
+                ctx.fillText("BF: 0", 190, 180);
+                ctx.fillText("BF: 0", 290, 180);
+                ctx.fillText("BF: 0", 390, 180);
+                
+                // Level 3 balance factors
+                ctx.fillText("BF: 0", 0, 250);
+                ctx.fillText("BF: 0", 110, 250);
+                
+                ctx.font = 'bold 14px Arial';
+                ctx.fillText("All balance factors are -1, 0, or 1", 200, 290);
+            }, 500);
+        }
+
+        function drawUnbalancedTreeWithBalanceFactors(canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw edges
+            // Root to children
+            drawEdge(ctx, 200, 50, 300, 120);
+            
+            // Right branch
+            drawEdge(ctx, 300, 120, 350, 190);
+            drawEdge(ctx, 350, 190, 375, 260);
+            drawEdge(ctx, 375, 260, 390, 330);
+            
+            // Left branch from second level
+            drawEdge(ctx, 300, 120, 250, 190);
+
+            // Draw nodes
+            drawNode(ctx, 200, 50, 20, "50", "#FF4800", "#FFFFFF"); // Root
+            
+            // Right branch
+            drawNode(ctx, 300, 120, 20, "75", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 350, 190, 20, "85", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 375, 260, 20, "95", "#FF4800", "#FFFFFF");
+            drawNode(ctx, 390, 330, 20, "100", "#FF4800", "#FFFFFF");
+            
+            // Left branch
+            drawNode(ctx, 250, 190, 20, "60", "#FF4800", "#FFFFFF");
+
+            // Animate balance factors appearing
+            setTimeout(() => {
+                // Add balance factor labels
+                ctx.font = '12px Arial';
+                ctx.fillStyle = '#FF4800';
+                ctx.textAlign = 'center';
+                
+                // Root balance factor
+                ctx.fillText("BF: 3", 240, 40); // Highlight the significant imbalance
+                
+                // Level 1 balance factor
+                ctx.fillText("BF: 2", 340, 110);
+                
+                // Level 2 balance factors
+                ctx.fillText("BF: 0", 220, 180);
+                ctx.fillText("BF: 1", 390, 180);
+                
+                // Level 3 balance factor
+                ctx.fillText("BF: 1", 345, 250);
+                
+                // Level 4 balance factor
+                ctx.fillText("BF: 0", 420, 320);
+                
+                ctx.font = 'bold 14px Arial';
+                ctx.fillText("Some balance factors > 1", 200, 290);
+                ctx.fillText("Tree needs rebalancing", 200, 310);
+            }, 500);
+        }
+
+        function drawInitialTrees() {
+            drawBalancedTree(document.getElementById('balancedTreeCanvas'));
+            drawUnbalancedTree(document.getElementById('unbalancedTreeCanvas'));
+        }
+
+        function drawTreesWithHeight() {
+            drawBalancedTreeWithHeight(document.getElementById('balancedTreeHeightCanvas'));
+            drawUnbalancedTreeWithHeight(document.getElementById('unbalancedTreeHeightCanvas'));
+        }
+
+        function drawTreesWithBalanceFactors() {
+            drawBalancedTreeWithBalanceFactors(document.getElementById('balancedTreeFactorCanvas'));
+            drawUnbalancedTreeWithBalanceFactors(document.getElementById('unbalancedTreeFactorCanvas'));
+        }
+
+        // Initialize the first slide
+        window.onload = function() {
+            showSlide(1);
+        };
+    </script>
+</body>
+</html>
