@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recursive Tree Construction Process</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #FFFFFF;
+      color: #000000;
+    }
+    
+    h1 {
+      color: #FF4800;
+      text-align: center;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .animation-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+    }
+    
+    #string-display {
+      font-family: monospace;
+      font-size: 24px;
+      margin-bottom: 20px;
+      letter-spacing: 5px;
+      position: relative;
+      height: 50px;
+    }
+    
+    #pointer {
+      position: absolute;
+      color: #FF4800;
+      font-weight: bold;
+      transition: left 0.5s;
+    }
+    
+    #canvas {
+      border: 2px solid #FD9F78;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+    
+    .explanation {
+      background-color: #FD9F78;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      color: #000000;
+      max-width: 800px;
+    }
+    
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    
+    .btn {
+      background-color: #FF4800;
+      color: #FFFFFF;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+    
+    .btn:hover {
+      background-color: #FD9F78;
+    }
+    
+    .btn:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    
+    .step-indicator {
+      font-weight: bold;
+      margin-top: 10px;
+      color: #FF4800;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Recursive Tree Construction Process</h1>
+    
+    <div class="explanation" id="explanation">
+      Welcome to the visualization of recursive tree construction from the string '4(2(3)(1))(6(5))'. Each step will show how the parser moves through the string and builds the tree.
+    </div>
+    
+    <div class="animation-container">
+      <div id="string-display">
+        4(2(3)(1))(6(5))
+        <div id="pointer">^</div>
+      </div>
+      
+      <canvas id="canvas" width="800" height="400"></canvas>
+      
+      <div class="step-indicator">
+        Step <span id="current-step">1</span> of <span id="total-steps">15</span>
+      </div>
+      
+      <div class="controls">
+        <button id="prev-btn" class="btn">Previous</button>
+        <button id="next-btn" class="btn">Next</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const string = '4(2(3)(1))(6(5))';
+    
+    // Define the steps of the animation
+    const steps = [
+      {
+        pointer: 0,
+        explanation: "We start parsing the string '4(2(3)(1))(6(5))'. The first character '4' is the root value of our tree.",
+        nodes: [{ id: 'root', value: '4', x: 400, y: 50, parent: null }],
+        highlightNode: 'root'
+      },
+      {
+        pointer: 1,
+        explanation: "We encounter '(' which indicates that we need to create a left child for the current node (4).",
+        nodes: [{ id: 'root', value: '4', x: 400, y: 50, parent: null }],
+        highlightNode: 'root'
+      },
+      {
+        pointer: 2,
+        explanation: "We see '2'. This will be the value of the left child of the root node.",
+        nodes: [
+          { id: 'root', value: '4', x: 400, y: 50, parent: null },
+          { id: 'node1', value: '2', x: 250, y: 120, parent: 'root' }
+        ],
+        highlightNode: 'node1'
+      },
+      {
+        pointer: 3,
+        explanation: "Another '(' indicates we need to create a left child for node 2.",
+        nodes: [
+          { id: 'root', value: '4', x: 400, y: 50, parent: null },
+          { id: 'node1', value: '2', x: 250, y: 120, parent: 'root' }
+        ],
+        highlightNode: 'node1'
+      },
+      {
+        pointer: 4,
+        explanation: "We see '3'. This becomes the left child of node 2.",
+        nodes: [
+          { id: 'root', value: '4', x: 400, y: 50, parent: null },
+          { id: 'node1', value: '2', x: 250, y: 120, parent: 'root' },
+          { id: 'node2', value: '3', x: 175, y: 190, parent: 'node1' }
+        ],
+        highlightNode: 'node2'
+      },
+      {
+        pointer: 5,
+        explanation: "We encounter ')' which means we're done with the left subtree of node 2.",
+        nodes: [
+          { id: 'root', value: '4', x: 400, y: 50, parent: null },
+          { id: 'node1', value: '2', x: 250, y: 120, parent: 'root' },
+          { id: 'node2', value: '3', x: 175, y: 190, parent: 'node1' }
+        ],
+        highlightNode: 'node1'
+      },
+      {
+        pointer: 6,
+        explanation: "Another '(' means we need to create a right child for node 2.",
+        nodes: [
+          { id: 'root', value: '4', x: 400, y: 50, parent: null },
+          { id: 'node1', value: '2', x: 250, y: 120, parent: 'root' },
+          { id: 'node2', value: '3', x: 175, y: 190, parent: 'node1' }
+        ],
+        highlightNode: 'node1'
+      },
+      {
+        pointer: 7,
+        explanation: "We see '1'. This becomes the right child of node 2.",
+        nodes: [
+          { id: 'root', value: '4', x: 400, y: 50, parent: null },
+          { id: 'node1', value: '2', x: 250, y: 120, parent: 'root' },
+          { id: 'node2', value: '3', x: 175, y: 190, parent: 'node1' },
+          { id: 'node3', value: '1', x: 325, y: 190, parent: 'node1' }
+        ],
+        highlightNode: 'node3'
+      },
+      {
+        pointer: 8,
+        explanation: "')' indicates we're done with the right subtree of node 2.",
+        nodes: [
+          { id: 'root', value: '4', x: 400, y: 50, parent: null },
+          { id: 'node1', value: '2', x: 250, y: 120, parent: 'root' },
+          { id: 'node2', value: '3', x: 175, y: 190, parent: 'node1' },
+          { id: 'node3', value: '1', x: 325, y: 190, parent: 'node1' }
+        ],
+        highlightNode: 'node1'
+      },
+      {
+        pointer: 9,
+        explanation: "Another ')' means we're completely done with the left subtree of the root node 4.",
+        nodes: [
+          { id: 'root', value: '4', x: 400, y: 50, parent: null },
+          { id: 'node1', value: '2', x: 250, y: 120, parent: 'root' },
+          { id: 'node2', value: '3', x: 175, y: 190, parent: 'node1' },
+          { id: 'node3', value: '1', x: 325, y: 190, parent: 'node1' }
+        ],
+        highlightNode: 'root'
+      },
+      {
+        pointer: 10,
+        explanation: "Another '(' indicates we need to create a right child for the root node 4.",
+        nodes: [
+          { id: 'root', value: '4', x: 400, y: 50, parent: null },
+          { id: 'node1', value: '2', x: 250, y: 120, parent: 'root' },
+          { id: 'node2', value: '3', x: 175, y: 190, parent: 'node1' },
+          { id: 'node3', value: '1', x: 325, y: 190, parent: 'node1' }
+        ],
+        highlightNode: 'root'
+      },
+      {
+        pointer: 11,
+        explanation: "We see '6'. This will be the value of the right child of the root node.",
+        nodes: [
+          { id: 'root', value: '4', x: 400, y: 50, parent: null },
+          { id: 'node1', value: '2', x: 250, y: 120, parent: 'root' },
+          { id: 'node2', value: '3', x: 175, y: 190, parent: 'node1' },
+          { id: 'node3', value: '1', x: 325, y: 190, parent: 'node1' },
+          { id: 'node4', value: '6', x: 550, y: 120, parent: 'root' }
+        ],
+        highlightNode: 'node4'
+      },
+      {
+        pointer: 12,
+        explanation: "Another '(' means we need to create a left child for node 6.",
+        nodes: [
+          { id: 'root', value: '4', x: 400, y: 50, parent: null },
+          { id: 'node1', value: '2', x: 250, y: 120, parent: 'root' },
+          { id: 'node2', value: '3', x: 175, y: 190, parent: 'node1' },
+          { id: 'node3', value: '1', x: 325, y: 190, parent: 'node1' },
+          { id: 'node4', value: '6', x: 550, y: 120, parent: 'root' }
+        ],
+        highlightNode: 'node4'
+      },
+      {
+        pointer: 13,
+        explanation: "We see '5'. This becomes the left child of node 6.",
+        nodes: [
+          { id: 'root', value: '4', x: 400, y: 50, parent: null },
+          { id: 'node1', value: '2', x: 250, y: 120, parent: 'root' },
+          { id: 'node2', value: '3', x: 175, y: 190, parent: 'node1' },
+          { id: 'node3', value: '1', x: 325, y: 190, parent: 'node1' },
+          { id: 'node4', value: '6', x: 550, y: 120, parent: 'root' },
+          { id: 'node5', value: '5', x: 475, y: 190, parent: 'node4' }
+        ],
+        highlightNode: 'node5'
+      },
+      {
+        pointer: 14,
+        explanation: "')' indicates we're done with the left subtree of node 6.",
+        nodes: [
+          { id: 'root', value: '4', x: 400, y: 50, parent: null },
+          { id: 'node1', value: '2', x: 250, y: 120, parent: 'root' },
+          { id: 'node2', value: '3', x: 175, y: 190, parent: 'node1' },
+          { id: 'node3', value: '1', x: 325, y: 190, parent: 'node1' },
+          { id: 'node4', value: '6', x: 550, y: 120, parent: 'root' },
+          { id: 'node5', value: '5', x: 475, y: 190, parent: 'node4' }
+        ],
+        highlightNode: 'node4'
+      },
+      {
+        pointer: 15,
+        explanation: "The final ')' means we're completely done with the right subtree of the root. Our tree construction is complete! The final tree has root 4, with a left subtree rooted at 2 (with children 3 and 1), and a right subtree rooted at 6 (with left child 5).",
+        nodes: [
+          { id: 'root', value: '4', x: 400, y: 50, parent: null },
+          { id: 'node1', value: '2', x: 250, y: 120, parent: 'root' },
+          { id: 'node2', value: '3', x: 175, y: 190, parent: 'node1' },
+          { id: 'node3', value: '1', x: 325, y: 190, parent: 'node1' },
+          { id: 'node4', value: '6', x: 550, y: 120, parent: 'root' },
+          { id: 'node5', value: '5', x: 475, y: 190, parent: 'node4' }
+        ],
+        highlightNode: 'root'
+      }
+    ];
+    
+    // Get DOM elements
+    const stringDisplay = document.getElementById('string-display');
+    const pointer = document.getElementById('pointer');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const explanation = document.getElementById('explanation');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const currentStepSpan = document.getElementById('current-step');
+    const totalStepsSpan = document.getElementById('total-steps');
+    
+    let currentStep = 0;
+    totalStepsSpan.textContent = steps.length;
+    
+    // Draw the tree
+    function drawTree(step) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw edges first
+      for (const node of step.nodes) {
+        if (node.parent) {
+          const parent = step.nodes.find(n => n.id === node.parent);
+          ctx.beginPath();
+          ctx.moveTo(parent.x, parent.y);
+          ctx.lineTo(node.x, node.y);
+          ctx.strokeStyle = '#FD9F78';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+      }
+      
+      // Draw nodes
+      for (const node of step.nodes) {
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, 25, 0, Math.PI * 2);
+        
+        if (node.id === step.highlightNode) {
+          ctx.fillStyle = '#FF4800';
+        } else {
+          ctx.fillStyle = '#FFFFFF';
+        }
+        
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        ctx.fill();
+        ctx.stroke();
+        
+        ctx.fillStyle = node.id === step.highlightNode ? '#FFFFFF' : '#000000';
+        ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(node.value, node.x, node.y);
+      }
+    }
+    
+    // Update pointer position
+    function updatePointer(position) {
+      pointer.style.left = (position * 18 + 8) + 'px'; // Adjust based on letter spacing
+    }
+    
+    // Update the animation based on current step
+    function updateAnimation() {
+      const step = steps[currentStep];
+      
+      // Update explanation
+      explanation.textContent = step.explanation;
+      
+      // Update pointer
+      updatePointer(step.pointer);
+      
+      // Draw tree
+      drawTree(step);
+      
+      // Update step counter
+      currentStepSpan.textContent = currentStep + 1;
+      
+      // Update button states
+      prevBtn.disabled = currentStep === 0;
+      nextBtn.disabled = currentStep === steps.length - 1;
+    }
+    
+    // Event listeners for buttons
+    prevBtn.addEventListener('click', () => {
+      if (currentStep > 0) {
+        currentStep--;
+        updateAnimation();
+      }
+    });
+    
+    nextBtn.addEventListener('click', () => {
+      if (currentStep < steps.length - 1) {
+        currentStep++;
+        updateAnimation();
+      }
+    });
+    
+    // Initialize animation
+    updateAnimation();
+  </script>
+</body>
+</html>
