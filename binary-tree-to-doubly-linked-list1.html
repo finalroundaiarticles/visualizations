@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Tree to Doubly Linked List Conversion</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .animation-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 30px;
+            position: relative;
+            height: 400px;
+        }
+        
+        .tree-container, .list-container {
+            width: 45%;
+            height: 100%;
+            position: relative;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        
+        .container-title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #FF4800;
+        }
+        
+        .node {
+            width: 40px;
+            height: 40px;
+            background-color: #FD9F78;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            position: absolute;
+            transition: all 1s ease;
+        }
+        
+        .active {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.2);
+        }
+        
+        .edge {
+            position: absolute;
+            background-color: #000000;
+            height: 2px;
+            transform-origin: left center;
+            transition: all 1s ease;
+        }
+        
+        .list-node {
+            width: 40px;
+            height: 40px;
+            background-color: #FD9F78;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            position: absolute;
+            opacity: 0;
+            transition: all 1s ease;
+        }
+        
+        .list-arrow {
+            position: absolute;
+            height: 2px;
+            background-color: #000000;
+            opacity: 0;
+            transition: all 1s ease;
+        }
+        
+        .arrow-head {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            opacity: 0;
+            transition: all 1s ease;
+        }
+        
+        .explanation {
+            width: 100%;
+            padding: 20px;
+            background-color: #FD9F78;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            color: #000000;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 300px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Tree to Doubly Linked List Conversion</h1>
+        
+        <div class="animation-container">
+            <div class="tree-container">
+                <div class="container-title">Binary Tree</div>
+                <!-- Tree nodes will be added here by JavaScript -->
+            </div>
+            
+            <div class="list-container">
+                <div class="container-title">Doubly Linked List</div>
+                <!-- List nodes will be added here by JavaScript -->
+            </div>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            Welcome to the Binary Tree to Doubly Linked List Conversion tutorial! We'll convert a binary tree to a doubly linked list while preserving the inorder traversal sequence.
+        </div>
+        
+        <div class="nav-buttons">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        // Animation steps and state
+        let currentStep = 0;
+        const steps = [
+            {
+                text: "Welcome to the Binary Tree to Doubly Linked List Conversion tutorial! We'll convert a binary tree to a doubly linked list while preserving the inorder traversal sequence.",
+                action: "init"
+            },
+            {
+                text: "Let's start by understanding the binary tree. The root node is 4, with left child 2 and right child 5.",
+                action: "highlightRoot"
+            },
+            {
+                text: "Node 2 has two children: 1 (left) and 3 (right).",
+                action: "highlightNode2"
+            },
+            {
+                text: "To convert this binary tree to a doubly linked list, we need to perform an inorder traversal (left-root-right) and rearrange the connections.",
+                action: "explainInorder"
+            },
+            {
+                text: "Let's begin with the leftmost node: 1. This will be the first node in our doubly linked list.",
+                action: "startWithNode1"
+            },
+            {
+                text: "Next in the inorder traversal is node 2. We connect node 1 and node 2 with bidirectional pointers.",
+                action: "connectNode1And2"
+            },
+            {
+                text: "The next node in the inorder traversal is 3. We connect node 2 and node 3.",
+                action: "connectNode2And3"
+            },
+            {
+                text: "Next is node 4 (the root). We connect node 3 and node 4.",
+                action: "connectNode3And4"
+            },
+            {
+                text: "Finally, we reach node 5. We connect node 4 and node 5 to complete our doubly linked list.",
+                action: "connectNode4And5"
+            },
+            {
+                text: "Now our conversion is complete! We have successfully converted the binary tree to a doubly linked list while preserving the inorder traversal sequence (1→2→3→4→5).",
+                action: "complete"
+            }
+        ];
+        
+        // DOM elements
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const explanationDiv = document.getElementById('explanation');
+        const treeContainer = document.querySelector('.tree-container');
+        const listContainer = document.querySelector('.list-container');
+        
+        // Initialize the animation
+        function initAnimation() {
+            // Create tree nodes
+            createTreeNode('node4', 4, 200, 50);
+            createTreeNode('node2', 2, 100, 150);
+            createTreeNode('node5', 5, 300, 150);
+            createTreeNode('node1', 1, 50, 250);
+            createTreeNode('node3', 3, 150, 250);
+            
+            // Create tree edges
+            createTreeEdge('edge4-2', 220, 70, 120, 150);
+            createTreeEdge('edge4-5', 240, 70, 300, 150);
+            createTreeEdge('edge2-1', 100, 170, 70, 250);
+            createTreeEdge('edge2-3', 120, 170, 150, 250);
+            
+            // Create list nodes (initially hidden)
+            createListNode('list1', 1, 50, 200);
+            createListNode('list2', 2, 150, 200);
+            createListNode('list3', 3, 250, 200);
+            createListNode('list4', 4, 350, 200);
+            createListNode('list5', 5, 450, 200);
+            
+            // Create list arrows (initially hidden)
+            createListArrow('arrow1-2', 90, 200, 60);
+            createListArrow('arrow2-1', 150, 200, 60, true);
+            createListArrow('arrow2-3', 190, 200, 60);
+            createListArrow('arrow3-2', 250, 200, 60, true);
+            createListArrow('arrow3-4', 290, 200, 60);
+            createListArrow('arrow4-3', 350, 200, 60, true);
+            createListArrow('arrow4-5', 390, 200, 60);
+            createListArrow('arrow5-4', 450, 200, 60, true);
+        }
+        
+        // Create a tree node
+        function createTreeNode(id, value, x, y) {
+            const node = document.createElement('div');
+            node.className = 'node';
+            node.id = id;
+            node.textContent = value;
+            node.style.left = `${x}px`;
+            node.style.top = `${y}px`;
+            treeContainer.appendChild(node);
+        }
+        
+        // Create a tree edge
+        function createTreeEdge(id, startX, startY, endX, endY) {
+            const length = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+            const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
+            
+            const edge = document.createElement('div');
+            edge.className = 'edge';
+            edge.id = id;
+            edge.style.width = `${length}px`;
+            edge.style.left = `${startX}px`;
+            edge.style.top = `${startY}px`;
+            edge.style.transform = `rotate(${angle}deg)`;
+            treeContainer.appendChild(edge);
+        }
+        
+        // Create a list node
+        function createListNode(id, value, x, y) {
+            const node = document.createElement('div');
+            node.className = 'list-node';
+            node.id = id;
+            node.textContent = value;
+            node.style.left = `${x}px`;
+            node.style.top = `${y}px`;
+            listContainer.appendChild(node);
+        }
+        
+        // Create a list arrow
+        function createListArrow(id, startX, startY, length, reverse = false) {
+            const arrow = document.createElement('div');
+            arrow.className = 'list-arrow';
+            arrow.id = id;
+            arrow.style.width = `${length}px`;
+            arrow.style.left = `${startX}px`;
+            arrow.style.top = `${startY}px`;
+            listContainer.appendChild(arrow);
+            
+            const arrowHead = document.createElement('div');
+            arrowHead.className = 'arrow-head';
+            arrowHead.style.top = `${startY - 4}px`;
+            
+            if (reverse) {
+                arrowHead.style.left = `${startX - 5}px`;
+                arrowHead.style.borderRight = '8px solid #000000';
+            } else {
+                arrowHead.style.left = `${startX + length - 3}px`;
+                arrowHead.style.borderLeft = '8px solid #000000';
+            }
+            
+            listContainer.appendChild(arrowHead);
+        }
+        
+        // Perform actions based on the current step
+        function performAction(action) {
+            resetHighlights();
+            
+            switch(action) {
+                case 'init':
+                    // Initial state
+                    break;
+                    
+                case 'highlightRoot':
+                    document.getElementById('node4').classList.add('active');
+                    document.getElementById('edge4-2').style.backgroundColor = '#FF4800';
+                    document.getElementById('edge4-5').style.backgroundColor = '#FF4800';
+                    break;
+                    
+                case 'highlightNode2':
+                    document.getElementById('node2').classList.add('active');
+                    document.getElementById('edge2-1').style.backgroundColor = '#FF4800';
+                    document.getElementById('edge2-3').style.backgroundColor = '#FF4800';
+                    document.getElementById('node1').classList.add('active');
+                    document.getElementById('node3').classList.add('active');
+                    break;
+                    
+                case 'explainInorder':
+                    // Highlight nodes in inorder sequence
+                    setTimeout(() => {
+                        document.getElementById('node1').classList.add('active');
+                    }, 0);
+                    
+                    setTimeout(() => {
+                        document.getElementById('node1').classList.remove('active');
+                        document.getElementById('node2').classList.add('active');
+                    }, 800);
+                    
+                    setTimeout(() => {
+                        document.getElementById('node2').classList.remove('active');
+                        document.getElementById('node3').classList.add('active');
+                    }, 1600);
+                    
+                    setTimeout(() => {
+                        document.getElementById('node3').classList.remove('active');
+                        document.getElementById('node4').classList.add('active');
+                    }, 2400);
+                    
+                    setTimeout(() => {
+                        document.getElementById('node4').classList.remove('active');
+                        document.getElementById('node5').classList.add('active');
+                    }, 3200);
+                    
+                    setTimeout(() => {
+                        document.getElementById('node5').classList.remove('active');
+                    }, 4000);
+                    break;
+                    
+                case 'startWithNode1':
+                    document.getElementById('node1').classList.add('active');
+                    document.getElementById('list1').style.opacity = '1';
+                    break;
+                    
+                case 'connectNode1And2':
+                    document.getElementById('node1').classList.add('active');
+                    document.getElementById('node2').classList.add('active');
+                    document.getElementById('list1').style.opacity = '1';
+                    document.getElementById('list2').style.opacity = '1';
+                    document.getElementById('arrow1-2').style.opacity = '1';
+                    document.getElementById('arrow2-1').style.opacity = '1';
+                    document.querySelectorAll('.arrow-head')[0].style.opacity = '1';
+                    document.querySelectorAll('.arrow-head')[1].style.opacity = '1';
+                    break;
+                    
+                case 'connectNode2And3':
+                    document.getElementById('node2').classList.add('active');
+                    document.getElementById('node3').classList.add('active');
+                    document.getElementById('list1').style.opacity = '1';
+                    document.getElementById('list2').style.opacity = '1';
+                    document.getElementById('list3').style.opacity = '1';
+                    document.getElementById('arrow1-2').style.opacity = '1';
+                    document.getElementById('arrow2-1').style.opacity = '1';
+                    document.getElementById('arrow2-3').style.opacity = '1';
+                    document.getElementById('arrow3-2').style.opacity = '1';
+                    document.querySelectorAll('.arrow-head')[0].style.opacity = '1';
+                    document.querySelectorAll('.arrow-head')[1].style.opacity = '1';
+                    document.querySelectorAll('.arrow-head')[2].style.opacity = '1';
+                    document.querySelectorAll('.arrow-head')[3].style.opacity = '1';
+                    break;
+                    
+                case 'connectNode3And4':
+                    document.getElementById('node3').classList.add('active');
+                    document.getElementById('node4').classList.add('active');
+                    document.getElementById('list1').style.opacity = '1';
+                    document.getElementById('list2').style.opacity = '1';
+                    document.getElementById('list3').style.opacity = '1';
+                    document.getElementById('list4').style.opacity = '1';
+                    document.getElementById('arrow1-2').style.opacity = '1';
+                    document.getElementById('arrow2-1').style.opacity = '1';
+                    document.getElementById('arrow2-3').style.opacity = '1';
+                    document.getElementById('arrow3-2').style.opacity = '1';
+                    document.getElementById('arrow3-4').style.opacity = '1';
+                    document.getElementById('arrow4-3').style.opacity = '1';
+                    for (let i = 0; i < 6; i++) {
+                        document.querySelectorAll('.arrow-head')[i].style.opacity = '1';
+                    }
+                    break;
+                    
+                case 'connectNode4And5':
+                    document.getElementById('node4').classList.add('active');
+                    document.getElementById('node5').classList.add('active');
+                    document.getElementById('list1').style.opacity = '1';
+                    document.getElementById('list2').style.opacity = '1';
+                    document.getElementById('list3').style.opacity = '1';
+                    document.getElementById('list4').style.opacity = '1';
+                    document.getElementById('list5').style.opacity = '1';
+                    document.getElementById('arrow1-2').style.opacity = '1';
+                    document.getElementById('arrow2-1').style.opacity = '1';
+                    document.getElementById('arrow2-3').style.opacity = '1';
+                    document.getElementById('arrow3-2').style.opacity = '1';
+                    document.getElementById('arrow3-4').style.opacity = '1';
+                    document.getElementById('arrow4-3').style.opacity = '1';
+                    document.getElementById('arrow4-5').style.opacity = '1';
+                    document.getElementById('arrow5-4').style.opacity = '1';
+                    for (let i = 0; i < 8; i++) {
+                        document.querySelectorAll('.arrow-head')[i].style.opacity = '1';
+                    }
+                    break;
+                    
+                case 'complete':
+                    document.getElementById('list1').style.opacity = '1';
+                    document.getElementById('list2').style.opacity = '1';
+                    document.getElementById('list3').style.opacity = '1';
+                    document.getElementById('list4').style.opacity = '1';
+                    document.getElementById('list5').style.opacity = '1';
+                    document.getElementById('arrow1-2').style.opacity = '1';
+                    document.getElementById('arrow2-1').style.opacity = '1';
+                    document.getElementById('arrow2-3').style.opacity = '1';
+                    document.getElementById('arrow3-2').style.opacity = '1';
+                    document.getElementById('arrow3-4').style.opacity = '1';
+                    document.getElementById('arrow4-3').style.opacity = '1';
+                    document.getElementById('arrow4-5').style.opacity = '1';
+                    document.getElementById('arrow5-4').style.opacity = '1';
+                    for (let i = 0; i < 8; i++) {
+                        document.querySelectorAll('.arrow-head')[i].style.opacity = '1';
+                    }
+                    break;
+            }
+        }
+        
+        // Reset all highlights
+        function resetHighlights() {
+            document.querySelectorAll('.node').forEach(node => {
+                node.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.edge').forEach(edge => {
+                edge.style.backgroundColor = '#000000';
+            });
+        }
+        
+        // Move to the next step
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateUI();
+            }
+        }
+        
+        // Move to the previous step
+        function previousStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateUI();
+            }
+        }
+        
+        // Update the UI based on the current step
+        function updateUI() {
+            explanationDiv.textContent = steps[currentStep].text;
+            performAction(steps[currentStep].action);
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        // Add event listeners
+        nextBtn.addEventListener('click', nextStep);
+        prevBtn.addEventListener('click', previousStep);
+        
+        // Initialize the animation
+        initAnimation();
+        updateUI();
+    </script>
+</body>
+</html>
