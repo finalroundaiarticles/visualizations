@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zig-Zag Traversal of Binary Tree</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+        }
+        canvas {
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+        }
+        .buttons {
+            margin: 20px 0;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-left: 5px solid #FF4800;
+            text-align: left;
+        }
+        .result {
+            margin: 20px 0;
+            font-weight: bold;
+            color: #FF4800;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Zig-Zag Traversal of Binary Tree</h1>
+        
+        <div class="explanation">
+            <p>Zig-zag traversal (also known as spiral traversal) visits tree nodes level by level, alternating between left-to-right and right-to-left directions:</p>
+            <ul>
+                <li>Level 0: Left to Right (root node)</li>
+                <li>Level 1: Right to Left</li>
+                <li>Level 2: Left to Right</li>
+                <li>And so on...</li>
+            </ul>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="treeCanvas" width="800" height="400"></canvas>
+        </div>
+        
+        <div class="result" id="result">
+            Result: [[3], [20, 9], [15, 7]]
+        </div>
+        
+        <div class="buttons">
+            <button id="prevBtn" disabled>Previous Step</button>
+            <button id="nextBtn">Next Step</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Tree node structure
+        class TreeNode {
+            constructor(val) {
+                this.val = val;
+                this.left = null;
+                this.right = null;
+                this.x = 0;
+                this.y = 0;
+                this.highlighted = false;
+            }
+        }
+        
+        // Create the example tree [3,9,20,null,null,15,7]
+        const root = new TreeNode(3);
+        root.left = new TreeNode(9);
+        root.right = new TreeNode(20);
+        root.right.left = new TreeNode(15);
+        root.right.right = new TreeNode(7);
+        
+        // Set positions for the tree nodes
+        const setPositions = (node, x, y, horizontalSpacing) => {
+            if (!node) return;
+            
+            node.x = x;
+            node.y = y;
+            
+            setPositions(node.left, x - horizontalSpacing, y + 80, horizontalSpacing / 2);
+            setPositions(node.right, x + horizontalSpacing, y + 80, horizontalSpacing / 2);
+        };
+        
+        setPositions(root, canvas.width / 2, 60, 160);
+        
+        // Drawing functions
+        const drawNode = (node, highlighted = false) => {
+            if (!node) return;
+            
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 25, 0, Math.PI * 2);
+            
+            if (highlighted) {
+                ctx.fillStyle = '#FF4800';
+            } else if (node.highlighted) {
+                ctx.fillStyle = '#FD9F78';
+            } else {
+                ctx.fillStyle = '#FFFFFF';
+            }
+            
+            ctx.fill();
+            ctx.strokeStyle = '#FF4800';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = highlighted || node.highlighted ? '#FFFFFF' : '#000000';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.val, node.x, node.y);
+        };
+        
+        const drawEdge = (parent, child) => {
+            if (!parent || !child) return;
+            
+            ctx.beginPath();
+            ctx.moveTo(parent.x, parent.y + 25);
+            ctx.lineTo(child.x, child.y - 25);
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        };
+        
+        const drawTree = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges first
+            if (root.left) drawEdge(root, root.left);
+            if (root.right) drawEdge(root, root.right);
+            if (root.right && root.right.left) drawEdge(root.right, root.right.left);
+            if (root.right && root.right.right) drawEdge(root.right, root.right.right);
+            
+            // Draw nodes
+            drawNode(root, currentStep === 0);
+            drawNode(root.left, currentStep === 2);
+            drawNode(root.right, currentStep === 1);
+            drawNode(root.right.left, currentStep === 3);
+            drawNode(root.right.right, currentStep === 4);
+            
+            // Draw arrow for current traversal direction
+            if (currentStep > 0) {
+                drawArrows();
+            }
+        };
+        
+        const drawArrow = (fromX, fromY, toX, toY, color) => {
+            const headSize = 10;
+            const angle = Math.atan2(toY - fromY, toX - fromX);
+            
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // Arrow head
+            ctx.beginPath();
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(
+                toX - headSize * Math.cos(angle - Math.PI / 6),
+                toY - headSize * Math.sin(angle - Math.PI / 6)
+            );
+            ctx.lineTo(
+                toX - headSize * Math.cos(angle + Math.PI / 6),
+                toY - headSize * Math.sin(angle + Math.PI / 6)
+            );
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+        };
+        
+        const drawArrows = () => {
+            if (currentStep <= 5) {
+                // Level indicators
+                ctx.font = '16px Arial';
+                ctx.fillStyle = '#000000';
+                ctx.textAlign = 'left';
+                ctx.fillText('Level 0: Left to Right', 20, 30);
+                
+                if (currentStep >= 2) {
+                    ctx.fillText('Level 1: Right to Left', 20, 55);
+                }
+                
+                if (currentStep >= 4) {
+                    ctx.fillText('Level 2: Left to Right', 20, 80);
+                }
+                
+                // Traversal arrows
+                if (currentStep === 1) {
+                    // Root visited
+                    ctx.fillStyle = '#FF4800';
+                    ctx.fillText('→ [3]', 200, 30);
+                }
+                
+                if (currentStep === 2) {
+                    // Level 1 first node (right to left)
+                    drawArrow(root.x, root.y + 35, root.right.x, root.right.y - 35, '#FF4800');
+                    ctx.fillStyle = '#FF4800';
+                    ctx.fillText('→ [3], [20, ...]', 200, 30);
+                }
+                
+                if (currentStep === 3) {
+                    // Level 1 second node
+                    drawArrow(root.right.x, root.right.y, root.left.x, root.left.y, '#FF4800');
+                    ctx.fillStyle = '#FF4800';
+                    ctx.fillText('→ [3], [20, 9]', 200, 55);
+                }
+                
+                if (currentStep === 4) {
+                    // Level 2 first node (left to right)
+                    drawArrow(root.left.x, root.left.y + 35, root.right.left.x, root.right.left.y - 35, '#FF4800');
+                    ctx.fillStyle = '#FF4800';
+                    ctx.fillText('→ [3], [20, 9], [15, ...]', 200, 80);
+                }
+                
+                if (currentStep === 5) {
+                    // Level 2 second node
+                    drawArrow(root.right.left.x, root.right.left.y, root.right.right.x, root.right.right.y, '#FF4800');
+                    ctx.fillStyle = '#FF4800';
+                    ctx.fillText('→ [3], [20, 9], [15, 7]', 200, 80);
+                }
+            }
+        };
+        
+        // Step control
+        let currentStep = 0;
+        const totalSteps = 6; // 0: Initial, 1-5: Traversal steps
+        
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        prevBtn.addEventListener('click', () => {
+            currentStep--;
+            updateButtons();
+            drawTree();
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            currentStep++;
+            updateButtons();
+            drawTree();
+        });
+        
+        const updateButtons = () => {
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps;
+            
+            // Update result display based on step
+            const resultEl = document.getElementById('result');
+            
+            if (currentStep === 0) {
+                resultEl.textContent = "Result: (Traversal not started)";
+            } else if (currentStep === 1) {
+                resultEl.textContent = "Result: [[3]]";
+            } else if (currentStep === 2) {
+                resultEl.textContent = "Result: [[3], [20]]";
+            } else if (currentStep === 3) {
+                resultEl.textContent = "Result: [[3], [20, 9]]";
+            } else if (currentStep === 4) {
+                resultEl.textContent = "Result: [[3], [20, 9], [15]]";
+            } else if (currentStep >= 5) {
+                resultEl.textContent = "Result: [[3], [20, 9], [15, 7]]";
+            }
+        };
+        
+        // Initial draw
+        drawTree();
+    </script>
+</body>
+</html>
