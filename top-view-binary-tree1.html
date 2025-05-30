@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horizontal Distance in Binary Trees</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        
+        .animation-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .node {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #000000;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            transition: all 0.5s ease;
+        }
+        
+        .node.highlight {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.2);
+        }
+        
+        .edge {
+            position: absolute;
+            background-color: #000000;
+            height: 2px;
+            transform-origin: 0% 50%;
+            transition: all 0.5s ease;
+        }
+        
+        .hd-label {
+            position: absolute;
+            color: #000000;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+        
+        .hd-label.show {
+            opacity: 1;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .explanation {
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #FD9F78;
+            margin-top: 20px;
+            color: #000000;
+        }
+        
+        .step-counter {
+            color: #FF4800;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Horizontal Distance in Binary Trees</h1>
+    
+    <div class="container">
+        <div class="animation-container" id="animation">
+            <!-- The tree will be created here using JavaScript -->
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <div class="step-counter" id="step-counter">Step 1 of 4</div>
+            <div id="step-text">
+                Horizontal Distance (HD) is a value assigned to each node in a binary tree. The root node has HD = 0. For any other node, if we move left from a parent, the HD decreases by 1, and if we move right, the HD increases by 1.
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
+            <button class="nav-btn" id="next-btn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        // Define the binary tree structure
+        const tree = {
+            value: 1,
+            left: {
+                value: 2,
+                left: { value: 4, left: null, right: null },
+                right: { value: 5, left: null, right: null }
+            },
+            right: {
+                value: 3,
+                left: { value: 6, left: null, right: null },
+                right: { value: 7, left: null, right: null }
+            }
+        };
+        
+        // Set up the animation steps
+        const steps = [
+            {
+                title: "Step 1 of 4",
+                text: "Horizontal Distance (HD) is a value assigned to each node in a binary tree. The root node has HD = 0. For any other node, if we move left from a parent, the HD decreases by 1, and if we move right, the HD increases by 1.",
+                highlight: [1],
+                showHD: [1]
+            },
+            {
+                title: "Step 2 of 4",
+                text: "When we move to the left child (node 2) from the root, HD decreases by 1. So, node 2 has HD = -1. Similarly, node 3 (right child of root) has HD = +1.",
+                highlight: [2, 3],
+                showHD: [1, 2, 3]
+            },
+            {
+                title: "Step 3 of 4",
+                text: "For node 4 (left child of node 2), HD = -1 - 1 = -2. For node 5 (right child of node 2), HD = -1 + 1 = 0.",
+                highlight: [4, 5],
+                showHD: [1, 2, 3, 4, 5]
+            },
+            {
+                title: "Step 4 of 4",
+                text: "For node 6 (left child of node 3), HD = 1 - 1 = 0. For node 7 (right child of node 3), HD = 1 + 1 = 2. Notice that nodes 1, 5, and 6 all have the same HD value of 0.",
+                highlight: [6, 7],
+                showHD: [1, 2, 3, 4, 5, 6, 7]
+            }
+        ];
+        
+        // Animation state
+        let currentStep = 0;
+        
+        // Create the tree visualization
+        function createTree() {
+            const animationContainer = document.getElementById('animation');
+            animationContainer.innerHTML = '';
+            
+            // Node positions (normalized for the container)
+            const nodePositions = {
+                1: { x: 50, y: 10 },  // Root
+                2: { x: 25, y: 30 },  // Left child of root
+                3: { x: 75, y: 30 },  // Right child of root
+                4: { x: 15, y: 50 },  // Left child of node 2
+                5: { x: 35, y: 50 },  // Right child of node 2
+                6: { x: 65, y: 50 },  // Left child of node 3
+                7: { x: 85, y: 50 }   // Right child of node 3
+            };
+            
+            const hdValues = {
+                1: 0,    // Root
+                2: -1,   // Left child of root
+                3: 1,    // Right child of root
+                4: -2,   // Left child of node 2
+                5: 0,    // Right child of node 2
+                6: 0,    // Left child of node 3
+                7: 2     // Right child of node 3
+            };
+            
+            // Create edges first so they appear behind nodes
+            createEdge(1, 2, nodePositions);
+            createEdge(1, 3, nodePositions);
+            createEdge(2, 4, nodePositions);
+            createEdge(2, 5, nodePositions);
+            createEdge(3, 6, nodePositions);
+            createEdge(3, 7, nodePositions);
+            
+            // Create nodes
+            for (let i = 1; i <= 7; i++) {
+                createNode(i, nodePositions[i], hdValues[i]);
+            }
+            
+            updateAnimation();
+        }
+        
+        function createNode(value, position, hdValue) {
+            const animationContainer = document.getElementById('animation');
+            
+            // Create node
+            const node = document.createElement('div');
+            node.className = 'node';
+            node.id = `node-${value}`;
+            node.textContent = value;
+            node.style.left = `${position.x}%`;
+            node.style.top = `${position.y}%`;
+            
+            // Create HD label
+            const hdLabel = document.createElement('div');
+            hdLabel.className = 'hd-label';
+            hdLabel.id = `hd-${value}`;
+            hdLabel.textContent = `HD=${hdValue}`;
+            hdLabel.style.left = `${position.x + 6}%`;
+            hdLabel.style.top = `${position.y - 8}%`;
+            
+            animationContainer.appendChild(node);
+            animationContainer.appendChild(hdLabel);
+        }
+        
+        function createEdge(fromNode, toNode, positions) {
+            const animationContainer = document.getElementById('animation');
+            
+            const edge = document.createElement('div');
+            edge.className = 'edge';
+            edge.id = `edge-${fromNode}-${toNode}`;
+            
+            const fromPos = positions[fromNode];
+            const toPos = positions[toNode];
+            
+            // Calculate edge properties
+            const length = Math.sqrt(
+                Math.pow((toPos.x - fromPos.x), 2) + 
+                Math.pow((toPos.y - fromPos.y), 2)
+            );
+            
+            const angle = Math.atan2(toPos.y - fromPos.y, toPos.x - fromPos.x) * 180 / Math.PI;
+            
+            // Position the edge
+            edge.style.width = `${length}%`;
+            edge.style.left = `${fromPos.x + 2.5}%`;
+            edge.style.top = `${fromPos.y + 2.5}%`;
+            edge.style.transform = `rotate(${angle}deg)`;
+            
+            animationContainer.appendChild(edge);
+        }
+        
+        function updateAnimation() {
+            const step = steps[currentStep];
+            
+            // Update step counter and text
+            document.getElementById('step-counter').textContent = step.title;
+            document.getElementById('step-text').textContent = step.text;
+            
+            // Reset all nodes
+            for (let i = 1; i <= 7; i++) {
+                const node = document.getElementById(`node-${i}`);
+                node.classList.remove('highlight');
+                
+                const hdLabel = document.getElementById(`hd-${i}`);
+                hdLabel.classList.remove('show');
+            }
+            
+            // Highlight nodes for current step
+            step.highlight.forEach(nodeId => {
+                const node = document.getElementById(`node-${nodeId}`);
+                node.classList.add('highlight');
+            });
+            
+            // Show HD labels for current step
+            step.showHD.forEach(nodeId => {
+                const hdLabel = document.getElementById(`hd-${nodeId}`);
+                hdLabel.classList.add('show');
+            });
+            
+            // Update button states
+            document.getElementById('prev-btn').disabled = currentStep === 0;
+            document.getElementById('next-btn').disabled = currentStep === steps.length - 1;
+        }
+        
+        // Event handlers for navigation buttons
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateAnimation();
+            }
+        });
+        
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateAnimation();
+            }
+        });
+        
+        // Initialize the visualization
+        window.onload = createTree;
+    </script>
+</body>
+</html>
