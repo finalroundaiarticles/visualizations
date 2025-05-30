@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deque Insertion Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .container {
+            width: 800px;
+            max-width: 90%;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .deque-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            position: relative;
+            height: 250px;
+        }
+        .deque {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .cell {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #FF4800;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 5px;
+            background-color: #FFFFFF;
+            transition: all 0.5s ease;
+            position: relative;
+            opacity: 0;
+            color: #000000;
+        }
+        .operation {
+            position: absolute;
+            top: -40px;
+            color: #FF4800;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .level-indicator {
+            position: absolute;
+            top: -80px;
+            color: #000000;
+            font-weight: bold;
+            font-size: 18px;
+            width: 100%;
+            text-align: center;
+        }
+        .arrow {
+            position: absolute;
+            width: 60px;
+            height: 30px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .arrow-left {
+            left: -70px;
+            top: 15px;
+        }
+        .arrow-right {
+            right: -70px;
+            top: 15px;
+        }
+        .explanation {
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            min-height: 100px;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            width: 300px;
+        }
+        .btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        .btn:hover {
+            background-color: #FD9F78;
+        }
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Deque Insertion Visualization</h1>
+        
+        <div class="deque-container">
+            <div class="level-indicator" id="levelIndicator">Level 0: Left-to-Right Insertion</div>
+            <div class="deque" id="deque">
+                <!-- Cells will be added here dynamically -->
+            </div>
+            <div class="operation" id="operation"></div>
+            <svg class="arrow arrow-left" id="arrowLeft" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30">
+                <defs>
+                    <marker id="arrowhead-left" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                        <polygon points="10 0, 0 3.5, 10 7" fill="#FF4800"/>
+                    </marker>
+                </defs>
+                <line x1="60" y1="15" x2="10" y2="15" stroke="#FF4800" stroke-width="3" marker-end="url(#arrowhead-left)"/>
+            </svg>
+            <svg class="arrow arrow-right" id="arrowRight" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30">
+                <defs>
+                    <marker id="arrowhead-right" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#FF4800"/>
+                    </marker>
+                </defs>
+                <line x1="0" y1="15" x2="50" y2="15" stroke="#FF4800" stroke-width="3" marker-end="url(#arrowhead-right)"/>
+            </svg>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            Welcome to the Deque Insertion Visualization. Click "Next" to begin.
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="btn" id="prevBtn" disabled>Previous</button>
+            <button class="btn" id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const steps = [
+            {
+                levelText: "Level 0: Left-to-Right Insertion",
+                operation: "append(3)",
+                explanation: "A deque (Double-Ended Queue) allows insertion and deletion at both ends. Here we're using append() which adds an element to the right end of the deque.",
+                dequeState: [3],
+                direction: "right"
+            },
+            {
+                levelText: "Level 1: Right-to-Left Insertion",
+                operation: "appendleft(20)",
+                explanation: "Now we're using appendleft() which adds an element to the left end of the deque. We've added 20 to the left side.",
+                dequeState: [20, 3],
+                direction: "left"
+            },
+            {
+                levelText: "Level 1: Right-to-Left Insertion",
+                operation: "appendleft(9)",
+                explanation: "We're continuing with appendleft() to add another element to the left end. We've added 9, which becomes the new leftmost element.",
+                dequeState: [9, 20, 3],
+                direction: "left"
+            },
+            {
+                levelText: "Level 2: Left-to-Right Insertion",
+                operation: "append(15)",
+                explanation: "Now we're back to using append() to add elements to the right end. We've added 15 to the right side.",
+                dequeState: [9, 20, 3, 15],
+                direction: "right"
+            },
+            {
+                levelText: "Level 2: Left-to-Right Insertion",
+                operation: "append(7)",
+                explanation: "We're continuing with append() to add another element to the right end. We've added 7, which becomes the new rightmost element.",
+                dequeState: [9, 20, 3, 15, 7],
+                direction: "right"
+            },
+            {
+                levelText: "Final Deque",
+                operation: "",
+                explanation: "The final deque after all insertions is [9, 20, 3, 15, 7]. We've demonstrated how elements can be added to both ends of a deque using append() and appendleft().",
+                dequeState: [9, 20, 3, 15, 7],
+                direction: "none"
+            }
+        ];
+
+        let currentStep = -1;
+        const dequeEl = document.getElementById('deque');
+        const operationEl = document.getElementById('operation');
+        const explanationEl = document.getElementById('explanation');
+        const levelIndicatorEl = document.getElementById('levelIndicator');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const arrowLeft = document.getElementById('arrowLeft');
+        const arrowRight = document.getElementById('arrowRight');
+
+        function updateDeque(state, direction, operation) {
+            // Clear previous deque
+            dequeEl.innerHTML = '';
+            
+            // Create cells for each element
+            state.forEach((value, index) => {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.textContent = value;
+                cell.style.opacity = '1';
+                dequeEl.appendChild(cell);
+            });
+            
+            // Update operation text
+            operationEl.textContent = operation;
+            operationEl.style.opacity = '1';
+            
+            // Show appropriate arrow
+            arrowLeft.style.opacity = direction === 'left' ? '1' : '0';
+            arrowRight.style.opacity = direction === 'right' ? '1' : '0';
+        }
+
+        function showStep(step) {
+            if (step < 0 || step >= steps.length) return;
+            
+            currentStep = step;
+            
+            const { levelText, operation, explanation, dequeState, direction } = steps[step];
+            
+            levelIndicatorEl.textContent = levelText;
+            explanationEl.textContent = explanation;
+            updateDeque(dequeState, direction, operation);
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                showStep(currentStep + 1);
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                showStep(currentStep - 1);
+            }
+        });
+
+        // Initialize with the first step
+        showStep(0);
+    </script>
+</body>
+</html>
