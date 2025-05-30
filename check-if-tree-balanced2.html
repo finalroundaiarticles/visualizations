@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Single-Pass Balance Checking Process</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background-color: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+        .explanation {
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        #animation-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        .node.active {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .node.unbalanced {
+            background-color: #000000;
+            color: #FFFFFF;
+            border-color: #FF4800;
+        }
+        .node.checked {
+            border-color: #00AA00;
+        }
+        .edge {
+            position: absolute;
+            background-color: #FF4800;
+            height: 2px;
+            transform-origin: 0 0;
+            transition: background-color 0.5s ease;
+        }
+        .edge.unbalanced {
+            background-color: #000000;
+        }
+        .result-label {
+            position: absolute;
+            font-size: 14px;
+            color: #000000;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 2px 5px;
+            border-radius: 4px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .result-label.visible {
+            opacity: 1;
+        }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-info {
+            background-color: #FFFFFF;
+            border: 2px solid #FF4800;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            max-width: 800px;
+            width: 100%;
+        }
+        .step-info h3 {
+            color: #FF4800;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Single-Pass Balance Checking Process</h1>
+        <div class="explanation">
+            <p>This animation demonstrates how a single-pass algorithm can check if a binary tree is balanced. 
+            A tree is balanced if the height difference between left and right subtrees is at most 1 for every node. 
+            The algorithm calculates heights and checks balance simultaneously, returning the height of the subtree 
+            if it's balanced, or -1 if any part is unbalanced.</p>
+        </div>
+        <div id="animation-container"></div>
+        <div class="buttons">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+        <div class="step-info" id="step-info">
+            <h3>Start Animation</h3>
+            <p>Click 'Next' to begin the visualization of the single-pass balance checking process.</p>
+        </div>
+    </div>
+
+    <script>
+        // Tree definition
+        const tree = {
+            value: 10,
+            left: {
+                value: 5,
+                left: {
+                    value: 3,
+                    left: null,
+                    right: null
+                },
+                right: {
+                    value: 7,
+                    left: null,
+                    right: null
+                }
+            },
+            right: {
+                value: 15,
+                left: null,
+                right: {
+                    value: 20,
+                    left: null,
+                    right: {
+                        value: 25,
+                        left: null,
+                        right: null
+                    }
+                }
+            }
+        };
+
+        // Animation container
+        const container = document.getElementById('animation-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepInfo = document.getElementById('step-info');
+
+        // Animation steps
+        const steps = [
+            {
+                title: "Initial Tree",
+                description: "Here's our binary tree. We will check if it's balanced using a single-pass algorithm that calculates heights and checks balance simultaneously."
+            },
+            {
+                title: "Start at Leaf Node (3)",
+                description: "We start by visiting the leaf node with value 3. Since it has no children, its height is 0. We return 0 to indicate it's balanced."
+            },
+            {
+                title: "Visit Leaf Node (7)",
+                description: "Next, we visit the leaf node with value 7. It has no children, so its height is 0. We return 0 to indicate it's balanced."
+            },
+            {
+                title: "Check Node (5)",
+                description: "Now we check node 5. Its left child (3) has height 0, and its right child (7) has height 0. The height difference is 0, so this subtree is balanced. We return 1 (max child height + 1)."
+            },
+            {
+                title: "Visit Leaf Node (15)",
+                description: "We visit node 15. It has no left child and has a right child. We'll check its right child first."
+            },
+            {
+                title: "Visit Node (20)",
+                description: "We visit node 20. It has no left child but has a right child. We'll check its right child."
+            },
+            {
+                title: "Visit Leaf Node (25)",
+                description: "We visit the leaf node with value 25. It has no children, so its height is 0. We return 0."
+            },
+            {
+                title: "Back to Node (20)",
+                description: "Node 20's right child (25) has height 0, and it has no left child (height -1). The height difference is 1, which is acceptable. This subtree is balanced with height 1."
+            },
+            {
+                title: "Back to Node (15)",
+                description: "Node 15 has no left child (height -1) and its right child (20) has height 1. The height difference is 2, which exceeds the allowed limit of 1. This subtree is unbalanced, so we return -1."
+            },
+            {
+                title: "Back to Root Node (10)",
+                description: "The root node's left child (5) has height 1, but its right child (15) returned -1, indicating an unbalanced subtree. Therefore, the entire tree is unbalanced."
+            },
+            {
+                title: "Final Result",
+                description: "The algorithm returns -1, indicating that the tree is not balanced. The imbalance occurs at node 15, where the height difference between its left and right subtrees is 2."
+            }
+        ];
+
+        let currentStep = 0;
+        let nodeElements = {};
+        let edgeElements = {};
+        let resultLabels = {};
+
+        // Draw the initial tree
+        function drawTree() {
+            const width = container.offsetWidth;
+            const height = container.offsetHeight;
+            
+            // Define positions
+            const positions = {
+                '10': { x: width / 2, y: 60 },
+                '5': { x: width / 4, y: 150 },
+                '15': { x: 3 * width / 4, y: 150 },
+                '3': { x: width / 8, y: 250 },
+                '7': { x: 3 * width / 8, y: 250 },
+                '20': { x: 7 * width / 8, y: 250 },
+                '25': { x: 7 * width / 8, y: 350 }
+            };
+
+            // Create nodes
+            function createNode(value, position) {
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.innerHTML = value;
+                node.style.left = `${position.x - 30}px`;
+                node.style.top = `${position.y - 30}px`;
+                container.appendChild(node);
+                
+                const resultLabel = document.createElement('div');
+                resultLabel.className = 'result-label';
+                resultLabel.style.left = `${position.x + 35}px`;
+                resultLabel.style.top = `${position.y}px`;
+                container.appendChild(resultLabel);
+                
+                nodeElements[value] = node;
+                resultLabels[value] = resultLabel;
+                
+                return node;
+            }
+
+            // Create edges
+            function createEdge(parentValue, childValue) {
+                const parent = positions[parentValue];
+                const child = positions[childValue];
+                
+                const dx = child.x - parent.x;
+                const dy = child.y - parent.y;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                const edge = document.createElement('div');
+                edge.className = 'edge';
+                edge.style.width = `${length}px`;
+                edge.style.left = `${parent.x}px`;
+                edge.style.top = `${parent.y}px`;
+                edge.style.transform = `rotate(${angle}deg)`;
+                container.appendChild(edge);
+                
+                edgeElements[`${parentValue}-${childValue}`] = edge;
+                
+                return edge;
+            }
+
+            // Create all nodes
+            createNode('10', positions['10']);
+            createNode('5', positions['5']);
+            createNode('15', positions['15']);
+            createNode('3', positions['3']);
+            createNode('7', positions['7']);
+            createNode('20', positions['20']);
+            createNode('25', positions['25']);
+            
+            // Create all edges
+            createEdge('10', '5');
+            createEdge('10', '15');
+            createEdge('5', '3');
+            createEdge('5', '7');
+            createEdge('15', '20');
+            createEdge('20', '25');
+        }
+
+        // Reset all nodes and edges
+        function resetAll() {
+            Object.values(nodeElements).forEach(node => {
+                node.className = 'node';
+            });
+            
+            Object.values(edgeElements).forEach(edge => {
+                edge.className = 'edge';
+            });
+            
+            Object.values(resultLabels).forEach(label => {
+                label.className = 'result-label';
+                label.textContent = '';
+            });
+        }
+
+        // Show specific step
+        function showStep(step) {
+            resetAll();
+            
+            const stepData = steps[step];
+            stepInfo.innerHTML = `<h3>${stepData.title}</h3><p>${stepData.description}</p>`;
+            
+            // Set active node and results based on the current step
+            switch(step) {
+                case 0: // Initial tree
+                    break;
+                    
+                case 1: // Node 3
+                    nodeElements['3'].classList.add('active');
+                    resultLabels['3'].textContent = 'Returns: 0';
+                    resultLabels['3'].classList.add('visible');
+                    break;
+                    
+                case 2: // Node 7
+                    nodeElements['3'].classList.add('checked');
+                    nodeElements['7'].classList.add('active');
+                    resultLabels['3'].textContent = 'Returns: 0';
+                    resultLabels['3'].classList.add('visible');
+                    resultLabels['7'].textContent = 'Returns: 0';
+                    resultLabels['7'].classList.add('visible');
+                    break;
+                    
+                case 3: // Node 5
+                    nodeElements['3'].classList.add('checked');
+                    nodeElements['7'].classList.add('checked');
+                    nodeElements['5'].classList.add('active');
+                    resultLabels['3'].textContent = 'Returns: 0';
+                    resultLabels['3'].classList.add('visible');
+                    resultLabels['7'].textContent = 'Returns: 0';
+                    resultLabels['7'].classList.add('visible');
+                    resultLabels['5'].textContent = 'Returns: 1';
+                    resultLabels['5'].classList.add('visible');
+                    break;
+                    
+                case 4: // Node 15
+                    nodeElements['3'].classList.add('checked');
+                    nodeElements['7'].classList.add('checked');
+                    nodeElements['5'].classList.add('checked');
+                    nodeElements['15'].classList.add('active');
+                    resultLabels['3'].textContent = 'Returns: 0';
+                    resultLabels['3'].classList.add('visible');
+                    resultLabels['7'].textContent = 'Returns: 0';
+                    resultLabels['7'].classList.add('visible');
+                    resultLabels['5'].textContent = 'Returns: 1';
+                    resultLabels['5'].classList.add('visible');
+                    break;
+                    
+                case 5: // Node 20
+                    nodeElements['3'].classList.add('checked');
+                    nodeElements['7'].classList.add('checked');
+                    nodeElements['5'].classList.add('checked');
+                    nodeElements['15'].classList.add('checked');
+                    nodeElements['20'].classList.add('active');
+                    resultLabels['3'].textContent = 'Returns: 0';
+                    resultLabels['3'].classList.add('visible');
+                    resultLabels['7'].textContent = 'Returns: 0';
+                    resultLabels['7'].classList.add('visible');
+                    resultLabels['5'].textContent = 'Returns: 1';
+                    resultLabels['5'].classList.add('visible');
+                    break;
+                    
+                case 6: // Node 25
+                    nodeElements['3'].classList.add('checked');
+                    nodeElements['7'].classList.add('checked');
+                    nodeElements['5'].classList.add('checked');
+                    nodeElements['15'].classList.add('checked');
+                    nodeElements['20'].classList.add('checked');
+                    nodeElements['25'].classList.add('active');
+                    resultLabels['3'].textContent = 'Returns: 0';
+                    resultLabels['3'].classList.add('visible');
+                    resultLabels['7'].textContent = 'Returns: 0';
+                    resultLabels['7'].classList.add('visible');
+                    resultLabels['5'].textContent = 'Returns: 1';
+                    resultLabels['5'].classList.add('visible');
+                    resultLabels['25'].textContent = 'Returns: 0';
+                    resultLabels['25'].classList.add('visible');
+                    break;
+                    
+                case 7: // Back to Node 20
+                    nodeElements['3'].classList.add('checked');
+                    nodeElements['7'].classList.add('checked');
+                    nodeElements['5'].classList.add('checked');
+                    nodeElements['15'].classList.add('checked');
+                    nodeElements['20'].classList.add('active');
+                    nodeElements['25'].classList.add('checked');
+                    resultLabels['3'].textContent = 'Returns: 0';
+                    resultLabels['3'].classList.add('visible');
+                    resultLabels['7'].textContent = 'Returns: 0';
+                    resultLabels['7'].classList.add('visible');
+                    resultLabels['5'].textContent = 'Returns: 1';
+                    resultLabels['5'].classList.add('visible');
+                    resultLabels['25'].textContent = 'Returns: 0';
+                    resultLabels['25'].classList.add('visible');
+                    resultLabels['20'].textContent = 'Returns: 1';
+                    resultLabels['20'].classList.add('visible');
+                    break;
+                    
+                case 8: // Back to Node 15
+                    nodeElements['3'].classList.add('checked');
+                    nodeElements['7'].classList.add('checked');
+                    nodeElements['5'].classList.add('checked');
+                    nodeElements['15'].classList.add('active', 'unbalanced');
+                    nodeElements['20'].classList.add('checked');
+                    nodeElements['25'].classList.add('checked');
+                    edgeElements['15-20'].classList.add('unbalanced');
+                    resultLabels['3'].textContent = 'Returns: 0';
+                    resultLabels['3'].classList.add('visible');
+                    resultLabels['7'].textContent = 'Returns: 0';
+                    resultLabels['7'].classList.add('visible');
+                    resultLabels['5'].textContent = 'Returns: 1';
+                    resultLabels['5'].classList.add('visible');
+                    resultLabels['25'].textContent = 'Returns: 0';
+                    resultLabels['25'].classList.add('visible');
+                    resultLabels['20'].textContent = 'Returns: 1';
+                    resultLabels['20'].classList.add('visible');
+                    resultLabels['15'].textContent = 'Returns: -1';
+                    resultLabels['15'].classList.add('visible');
+                    break;
+                    
+                case 9: // Back to Root Node 10
+                    nodeElements['3'].classList.add('checked');
+                    nodeElements['7'].classList.add('checked');
+                    nodeElements['5'].classList.add('checked');
+                    nodeElements['10'].classList.add('active', 'unbalanced');
+                    nodeElements['15'].classList.add('checked', 'unbalanced');
+                    nodeElements['20'].classList.add('checked');
+                    nodeElements['25'].classList.add('checked');
+                    edgeElements['15-20'].classList.add('unbalanced');
+                    edgeElements['10-15'].classList.add('unbalanced');
+                    resultLabels['3'].textContent = 'Returns: 0';
+                    resultLabels['3'].classList.add('visible');
+                    resultLabels['7'].textContent = 'Returns: 0';
+                    resultLabels['7'].classList.add('visible');
+                    resultLabels['5'].textContent = 'Returns: 1';
+                    resultLabels['5'].classList.add('visible');
+                    resultLabels['25'].textContent = 'Returns: 0';
+                    resultLabels['25'].classList.add('visible');
+                    resultLabels['20'].textContent = 'Returns: 1';
+                    resultLabels['20'].classList.add('visible');
+                    resultLabels['15'].textContent = 'Returns: -1';
+                    resultLabels['15'].classList.add('visible');
+                    resultLabels['10'].textContent = 'Returns: -1';
+                    resultLabels['10'].classList.add('visible');
+                    break;
+                    
+                case 10: // Final result
+                    nodeElements['3'].classList.add('checked');
+                    nodeElements['7'].classList.add('checked');
+                    nodeElements['5'].classList.add('checked');
+                    nodeElements['10'].classList.add('checked', 'unbalanced');
+                    nodeElements['15'].classList.add('checked', 'unbalanced');
+                    nodeElements['20'].classList.add('checked');
+                    nodeElements['25'].classList.add('checked');
+                    edgeElements['15-20'].classList.add('unbalanced');
+                    edgeElements['10-15'].classList.add('unbalanced');
+                    resultLabels['3'].textContent = 'Returns: 0';
+                    resultLabels['3'].classList.add('visible');
+                    resultLabels['7'].textContent = 'Returns: 0';
+                    resultLabels['7'].classList.add('visible');
+                    resultLabels['5'].textContent = 'Returns: 1';
+                    resultLabels['5'].classList.add('visible');
+                    resultLabels['25'].textContent = 'Returns: 0';
+                    resultLabels['25'].classList.add('visible');
+                    resultLabels['20'].textContent = 'Returns: 1';
+                    resultLabels['20'].classList.add('visible');
+                    resultLabels['15'].textContent = 'Returns: -1';
+                    resultLabels['15'].classList.add('visible');
+                    resultLabels['10'].textContent = 'Returns: -1';
+                    resultLabels['10'].classList.add('visible');
+                    break;
+            }
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+
+        // Initialize the animation
+        drawTree();
+        showStep(currentStep);
+
+        // Event listeners for the buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                showStep(currentStep);
+            }
+        });
+
+        // Responsive adjustments
+        window.addEventListener('resize', () => {
+            container.innerHTML = '';
+            Object.keys(nodeElements).forEach(key => delete nodeElements[key]);
+            Object.keys(edgeElements).forEach(key => delete edgeElements[key]);
+            Object.keys(resultLabels).forEach(key => delete resultLabels[key]);
+            drawTree();
+            showStep(currentStep);
+        });
+    </script>
+</body>
+</html>
