@@ -1,0 +1,360 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finding the Rightmost Non-9 Digit</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+        }
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        .animation-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            margin: 20px 0;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        .arrow {
+            position: absolute;
+            width: 50px;
+            height: 2px;
+            background-color: #000000;
+            transition: all 0.5s ease;
+        }
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid #000000;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        .explanation {
+            background-color: #FFFFFF;
+            color: #000000;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 2px solid #FF4800;
+            text-align: left;
+            min-height: 100px;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #FD9F78;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .highlight {
+            box-shadow: 0 0 10px 5px #FF4800;
+            animation: pulse 1s infinite;
+        }
+        .changed {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 10px 5px rgba(255, 72, 0, 0.5); }
+            50% { box-shadow: 0 0 15px 10px rgba(255, 72, 0, 0.7); }
+            100% { box-shadow: 0 0 10px 5px rgba(255, 72, 0, 0.5); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Finding the Rightmost Non-9 Digit</h1>
+        <div class="animation-container" id="animationContainer">
+            <!-- Nodes and arrows will be added dynamically -->
+        </div>
+        <div class="explanation" id="explanation">
+            Welcome to the visual guide of finding the rightmost non-9 digit in a linked list!
+            <br><br>
+            We'll start with a linked list: 1→9→9
+            <br><br>
+            Click "Next" to begin the animation.
+        </div>
+        <div class="controls">
+            <button class="btn" id="prevBtn" disabled>Previous</button>
+            <button class="btn" id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Animation steps
+        const steps = [
+            {
+                explanation: "Here's our linked list: 1→9→9. We need to find the rightmost non-9 digit, increment it, and set all subsequent digits to 0.",
+                nodes: [
+                    { id: 'node1', value: 1, x: 100, y: 150 },
+                    { id: 'node2', value: 9, x: 300, y: 150 },
+                    { id: 'node3', value: 9, x: 500, y: 150 }
+                ],
+                arrows: [
+                    { id: 'arrow1', from: 'node1', to: 'node2' },
+                    { id: 'arrow2', from: 'node2', to: 'node3' }
+                ],
+                highlights: []
+            },
+            {
+                explanation: "First, we scan through the list to find the rightmost non-9 digit. Let's start by examining the last node.",
+                nodes: [
+                    { id: 'node1', value: 1, x: 100, y: 150 },
+                    { id: 'node2', value: 9, x: 300, y: 150 },
+                    { id: 'node3', value: 9, x: 500, y: 150 }
+                ],
+                arrows: [
+                    { id: 'arrow1', from: 'node1', to: 'node2' },
+                    { id: 'arrow2', from: 'node2', to: 'node3' }
+                ],
+                highlights: ['node3']
+            },
+            {
+                explanation: "The last node contains 9, so we continue our search by examining the second node.",
+                nodes: [
+                    { id: 'node1', value: 1, x: 100, y: 150 },
+                    { id: 'node2', value: 9, x: 300, y: 150 },
+                    { id: 'node3', value: 9, x: 500, y: 150 }
+                ],
+                arrows: [
+                    { id: 'arrow1', from: 'node1', to: 'node2' },
+                    { id: 'arrow2', from: 'node2', to: 'node3' }
+                ],
+                highlights: ['node2']
+            },
+            {
+                explanation: "The second node also contains 9, so we continue our search by examining the first node.",
+                nodes: [
+                    { id: 'node1', value: 1, x: 100, y: 150 },
+                    { id: 'node2', value: 9, x: 300, y: 150 },
+                    { id: 'node3', value: 9, x: 500, y: 150 }
+                ],
+                arrows: [
+                    { id: 'arrow1', from: 'node1', to: 'node2' },
+                    { id: 'arrow2', from: 'node2', to: 'node3' }
+                ],
+                highlights: ['node1']
+            },
+            {
+                explanation: "The first node contains 1, which is not 9. This is the rightmost non-9 digit in our list.",
+                nodes: [
+                    { id: 'node1', value: 1, x: 100, y: 150 },
+                    { id: 'node2', value: 9, x: 300, y: 150 },
+                    { id: 'node3', value: 9, x: 500, y: 150 }
+                ],
+                arrows: [
+                    { id: 'arrow1', from: 'node1', to: 'node2' },
+                    { id: 'arrow2', from: 'node2', to: 'node3' }
+                ],
+                highlights: ['node1']
+            },
+            {
+                explanation: "Now, we increment this node's value by 1, changing it from 1 to 2.",
+                nodes: [
+                    { id: 'node1', value: 2, x: 100, y: 150, changed: true },
+                    { id: 'node2', value: 9, x: 300, y: 150 },
+                    { id: 'node3', value: 9, x: 500, y: 150 }
+                ],
+                arrows: [
+                    { id: 'arrow1', from: 'node1', to: 'node2' },
+                    { id: 'arrow2', from: 'node2', to: 'node3' }
+                ],
+                highlights: ['node1']
+            },
+            {
+                explanation: "Next, we need to set all digits to the right of our found digit to 0. Let's start with the second node.",
+                nodes: [
+                    { id: 'node1', value: 2, x: 100, y: 150 },
+                    { id: 'node2', value: 9, x: 300, y: 150 },
+                    { id: 'node3', value: 9, x: 500, y: 150 }
+                ],
+                arrows: [
+                    { id: 'arrow1', from: 'node1', to: 'node2' },
+                    { id: 'arrow2', from: 'node2', to: 'node3' }
+                ],
+                highlights: ['node2']
+            },
+            {
+                explanation: "We change the value of the second node from 9 to 0.",
+                nodes: [
+                    { id: 'node1', value: 2, x: 100, y: 150 },
+                    { id: 'node2', value: 0, x: 300, y: 150, changed: true },
+                    { id: 'node3', value: 9, x: 500, y: 150 }
+                ],
+                arrows: [
+                    { id: 'arrow1', from: 'node1', to: 'node2' },
+                    { id: 'arrow2', from: 'node2', to: 'node3' }
+                ],
+                highlights: ['node2']
+            },
+            {
+                explanation: "Finally, we change the value of the third node from 9 to 0.",
+                nodes: [
+                    { id: 'node1', value: 2, x: 100, y: 150 },
+                    { id: 'node2', value: 0, x: 300, y: 150 },
+                    { id: 'node3', value: 0, x: 500, y: 150, changed: true }
+                ],
+                arrows: [
+                    { id: 'arrow1', from: 'node1', to: 'node2' },
+                    { id: 'arrow2', from: 'node2', to: 'node3' }
+                ],
+                highlights: ['node3']
+            },
+            {
+                explanation: "We've successfully completed the operation! The original linked list 1→9→9 has been transformed to 2→0→0 by finding the rightmost non-9 digit (1), incrementing it to 2, and setting all subsequent digits to 0.",
+                nodes: [
+                    { id: 'node1', value: 2, x: 100, y: 150 },
+                    { id: 'node2', value: 0, x: 300, y: 150 },
+                    { id: 'node3', value: 0, x: 500, y: 150 }
+                ],
+                arrows: [
+                    { id: 'arrow1', from: 'node1', to: 'node2' },
+                    { id: 'arrow2', from: 'node2', to: 'node3' }
+                ],
+                highlights: []
+            }
+        ];
+
+        let currentStep = 0;
+        const container = document.getElementById('animationContainer');
+        const explanation = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        function renderStep(step) {
+            // Clear the container
+            container.innerHTML = '';
+            
+            // Add nodes
+            step.nodes.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.id = node.id;
+                nodeElement.className = 'node';
+                if (step.highlights.includes(node.id)) {
+                    nodeElement.classList.add('highlight');
+                }
+                if (node.changed) {
+                    nodeElement.classList.add('changed');
+                }
+                nodeElement.style.left = `${node.x}px`;
+                nodeElement.style.top = `${node.y}px`;
+                nodeElement.textContent = node.value;
+                container.appendChild(nodeElement);
+            });
+            
+            // Add arrows
+            step.arrows.forEach(arrow => {
+                const fromNode = document.getElementById(arrow.from);
+                const toNode = document.getElementById(arrow.to);
+                
+                if (fromNode && toNode) {
+                    const fromRect = fromNode.getBoundingClientRect();
+                    const toRect = toNode.getBoundingClientRect();
+                    
+                    const fromCenterX = fromNode.offsetLeft + fromNode.offsetWidth / 2;
+                    const fromCenterY = fromNode.offsetTop + fromNode.offsetHeight / 2;
+                    const toCenterX = toNode.offsetLeft + toNode.offsetWidth / 2;
+                    const toCenterY = toNode.offsetTop + toNode.offsetHeight / 2;
+                    
+                    const angle = Math.atan2(toCenterY - fromCenterY, toCenterX - fromCenterX);
+                    const length = Math.sqrt(Math.pow(toCenterX - fromCenterX, 2) + Math.pow(toCenterY - fromCenterY, 2)) - fromNode.offsetWidth / 2 - 10;
+                    
+                    const arrowElement = document.createElement('div');
+                    arrowElement.className = 'arrow';
+                    arrowElement.style.left = `${fromCenterX + (fromNode.offsetWidth / 2) * Math.cos(angle)}px`;
+                    arrowElement.style.top = `${fromCenterY + (fromNode.offsetHeight / 2) * Math.sin(angle)}px`;
+                    arrowElement.style.width = `${length}px`;
+                    arrowElement.style.transform = `rotate(${angle}rad)`;
+                    arrowElement.style.transformOrigin = 'left center';
+                    
+                    container.appendChild(arrowElement);
+                }
+            });
+            
+            // Update explanation
+            explanation.innerHTML = step.explanation;
+            
+            // Update buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+
+        function goToNextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                renderStep(steps[currentStep]);
+            }
+        }
+
+        function goToPrevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                renderStep(steps[currentStep]);
+            }
+        }
+
+        // Event listeners
+        nextBtn.addEventListener('click', goToNextStep);
+        prevBtn.addEventListener('click', goToPrevStep);
+
+        // Initialize with the first step
+        renderStep(steps[currentStep]);
+    </script>
+</body>
+</html>
