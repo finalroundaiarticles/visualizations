@@ -1,0 +1,475 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intersecting Linked Lists</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+        }
+
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .canvas-container {
+            position: relative;
+            height: 400px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            background-color: #FFFFFF;
+            overflow: hidden;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .explanation {
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #FD9F78;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #000000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Intersecting Linked Lists</h1>
+        <div class="canvas-container">
+            <canvas id="linkedListCanvas"></canvas>
+        </div>
+        <div class="explanation" id="explanation">
+            Welcome to the visualization of intersecting linked lists. We'll see how two different linked lists can share nodes.
+        </div>
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        <div class="step-indicator" id="stepIndicator">Step 1 of 5</div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('linkedListCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+
+        // Step management
+        let currentStep = 1;
+        const totalSteps = 5;
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const explanationEl = document.getElementById('explanation');
+        const stepIndicatorEl = document.getElementById('stepIndicator');
+
+        // Node class
+        class Node {
+            constructor(value, x, y, color = "#FF4800") {
+                this.value = value;
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.highlighted = false;
+                this.radius = 25;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+                ctx.fillStyle = this.highlighted ? "#FF4800" : this.color;
+                ctx.fill();
+                ctx.strokeStyle = "#000000";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.fillStyle = "#FFFFFF";
+                ctx.font = "18px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(this.value, this.x, this.y);
+            }
+        }
+
+        // Arrow class to connect nodes
+        function drawArrow(fromX, fromY, toX, toY, color = "#000000") {
+            const headLength = 15;
+            const angle = Math.atan2(toY - fromY, toX - fromX);
+            
+            // Draw line
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw arrowhead
+            ctx.beginPath();
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(toX - headLength * Math.cos(angle - Math.PI/6), toY - headLength * Math.sin(angle - Math.PI/6));
+            ctx.lineTo(toX - headLength * Math.cos(angle + Math.PI/6), toY - headLength * Math.sin(angle + Math.PI/6));
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+
+        // Label class for list names
+        function drawLabel(text, x, y, color = "#FF4800") {
+            ctx.fillStyle = color;
+            ctx.font = "bold 16px Arial";
+            ctx.textAlign = "left";
+            ctx.fillText(text, x, y);
+        }
+
+        // Define nodes for both lists
+        let nodeA, nodeB, nodeC, nodeD, nodeE, nodeF, nodeX, nodeY;
+        let list1Nodes = [];
+        let list2Nodes = [];
+        let intersectionNode;
+
+        function initializeNodes() {
+            // List 1 nodes
+            nodeA = new Node("A", 100, 100);
+            nodeB = new Node("B", 200, 100);
+            nodeC = new Node("C", 300, 100);
+            nodeD = new Node("D", 400, 150);
+            nodeE = new Node("E", 500, 150);
+            nodeF = new Node("F", 600, 150);
+            
+            // List 2 nodes
+            nodeX = new Node("X", 100, 200, "#FD9F78");
+            nodeY = new Node("Y", 200, 200, "#FD9F78");
+            
+            // Set up lists
+            list1Nodes = [nodeA, nodeB, nodeC, nodeD, nodeE, nodeF];
+            list2Nodes = [nodeX, nodeY, nodeD, nodeE, nodeF]; // Note: D, E, F are shared
+            
+            // Identify intersection node
+            intersectionNode = nodeD;
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function renderStep(step) {
+            clearCanvas();
+            
+            switch(step) {
+                case 1:
+                    // Initialize and show both lists separately
+                    explanationEl.textContent = "Let's visualize two separate linked lists. List 1 (top) has nodes A → B → C → D → E → F, and List 2 (bottom) has nodes X → Y → D → E → F.";
+                    
+                    // Draw List 1
+                    drawLabel("List 1", 50, 70);
+                    nodeA.draw();
+                    nodeB.draw();
+                    nodeC.draw();
+                    
+                    // Draw placeholder D, E, F for List 1
+                    const tempD1 = new Node("D", 400, 100);
+                    const tempE1 = new Node("E", 500, 100);
+                    const tempF1 = new Node("F", 600, 100);
+                    tempD1.draw();
+                    tempE1.draw();
+                    tempF1.draw();
+                    
+                    // Draw arrows for List 1
+                    drawArrow(nodeA.x + nodeA.radius, nodeA.y, nodeB.x - nodeB.radius, nodeB.y);
+                    drawArrow(nodeB.x + nodeB.radius, nodeB.y, nodeC.x - nodeC.radius, nodeC.y);
+                    drawArrow(nodeC.x + nodeC.radius, nodeC.y, tempD1.x - tempD1.radius, tempD1.y);
+                    drawArrow(tempD1.x + tempD1.radius, tempD1.y, tempE1.x - tempE1.radius, tempE1.y);
+                    drawArrow(tempE1.x + tempE1.radius, tempE1.y, tempF1.x - tempF1.radius, tempF1.y);
+                    
+                    // Draw List 2
+                    drawLabel("List 2", 50, 230, "#FD9F78");
+                    nodeX.draw();
+                    nodeY.draw();
+                    
+                    // Draw placeholder D, E, F for List 2
+                    const tempD2 = new Node("D", 300, 200, "#FD9F78");
+                    const tempE2 = new Node("E", 400, 200, "#FD9F78");
+                    const tempF2 = new Node("F", 500, 200, "#FD9F78");
+                    tempD2.draw();
+                    tempE2.draw();
+                    tempF2.draw();
+                    
+                    // Draw arrows for List 2
+                    drawArrow(nodeX.x + nodeX.radius, nodeX.y, nodeY.x - nodeY.radius, nodeY.y);
+                    drawArrow(nodeY.x + nodeY.radius, nodeY.y, tempD2.x - tempD2.radius, tempD2.y);
+                    drawArrow(tempD2.x + tempD2.radius, tempD2.y, tempE2.x - tempE2.radius, tempE2.y);
+                    drawArrow(tempE2.x + tempE2.radius, tempE2.y, tempF2.x - tempF2.radius, tempF2.y);
+                    break;
+                    
+                case 2:
+                    // Show both lists with the actual intersection
+                    explanationEl.textContent = "In reality, these lists share some nodes. Notice how both List 1 and List 2 converge at node D and continue with the same nodes afterward.";
+                    
+                    // Draw List 1
+                    drawLabel("List 1", 50, 70);
+                    nodeA.draw();
+                    nodeB.draw();
+                    nodeC.draw();
+                    
+                    // Draw shared nodes
+                    nodeD.draw();
+                    nodeE.draw();
+                    nodeF.draw();
+                    
+                    // Draw List 2
+                    drawLabel("List 2", 50, 230, "#FD9F78");
+                    nodeX.draw();
+                    nodeY.draw();
+                    
+                    // Draw arrows for List 1
+                    drawArrow(nodeA.x + nodeA.radius, nodeA.y, nodeB.x - nodeB.radius, nodeB.y);
+                    drawArrow(nodeB.x + nodeB.radius, nodeB.y, nodeC.x - nodeC.radius, nodeC.y);
+                    drawArrow(nodeC.x + nodeC.radius, nodeC.y, nodeD.x - nodeD.radius, nodeD.y - nodeD.radius/2);
+                    
+                    // Draw arrows for List 2
+                    drawArrow(nodeX.x + nodeX.radius, nodeX.y, nodeY.x - nodeY.radius, nodeY.y);
+                    drawArrow(nodeY.x + nodeY.radius, nodeY.y, nodeD.x - nodeD.radius, nodeD.y + nodeD.radius/2);
+                    
+                    // Draw arrows for shared part
+                    drawArrow(nodeD.x + nodeD.radius, nodeD.y, nodeE.x - nodeE.radius, nodeE.y);
+                    drawArrow(nodeE.x + nodeE.radius, nodeE.y, nodeF.x - nodeF.radius, nodeF.y);
+                    break;
+                    
+                case 3:
+                    // Highlight the intersection point
+                    explanationEl.textContent = "Node D is the intersection point - the first node that's common to both linked lists. From this point onward, both lists share the same nodes.";
+                    
+                    // Draw List 1
+                    drawLabel("List 1", 50, 70);
+                    nodeA.draw();
+                    nodeB.draw();
+                    nodeC.draw();
+                    
+                    // Draw shared nodes
+                    nodeD.highlighted = true;
+                    nodeD.draw();
+                    nodeD.highlighted = false;
+                    nodeE.draw();
+                    nodeF.draw();
+                    
+                    // Draw List 2
+                    drawLabel("List 2", 50, 230, "#FD9F78");
+                    nodeX.draw();
+                    nodeY.draw();
+                    
+                    // Draw arrows for List 1
+                    drawArrow(nodeA.x + nodeA.radius, nodeA.y, nodeB.x - nodeB.radius, nodeB.y);
+                    drawArrow(nodeB.x + nodeB.radius, nodeB.y, nodeC.x - nodeC.radius, nodeC.y);
+                    drawArrow(nodeC.x + nodeC.radius, nodeC.y, nodeD.x - nodeD.radius, nodeD.y - nodeD.radius/2);
+                    
+                    // Draw arrows for List 2
+                    drawArrow(nodeX.x + nodeX.radius, nodeX.y, nodeY.x - nodeY.radius, nodeY.y);
+                    drawArrow(nodeY.x + nodeY.radius, nodeY.y, nodeD.x - nodeD.radius, nodeD.y + nodeD.radius/2);
+                    
+                    // Draw arrows for shared part
+                    drawArrow(nodeD.x + nodeD.radius, nodeD.y, nodeE.x - nodeE.radius, nodeE.y);
+                    drawArrow(nodeE.x + nodeE.radius, nodeE.y, nodeF.x - nodeF.radius, nodeF.y);
+                    
+                    // Highlight intersection with text
+                    ctx.fillStyle = "#FF4800";
+                    ctx.font = "bold 16px Arial";
+                    ctx.fillText("Intersection Point", nodeD.x - 20, nodeD.y - 40);
+                    
+                    // Draw highlight circle around D
+                    ctx.beginPath();
+                    ctx.arc(nodeD.x, nodeD.y, nodeD.radius + 10, 0, 2 * Math.PI);
+                    ctx.strokeStyle = "#FF4800";
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    break;
+                    
+                case 4:
+                    // Show memory representation
+                    explanationEl.textContent = "In memory, this happens because both linked lists point to the same physical node objects. Node D and subsequent nodes are not duplicated - both lists reference the same memory locations.";
+                    
+                    // Draw List 1
+                    drawLabel("List 1", 50, 70);
+                    nodeA.draw();
+                    nodeB.draw();
+                    nodeC.draw();
+                    
+                    // Draw shared nodes
+                    nodeD.draw();
+                    nodeE.draw();
+                    nodeF.draw();
+                    
+                    // Draw List 2
+                    drawLabel("List 2", 50, 230, "#FD9F78");
+                    nodeX.draw();
+                    nodeY.draw();
+                    
+                    // Draw arrows for List 1
+                    drawArrow(nodeA.x + nodeA.radius, nodeA.y, nodeB.x - nodeB.radius, nodeB.y);
+                    drawArrow(nodeB.x + nodeB.radius, nodeB.y, nodeC.x - nodeC.radius, nodeC.y);
+                    drawArrow(nodeC.x + nodeC.radius, nodeC.y, nodeD.x - nodeD.radius, nodeD.y - nodeD.radius/2);
+                    
+                    // Draw arrows for List 2
+                    drawArrow(nodeX.x + nodeX.radius, nodeX.y, nodeY.x - nodeY.radius, nodeY.y);
+                    drawArrow(nodeY.x + nodeY.radius, nodeY.y, nodeD.x - nodeD.radius, nodeD.y + nodeD.radius/2);
+                    
+                    // Draw arrows for shared part
+                    drawArrow(nodeD.x + nodeD.radius, nodeD.y, nodeE.x - nodeE.radius, nodeE.y);
+                    drawArrow(nodeE.x + nodeE.radius, nodeE.y, nodeF.x - nodeF.radius, nodeF.y);
+                    
+                    // Add memory addresses to illustrate shared nodes
+                    ctx.fillStyle = "#000000";
+                    ctx.font = "12px Arial";
+                    ctx.fillText("Memory: 0x100", nodeA.x, nodeA.y + 45);
+                    ctx.fillText("Memory: 0x104", nodeB.x, nodeB.y + 45);
+                    ctx.fillText("Memory: 0x108", nodeC.x, nodeC.y + 45);
+                    ctx.fillText("Memory: 0x10C", nodeD.x, nodeD.y + 45);
+                    ctx.fillText("Memory: 0x110", nodeE.x, nodeE.y + 45);
+                    ctx.fillText("Memory: 0x114", nodeF.x, nodeF.y + 45);
+                    ctx.fillText("Memory: 0x118", nodeX.x, nodeX.y + 45);
+                    ctx.fillText("Memory: 0x11C", nodeY.x, nodeY.y + 45);
+                    break;
+                    
+                case 5:
+                    // Real-world applications
+                    explanationEl.textContent = "Intersecting linked lists have practical applications. For example, they can be used to detect cycles in networks, implement shared resources in memory-efficient ways, or model relationships in data structures where multiple paths lead to the same destination.";
+                    
+                    // Draw List 1
+                    drawLabel("List 1", 50, 70);
+                    nodeA.draw();
+                    nodeB.draw();
+                    nodeC.draw();
+                    
+                    // Draw shared nodes
+                    nodeD.draw();
+                    nodeE.draw();
+                    nodeF.draw();
+                    
+                    // Draw List 2
+                    drawLabel("List 2", 50, 230, "#FD9F78");
+                    nodeX.draw();
+                    nodeY.draw();
+                    
+                    // Draw arrows for List 1
+                    drawArrow(nodeA.x + nodeA.radius, nodeA.y, nodeB.x - nodeB.radius, nodeB.y);
+                    drawArrow(nodeB.x + nodeB.radius, nodeB.y, nodeC.x - nodeC.radius, nodeC.y);
+                    drawArrow(nodeC.x + nodeC.radius, nodeC.y, nodeD.x - nodeD.radius, nodeD.y - nodeD.radius/2);
+                    
+                    // Draw arrows for List 2
+                    drawArrow(nodeX.x + nodeX.radius, nodeX.y, nodeY.x - nodeY.radius, nodeY.y);
+                    drawArrow(nodeY.x + nodeY.radius, nodeY.y, nodeD.x - nodeD.radius, nodeD.y + nodeD.radius/2);
+                    
+                    // Draw arrows for shared part
+                    drawArrow(nodeD.x + nodeD.radius, nodeD.y, nodeE.x - nodeE.radius, nodeE.y);
+                    drawArrow(nodeE.x + nodeE.radius, nodeE.y, nodeF.x - nodeF.radius, nodeF.y);
+                    
+                    // Add application illustrations
+                    ctx.fillStyle = "#FD9F78";
+                    ctx.fillRect(400, 250, 200, 100);
+                    ctx.fillStyle = "#000000";
+                    ctx.font = "14px Arial";
+                    ctx.fillText("Real-world Applications:", 410, 270);
+                    ctx.font = "12px Arial";
+                    ctx.fillText("• Network topology analysis", 410, 290);
+                    ctx.fillText("• Memory-efficient data structures", 410, 310);
+                    ctx.fillText("• Detecting loops in structures", 410, 330);
+                    break;
+            }
+            
+            // Update step indicator
+            stepIndicatorEl.textContent = `Step ${currentStep} of ${totalSteps}`;
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                renderStep(currentStep);
+                prevBtn.disabled = false;
+                if (currentStep === totalSteps) {
+                    nextBtn.disabled = true;
+                }
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                renderStep(currentStep);
+                nextBtn.disabled = false;
+                if (currentStep === 1) {
+                    prevBtn.disabled = true;
+                }
+            }
+        }
+
+        // Initialize and set up event listeners
+        initializeNodes();
+        renderStep(currentStep);
+        
+        prevBtn.addEventListener('click', prevStep);
+        nextBtn.addEventListener('click', nextStep);
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            renderStep(currentStep);
+        });
+    </script>
+</body>
+</html>
