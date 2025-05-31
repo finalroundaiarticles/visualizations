@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Tree to BST Transformation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1, h3 {
+            color: #000000;
+            text-align: center;
+        }
+        
+        #container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 900px;
+        }
+        
+        #animation-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 500px;
+            width: 100%;
+            position: relative;
+        }
+        
+        #explanation {
+            margin: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #FD9F78;
+            color: #000000;
+            max-width: 800px;
+        }
+        
+        .node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            font-weight: bold;
+            transition: all 0.8s ease;
+        }
+        
+        .edge {
+            position: absolute;
+            background-color: #000000;
+            height: 2px;
+            transform-origin: 0 0;
+            transition: all 0.8s ease;
+        }
+        
+        .arrow {
+            position: absolute;
+            width: 60px;
+            height: 30px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .arrow-line {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background-color: #FF4800;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .arrow-head {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+            border-left: 15px solid #FF4800;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .btn:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .labels {
+            position: absolute;
+            font-weight: bold;
+            font-size: 18px;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Binary Tree to BST Transformation</h1>
+        
+        <div id="animation-container">
+            <div class="labels" style="top: 10px; left: 200px;">Original Binary Tree</div>
+            <div class="labels" style="top: 10px; right: 200px;">Transformed BST</div>
+        </div>
+        
+        <div id="explanation">
+            <h3 id="step-title">Introduction</h3>
+            <p id="step-description">This visualization shows how to convert a Binary Tree to a Binary Search Tree (BST) while maintaining the original tree structure. We'll transform the tree with node values [5, 6, 2, 3, 7, 4, 1] into a BST.</p>
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" class="btn" disabled>Previous</button>
+            <button id="nextBtn" class="btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const steps = [
+            {
+                title: "Introduction",
+                description: "This visualization shows how to convert a Binary Tree to a Binary Search Tree (BST) while maintaining the original tree structure. We'll transform the tree with node values [5, 6, 2, 3, 7, 4, 1] into a BST."
+            },
+            {
+                title: "Original Binary Tree",
+                description: "Here is our original binary tree. In this tree, the nodes are not arranged according to the BST property, which requires all left child nodes to be smaller than their parent and all right child nodes to be greater than their parent."
+            },
+            {
+                title: "Inorder Traversal",
+                description: "First, we perform an inorder traversal of the original binary tree to get the values in sorted order. The inorder traversal gives us: [1, 2, 3, 4, 5, 6, 7]."
+            },
+            {
+                title: "Transformation Process - Step 1",
+                description: "We will replace the node values in the original tree with values from the sorted array, following the same inorder traversal. The first swap replaces value 5 with 3.",
+                swaps: [[0, 0]]
+            },
+            {
+                title: "Transformation Process - Step 2",
+                description: "The next swap replaces value 6 with 2.",
+                swaps: [[1, 1]]
+            },
+            {
+                title: "Transformation Process - Step 3",
+                description: "The next swap replaces value 2 with 5.",
+                swaps: [[2, 2]]
+            },
+            {
+                title: "Transformation Process - Step 4",
+                description: "The next swap replaces value 3 with 1.",
+                swaps: [[3, 3]]
+            },
+            {
+                title: "Transformation Process - Step 5",
+                description: "The next swap replaces value 7 with 4.",
+                swaps: [[4, 4]]
+            },
+            {
+                title: "Transformation Process - Step 6",
+                description: "The next swap replaces value 4 with 6.",
+                swaps: [[5, 5]]
+            },
+            {
+                title: "Transformation Process - Step 7",
+                description: "The final swap replaces value 1 with 7.",
+                swaps: [[6, 6]]
+            },
+            {
+                title: "Completed BST",
+                description: "Now we have successfully transformed the binary tree into a BST without changing its structure. Notice that if we perform an inorder traversal on this BST, we get the sorted sequence [1, 2, 3, 4, 5, 6, 7]."
+            },
+            {
+                title: "BST Property Verification",
+                description: "In a BST, all nodes in the left subtree of any node should have values less than the node, and all nodes in the right subtree should have values greater than the node. Our transformed tree now satisfies this property."
+            }
+        ];
+
+        const originalTreeStructure = [
+            { id: 0, value: 5, x: 150, y: 80, left: 1, right: 2 },
+            { id: 1, value: 6, x: 80, y: 160, left: 3, right: 4 },
+            { id: 2, value: 2, x: 220, y: 160, left: 5, right: 6 },
+            { id: 3, value: 3, x: 40, y: 240, left: null, right: null },
+            { id: 4, value: 7, x: 120, y: 240, left: null, right: null },
+            { id: 5, value: 4, x: 180, y: 240, left: null, right: null },
+            { id: 6, value: 1, x: 260, y: 240, left: null, right: null }
+        ];
+
+        const bstValues = [3, 2, 5, 1, 4, 6, 7]; // Target BST values
+
+        let currentStep = 0;
+        let nodes = [];
+        let edges = [];
+        let arrows = [];
+        
+        function init() {
+            const container = document.getElementById('animation-container');
+            
+            // Create original tree nodes and edges
+            originalTreeStructure.forEach(node => {
+                const nodeElem = document.createElement('div');
+                nodeElem.className = 'node';
+                nodeElem.textContent = node.value;
+                nodeElem.style.left = `${node.x}px`;
+                nodeElem.style.top = `${node.y}px`;
+                container.appendChild(nodeElem);
+                nodes.push(nodeElem);
+                
+                // Create edges
+                if (node.left !== null) {
+                    createEdge(container, node, originalTreeStructure[node.left]);
+                }
+                if (node.right !== null) {
+                    createEdge(container, node, originalTreeStructure[node.right]);
+                }
+            });
+            
+            // Create clone of the tree for BST (offset to the right)
+            const xOffset = 400;
+            originalTreeStructure.forEach((node, idx) => {
+                const nodeElem = document.createElement('div');
+                nodeElem.className = 'node';
+                nodeElem.textContent = node.value;
+                nodeElem.style.left = `${node.x + xOffset}px`;
+                nodeElem.style.top = `${node.y}px`;
+                container.appendChild(nodeElem);
+                nodes.push(nodeElem);
+                
+                // Create edges
+                if (node.left !== null) {
+                    createEdge(container, 
+                              { x: node.x + xOffset, y: node.y }, 
+                              { x: originalTreeStructure[node.left].x + xOffset, y: originalTreeStructure[node.left].y });
+                }
+                if (node.right !== null) {
+                    createEdge(container, 
+                              { x: node.x + xOffset, y: node.y }, 
+                              { x: originalTreeStructure[node.right].x + xOffset, y: originalTreeStructure[node.right].y });
+                }
+            });
+            
+            // Create swap arrows
+            for (let i = 0; i < originalTreeStructure.length; i++) {
+                const arrow = document.createElement('div');
+                arrow.className = 'arrow';
+                arrow.style.left = `${originalTreeStructure[i].x + 50}px`;
+                arrow.style.top = `${originalTreeStructure[i].y}px`;
+                
+                const arrowLine = document.createElement('div');
+                arrowLine.className = 'arrow-line';
+                arrow.appendChild(arrowLine);
+                
+                const arrowHead = document.createElement('div');
+                arrowHead.className = 'arrow-head';
+                arrow.appendChild(arrowHead);
+                
+                container.appendChild(arrow);
+                arrows.push(arrow);
+            }
+            
+            updateStep();
+        }
+        
+        function createEdge(container, fromNode, toNode) {
+            const edge = document.createElement('div');
+            edge.className = 'edge';
+            
+            const dx = toNode.x - fromNode.x;
+            const dy = toNode.y - fromNode.y;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            
+            edge.style.width = `${length}px`;
+            edge.style.left = `${fromNode.x + 20}px`;
+            edge.style.top = `${fromNode.y + 20}px`;
+            edge.style.transform = `rotate(${angle}deg)`;
+            
+            container.appendChild(edge);
+            edges.push(edge);
+        }
+        
+        function updateStep() {
+            document.getElementById('step-title').textContent = steps[currentStep].title;
+            document.getElementById('step-description').textContent = steps[currentStep].description;
+            
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === steps.length - 1;
+            
+            // Hide all arrows
+            arrows.forEach(arrow => {
+                arrow.style.opacity = '0';
+            });
+            
+            // If there are swaps in this step, show them
+            if (steps[currentStep].swaps) {
+                steps[currentStep].swaps.forEach(swap => {
+                    arrows[swap[0]].style.opacity = '1';
+                    
+                    // Update the value in the BST tree
+                    nodes[swap[0] + originalTreeStructure.length].textContent = bstValues[swap[0]];
+                });
+            }
+            
+            // For the final step, make sure all BST nodes have their final values
+            if (currentStep >= steps.length - 2) {
+                for (let i = 0; i < originalTreeStructure.length; i++) {
+                    nodes[i + originalTreeStructure.length].textContent = bstValues[i];
+                }
+            }
+        }
+        
+        document.getElementById('nextBtn').addEventListener('click', function() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateStep();
+            }
+        });
+        
+        document.getElementById('prevBtn').addEventListener('click', function() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        });
+        
+        window.onload = init;
+    </script>
+</body>
+</html>
