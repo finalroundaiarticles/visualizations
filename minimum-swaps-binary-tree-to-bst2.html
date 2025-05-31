@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cycle Detection for Minimum Swaps</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .array-box {
+            display: flex;
+            flex-direction: column;
+            margin: 0 10px;
+        }
+        .array-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-align: center;
+            color: #000000;
+        }
+        .array-element {
+            width: 40px;
+            height: 40px;
+            margin: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #000000;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+        .array-element.highlight {
+            background-color: #FD9F78;
+            transform: scale(1.1);
+        }
+        .array-element.swap {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .array-indices {
+            display: flex;
+            justify-content: center;
+        }
+        .index-element {
+            width: 40px;
+            height: 20px;
+            margin: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            color: #777;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+            background-color: rgba(253, 159, 120, 0.1);
+        }
+        .cycle {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .cycle-element {
+            width: 40px;
+            height: 40px;
+            margin: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #000000;
+            border-radius: 50%;
+            font-weight: bold;
+            position: relative;
+        }
+        .cycle-arrow {
+            position: absolute;
+            top: 50%;
+            right: -20px;
+            transform: translateY(-50%);
+            color: #FF4800;
+            font-size: 20px;
+        }
+        .counter {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FF4800;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .cycle-container {
+            margin-top: 20px;
+        }
+        .current-cycle {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cycle Detection for Minimum Swaps</h1>
+        
+        <div class="explanation" id="explanation">
+            Welcome to Cycle Detection for Minimum Swaps! This animation demonstrates how to find the minimum number of swaps required to sort an array by detecting cycles.
+        </div>
+        
+        <div class="array-container">
+            <div class="array-box">
+                <div class="array-label">Original Array</div>
+                <div class="array-indices" id="original-indices"></div>
+                <div class="array-elements" id="original-array"></div>
+            </div>
+            
+            <div class="array-box">
+                <div class="array-label">Target Array</div>
+                <div class="array-indices" id="target-indices"></div>
+                <div class="array-elements" id="target-array"></div>
+            </div>
+        </div>
+        
+        <div class="counter" id="swap-counter">Swaps: 0</div>
+        
+        <div class="cycle-container">
+            <div class="array-label">Current Cycle</div>
+            <div class="current-cycle" id="current-cycle"></div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prev-btn" disabled>Previous</button>
+            <button class="nav-button" id="next-btn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        // Original and target arrays
+        const originalArray = [6, 3, 7, 2, 1, 4, 5];
+        const targetArray = [1, 2, 3, 4, 5, 6, 7];
+        
+        // Create an array that maps original values to their positions
+        let positions = {};
+        for (let i = 0; i < originalArray.length; i++) {
+            positions[originalArray[i]] = i;
+        }
+        
+        // States for animation
+        const states = [];
+        let currentState = -1;
+        let swapCount = 0;
+        
+        // Build the initial state
+        states.push({
+            original: [...originalArray],
+            highlight: [],
+            cycleElements: [],
+            swaps: 0,
+            explanation: "We want to find the minimum number of swaps to sort the array [6, 3, 7, 2, 1, 4, 5] to [1, 2, 3, 4, 5, 6, 7]. We'll use cycle detection to do this."
+        });
+        
+        // Add explanation of the concept
+        states.push({
+            original: [...originalArray],
+            highlight: [],
+            cycleElements: [],
+            swaps: 0,
+            explanation: "A cycle occurs when elements form a circular dependency for swapping. For example, if A needs to be where B is, B needs to be where C is, and C needs to be where A is, that's a cycle of length 3."
+        });
+        
+        states.push({
+            original: [...originalArray],
+            highlight: [],
+            cycleElements: [],
+            swaps: 0,
+            explanation: "For each cycle of length N, we need (N-1) swaps to put all elements in their correct positions. We'll detect all cycles and count the swaps."
+        });
+        
+        // Track visited elements
+        const visited = new Array(originalArray.length).fill(false);
+        
+        // Detect cycles
+        for (let i = 0; i < originalArray.length; i++) {
+            if (visited[i] || originalArray[i] === targetArray[i]) continue;
+            
+            let j = i;
+            let cycleSize = 0;
+            let cycleElements = [];
+            
+            // Trace the cycle
+            while (!visited[j]) {
+                visited[j] = true;
+                
+                // Find where this element should go in the target array
+                const targetIndex = positions[targetArray[j]];
+                
+                states.push({
+                    original: [...originalArray],
+                    highlight: [j],
+                    cycleElements: [...cycleElements],
+                    swaps: swapCount,
+                    explanation: `Examining element ${originalArray[j]} at index ${j}. It should be at the position where ${targetArray[j]} is in the original array.`
+                });
+                
+                cycleElements.push({
+                    value: originalArray[j],
+                    index: j
+                });
+                
+                // If the element is already in correct position, we're done with this element
+                if (j === targetIndex) {
+                    states.push({
+                        original: [...originalArray],
+                        highlight: [j],
+                        cycleElements: [...cycleElements],
+                        swaps: swapCount,
+                        explanation: `Element ${originalArray[j]} is already in its correct position.`
+                    });
+                    break;
+                }
+                
+                j = targetIndex;
+                cycleSize++;
+            }
+            
+            // Complete the cycle if it exists
+            if (cycleSize > 0) {
+                states.push({
+                    original: [...originalArray],
+                    highlight: cycleElements.map(e => e.index),
+                    cycleElements: [...cycleElements],
+                    swaps: swapCount,
+                    explanation: `Found a cycle of length ${cycleSize + 1}. The cycle contains elements: ${cycleElements.map(e => e.value).join(' → ')}.`
+                });
+                
+                // Number of swaps required for this cycle
+                const swapsRequired = cycleSize;
+                swapCount += swapsRequired;
+                
+                states.push({
+                    original: [...originalArray],
+                    highlight: cycleElements.map(e => e.index),
+                    cycleElements: [...cycleElements],
+                    swaps: swapCount,
+                    explanation: `For a cycle of length ${cycleSize + 1}, we need ${swapsRequired} swaps to sort it.`
+                });
+            }
+        }
+        
+        // Final state
+        states.push({
+            original: [...targetArray],
+            highlight: [],
+            cycleElements: [],
+            swaps: swapCount,
+            explanation: `Total minimum swaps required: ${swapCount}. All elements are now in their correct positions.`
+        });
+        
+        // Initialize the visualization
+        function initializeVisualization() {
+            const originalIndicesContainer = document.getElementById('original-indices');
+            const originalArrayContainer = document.getElementById('original-array');
+            const targetIndicesContainer = document.getElementById('target-indices');
+            const targetArrayContainer = document.getElementById('target-array');
+            
+            // Create indices
+            for (let i = 0; i < originalArray.length; i++) {
+                const indexElement = document.createElement('div');
+                indexElement.className = 'index-element';
+                indexElement.textContent = i;
+                originalIndicesContainer.appendChild(indexElement);
+                
+                const targetIndexElement = document.createElement('div');
+                targetIndexElement.className = 'index-element';
+                targetIndexElement.textContent = i;
+                targetIndicesContainer.appendChild(targetIndexElement);
+            }
+            
+            // Create original array elements
+            for (let i = 0; i < originalArray.length; i++) {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.textContent = originalArray[i];
+                element.id = `original-${i}`;
+                originalArrayContainer.appendChild(element);
+            }
+            
+            // Create target array elements
+            for (let i = 0; i < targetArray.length; i++) {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.textContent = targetArray[i];
+                targetArrayContainer.appendChild(element);
+            }
+            
+            // Initialize with first state
+            updateState(0);
+        }
+        
+        function updateState(stateIndex) {
+            if (stateIndex < 0 || stateIndex >= states.length) return;
+            
+            currentState = stateIndex;
+            const state = states[currentState];
+            
+            // Update buttons
+            document.getElementById('prev-btn').disabled = currentState === 0;
+            document.getElementById('next-btn').disabled = currentState === states.length - 1;
+            
+            // Update original array
+            for (let i = 0; i < state.original.length; i++) {
+                const element = document.getElementById(`original-${i}`);
+                element.textContent = state.original[i];
+                element.className = 'array-element';
+                
+                if (state.highlight.includes(i)) {
+                    element.classList.add('highlight');
+                }
+            }
+            
+            // Update swap counter
+            document.getElementById('swap-counter').textContent = `Swaps: ${state.swaps}`;
+            
+            // Update explanation
+            document.getElementById('explanation').textContent = state.explanation;
+            
+            // Update cycle visualization
+            updateCycleVisualization(state.cycleElements);
+        }
+        
+        function updateCycleVisualization(cycleElements) {
+            const cycleContainer = document.getElementById('current-cycle');
+            cycleContainer.innerHTML = '';
+            
+            if (cycleElements.length === 0) return;
+            
+            for (let i = 0; i < cycleElements.length; i++) {
+                const element = document.createElement('div');
+                element.className = 'cycle-element';
+                element.textContent = cycleElements[i].value;
+                
+                if (i < cycleElements.length - 1) {
+                    const arrow = document.createElement('span');
+                    arrow.className = 'cycle-arrow';
+                    arrow.innerHTML = '→';
+                    element.appendChild(arrow);
+                } else if (cycleElements.length > 1) {
+                    // Add an arrow back to the first element to complete the cycle
+                    const arrow = document.createElement('span');
+                    arrow.className = 'cycle-arrow';
+                    arrow.innerHTML = '↩';
+                    element.appendChild(arrow);
+                }
+                
+                cycleContainer.appendChild(element);
+            }
+        }
+        
+        // Event listeners for navigation buttons
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            updateState(currentState - 1);
+        });
+        
+        document.getElementById('next-btn').addEventListener('click', () => {
+            updateState(currentState + 1);
+        });
+        
+        // Initialize the visualization
+        window.onload = initializeVisualization;
+    </script>
+</body>
+</html>
