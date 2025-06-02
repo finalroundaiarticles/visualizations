@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Tree with K-Sum Paths</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 20px auto;
+        }
+        
+        .explanation {
+            margin-bottom: 20px;
+            color: #000000;
+            text-align: center;
+            font-size: 18px;
+        }
+        
+        .canvas-container {
+            width: 100%;
+            height: 500px;
+            position: relative;
+        }
+        
+        canvas {
+            border: 1px solid #FD9F78;
+            border-radius: 8px;
+            background-color: #FFFFFF;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        
+        .nav-button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #000000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Binary Tree with K-Sum Paths (K=8)</h1>
+    
+    <div class="container">
+        <div class="explanation" id="explanation">
+            A Binary Tree structure with values showing paths that sum to K=8
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="treeCanvas" width="900" height="500"></canvas>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">Step 1/4</div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prevButton" disabled>Previous</button>
+            <button class="nav-button" id="nextButton">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        // Get the canvas and context
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Tree node class
+        class TreeNode {
+            constructor(value) {
+                this.value = value;
+                this.left = null;
+                this.right = null;
+            }
+        }
+        
+        // Create the example tree
+        function createTree() {
+            const root = new TreeNode(1);
+            root.left = new TreeNode(3);
+            root.right = new TreeNode(7);
+            root.left.left = new TreeNode(-1);
+            root.left.right = new TreeNode(2);
+            root.left.right.left = new TreeNode(1);
+            root.left.right.right = new TreeNode(1);
+            root.right.left = new TreeNode(4);
+            root.right.right = new TreeNode(5);
+            return root;
+        }
+        
+        const tree = createTree();
+        
+        // Animation steps
+        let currentStep = 1;
+        const totalSteps = 4;
+        
+        const explanations = [
+            "This is a binary tree with node values 1, 3, -1, 2, 1, 1, 4, 7, 5. We want to find paths that sum to K=8.",
+            "Traversing the tree to find paths that sum to K=8. The blue highlight shows nodes being examined.",
+            "First path found: [1, 3, 2, 1, 1] = 8. This path is highlighted in orange.",
+            "Second path found: [1, 7] = 8. Both valid K-sum paths are highlighted."
+        ];
+        
+        // Navigation buttons
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+        const stepIndicator = document.getElementById('stepIndicator');
+        const explanationText = document.getElementById('explanation');
+        
+        prevButton.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateUI();
+            }
+        });
+        
+        nextButton.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateUI();
+            }
+        });
+        
+        function updateUI() {
+            // Update buttons
+            prevButton.disabled = currentStep === 1;
+            nextButton.disabled = currentStep === totalSteps;
+            
+            // Update step indicator
+            stepIndicator.textContent = `Step ${currentStep}/${totalSteps}`;
+            
+            // Update explanation
+            explanationText.textContent = explanations[currentStep - 1];
+            
+            // Redraw the tree
+            drawTree();
+        }
+        
+        // Draw tree function
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const nodeRadius = 25;
+            const levelHeight = 100;
+            const startX = canvas.width / 2;
+            const startY = 60;
+            
+            // Draw the tree structure
+            drawNode(tree, startX, startY, 220, nodeRadius, levelHeight);
+            
+            // Draw the paths based on current step
+            if (currentStep >= 2) {
+                // Step 2: Blue highlight for traversal
+                const traversalColor = '#3498db'; // Blue for traversal
+                
+                if (currentStep === 2) {
+                    // Just highlight all nodes in blue to show traversal
+                    highlightPath(tree, startX, startY, 220, nodeRadius, levelHeight, traversalColor);
+                }
+                
+                // Step 3: First path found
+                if (currentStep >= 3) {
+                    // Path 1: [1, 3, 2, 1, 1]
+                    const path1 = [
+                        { node: tree, x: startX, y: startY },
+                        { node: tree.left, x: startX - 220, y: startY + levelHeight },
+                        { node: tree.left.right, x: (startX - 220) + 110, y: startY + 2 * levelHeight },
+                        { node: tree.left.right.left, x: (startX - 220) + 110 - 55, y: startY + 3 * levelHeight },
+                        { node: tree.left.right.right, x: (startX - 220) + 110 + 55, y: startY + 3 * levelHeight }
+                    ];
+                    
+                    drawPath(path1, '#FF4800');
+                }
+                
+                // Step 4: Second path found
+                if (currentStep === 4) {
+                    // Path 2: [1, 7]
+                    const path2 = [
+                        { node: tree, x: startX, y: startY },
+                        { node: tree.right, x: startX + 220, y: startY + levelHeight }
+                    ];
+                    
+                    drawPath(path2, '#FF4800');
+                }
+            }
+        }
+        
+        function drawNode(node, x, y, width, radius, levelHeight) {
+            if (!node) return;
+            
+            // Draw connecting lines to children
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            
+            if (node.left) {
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x - width/2, y + levelHeight);
+                ctx.stroke();
+                drawNode(node.left, x - width/2, y + levelHeight, width/2, radius, levelHeight);
+            }
+            
+            if (node.right) {
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + width/2, y + levelHeight);
+                ctx.stroke();
+                drawNode(node.right, x + width/2, y + levelHeight, width/2, radius, levelHeight);
+            }
+            
+            // Draw node circle
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+            
+            // Draw node value
+            ctx.font = '18px Arial';
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.value, x, y);
+        }
+        
+        function highlightPath(node, x, y, width, radius, levelHeight, color) {
+            if (!node) return;
+            
+            // Highlight current node
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.globalAlpha = 0.3;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            
+            // Recursively highlight children
+            if (node.left) {
+                highlightPath(node.left, x - width/2, y + levelHeight, width/2, radius, levelHeight, color);
+            }
+            
+            if (node.right) {
+                highlightPath(node.right, x + width/2, y + levelHeight, width/2, radius, levelHeight, color);
+            }
+        }
+        
+        function drawPath(path, color) {
+            // Draw the line connecting the path nodes
+            ctx.beginPath();
+            ctx.moveTo(path[0].x, path[0].y);
+            
+            for (let i = 1; i < path.length; i++) {
+                ctx.lineTo(path[i].x, path[i].y);
+            }
+            
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 5;
+            ctx.stroke();
+            
+            // Highlight the nodes in the path
+            for (const point of path) {
+                // Highlight circle
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 30, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.globalAlpha = 0.3;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                
+                // Re-draw node value
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 25, 0, Math.PI * 2);
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fill();
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Draw node value
+                ctx.font = '18px Arial';
+                ctx.fillStyle = '#000000';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(point.node.value, point.x, point.y);
+            }
+            
+            // Show the sum calculation
+            let sum = 0;
+            let sumText = '';
+            
+            for (let i = 0; i < path.length; i++) {
+                sum += path[i].node.value;
+                sumText += path[i].node.value;
+                if (i < path.length - 1) sumText += ' + ';
+            }
+            
+            sumText += ' = ' + sum;
+            
+            // Position the sum text
+            const lastNode = path[path.length - 1];
+            const textX = lastNode.x + 80;
+            const textY = lastNode.y;
+            
+            // Draw a background for the text
+            const textWidth = ctx.measureText(sumText).width;
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(textX - 5, textY - 15, textWidth + 10, 30);
+            ctx.strokeStyle = color;
+            ctx.strokeRect(textX - 5, textY - 15, textWidth + 10, 30);
+            
+            // Draw the text
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'left';
+            ctx.fillText(sumText, textX, textY);
+        }
+        
+        // Initial draw
+        updateUI();
+    </script>
+</body>
+</html>
