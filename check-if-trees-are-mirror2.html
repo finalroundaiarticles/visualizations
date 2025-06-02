@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mirror Comparison Recursive Process</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            position: relative;
+        }
+        .animation-container {
+            width: 100%;
+            height: 500px;
+            position: relative;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .step-info {
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            min-height: 60px;
+        }
+        .tree-container {
+            display: flex;
+            justify-content: space-around;
+            height: 400px;
+        }
+        .tree {
+            width: 45%;
+            height: 400px;
+            position: relative;
+        }
+        .node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            position: absolute;
+            transition: all 0.5s ease;
+        }
+        .node.highlighted {
+            background-color: #000000;
+            transform: scale(1.2);
+        }
+        .edge {
+            position: absolute;
+            background-color: #000000;
+            height: 2px;
+            transform-origin: 0 0;
+            transition: all 0.5s ease;
+        }
+        .comparison-line {
+            position: absolute;
+            border-top: 3px dashed #FF4800;
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .step-counter {
+            display: flex;
+            align-items: center;
+            color: #000000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mirror Comparison Recursive Process</h1>
+    <div class="container">
+        <div class="step-info" id="step-info">
+            Understanding how mirror comparison works in binary trees
+        </div>
+        <div class="animation-container">
+            <div class="tree-container">
+                <div class="tree" id="tree1"></div>
+                <div class="tree" id="tree2"></div>
+            </div>
+            <div id="comparison-lines"></div>
+        </div>
+        <div class="navigation">
+            <button class="nav-button" id="prev-btn" disabled>Previous</button>
+            <div class="step-counter" id="step-counter">Step 1 of 6</div>
+            <button class="nav-button" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Tree nodes data
+        const tree1Data = [
+            { id: 1, value: 1, x: 50, y: 10, parentId: null },
+            { id: 2, value: 2, x: 25, y: 80, parentId: 1 },
+            { id: 3, value: 3, x: 75, y: 80, parentId: 1 },
+            { id: 4, value: 4, x: 12, y: 150, parentId: 2 },
+            { id: 5, value: 5, x: 38, y: 150, parentId: 2 },
+            { id: 6, value: 6, x: 62, y: 150, parentId: 3 },
+            { id: 7, value: 7, x: 88, y: 150, parentId: 3 }
+        ];
+
+        const tree2Data = [
+            { id: 1, value: 1, x: 50, y: 10, parentId: null },
+            { id: 2, value: 3, x: 25, y: 80, parentId: 1 },
+            { id: 3, value: 2, x: 75, y: 80, parentId: 1 },
+            { id: 4, value: 7, x: 12, y: 150, parentId: 2 },
+            { id: 5, value: 6, x: 38, y: 150, parentId: 2 },
+            { id: 6, value: 5, x: 62, y: 150, parentId: 3 },
+            { id: 7, value: 4, x: 88, y: 150, parentId: 3 }
+        ];
+
+        // Animation steps
+        const steps = [
+            {
+                info: "In this animation, we'll see how mirror comparison works in binary trees. We have two trees, and we'll check if one is a mirror of the other.",
+                highlights: [],
+                comparisons: []
+            },
+            {
+                info: "Step 1: Compare the root nodes of both trees. Both roots have value 1, so they match.",
+                highlights: [{ tree: 1, nodeId: 1 }, { tree: 2, nodeId: 1 }],
+                comparisons: [{ from: { tree: 1, nodeId: 1 }, to: { tree: 2, nodeId: 1 } }]
+            },
+            {
+                info: "Step 2: Compare the left child of Tree 1 (node 2) with the right child of Tree 2 (node 2). The values match (2).",
+                highlights: [{ tree: 1, nodeId: 2 }, { tree: 2, nodeId: 3 }],
+                comparisons: [{ from: { tree: 1, nodeId: 2 }, to: { tree: 2, nodeId: 3 } }]
+            },
+            {
+                info: "Step 3: Compare the right child of Tree 1 (node 3) with the left child of Tree 2 (node 3). The values match (3).",
+                highlights: [{ tree: 1, nodeId: 3 }, { tree: 2, nodeId: 2 }],
+                comparisons: [{ from: { tree: 1, nodeId: 3 }, to: { tree: 2, nodeId: 2 } }]
+            },
+            {
+                info: "Step 4: The recursive process continues by comparing node 4 & 5 (left subtree of Tree 1) with node 5 & 4 (right subtree of Tree 2).",
+                highlights: [{ tree: 1, nodeId: 4 }, { tree: 1, nodeId: 5 }, { tree: 2, nodeId: 6 }, { tree: 2, nodeId: 7 }],
+                comparisons: [
+                    { from: { tree: 1, nodeId: 4 }, to: { tree: 2, nodeId: 7 } },
+                    { from: { tree: 1, nodeId: 5 }, to: { tree: 2, nodeId: 6 } }
+                ]
+            },
+            {
+                info: "Step 5: Similarly, node 6 & 7 (right subtree of Tree 1) are compared with node 7 & 6 (left subtree of Tree 2).",
+                highlights: [{ tree: 1, nodeId: 6 }, { tree: 1, nodeId: 7 }, { tree: 2, nodeId: 4 }, { tree: 2, nodeId: 5 }],
+                comparisons: [
+                    { from: { tree: 1, nodeId: 6 }, to: { tree: 2, nodeId: 5 } },
+                    { from: { tree: 1, nodeId: 7 }, to: { tree: 2, nodeId: 4 } }
+                ]
+            },
+            {
+                info: "The recursive process confirms that Tree 1 and Tree 2 are mirrors of each other. Each node in Tree 1 corresponds to its mirror position in Tree 2.",
+                highlights: [
+                    { tree: 1, nodeId: 1 }, { tree: 1, nodeId: 2 }, { tree: 1, nodeId: 3 }, 
+                    { tree: 1, nodeId: 4 }, { tree: 1, nodeId: 5 }, { tree: 1, nodeId: 6 }, { tree: 1, nodeId: 7 },
+                    { tree: 2, nodeId: 1 }, { tree: 2, nodeId: 2 }, { tree: 2, nodeId: 3 }, 
+                    { tree: 2, nodeId: 4 }, { tree: 2, nodeId: 5 }, { tree: 2, nodeId: 6 }, { tree: 2, nodeId: 7 }
+                ],
+                comparisons: [
+                    { from: { tree: 1, nodeId: 1 }, to: { tree: 2, nodeId: 1 } },
+                    { from: { tree: 1, nodeId: 2 }, to: { tree: 2, nodeId: 3 } },
+                    { from: { tree: 1, nodeId: 3 }, to: { tree: 2, nodeId: 2 } },
+                    { from: { tree: 1, nodeId: 4 }, to: { tree: 2, nodeId: 7 } },
+                    { from: { tree: 1, nodeId: 5 }, to: { tree: 2, nodeId: 6 } },
+                    { from: { tree: 1, nodeId: 6 }, to: { tree: 2, nodeId: 5 } },
+                    { from: { tree: 1, nodeId: 7 }, to: { tree: 2, nodeId: 4 } }
+                ]
+            }
+        ];
+
+        let currentStep = 0;
+        
+        // Initialize trees
+        function initializeTrees() {
+            const tree1Container = document.getElementById('tree1');
+            const tree2Container = document.getElementById('tree2');
+            
+            // Clear containers
+            tree1Container.innerHTML = '';
+            tree2Container.innerHTML = '';
+            
+            // Create nodes and edges for Tree 1
+            tree1Data.forEach(node => {
+                // Create node
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'node';
+                nodeElement.id = `tree1-node-${node.id}`;
+                nodeElement.style.left = `${node.x}%`;
+                nodeElement.style.top = `${node.y}px`;
+                nodeElement.textContent = node.value;
+                tree1Container.appendChild(nodeElement);
+                
+                // Create edge to parent
+                if (node.parentId) {
+                    const parent = tree1Data.find(n => n.id === node.parentId);
+                    const edge = document.createElement('div');
+                    edge.className = 'edge';
+                    
+                    const dx = node.x - parent.x;
+                    const dy = node.y - parent.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    edge.style.width = `${length}%`;
+                    edge.style.left = `${parent.x}%`;
+                    edge.style.top = `${parent.y + 20}px`;
+                    edge.style.transform = `rotate(${angle}deg)`;
+                    
+                    tree1Container.appendChild(edge);
+                }
+            });
+            
+            // Create nodes and edges for Tree 2
+            tree2Data.forEach(node => {
+                // Create node
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'node';
+                nodeElement.id = `tree2-node-${node.id}`;
+                nodeElement.style.left = `${node.x}%`;
+                nodeElement.style.top = `${node.y}px`;
+                nodeElement.textContent = node.value;
+                tree2Container.appendChild(nodeElement);
+                
+                // Create edge to parent
+                if (node.parentId) {
+                    const parent = tree2Data.find(n => n.id === node.parentId);
+                    const edge = document.createElement('div');
+                    edge.className = 'edge';
+                    
+                    const dx = node.x - parent.x;
+                    const dy = node.y - parent.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    edge.style.width = `${length}%`;
+                    edge.style.left = `${parent.x}%`;
+                    edge.style.top = `${parent.y + 20}px`;
+                    edge.style.transform = `rotate(${angle}deg)`;
+                    
+                    tree2Container.appendChild(edge);
+                }
+            });
+        }
+        
+        // Update the animation to the current step
+        function updateAnimation() {
+            // Update step info
+            document.getElementById('step-info').textContent = steps[currentStep].info;
+            document.getElementById('step-counter').textContent = `Step ${currentStep + 1} of ${steps.length}`;
+            
+            // Reset all nodes
+            document.querySelectorAll('.node').forEach(node => {
+                node.classList.remove('highlighted');
+            });
+            
+            // Clear all comparison lines
+            document.getElementById('comparison-lines').innerHTML = '';
+            
+            // Apply highlights
+            if (steps[currentStep].highlights) {
+                steps[currentStep].highlights.forEach(highlight => {
+                    const nodeElement = document.getElementById(`tree${highlight.tree}-node-${highlight.nodeId}`);
+                    if (nodeElement) {
+                        nodeElement.classList.add('highlighted');
+                    }
+                });
+            }
+            
+            // Create comparison lines
+            if (steps[currentStep].comparisons) {
+                steps[currentStep].comparisons.forEach(comparison => {
+                    createComparisonLine(comparison.from, comparison.to);
+                });
+            }
+            
+            // Update button states
+            document.getElementById('prev-btn').disabled = currentStep === 0;
+            document.getElementById('next-btn').disabled = currentStep === steps.length - 1;
+        }
+        
+        // Create a comparison line between two nodes
+        function createComparisonLine(from, to) {
+            const fromNode = document.getElementById(`tree${from.tree}-node-${from.nodeId}`);
+            const toNode = document.getElementById(`tree${to.tree}-node-${to.nodeId}`);
+            
+            if (!fromNode || !toNode) return;
+            
+            const container = document.getElementById('comparison-lines');
+            const comparisonLine = document.createElement('div');
+            comparisonLine.className = 'comparison-line';
+            
+            const tree1Container = document.querySelector('#tree1').getBoundingClientRect();
+            const tree2Container = document.querySelector('#tree2').getBoundingClientRect();
+            const fromRect = fromNode.getBoundingClientRect();
+            const toRect = toNode.getBoundingClientRect();
+            
+            // Calculate positions relative to animation container
+            const fromX = fromRect.left - tree1Container.left + fromRect.width / 2;
+            const fromY = fromRect.top - tree1Container.top + fromRect.height / 2;
+            const toX = toRect.left - tree1Container.left + toRect.width / 2;
+            const toY = toRect.top - tree1Container.top + toRect.height / 2;
+            
+            const dx = toX - fromX;
+            const dy = toY - fromY;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            
+            comparisonLine.style.width = `${length}px`;
+            comparisonLine.style.left = `${fromX}px`;
+            comparisonLine.style.top = `${fromY}px`;
+            comparisonLine.style.transform = `rotate(${angle}deg)`;
+            comparisonLine.style.opacity = '1';
+            
+            container.appendChild(comparisonLine);
+        }
+        
+        // Event listeners for navigation buttons
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateAnimation();
+            }
+        });
+        
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateAnimation();
+            }
+        });
+        
+        // Initialize the animation
+        initializeTrees();
+        updateAnimation();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            updateAnimation();
+        });
+    </script>
+</body>
+</html>
