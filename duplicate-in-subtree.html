@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duplicate Subtree Finder</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: white;
+        }
+        
+        #container {
+            width: 100%;
+            height: 100vh;
+            background-color: white;
+            position: relative;
+        }
+        
+        #controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: white;
+            padding: 15px;
+            border: 2px solid #1c1d20;
+            border-radius: 8px;
+        }
+        
+        button {
+            background-color: #ff4800;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background-color: #e03d00;
+        }
+        
+        #canvas {
+            width: 100%;
+            height: 100%;
+            background-color: white;
+        }
+        
+        .node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #1c1d20;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            cursor: move;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            font-size: 14px;
+            user-select: none;
+            border: 2px solid #1c1d20;
+        }
+        
+        .node.duplicate {
+            background-color: #ff4800;
+            border-color: #ff4800;
+        }
+        
+        .edge {
+            position: absolute;
+            background-color: #1c1d20;
+            height: 2px;
+            transform-origin: left center;
+            z-index: 1;
+        }
+        
+        .edge.duplicate {
+            background-color: #ff4800;
+        }
+        
+        #result {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            padding: 15px;
+            border: 2px solid #1c1d20;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            min-width: 200px;
+        }
+        
+        .result-true {
+            color: #ff4800;
+        }
+        
+        .result-false {
+            color: #1c1d20;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="controls">
+            <button onclick="prevStep()">← Prev</button>
+            <button onclick="nextStep()">Next →</button>
+        </div>
+        
+        <div id="canvas"></div>
+        
+        <div id="result">
+            <div>Step: <span id="stepText">1 of 5</span></div>
+            <div id="stepDescription">Starting with the example tree...</div>
+        </div>
+    </div>
+
+    <script>
+        let nodes = [];
+        let edges = [];
+        let currentStep = 0;
+        const totalSteps = 5;
+
+        const steps = [
+            {
+                title: "Starting with the example tree...",
+                description: "We have a binary tree with potential duplicate subtrees",
+                highlight: []
+            },
+            {
+                title: "Serializing subtrees...",
+                description: "Converting each subtree to string format: left,right,value",
+                highlight: []
+            },
+            {
+                title: "Found first subtree pattern",
+                description: "Subtree with root 2: pattern 'null,null,4,null,2' (size 2)",
+                highlight: [1, 3] // indices of nodes with value 2
+            },
+            {
+                title: "Found duplicate pattern!",
+                description: "Same pattern appears twice - both subtrees look like: 2→4",
+                highlight: [1, 3, 4, 6] // all nodes in duplicate subtrees
+            },
+            {
+                title: "Result: TRUE",
+                description: "Duplicate subtrees found with size ≥ 2",
+                highlight: [1, 3, 4, 6]
+            }
+        ];
+
+        class TreeNode {
+            constructor(val, left = null, right = null) {
+                this.val = val;
+                this.left = left;
+                this.right = right;
+                this.x = 0;
+                this.y = 0;
+                this.id = Date.now() + Math.random();
+            }
+        }
+
+        function initializeTree() {
+            // Create the example tree structure
+            const root = new TreeNode(1);
+            root.x = 400;
+            root.y = 100;
+            
+            const node2_1 = new TreeNode(2);
+            node2_1.x = 300;
+            node2_1.y = 200;
+            
+            const node3 = new TreeNode(3);
+            node3.x = 500;
+            node3.y = 200;
+            
+            const node4_1 = new TreeNode(4);
+            node4_1.x = 250;
+            node4_1.y = 300;
+            
+            const node2_2 = new TreeNode(2);
+            node2_2.x = 450;
+            node2_2.y = 300;
+            
+            const node1_2 = new TreeNode(1);
+            node1_2.x = 550;
+            node1_2.y = 300;
+            
+            const node4_2 = new TreeNode(4);
+            node4_2.x = 400;
+            node4_2.y = 400;
+            
+            // Set up relationships
+            root.left = node2_1;
+            root.right = node3;
+            node2_1.left = node4_1;
+            node3.left = node2_2;
+            node3.right = node1_2;
+            node2_2.left = node4_2;
+            
+            nodes = [root, node2_1, node3, node4_1, node2_2, node1_2, node4_2];
+            
+            renderTree();
+            updateStep();
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateStep();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        }
+
+        function updateStep() {
+            const step = steps[currentStep];
+            document.getElementById('stepText').textContent = `${currentStep + 1} of ${totalSteps}`;
+            document.getElementById('stepDescription').textContent = step.description;
+            
+            // Clear previous highlighting
+            document.querySelectorAll('.node').forEach(node => {
+                node.classList.remove('duplicate');
+            });
+            document.querySelectorAll('.edge').forEach(edge => {
+                edge.classList.remove('duplicate');
+            });
+
+            // Apply current step highlighting
+            step.highlight.forEach(nodeIndex => {
+                if (nodes[nodeIndex]) {
+                    highlightNode(nodes[nodeIndex]);
+                    highlightConnectedEdges(nodes[nodeIndex]);
+                }
+            });
+        }
+
+        function renderTree() {
+            const canvas = document.getElementById('canvas');
+            canvas.innerHTML = '';
+            edges = [];
+
+            // Draw edges first
+            nodes.forEach(node => {
+                if (node.left) {
+                    drawEdge(node, node.left);
+                }
+                if (node.right) {
+                    drawEdge(node, node.right);
+                }
+            });
+
+            // Draw nodes
+            nodes.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'node';
+                nodeElement.style.left = node.x + 'px';
+                nodeElement.style.top = node.y + 'px';
+                nodeElement.textContent = node.val;
+                canvas.appendChild(nodeElement);
+            });
+        }
+
+        function drawEdge(parent, child) {
+            const edge = document.createElement('div');
+            edge.className = 'edge';
+            
+            const dx = child.x - parent.x;
+            const dy = child.y - parent.y;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            
+            edge.style.left = (parent.x + 20) + 'px';
+            edge.style.top = (parent.y + 20) + 'px';
+            edge.style.width = length + 'px';
+            edge.style.transform = `rotate(${angle}deg)`;
+            
+            edges.push({ element: edge, parent, child });
+            document.getElementById('canvas').appendChild(edge);
+        }
+
+        function highlightNode(node) {
+            const nodeElements = document.querySelectorAll('.node');
+            nodeElements.forEach(elem => {
+                if (parseInt(elem.style.left) === node.x && parseInt(elem.style.top) === node.y) {
+                    elem.classList.add('duplicate');
+                }
+            });
+        }
+
+        function highlightConnectedEdges(node) {
+            edges.forEach(edge => {
+                if (edge.parent === node || edge.child === node) {
+                    edge.element.classList.add('duplicate');
+                }
+            });
+        }
+
+        // Initialize on load
+        initializeTree();
+    </script>
+</body>
+</html>
