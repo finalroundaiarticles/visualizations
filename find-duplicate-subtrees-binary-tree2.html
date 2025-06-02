@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Tree Serialization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .animation-container {
+            width: 100%;
+            height: 450px;
+            position: relative;
+            margin: 20px 0;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+        }
+        .explanation {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .node {
+            width: 50px;
+            height: 50px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            font-weight: bold;
+            transition: all 0.5s ease-in-out;
+        }
+        .edge {
+            position: absolute;
+            background-color: #000000;
+            height: 2px;
+            transform-origin: 0 0;
+            transition: all 0.5s ease-in-out;
+        }
+        .string-box {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px;
+            background-color: #FD9F78;
+            border-radius: 8px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            width: 80%;
+            text-align: center;
+        }
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 15px solid #FF4800;
+            opacity: 0;
+            transition: all 0.5s ease-in-out;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-counter {
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 10px;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Tree Serialization Process</h1>
+        
+        <div class="explanation" id="explanationText">
+            Welcome to the Binary Tree Serialization visualization. We'll show how a binary tree is converted to a string representation using the format 'left_subtree,right_subtree,current_value'.
+        </div>
+        
+        <div class="animation-container" id="animationContainer">
+            <!-- Nodes and edges will be added here by JavaScript -->
+            <div class="string-box" id="stringBox"></div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous Step</button>
+            <div class="step-counter" id="stepCounter">Step 1/6</div>
+            <button id="nextBtn">Next Step</button>
+        </div>
+    </div>
+
+    <script>
+        // Animation state
+        let currentStep = 1;
+        const totalSteps = 6;
+        
+        // Tree structure
+        const treeNodes = [
+            { id: 1, value: 10, x: 400, y: 80 },
+            { id: 2, value: 5, x: 300, y: 180 },
+            { id: 3, value: 15, x: 500, y: 180 },
+            { id: 4, value: 3, x: 250, y: 280 },
+            { id: 5, value: 7, x: 350, y: 280 },
+            { id: 6, value: 12, x: 450, y: 280 }
+        ];
+        
+        const treeEdges = [
+            { from: 1, to: 2 },
+            { from: 1, to: 3 },
+            { from: 2, to: 4 },
+            { from: 2, to: 5 },
+            { from: 3, to: 6 }
+        ];
+        
+        // Serialization steps
+        const steps = [
+            { 
+                title: "Original Binary Tree", 
+                text: "Here's our binary tree. We will serialize it using the format 'left_subtree,right_subtree,current_value'.",
+                showString: false,
+                string: "",
+                highlightNodes: []
+            },
+            { 
+                title: "Start Serialization", 
+                text: "We use a post-order traversal approach. We first process the left subtree, then the right subtree, and finally the current node.",
+                showString: false,
+                string: "",
+                highlightNodes: [1]
+            },
+            { 
+                title: "Process Left Subtree", 
+                text: "We recursively serialize the left subtree first. The left subtree of root (10) is the subtree with root node 5.",
+                showString: true,
+                string: "3,,5,7,,5,",
+                highlightNodes: [2, 4, 5]
+            },
+            { 
+                title: "Process Right Subtree", 
+                text: "After processing the left subtree, we move to the right subtree. The right subtree of root (10) is the subtree with root node 15.",
+                showString: true,
+                string: "3,,5,7,,5,12,,15,",
+                highlightNodes: [3, 6]
+            },
+            { 
+                title: "Process Root Node", 
+                text: "Finally, we process the root node (10) and add it to the serialized string.",
+                showString: true,
+                string: "3,,5,7,,5,12,,15,10",
+                highlightNodes: [1]
+            },
+            { 
+                title: "Final Serialized String", 
+                text: "The complete serialized representation of our binary tree is: '3,,5,7,,5,12,,15,10'. This string contains all the information needed to reconstruct the original tree.",
+                showString: true,
+                string: "3,,5,7,,5,12,,15,10",
+                highlightNodes: []
+            }
+        ];
+
+        // DOM elements
+        const container = document.getElementById('animationContainer');
+        const explanationText = document.getElementById('explanationText');
+        const stringBox = document.getElementById('stringBox');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepCounter = document.getElementById('stepCounter');
+        
+        // Initialize tree visualization
+        function initializeTree() {
+            // Create nodes
+            treeNodes.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'node';
+                nodeElement.id = `node-${node.id}`;
+                nodeElement.style.left = `${node.x - 25}px`;
+                nodeElement.style.top = `${node.y - 25}px`;
+                nodeElement.textContent = node.value;
+                container.appendChild(nodeElement);
+            });
+            
+            // Create edges
+            treeEdges.forEach(edge => {
+                const fromNode = treeNodes.find(n => n.id === edge.from);
+                const toNode = treeNodes.find(n => n.id === edge.to);
+                
+                const dx = toNode.x - fromNode.x;
+                const dy = toNode.y - fromNode.y;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                const edgeElement = document.createElement('div');
+                edgeElement.className = 'edge';
+                edgeElement.style.width = `${length}px`;
+                edgeElement.style.left = `${fromNode.x}px`;
+                edgeElement.style.top = `${fromNode.y}px`;
+                edgeElement.style.transform = `rotate(${angle}deg)`;
+                
+                container.appendChild(edgeElement);
+            });
+            
+            // Create arrows for visualization
+            for (let i = 0; i < 6; i++) {
+                const arrow = document.createElement('div');
+                arrow.className = 'arrow';
+                arrow.id = `arrow-${i}`;
+                arrow.style.opacity = '0';
+                container.appendChild(arrow);
+            }
+        }
+        
+        // Update animation based on current step
+        function updateStep() {
+            const step = steps[currentStep - 1];
+            
+            // Update explanation text
+            explanationText.innerHTML = `<strong>${step.title}:</strong> ${step.text}`;
+            
+            // Update step counter
+            stepCounter.textContent = `Step ${currentStep}/${totalSteps}`;
+            
+            // Reset all nodes to default state
+            treeNodes.forEach(node => {
+                const nodeElement = document.getElementById(`node-${node.id}`);
+                nodeElement.style.backgroundColor = '#FF4800';
+                nodeElement.style.transform = 'scale(1)';
+            });
+            
+            // Highlight nodes for current step
+            step.highlightNodes.forEach(nodeId => {
+                const nodeElement = document.getElementById(`node-${nodeId}`);
+                nodeElement.style.backgroundColor = '#000000';
+                nodeElement.style.transform = 'scale(1.2)';
+            });
+            
+            // Show/hide string box
+            stringBox.style.opacity = step.showString ? '1' : '0';
+            stringBox.textContent = step.string;
+            
+            // Update arrows if needed
+            updateArrows(currentStep);
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === totalSteps;
+        }
+        
+        // Update arrows for visualization
+        function updateArrows(step) {
+            // Hide all arrows first
+            for (let i = 0; i < 6; i++) {
+                const arrow = document.getElementById(`arrow-${i}`);
+                arrow.style.opacity = '0';
+            }
+            
+            // Show relevant arrows based on step
+            if (step === 3) {
+                showArrow(4, 250, 280, 0);
+                showArrow(5, 350, 280, 1);
+                showArrow(2, 300, 180, 2);
+            } else if (step === 4) {
+                showArrow(6, 450, 280, 3);
+                showArrow(3, 500, 180, 4);
+            } else if (step === 5) {
+                showArrow(1, 400, 80, 5);
+            }
+        }
+        
+        // Helper function to position and show arrows
+        function showArrow(nodeId, x, bottom, arrowIndex) {
+            const node = document.getElementById(`node-${nodeId}`);
+            const arrow = document.getElementById(`arrow-${arrowIndex}`);
+            
+            arrow.style.left = `${x}px`;
+            arrow.style.top = `${bottom + 40}px`;
+            arrow.style.opacity = '1';
+        }
+        
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStep();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateStep();
+            }
+        });
+        
+        // Initialize the visualization
+        initializeTree();
+        updateStep();
+    </script>
+</body>
+</html>
