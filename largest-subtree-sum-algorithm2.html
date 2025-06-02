@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bottom-up Traversal Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .canvas-container {
+            width: 100%;
+            margin: 20px auto;
+            position: relative;
+        }
+        
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border: 1px solid #FD9F78;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .step-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #FD9F78;
+            color: #000000;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bottom-up Traversal Visualization</h1>
+        <p>This animation demonstrates post-order traversal on a binary tree, showing how values are calculated from leaves to the root in a bottom-up approach.</p>
+        
+        <div class="canvas-container">
+            <canvas id="treeCanvas" width="900" height="450"></canvas>
+        </div>
+        
+        <div class="step-info" id="stepInfo">
+            Press "Next" to start the bottom-up traversal
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        const stepInfo = document.getElementById('stepInfo');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        // Tree nodes with their positions
+        const nodes = [
+            { id: 1, value: 1, x: 450, y: 60, sum: null, left: 2, right: 3 },
+            { id: 2, value: 2, x: 300, y: 150, sum: null, left: 4, right: 5 },
+            { id: 3, value: 3, x: 600, y: 150, sum: null, left: null, right: null },
+            { id: 4, value: 4, x: 225, y: 250, sum: null, left: null, right: null },
+            { id: 5, value: 5, x: 375, y: 250, sum: null, left: null, right: null }
+        ];
+        
+        // Create a map for easier node access
+        const nodeMap = {};
+        nodes.forEach(node => {
+            nodeMap[node.id] = node;
+        });
+        
+        // Steps for the animation
+        const steps = [
+            {
+                description: "Starting the post-order traversal. We visit nodes in order: left subtree, right subtree, then root.",
+                highlight: [],
+                active: []
+            },
+            {
+                description: "Visit leaf node 4. Since it has no children, its sum is its own value (4).",
+                highlight: [4],
+                active: [4],
+                update: { nodeId: 4, sum: 4 }
+            },
+            {
+                description: "Visit leaf node 5. Since it has no children, its sum is its own value (5).",
+                highlight: [5],
+                active: [5],
+                update: { nodeId: 5, sum: 5 }
+            },
+            {
+                description: "Visit node 2. Its sum is its value (2) plus the sum of its left child (4) and right child (5): 2 + 4 + 5 = 11",
+                highlight: [2, 4, 5],
+                active: [2],
+                update: { nodeId: 2, sum: 11 }
+            },
+            {
+                description: "Visit leaf node 3. Since it has no children, its sum is its own value (3).",
+                highlight: [3],
+                active: [3],
+                update: { nodeId: 3, sum: 3 }
+            },
+            {
+                description: "Visit root node 1. Its sum is its value (1) plus the sum of its left child (11) and right child (3): 1 + 11 + 3 = 15",
+                highlight: [1, 2, 3],
+                active: [1],
+                update: { nodeId: 1, sum: 15 }
+            },
+            {
+                description: "Bottom-up traversal complete! The total sum at the root is 15. This approach is powerful for solving tree problems by aggregating results from the bottom up.",
+                highlight: [1],
+                active: []
+            }
+        ];
+        
+        let currentStep = 0;
+        
+        // Draw a node
+        function drawNode(node, isHighlighted, isActive) {
+            // Draw circle
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 30, 0, Math.PI * 2);
+            
+            if (isActive) {
+                ctx.fillStyle = '#FF4800';
+            } else if (isHighlighted) {
+                ctx.fillStyle = '#FD9F78';
+            } else {
+                ctx.fillStyle = '#FFFFFF';
+            }
+            
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+            
+            // Draw node value
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.value, node.x, node.y);
+            
+            // Draw sum if calculated
+            if (node.sum !== null) {
+                ctx.font = '14px Arial';
+                ctx.fillStyle = '#000000';
+                ctx.fillText(`Sum: ${node.sum}`, node.x, node.y + 50);
+            }
+        }
+        
+        // Draw connection between nodes
+        function drawConnection(fromNode, toNode) {
+            ctx.beginPath();
+            ctx.moveTo(fromNode.x, fromNode.y + 30);
+            ctx.lineTo(toNode.x, toNode.y - 30);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+        }
+        
+        // Draw the tree
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw connections
+            nodes.forEach(node => {
+                if (node.left) {
+                    drawConnection(node, nodeMap[node.left]);
+                }
+                if (node.right) {
+                    drawConnection(node, nodeMap[node.right]);
+                }
+            });
+            
+            // Determine highlighted and active nodes for current step
+            const highlightedNodes = steps[currentStep].highlight || [];
+            const activeNodes = steps[currentStep].active || [];
+            
+            // Draw nodes
+            nodes.forEach(node => {
+                const isHighlighted = highlightedNodes.includes(node.id);
+                const isActive = activeNodes.includes(node.id);
+                drawNode(node, isHighlighted, isActive);
+            });
+            
+            // Update step info
+            stepInfo.textContent = steps[currentStep].description;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        // Handle next button click
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                
+                // Apply updates for this step
+                if (steps[currentStep].update) {
+                    const { nodeId, sum } = steps[currentStep].update;
+                    nodeMap[nodeId].sum = sum;
+                }
+                
+                drawTree();
+            }
+        });
+        
+        // Handle previous button click
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                // If moving back, we need to check if the previous step had an update
+                // and revert it
+                if (steps[currentStep].update) {
+                    const { nodeId } = steps[currentStep].update;
+                    nodeMap[nodeId].sum = null;
+                }
+                
+                currentStep--;
+                drawTree();
+            }
+        });
+        
+        // Initial draw
+        drawTree();
+    </script>
+</body>
+</html>
