@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sum Tree Algorithm Visualization</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: white;
+            font-family: Arial, sans-serif;
+        }
+        
+        #canvas {
+            background-color: white;
+            cursor: pointer;
+        }
+        
+        .controls {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        button {
+            background-color: #ff4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background-color: #e63e00;
+        }
+        
+        .status {
+            margin-left: 20px;
+            font-weight: bold;
+            color: #1c1d20;
+            font-size: 16px;
+        }
+        
+        .step-info {
+            margin-top: 10px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #ff4800;
+            color: #1c1d20;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button onclick="startVisualization()">Start Algorithm Visualization</button>
+        <button onclick="resetVisualization()">Reset</button>
+        <div class="status" id="status">Click "Start Algorithm Visualization" to see how the code works</div>
+    </div>
+    
+    <div class="step-info" id="stepInfo">
+        The algorithm checks if a binary tree is a Sum Tree by verifying that each non-leaf node's value equals the sum of all nodes in its left and right subtrees.
+    </div>
+    
+    <canvas id="canvas" width="1200" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const status = document.getElementById('status');
+        const stepInfo = document.getElementById('stepInfo');
+        
+        let nodes = [];
+        let currentStep = 0;
+        let isAnimating = false;
+        let animationSteps = [];
+        
+        class TreeNode {
+            constructor(val, x, y) {
+                this.val = val;
+                this.x = x;
+                this.y = y;
+                this.left = null;
+                this.right = null;
+                this.radius = 30;
+                this.highlight = false;
+                this.computed = false;
+                this.subtreeSum = null;
+            }
+        }
+        
+        function createExampleTree() {
+            nodes = [];
+            
+            const root = new TreeNode(20, 600, 100);
+            const left = new TreeNode(8, 450, 220);
+            const right = new TreeNode(4, 750, 220);
+            const leftLeft = new TreeNode(4, 350, 340);
+            const leftRight = new TreeNode(4, 550, 340);
+            
+            root.left = left;
+            root.right = right;
+            left.left = leftLeft;
+            left.right = leftRight;
+            
+            nodes = [root, left, right, leftLeft, leftRight];
+            
+            animationSteps = [
+                {
+                    node: leftLeft,
+                    message: "Step 1: Check leaf node (4) - Leaf nodes are valid by definition. Returns value: 4",
+                    highlight: [leftLeft],
+                    computed: [leftLeft],
+                    subtreeSum: 4
+                },
+                {
+                    node: leftRight,
+                    message: "Step 2: Check leaf node (4) - Leaf nodes are valid by definition. Returns value: 4",
+                    highlight: [leftRight],
+                    computed: [leftLeft, leftRight],
+                    subtreeSum: 4
+                },
+                {
+                    node: left,
+                    message: "Step 3: Check node (8) - Left sum: 4, Right sum: 4. Node value: 8. Check: 8 = 4 + 4 ✓ Valid! Returns total: 8 + 4 + 4 = 16",
+                    highlight: [left],
+                    computed: [leftLeft, leftRight, left],
+                    subtreeSum: 16
+                },
+                {
+                    node: right,
+                    message: "Step 4: Check leaf node (4) - Leaf nodes are valid by definition. Returns value: 4",
+                    highlight: [right],
+                    computed: [leftLeft, leftRight, left, right],
+                    subtreeSum: 4
+                },
+                {
+                    node: nodes[0],
+                    message: "Step 5: Check root (20) - Left sum: 16, Right sum: 4. Node value: 20. Check: 20 = 16 + 4 ✓ Valid! Tree is a Sum Tree!",
+                    highlight: [nodes[0]],
+                    computed: nodes,
+                    subtreeSum: 40
+                }
+            ];
+        }
+        
+        function startVisualization() {
+            if (isAnimating) return;
+            
+            createExampleTree();
+            currentStep = 0;
+            isAnimating = true;
+            
+            nextStep();
+        }
+        
+        function nextStep() {
+            if (currentStep >= animationSteps.length) {
+                status.textContent = "✓ Algorithm Complete - Tree is a Valid Sum Tree!";
+                isAnimating = false;
+                return;
+            }
+            
+            const step = animationSteps[currentStep];
+            
+            // Reset highlights
+            nodes.forEach(node => {
+                node.highlight = false;
+                node.computed = false;
+            });
+            
+            // Set current highlights and computed states
+            step.highlight.forEach(node => node.highlight = true);
+            step.computed.forEach(node => {
+                node.computed = true;
+                if (node === step.node) {
+                    node.subtreeSum = step.subtreeSum;
+                }
+            });
+            
+            stepInfo.innerHTML = step.message;
+            status.textContent = `Step ${currentStep + 1} of ${animationSteps.length}`;
+            
+            draw();
+            
+            currentStep++;
+            
+            setTimeout(() => {
+                if (isAnimating) nextStep();
+            }, 3000);
+        }
+        
+        function resetVisualization() {
+            createExampleTree();
+            currentStep = 0;
+            isAnimating = false;
+            
+            nodes.forEach(node => {
+                node.highlight = false;
+                node.computed = false;
+                node.subtreeSum = null;
+            });
+            
+            status.textContent = "Click 'Start Algorithm Visualization' to see how the code works";
+            stepInfo.innerHTML = "The algorithm checks if a binary tree is a Sum Tree by verifying that each non-leaf node's value equals the sum of all nodes in its left and right subtrees.";
+            
+            draw();
+        }
+        
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges
+            nodes.forEach(node => {
+                ctx.strokeStyle = '#1c1d20';
+                ctx.lineWidth = 2;
+                
+                if (node.left) {
+                    ctx.beginPath();
+                    ctx.moveTo(node.x, node.y);
+                    ctx.lineTo(node.left.x, node.left.y);
+                    ctx.stroke();
+                }
+                if (node.right) {
+                    ctx.beginPath();
+                    ctx.moveTo(node.x, node.y);
+                    ctx.lineTo(node.right.x, node.right.y);
+                    ctx.stroke();
+                }
+            });
+            
+            // Draw nodes
+            nodes.forEach(node => {
+                // Node circle
+                if (node.highlight) {
+                    ctx.fillStyle = '#ff4800';
+                } else if (node.computed) {
+                    ctx.fillStyle = '#1c1d20';
+                } else {
+                    ctx.fillStyle = '#999999';
+                }
+                
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Node value
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node.val.toString(), node.x, node.y);
+                
+                // Show subtree sum if computed
+                if (node.subtreeSum !== null) {
+                    ctx.fillStyle = '#ff4800';
+                    ctx.font = 'bold 12px Arial';
+                    ctx.fillText(`Sum: ${node.subtreeSum}`, node.x, node.y + 45);
+                }
+            });
+            
+            // Draw legend
+            ctx.fillStyle = '#1c1d20';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('Legend:', 50, 500);
+            
+            // Current node
+            ctx.fillStyle = '#ff4800';
+            ctx.beginPath();
+            ctx.arc(70, 530, 15, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#1c1d20';
+            ctx.fillText('Currently Processing', 100, 535);
+            
+            // Computed node
+            ctx.fillStyle = '#1c1d20';
+            ctx.beginPath();
+            ctx.arc(70, 560, 15, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillText('Already Computed', 100, 565);
+            
+            // Unprocessed node
+            ctx.fillStyle = '#999999';
+            ctx.beginPath();
+            ctx.arc(280, 530, 15, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#1c1d20';
+            ctx.fillText('Not Yet Processed', 310, 535);
+        }
+        
+        // Initialize
+        createExampleTree();
+        draw();
+    </script>
+</body>
+</html>
