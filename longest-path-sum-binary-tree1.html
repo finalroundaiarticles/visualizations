@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Tree Sum Path Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .explanation {
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        #canvas-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        canvas {
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+            background-color: #FFFFFF;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .step-info {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Tree Path Sum Visualization</h1>
+        
+        <div class="explanation">
+            This visualization demonstrates a binary tree with nodes (4-2-5-7-1-3) and shows the three possible longest paths with their sums. Watch how we calculate the sum along each path and find the one with the maximum value.
+        </div>
+        
+        <div id="canvas-container">
+            <canvas id="treeCanvas" width="900" height="400"></canvas>
+        </div>
+        
+        <div class="step-info" id="stepInfo">Step 1: Initial Binary Tree</div>
+        
+        <div class="navigation">
+            <button id="prevBtn" class="nav-button" disabled>Previous</button>
+            <button id="nextBtn" class="nav-button">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Tree data
+        class TreeNode {
+            constructor(value) {
+                this.value = value;
+                this.left = null;
+                this.right = null;
+                this.x = 0;
+                this.y = 0;
+            }
+        }
+        
+        // Create our binary tree
+        const root = new TreeNode(4);
+        root.left = new TreeNode(2);
+        root.right = new TreeNode(5);
+        root.left.left = new TreeNode(7);
+        root.left.right = new TreeNode(1);
+        root.right.right = new TreeNode(3);
+        
+        // Paths to visualize
+        const paths = [
+            { nodes: [root, root.left, root.left.left], sum: 13, name: "4→2→7 (Sum: 13)" },
+            { nodes: [root, root.left, root.left.right], sum: 7, name: "4→2→1 (Sum: 7)" },
+            { nodes: [root, root.right, root.right.right], sum: 12, name: "4→5→3 (Sum: 12)" }
+        ];
+        
+        // Animation state
+        let currentStep = 0;
+        const totalSteps = paths.length + 2; // Initial tree + 3 paths + final result
+        
+        // Positioning the tree
+        function positionTree() {
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            root.x = width / 2;
+            root.y = 60;
+            
+            const level2X = width / 4;
+            root.left.x = root.x - level2X;
+            root.right.x = root.x + level2X;
+            root.left.y = root.y + 80;
+            root.right.y = root.y + 80;
+            
+            const level3X = width / 8;
+            root.left.left.x = root.left.x - level3X;
+            root.left.right.x = root.left.x + level3X;
+            root.right.right.x = root.right.x + level3X;
+            root.left.left.y = root.left.y + 80;
+            root.left.right.y = root.left.y + 80;
+            root.right.right.y = root.right.y + 80;
+        }
+        
+        // Draw a node
+        function drawNode(node, highlighted = false) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 25, 0, Math.PI * 2);
+            
+            if (highlighted) {
+                ctx.fillStyle = '#FF4800';
+            } else {
+                ctx.fillStyle = '#FD9F78';
+            }
+            
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw the value
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.value, node.x, node.y);
+        }
+        
+        // Draw an edge between two nodes
+        function drawEdge(node1, node2, highlighted = false) {
+            ctx.beginPath();
+            ctx.moveTo(node1.x, node1.y + 25); // Start from bottom of node1
+            ctx.lineTo(node2.x, node2.y - 25); // End at top of node2
+            
+            if (highlighted) {
+                ctx.strokeStyle = '#FF4800';
+                ctx.lineWidth = 4;
+            } else {
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+            }
+            
+            ctx.stroke();
+        }
+        
+        // Draw the entire tree
+        function drawTree(highlightedPath = null) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges first
+            if (root.left) {
+                const highlighted = highlightedPath && 
+                    highlightedPath.includes(root) && 
+                    highlightedPath.includes(root.left);
+                drawEdge(root, root.left, highlighted);
+            }
+            
+            if (root.right) {
+                const highlighted = highlightedPath && 
+                    highlightedPath.includes(root) && 
+                    highlightedPath.includes(root.right);
+                drawEdge(root, root.right, highlighted);
+            }
+            
+            if (root.left && root.left.left) {
+                const highlighted = highlightedPath && 
+                    highlightedPath.includes(root.left) && 
+                    highlightedPath.includes(root.left.left);
+                drawEdge(root.left, root.left.left, highlighted);
+            }
+            
+            if (root.left && root.left.right) {
+                const highlighted = highlightedPath && 
+                    highlightedPath.includes(root.left) && 
+                    highlightedPath.includes(root.left.right);
+                drawEdge(root.left, root.left.right, highlighted);
+            }
+            
+            if (root.right && root.right.right) {
+                const highlighted = highlightedPath && 
+                    highlightedPath.includes(root.right) && 
+                    highlightedPath.includes(root.right.right);
+                drawEdge(root.right, root.right.right, highlighted);
+            }
+            
+            // Then draw nodes
+            drawNode(root, highlightedPath && highlightedPath.includes(root));
+            
+            if (root.left) {
+                drawNode(root.left, highlightedPath && highlightedPath.includes(root.left));
+            }
+            
+            if (root.right) {
+                drawNode(root.right, highlightedPath && highlightedPath.includes(root.right));
+            }
+            
+            if (root.left && root.left.left) {
+                drawNode(root.left.left, highlightedPath && highlightedPath.includes(root.left.left));
+            }
+            
+            if (root.left && root.left.right) {
+                drawNode(root.left.right, highlightedPath && highlightedPath.includes(root.left.right));
+            }
+            
+            if (root.right && root.right.right) {
+                drawNode(root.right.right, highlightedPath && highlightedPath.includes(root.right.right));
+            }
+            
+            // If a path is highlighted, show its sum
+            if (highlightedPath) {
+                const pathSum = highlightedPath.reduce((sum, node) => sum + node.value, 0);
+                const lastNode = highlightedPath[highlightedPath.length - 1];
+                
+                ctx.fillStyle = '#FF4800';
+                ctx.font = '18px Arial';
+                ctx.textAlign = 'center';
+                
+                // Display the running sum
+                let runningSum = 0;
+                for (let i = 0; i < highlightedPath.length; i++) {
+                    runningSum += highlightedPath[i].value;
+                    
+                    if (i < highlightedPath.length - 1) {
+                        // Calculate midpoint between current node and next node for sum display
+                        const nextNode = highlightedPath[i + 1];
+                        const midX = (highlightedPath[i].x + nextNode.x) / 2;
+                        const midY = (highlightedPath[i].y + nextNode.y) / 2 - 15;
+                        
+                        ctx.fillText(`Sum: ${runningSum}`, midX, midY);
+                    }
+                }
+                
+                // Display final sum below the last node
+                ctx.fillText(`Final Sum: ${pathSum}`, lastNode.x, lastNode.y + 45);
+            }
+        }
+        
+        // Draw final result with the maximum path
+        function drawFinalResult() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Find max sum path
+            const maxSumPath = paths.reduce((max, path) => 
+                path.sum > max.sum ? path : max, paths[0]);
+            
+            // Draw the tree with max path highlighted
+            drawTree(maxSumPath.nodes);
+            
+            // Add an explanation at the bottom
+            ctx.fillStyle = '#FF4800';
+            ctx.font = 'bold 22px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Maximum Sum Path: ${maxSumPath.name}`, canvas.width / 2, canvas.height - 30);
+        }
+        
+        // Update the UI based on current step
+        function updateUI() {
+            const stepInfo = document.getElementById('stepInfo');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+            
+            if (currentStep === 0) {
+                stepInfo.textContent = "Step 1: Initial Binary Tree";
+                drawTree();
+            } else if (currentStep < totalSteps - 1) {
+                // Path steps
+                const pathIndex = currentStep - 1;
+                stepInfo.textContent = `Step ${currentStep + 1}: Examining Path ${paths[pathIndex].name}`;
+                drawTree(paths[pathIndex].nodes);
+            } else {
+                // Final result
+                stepInfo.textContent = `Final Result: Finding the Maximum Sum Path`;
+                drawFinalResult();
+            }
+        }
+        
+        // Navigation handlers
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateUI();
+            }
+        });
+        
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateUI();
+            }
+        });
+        
+        // Initialize
+        positionTree();
+        updateUI();
+    </script>
+</body>
+</html>
