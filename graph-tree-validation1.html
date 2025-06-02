@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tree vs. Non-Tree Examples</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            width: 100%;
+            max-width: 1200px;
+        }
+        
+        .graph-container {
+            width: 45%;
+            min-width: 300px;
+            margin: 10px;
+            text-align: center;
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            padding: 20px;
+            background-color: #FFFFFF;
+        }
+        
+        .graph-title {
+            color: #FF4800;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        canvas {
+            margin-bottom: 20px;
+            border: 1px solid #f0f0f0;
+            border-radius: 5px;
+        }
+        
+        .explanation {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #FFF;
+            border: 2px solid #FD9F78;
+            text-align: left;
+            max-width: 1000px;
+            width: 90%;
+        }
+        
+        .explanation-title {
+            color: #FF4800;
+            margin-bottom: 15px;
+        }
+        
+        .navigation {
+            display: flex;
+            margin-top: 25px;
+            justify-content: center;
+        }
+        
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .slide-container {
+            width: 100%;
+            max-width: 1200px;
+        }
+        
+        .slide {
+            display: none;
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        .slide-indicator {
+            text-align: center;
+            margin-top: 15px;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tree vs. Non-Tree Examples</h1>
+    
+    <div class="slide-container">
+        <div class="slide active" id="slide1">
+            <div class="container">
+                <div class="graph-container">
+                    <div class="graph-title">Example 1: Valid Tree</div>
+                    <div>n=5, edges=[[0,1], [0,2], [0,3], [1,4]]</div>
+                    <canvas id="treeCanvas" width="400" height="400"></canvas>
+                    <div>
+                        <strong>Key Characteristics:</strong>
+                        <ul style="text-align: left;">
+                            <li>Connected graph</li>
+                            <li>No cycles</li>
+                            <li>4 edges for 5 nodes</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="graph-container">
+                    <div class="graph-title">Example 2: Not a Tree</div>
+                    <div>n=5, edges=[[0,1], [1,2], [2,3], [1,3], [1,4]]</div>
+                    <canvas id="nonTreeCanvas" width="400" height="400"></canvas>
+                    <div>
+                        <strong>Key Characteristics:</strong>
+                        <ul style="text-align: left;">
+                            <li>Connected graph</li>
+                            <li>Contains a cycle (1-2-3-1) highlighted in red</li>
+                            <li>5 edges for 5 nodes</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <h3 class="explanation-title">What Makes a Tree?</h3>
+                <p>A <strong>tree</strong> is an undirected graph that is both connected and acyclic:</p>
+                <ul>
+                    <li><strong>Connected:</strong> There exists a path between any two nodes.</li>
+                    <li><strong>Acyclic:</strong> There are no cycles (closed paths) in the graph.</li>
+                    <li>For a tree with n nodes, there are exactly (n-1) edges.</li>
+                </ul>
+                
+                <p>In Example 1, we have a valid tree with 5 nodes and 4 edges. Node 0 serves as the root, connecting to nodes 1, 2, and 3. Node 1 connects to node 4. There are no cycles in this structure.</p>
+                
+                <p>In Example 2, we have a graph that is not a tree because it contains a cycle between nodes 1, 2, and 3 (highlighted in red). Also, the number of edges (5) exceeds n-1 (4), which is another indication it's not a tree.</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide2">
+            <div class="container">
+                <div class="graph-container" style="width: 90%;">
+                    <div class="graph-title">Animation: Building a Tree vs. Creating a Cycle</div>
+                    <canvas id="animationCanvas" width="800" height="400"></canvas>
+                    <div id="animationControls" style="margin-top: 10px;">
+                        <button id="playPauseBtn" class="nav-button">Play</button>
+                        <button id="resetBtn" class="nav-button">Reset</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <h3 class="explanation-title">Key Differences Between Trees and Non-Trees</h3>
+                <p>The animation illustrates how trees and non-trees differ:</p>
+                
+                <ul>
+                    <li><strong>Tree Formation:</strong> As edges are added, a tree maintains its acyclic property. When a new node is connected to the existing structure, it creates a branching pattern.</li>
+                    <li><strong>Cycle Formation:</strong> When an edge connects two nodes that already have a path between them, it creates a cycle, which makes the structure no longer a tree.</li>
+                    <li><strong>Edge Count:</strong> A tree with n nodes always has exactly (n-1) edges. Any more edges will create cycles.</li>
+                </ul>
+                
+                <p>Understanding these differences is crucial in graph theory, network design, and many algorithms where tree structures are preferred for their simplicity and efficiency.</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide3">
+            <div class="container" style="flex-direction: column; align-items: center;">
+                <div class="graph-container" style="width: 90%; max-width: 800px;">
+                    <div class="graph-title">Properties Comparison</div>
+                    <canvas id="comparisonCanvas" width="700" height="400"></canvas>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <h3 class="explanation-title">Why Trees Matter</h3>
+                <p>Trees are fundamental structures in computer science and mathematics for several reasons:</p>
+                
+                <ul>
+                    <li><strong>Efficiency:</strong> Trees provide efficient access, search, and modification operations.</li>
+                    <li><strong>Hierarchy:</strong> Trees naturally represent hierarchical relationships (file systems, organization charts).</li>
+                    <li><strong>Simplicity:</strong> With no cycles, algorithms on trees are often simpler than on general graphs.</li>
+                    <li><strong>Unique Paths:</strong> In a tree, there is exactly one path between any two nodes.</li>
+                </ul>
+                
+                <p>Non-tree graphs (containing cycles) are more complex to analyze and may require additional techniques to handle the cyclic relationships.</p>
+                
+                <p>When analyzing a graph, checking whether it's a tree is often the first step to determine which algorithms and approaches will be most effective.</p>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevButton" class="nav-button" disabled>Previous</button>
+            <button id="nextButton" class="nav-button">Next</button>
+        </div>
+        
+        <div class="slide-indicator">
+            Slide <span id="currentSlide">1</span> of <span id="totalSlides">3</span>
+        </div>
+    </div>
+    
+    <script>
+        // Navigation functionality
+        let currentSlideIndex = 1;
+        const totalSlides = 3;
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+        const currentSlideSpan = document.getElementById('currentSlide');
+        
+        function updateSlide() {
+            // Hide all slides
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            // Show current slide
+            document.getElementById(`slide${currentSlideIndex}`).classList.add('active');
+            
+            // Update buttons
+            prevButton.disabled = currentSlideIndex === 1;
+            nextButton.disabled = currentSlideIndex === totalSlides;
+            
+            // Update indicator
+            currentSlideSpan.textContent = currentSlideIndex;
+            
+            // If we're on slide 2, reset and start the animation
+            if (currentSlideIndex === 2) {
+                resetAnimation();
+                if (!animationPaused) {
+                    animationPaused = true;
+                    document.getElementById('playPauseBtn').textContent = 'Play';
+                }
+            }
+        }
+        
+        prevButton.addEventListener('click', () => {
+            if (currentSlideIndex > 1) {
+                currentSlideIndex--;
+                updateSlide();
+            }
+        });
+        
+        nextButton.addEventListener('click', () => {
+            if (currentSlideIndex < totalSlides) {
+                currentSlideIndex++;
+                updateSlide();
+            }
+        });
+        
+        // Drawing the tree
+        const treeCanvas = document.getElementById('treeCanvas');
+        const treeCtx = treeCanvas.getContext('2d');
+        
+        function drawTree() {
+            const positions = [
+                { x: 200, y: 100 }, // Node 0
+                { x: 100, y: 200 }, // Node 1
+                { x: 200, y: 200 }, // Node 2
+                { x: 300, y: 200 }, // Node 3
+                { x: 100, y: 300 }  // Node 4
+            ];
+            
+            const edges = [[0, 1], [0, 2], [0, 3], [1, 4]];
+            
+            // Clear canvas
+            treeCtx.clearRect(0, 0, treeCanvas.width, treeCanvas.height);
+            
+            // Draw edges
+            treeCtx.strokeStyle = '#FF4800';
+            treeCtx.lineWidth = 2;
+            
+            edges.forEach(edge => {
+                treeCtx.beginPath();
+                treeCtx.moveTo(positions[edge[0]].x, positions[edge[0]].y);
+                treeCtx.lineTo(positions[edge[1]].x, positions[edge[1]].y);
+                treeCtx.stroke();
+            });
+            
+            // Draw nodes
+            positions.forEach((pos, index) => {
+                treeCtx.beginPath();
+                treeCtx.fillStyle = '#FD9F78';
+                treeCtx.arc(pos.x, pos.y, 20, 0, Math.PI * 2);
+                treeCtx.fill();
+                treeCtx.stroke();
+                
+                // Add node label
+                treeCtx.fillStyle = '#000000';
+                treeCtx.textAlign = 'center';
+                treeCtx.textBaseline = 'middle';
+                treeCtx.font = '16px Arial';
+                treeCtx.fillText(index.toString(), pos.x, pos.y);
+            });
+        }
+        
+        // Drawing the non-tree
+        const nonTreeCanvas = document.getElementById('nonTreeCanvas');
+        const nonTreeCtx = nonTreeCanvas.getContext('2d');
+        
+        function drawNonTree() {
+            const positions = [
+                { x: 150, y: 100 }, // Node 0
+                { x: 150, y: 200 }, // Node 1
+                { x: 250, y: 200 }, // Node 2
+                { x: 200, y: 300 }, // Node 3
+                { x: 100, y: 300 }  // Node 4
+            ];
+            
+            const normalEdges = [[0, 1], [1, 4]];
+            const cycleEdges = [[1, 2], [2, 3], [1, 3]]; // The cycle
+            
+            // Clear canvas
+            nonTreeCtx.clearRect(0, 0, nonTreeCanvas.width, nonTreeCanvas.height);
+            
+            // Draw normal edges
+            nonTreeCtx.strokeStyle = '#FF4800';
+            nonTreeCtx.lineWidth = 2;
+            
+            normalEdges.forEach(edge => {
+                nonTreeCtx.beginPath();
+                nonTreeCtx.moveTo(positions[edge[0]].x, positions[edge[0]].y);
+                nonTreeCtx.lineTo(positions[edge[1]].x, positions[edge[1]].y);
+                nonTreeCtx.stroke();
+            });
+            
+            // Draw cycle edges in red
+            nonTreeCtx.strokeStyle = 'red';
+            cycleEdges.forEach(edge => {
+                nonTreeCtx.beginPath();
+                nonTreeCtx.moveTo(positions[edge[0]].x, positions[edge[0]].y);
+                nonTreeCtx.lineTo(positions[edge[1]].x, positions[edge[1]].y);
+                nonTreeCtx.stroke();
+            });
+            
+            // Draw nodes
+            positions.forEach((pos, index) => {
+                nonTreeCtx.beginPath();
+                nonTreeCtx.fillStyle = '#FD9F78';
+                nonTreeCtx.strokeStyle = '#FF4800';
+                nonTreeCtx.lineWidth = 2;
+                nonTreeCtx.arc(pos.x, pos.y, 20, 0, Math.PI * 2);
+                nonTreeCtx.fill();
+                nonTreeCtx.stroke();
+                
+                // Add node label
+                nonTreeCtx.fillStyle = '#000000';
+                nonTreeCtx.textAlign = 'center';
+                nonTreeCtx.textBaseline = 'middle';
+                nonTreeCtx.font = '16px Arial';
+                nonTreeCtx.fillText(index.toString(), pos.x, pos.y);
+            });
+        }
+        
+        // Animation canvas
+        const animationCanvas = document.getElementById('animationCanvas');
+        const animCtx = animationCanvas.getContext('2d');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        
+        let animationPaused = true;
+        let animationStep = 0;
+        let animationInterval;
+        
+        const treePositions = [
+            { x: 200, y: 100 }, // Node 0
+            { x: 100, y: 200 }, // Node 1
+            { x: 200, y: 200 }, // Node 2
+            { x: 300, y: 200 }, // Node 3
+            { x: 100, y: 300 }  // Node 4
+        ];
+        
+        const nonTreePositions = [
+            { x: 600, y: 100 }, // Node 0
+            { x: 600, y: 200 }, // Node 1
+            { x: 700, y: 200 }, // Node 2
+            { x: 650, y: 300 }, // Node 3
+            { x: 550, y: 300 }  // Node 4
+        ];
+        
+        const treeEdges = [[0, 1], [0, 2], [0, 3], [1, 4]];
+        const nonTreeEdges = [[0, 1], [1, 2], [2, 3], [1, 3], [1, 4]];
+        
+        function drawAnimationFrame() {
+            // Clear canvas
+            animCtx.clearRect(0, 0, animationCanvas.width, animationCanvas.height);
+            
+            // Draw title
+            animCtx.font = '18px Arial';
+            animCtx.fillStyle = '#FF4800';
+            animCtx.textAlign = 'center';
+            animCtx.fillText('Valid Tree', 200, 50);
+            animCtx.fillText('Invalid Tree (Contains Cycle)', 600, 50);
+            
+            // Draw divider line
+            animCtx.beginPath();
+            animCtx.strokeStyle = '#FD9F78';
+            animCtx.lineWidth = 2;
+            animCtx.setLineDash([5, 5]);
+            animCtx.moveTo(400, 50);
+            animCtx.lineTo(400, 350);
+            animCtx.stroke();
+            animCtx.setLineDash([]);
+            
+            // Draw edges based on current step
+            drawEdgesForStep();
+            
+            // Draw nodes for both graphs
+            treePositions.forEach((pos, index) => {
+                animCtx.beginPath();
+                animCtx.fillStyle = '#FD9F78';
+                animCtx.strokeStyle = '#FF4800';
+                animCtx.lineWidth = 2;
+                animCtx.arc(pos.x, pos.y, 20, 0, Math.PI * 2);
+                animCtx.fill();
+                animCtx.stroke();
+                
+                animCtx.fillStyle = '#000000';
+                animCtx.textAlign = 'center';
+                animCtx.textBaseline = 'middle';
+                animCtx.font = '16px Arial';
+                animCtx.fillText(index.toString(), pos.x, pos.y);
+            });
+            
+            nonTreePositions.forEach((pos, index) => {
+                animCtx.beginPath();
+                animCtx.fillStyle = '#FD9F78';
+                animCtx.strokeStyle = '#FF4800';
+                animCtx.lineWidth = 2;
+                animCtx.arc(pos.x, pos.y, 20, 0, Math.PI * 2);
+                animCtx.fill();
+                animCtx.stroke();
+                
+                animCtx.fillStyle = '#000000';
+                animCtx.textAlign = 'center';
+                animCtx.textBaseline = 'middle';
+                animCtx.font = '16px Arial';
+                animCtx.fillText(index.toString(), pos.x, pos.y);
+            });
+            
+            // Draw explanation based on current step
+            drawExplanationForStep();
+        }
+        
+        function drawEdgesForStep() {
+            animCtx.lineWidth = 2;
+            
+            // Draw tree edges
+            for(let i = 0; i < Math.min(animationStep + 1, treeEdges.length); i++) {
+                const edge = treeEdges[i];
+                animCtx.beginPath();
+                animCtx.strokeStyle = '#FF4800';
+                animCtx.moveTo(treePositions[edge[0]].x, treePositions[edge[0]].y);
+                animCtx.lineTo(treePositions[edge[1]].x, treePositions[edge[1]].y);
+                animCtx.stroke();
+            }
+            
+            // Draw non-tree edges
+            for(let i = 0; i < Math.min(animationStep + 1, nonTreeEdges.length); i++) {
+                const edge = nonTreeEdges[i];
+                
+                // Check if this is part of the cycle
+                const isCycleEdge = (i >= 1 && i <= 3) && animationStep >= 3;
+                
+                animCtx.beginPath();
+                animCtx.strokeStyle = isCycleEdge ? 'red' : '#FF4800';
+                animCtx.moveTo(nonTreePositions[edge[0]].x, nonTreePositions[edge[0]].y);
+                animCtx.lineTo(nonTreePositions[edge[1]].x, nonTreePositions[edge[1]].y);
+                animCtx.stroke();
+                
+                // Highlight cycle when it's formed
+                if (animationStep === 3 && i === 3) {
+                    // Draw a semi-transparent red highlight around the cycle
+                    animCtx.beginPath();
+                    animCtx.fillStyle = 'rgba(255,0,0,0.1)';
+                    animCtx.moveTo(nonTreePositions[1].x, nonTreePositions[1].y);
+                    animCtx.lineTo(nonTreePositions[2].x, nonTreePositions[2].y);
+                    animCtx.lineTo(nonTreePositions[3].x, nonTreePositions[3].y);
+                    animCtx.closePath();
+                    animCtx.fill();
+                }
+            }
+        }
+        
+        function drawExplanationForStep() {
+            animCtx.fillStyle = '#000000';
+            animCtx.textAlign = 'center';
+            animCtx.font = '14px Arial';
+            
+            const explanation = [
+                "Adding first edge: Node 0 to Node 1",
+                "Adding more edges: Node 0 connecting to other nodes",
+                "Tree is forming with each node having a unique path",
+                "A cycle is formed in the right graph (1-2-3-1)",
+                "Final edge added: Both graphs are now complete"
+            ];
+            
+            if (animationStep < explanation.length) {
+                animCtx.fillText(explanation[animationStep], 400, 380);
+            }
+        }
+        
+        function startAnimation() {
+            animationInterval = setInterval(() => {
+                if (!animationPaused) {
+                    animationStep++;
+                    if (animationStep >= 5) {
+                        animationStep = 4; // Hold at the last frame
+                        animationPaused = true;
+                        playPauseBtn.textContent = 'Play';
+                        clearInterval(animationInterval);
+                    }
+                    drawAnimationFrame();
+                }
+            }, 1500);
+        }
+        
+        function resetAnimation() {
+            clearInterval(animationInterval);
+            animationStep = 0;
+            drawAnimationFrame();
+            if (!animationPaused) {
+                startAnimation();
+            }
+        }
+        
+        playPauseBtn.addEventListener('click', () => {
+            animationPaused = !animationPaused;
+            playPauseBtn.textContent = animationPaused ? 'Play' : 'Pause';
+            
+            if (!animationPaused && animationStep >= 4) {
+                // If at the end, restart
+                animationStep = 0;
+            }
+            
+            if (!animationPaused) {
+                startAnimation();
+            }
+        });
+        
+        resetBtn.addEventListener('click', resetAnimation);
+        
+        // Comparison canvas
+        const comparisonCanvas = document.getElementById('comparisonCanvas');
+        const compCtx = comparisonCanvas.getContext('2d');
+        
+        function drawComparison() {
+            compCtx.clearRect(0, 0, comparisonCanvas.width, comparisonCanvas.height);
+            
+            const treeX = 175;
+            const nonTreeX = 525;
+            const startY = 80;
+            const rowHeight = 50;
+            
+            // Draw headers
+            compCtx.font = 'bold 18px Arial';
+            compCtx.fillStyle = '#FF4800';
+            compCtx.textAlign = 'center';
+            compCtx.fillText('Tree Properties', treeX, 40);
+            compCtx.fillText('Non-Tree Properties', nonTreeX, 40);
+            
+            // Draw properties
+            compCtx.font = '16px Arial';
+            compCtx.fillStyle = '#000000';
+            compCtx.textAlign = 'center';
+            
+            const properties = [
+                ["Exactly n-1 edges", "Can have n or more edges"],
+                ["No cycles", "Contains at least one cycle"],
+                ["One unique path between any two nodes", "Can have multiple paths between nodes"],
+                ["Removing any edge disconnects the graph", "Can remove edges while staying connected"],
+                ["Adding any edge creates a cycle", "Adding edges may create additional cycles"],
+                ["Simple to traverse", "May need cycle detection algorithms"]
+            ];
+            
+            for (let i = 0; i < properties.length; i++) {
+                const y = startY + i * rowHeight;
+                
+                // Draw tree property
+                compCtx.fillStyle = '#FFF';
+                compCtx.fillRect(treeX - 150, y - 20, 300, 40);
+                compCtx.fillStyle = '#000';
+                compCtx.fillText(properties[i][0], treeX, y);
+                compCtx.strokeStyle = '#FF4800';
+                compCtx.strokeRect(treeX - 150, y - 20, 300, 40);
+                
+                // Draw non-tree property
+                compCtx.fillStyle = '#FFF';
+                compCtx.fillRect(nonTreeX - 150, y - 20, 300, 40);
+                compCtx.fillStyle = '#000';
+                compCtx.fillText(properties[i][1], nonTreeX, y);
+                compCtx.strokeStyle = '#FF4800';
+                compCtx.strokeRect(nonTreeX - 150, y - 20, 300, 40);
+            }
+        }
+        
+        // Initialize all canvases
+        drawTree();
+        drawNonTree();
+        drawAnimationFrame();
+        drawComparison();
+    </script>
+</body>
+</html>
