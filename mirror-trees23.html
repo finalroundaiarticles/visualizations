@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mirror Trees Checker</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: white;
+        }
+        
+        #container {
+            width: 100%;
+            height: 100vh;
+            background-color: white;
+            position: relative;
+        }
+        
+        #controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: white;
+            padding: 15px;
+            border: 2px solid #1c1d20;
+            border-radius: 8px;
+        }
+        
+        button {
+            background-color: #ff4800;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background-color: #e03d00;
+        }
+        
+        #canvas {
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            padding-top: 120px;
+        }
+        
+        .tree-container {
+            position: relative;
+            width: 35%;
+            height: 400px;
+            border: 2px solid #1c1d20;
+            border-radius: 8px;
+            background-color: white;
+        }
+        
+        .tree-title {
+            position: absolute;
+            top: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            font-size: 18px;
+            color: #1c1d20;
+        }
+        
+        .node {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background-color: white;
+            color: #1c1d20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            font-size: 12px;
+            user-select: none;
+            border: 2px solid #1c1d20;
+            z-index: 10;
+        }
+        
+        .node.highlight {
+            background-color: white;
+            color: #ff4800;
+            border-color: #ff4800;
+            box-shadow: 0 0 10px #ff4800;
+        }
+        
+        .edge {
+            position: absolute;
+            background-color: #1c1d20;
+            height: 2px;
+            transform-origin: left center;
+            z-index: 1;
+        }
+        
+        .edge.highlight {
+            background-color: #ff4800;
+            box-shadow: 0 0 4px #ff4800;
+        }
+        
+        #result {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            padding: 15px;
+            border: 2px solid #1c1d20;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            min-width: 300px;
+        }
+        
+        .result-true {
+            color: #ff4800;
+        }
+        
+        .result-false {
+            color: #1c1d20;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="controls">
+            <button onclick="prevStep()">← Prev</button>
+            <button onclick="nextStep()">Next →</button>
+        </div>
+        
+        <div id="canvas">
+            <div class="tree-container" id="tree1-container">
+                <div class="tree-title">Tree 1</div>
+            </div>
+            <div class="tree-container" id="tree2-container">
+                <div class="tree-title">Tree 2</div>
+            </div>
+        </div>
+        
+        <div id="result">
+            <div>Step: <span id="stepText">1 of 6</span></div>
+            <div id="stepDescription">Checking if two trees are mirrors of each other...</div>
+        </div>
+    </div>
+
+    <script>
+        let tree1Nodes = [];
+        let tree2Nodes = [];
+        let tree1Edges = [];
+        let tree2Edges = [];
+        let currentStep = 0;
+        const totalSteps = 6;
+
+        const steps = [
+            {
+                title: "Checking if two trees are mirrors of each other...",
+                description: "Two trees are mirrors if left subtree of one matches right subtree of other",
+                highlight: { tree1: [], tree2: [] }
+            },
+            {
+                title: "Step 1: Compare root nodes",
+                description: "Both roots have value 1 ✓ - Continue checking subtrees",
+                highlight: { tree1: [0], tree2: [0] }
+            },
+            {
+                title: "Step 2: Compare Tree1.left with Tree2.right",
+                description: "Tree1.left (2) vs Tree2.right (2) ✓ - Values match",
+                highlight: { tree1: [1], tree2: [2] }
+            },
+            {
+                title: "Step 3: Compare Tree1.right with Tree2.left",
+                description: "Tree1.right (3) vs Tree2.left (3) ✓ - Values match",
+                highlight: { tree1: [2], tree2: [1] }
+            },
+            {
+                title: "Step 4: All leaf nodes checked",
+                description: "All corresponding nodes have matching values in mirror positions",
+                highlight: { tree1: [1, 2], tree2: [1, 2] }
+            },
+            {
+                title: "Result: TRUE - Trees are mirrors!",
+                description: "Tree1's left subtree mirrors Tree2's right subtree and vice versa",
+                highlight: { tree1: [0, 1, 2], tree2: [0, 1, 2] }
+            }
+        ];
+
+        class TreeNode {
+            constructor(val, left = null, right = null) {
+                this.val = val;
+                this.left = left;
+                this.right = right;
+                this.x = 0;
+                this.y = 0;
+            }
+        }
+
+        function initializeTrees() {
+            // Tree 1: Root(1), Left(2), Right(3)
+            const tree1Root = new TreeNode(1);
+            tree1Root.x = 120;
+            tree1Root.y = 80;
+            
+            const tree1Left = new TreeNode(2);
+            tree1Left.x = 80;
+            tree1Left.y = 160;
+            
+            const tree1Right = new TreeNode(3);
+            tree1Right.x = 160;
+            tree1Right.y = 160;
+            
+            tree1Root.left = tree1Left;
+            tree1Root.right = tree1Right;
+            
+            tree1Nodes = [tree1Root, tree1Left, tree1Right];
+
+            // Tree 2: Root(1), Left(3), Right(2) - Mirror of Tree 1
+            const tree2Root = new TreeNode(1);
+            tree2Root.x = 120;
+            tree2Root.y = 80;
+            
+            const tree2Left = new TreeNode(3);
+            tree2Left.x = 80;
+            tree2Left.y = 160;
+            
+            const tree2Right = new TreeNode(2);
+            tree2Right.x = 160;
+            tree2Right.y = 160;
+            
+            tree2Root.left = tree2Left;
+            tree2Root.right = tree2Right;
+            
+            tree2Nodes = [tree2Root, tree2Left, tree2Right];
+
+            renderTrees();
+            updateStep();
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateStep();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        }
+
+        function updateStep() {
+            const step = steps[currentStep];
+            document.getElementById('stepText').textContent = `${currentStep + 1} of ${totalSteps}`;
+            document.getElementById('stepDescription').textContent = step.description;
+            
+            // Clear previous highlighting
+            document.querySelectorAll('.node').forEach(node => {
+                node.classList.remove('highlight');
+            });
+            document.querySelectorAll('.edge').forEach(edge => {
+                edge.classList.remove('highlight');
+            });
+
+            // Apply current step highlighting
+            step.highlight.tree1.forEach(nodeIndex => {
+                if (tree1Nodes[nodeIndex]) {
+                    highlightNodeInTree(tree1Nodes[nodeIndex], 'tree1-container');
+                }
+            });
+
+            step.highlight.tree2.forEach(nodeIndex => {
+                if (tree2Nodes[nodeIndex]) {
+                    highlightNodeInTree(tree2Nodes[nodeIndex], 'tree2-container');
+                }
+            });
+        }
+
+        function renderTrees() {
+            renderTree(tree1Nodes, 'tree1-container', tree1Edges);
+            renderTree(tree2Nodes, 'tree2-container', tree2Edges);
+        }
+
+        function renderTree(nodes, containerId, edges) {
+            const container = document.getElementById(containerId);
+            // Clear existing content except title
+            const title = container.querySelector('.tree-title');
+            container.innerHTML = '';
+            container.appendChild(title);
+            
+            edges.length = 0;
+
+            // Draw edges first
+            nodes.forEach(node => {
+                if (node.left) {
+                    drawEdge(node, node.left, container, edges);
+                }
+                if (node.right) {
+                    drawEdge(node, node.right, container, edges);
+                }
+            });
+
+            // Draw nodes
+            nodes.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'node';
+                nodeElement.style.left = node.x + 'px';
+                nodeElement.style.top = node.y + 'px';
+                nodeElement.textContent = node.val;
+                container.appendChild(nodeElement);
+            });
+        }
+
+        function drawEdge(parent, child, container, edges) {
+            const edge = document.createElement('div');
+            edge.className = 'edge';
+            
+            const dx = child.x - parent.x;
+            const dy = child.y - parent.y;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            
+            edge.style.left = (parent.x + 17) + 'px';
+            edge.style.top = (parent.y + 17) + 'px';
+            edge.style.width = length + 'px';
+            edge.style.transform = `rotate(${angle}deg)`;
+            
+            edges.push({ element: edge, parent, child });
+            container.appendChild(edge);
+        }
+
+        function highlightNodeInTree(node, containerId) {
+            const container = document.getElementById(containerId);
+            const nodeElements = container.querySelectorAll('.node');
+            
+            nodeElements.forEach(elem => {
+                if (parseInt(elem.style.left) === node.x && parseInt(elem.style.top) === node.y) {
+                    elem.classList.add('highlight');
+                }
+            });
+
+            // Highlight connected edges
+            const edges = containerId === 'tree1-container' ? tree1Edges : tree2Edges;
+            edges.forEach(edge => {
+                if (edge.parent === node || edge.child === node) {
+                    edge.element.classList.add('highlight');
+                }
+            });
+        }
+
+        // Initialize on load
+        initializeTrees();
+    </script>
+</body>
+</html>
