@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Tree LCA Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: rgba(253, 159, 120, 0.1);
+            border-left: 5px solid #FD9F78;
+        }
+        
+        #canvas-container {
+            width: 100%;
+            height: 500px;
+            position: relative;
+            margin: 20px 0;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lowest Common Ancestor (LCA) in Binary Trees</h1>
+        
+        <div class="explanation">
+            <p>The Lowest Common Ancestor (LCA) of two nodes in a binary tree is the deepest node that has both nodes as descendants. A node can be a descendant of itself.</p>
+        </div>
+        
+        <div id="canvas-container">
+            <canvas id="treeCanvas"></canvas>
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #000000;"></div>
+                <span>Regular Node</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FF4800;"></div>
+                <span>Target Node 1</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FD9F78;"></div>
+                <span>Target Node 2</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #00A86B;"></div>
+                <span>LCA Node</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class TreeNode {
+            constructor(val) {
+                this.val = val;
+                this.left = null;
+                this.right = null;
+                this.x = 0;
+                this.y = 0;
+            }
+        }
+
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        // Resize canvas to fit container
+        function resizeCanvas() {
+            const container = document.getElementById('canvas-container');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+
+        window.addEventListener('resize', function() {
+            resizeCanvas();
+            drawCurrentStep();
+        });
+
+        resizeCanvas();
+
+        // Create the binary tree from the example
+        function createBinaryTree() {
+            const root = new TreeNode(3);
+            root.left = new TreeNode(5);
+            root.right = new TreeNode(1);
+            root.left.left = new TreeNode(6);
+            root.left.right = new TreeNode(2);
+            root.right.left = new TreeNode(0);
+            root.right.right = new TreeNode(8);
+            root.left.right.left = new TreeNode(7);
+            root.left.right.right = new TreeNode(4);
+            return root;
+        }
+
+        const root = createBinaryTree();
+
+        // Calculate node positions for drawing
+        function calculateNodePositions(node, depth = 0, horizontalPosition = 0, totalWidth = 1) {
+            if (!node) return;
+            
+            const nodeSpacing = canvas.width / (Math.pow(2, depth) + 1);
+            node.x = (horizontalPosition + 1) * nodeSpacing;
+            node.y = (depth + 1) * 70;
+            
+            calculateNodePositions(node.left, depth + 1, horizontalPosition * 2, totalWidth);
+            calculateNodePositions(node.right, depth + 1, horizontalPosition * 2 + 1, totalWidth);
+        }
+
+        // Drawing functions
+        function drawNode(node, color = "#000000", highlight = false) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, highlight ? 25 : 20, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = "#FFFFFF";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.font = "16px Arial";
+            ctx.fillStyle = "#FFFFFF";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(node.val, node.x, node.y);
+        }
+
+        function drawEdge(parent, child, color = "#000000") {
+            ctx.beginPath();
+            ctx.moveTo(parent.x, parent.y);
+            ctx.lineTo(child.x, child.y);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function drawTree(node, targetNode1 = null, targetNode2 = null, lcaNode = null, highlightPath = false) {
+            if (!node) return;
+
+            // Draw edges to children
+            if (node.left) {
+                let edgeColor = "#000000";
+                if (highlightPath && (
+                    (node === lcaNode && (node.left === targetNode1 || node.left === targetNode2)) ||
+                    isAncestor(node.left, targetNode1) || isAncestor(node.left, targetNode2)
+                )) {
+                    edgeColor = "#FF4800";
+                }
+                drawEdge(node, node.left, edgeColor);
+            }
+            
+            if (node.right) {
+                let edgeColor = "#000000";
+                if (highlightPath && (
+                    (node === lcaNode && (node.right === targetNode1 || node.right === targetNode2)) ||
+                    isAncestor(node.right, targetNode1) || isAncestor(node.right, targetNode2)
+                )) {
+                    edgeColor = "#FF4800";
+                }
+                drawEdge(node, node.right, edgeColor);
+            }
+
+            // Draw the node
+            let nodeColor = "#000000";
+            let isHighlighted = false;
+            
+            if (node === targetNode1) {
+                nodeColor = "#FF4800";
+                isHighlighted = true;
+            } else if (node === targetNode2) {
+                nodeColor = "#FD9F78";
+                isHighlighted = true;
+            } else if (node === lcaNode) {
+                nodeColor = "#00A86B";
+                isHighlighted = true;
+            }
+            
+            drawNode(node, nodeColor, isHighlighted);
+
+            // Recursively draw children
+            if (node.left) drawTree(node.left, targetNode1, targetNode2, lcaNode, highlightPath);
+            if (node.right) drawTree(node.right, targetNode1, targetNode2, lcaNode, highlightPath);
+        }
+
+        // Helper function to check if a node is an ancestor of another
+        function isAncestor(potentialAncestor, targetNode) {
+            if (!potentialAncestor || !targetNode) return false;
+            if (potentialAncestor === targetNode) return true;
+            
+            return isAncestor(potentialAncestor.left, targetNode) || 
+                   isAncestor(potentialAncestor.right, targetNode);
+        }
+
+        // Find a node by its value
+        function findNode(root, val) {
+            if (!root) return null;
+            if (root.val === val) return root;
+            
+            const leftResult = findNode(root.left, val);
+            if (leftResult) return leftResult;
+            
+            return findNode(root.right, val);
+        }
+
+        // Find the LCA
+        function findLCA(root, p, q) {
+            if (!root || root === p || root === q) return root;
+            
+            const left = findLCA(root.left, p, q);
+            const right = findLCA(root.right, p, q);
+            
+            if (left && right) return root;
+            return left ? left : right;
+        }
+
+        // Animation steps
+        const animationSteps = [
+            {
+                title: "Binary Tree Structure",
+                description: "This is our binary tree with nodes 3, 5, 1, 6, 2, 0, 8, 7, 4. We'll explore how to find the Lowest Common Ancestor (LCA) of different node pairs.",
+                action: () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    calculateNodePositions(root);
+                    drawTree(root);
+                    
+                    ctx.font = "18px Arial";
+                    ctx.fillStyle = "#000000";
+                    ctx.textAlign = "center";
+                    ctx.fillText("Binary Tree Structure", canvas.width/2, 30);
+                }
+            },
+            {
+                title: "Finding LCA of Nodes 5 and 1",
+                description: "Let's find the LCA of nodes 5 and 1. We need to find the deepest node that has both 5 and 1 as descendants.",
+                action: () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const node5 = findNode(root, 5);
+                    const node1 = findNode(root, 1);
+                    
+                    calculateNodePositions(root);
+                    drawTree(root, node5, node1);
+                    
+                    ctx.font = "18px Arial";
+                    ctx.fillStyle = "#000000";
+                    ctx.textAlign = "center";
+                    ctx.fillText("Finding LCA of Nodes 5 and 1", canvas.width/2, 30);
+                }
+            },
+            {
+                title: "LCA of Nodes 5 and 1",
+                description: "The LCA of nodes 5 and 1 is node 3 (the root). This is because 3 is the deepest node that has both 5 and 1 as descendants.",
+                action: () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const node5 = findNode(root, 5);
+                    const node1 = findNode(root, 1);
+                    const lca = findLCA(root, node5, node1);
+                    
+                    calculateNodePositions(root);
+                    drawTree(root, node5, node1, lca, true);
+                    
+                    ctx.font = "18px Arial";
+                    ctx.fillStyle = "#000000";
+                    ctx.textAlign = "center";
+                    ctx.fillText("LCA of Nodes 5 and 1 is Node 3", canvas.width/2, 30);
+                }
+            },
+            {
+                title: "Finding LCA of Nodes 5 and 4",
+                description: "Now, let's find the LCA of nodes 5 and 4. Again, we need to find the deepest node that has both 5 and 4 as descendants.",
+                action: () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const node5 = findNode(root, 5);
+                    const node4 = findNode(root, 4);
+                    
+                    calculateNodePositions(root);
+                    drawTree(root, node5, node4);
+                    
+                    ctx.font = "18px Arial";
+                    ctx.fillStyle = "#000000";
+                    ctx.textAlign = "center";
+                    ctx.fillText("Finding LCA of Nodes 5 and 4", canvas.width/2, 30);
+                }
+            },
+            {
+                title: "LCA of Nodes 5 and 4",
+                description: "The LCA of nodes 5 and 4 is node 5 itself. Remember that a node can be a descendant of itself, and node 5 is the deepest node that has both 5 and 4 as descendants.",
+                action: () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const node5 = findNode(root, 5);
+                    const node4 = findNode(root, 4);
+                    const lca = findLCA(root, node5, node4);
+                    
+                    calculateNodePositions(root);
+                    drawTree(root, node5, node4, lca, true);
+                    
+                    ctx.font = "18px Arial";
+                    ctx.fillStyle = "#000000";
+                    ctx.textAlign = "center";
+                    ctx.fillText("LCA of Nodes 5 and 4 is Node 5", canvas.width/2, 30);
+                }
+            }
+        ];
+
+        let currentStep = 0;
+
+        function drawCurrentStep() {
+            animationSteps[currentStep].action();
+            updateExplanation();
+            updateButtonState();
+        }
+
+        function updateExplanation() {
+            const step = animationSteps[currentStep];
+            const explanation = document.querySelector('.explanation');
+            explanation.innerHTML = `<p>${step.description}</p>`;
+        }
+
+        function updateButtonState() {
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === animationSteps.length - 1;
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                drawCurrentStep();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < animationSteps.length - 1) {
+                currentStep++;
+                drawCurrentStep();
+            }
+        });
+
+        // Initial draw
+        drawCurrentStep();
+    </script>
+</body>
+</html>
