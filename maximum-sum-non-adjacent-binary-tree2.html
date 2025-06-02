@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Programming State Calculation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .explanation {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .animation-container {
+            width: 100%;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #000000;
+        }
+
+        .node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            transition: all 0.5s ease;
+            border: 2px solid #FF4800;
+            color: #000000;
+        }
+
+        .node-value {
+            position: absolute;
+            background-color: #FFFFFF;
+            border: 1px solid #FF4800;
+            border-radius: 5px;
+            padding: 5px;
+            font-size: 12px;
+            color: #000000;
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+
+        .edge {
+            position: absolute;
+            background-color: #FF4800;
+            transform-origin: 0 0;
+            height: 2px;
+            z-index: -1;
+            transition: all 0.5s ease;
+        }
+
+        .highlight {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(255, 72, 0, 0.7);
+        }
+
+        .calculation {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            width: 250px;
+            background-color: #FFFFFF;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .calculation-title {
+            font-weight: bold;
+            color: #FF4800;
+            margin-bottom: 5px;
+        }
+
+        .calculation-step {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dynamic Programming State Calculation on a Tree</h1>
+        
+        <div class="explanation">
+            <p>This animation illustrates the bottom-up dynamic programming approach to solve the "Maximum Independent Set" problem on a tree. For each node, we calculate two values:</p>
+            <p><strong style="color: #FF4800;">[include, exclude]</strong> - The maximum value when the node is included or excluded from the set.</p>
+            <p>We traverse the tree from leaves to root (post-order traversal), computing these values for each node based on its children's values.</p>
+        </div>
+        
+        <div class="animation-container" id="animation">
+            <!-- Tree nodes and edges will be added here dynamically -->
+            <div class="calculation" id="calculation">
+                <div class="calculation-title">Calculation:</div>
+                <div id="calculation-content"></div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" class="nav-button" disabled>Previous</button>
+            <button id="nextBtn" class="nav-button">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">Step 0 of 0</div>
+    </div>
+
+    <script>
+        // Tree structure
+        const tree = {
+            id: 1,
+            value: 5,
+            children: [
+                {
+                    id: 2,
+                    value: 3,
+                    children: [
+                        {
+                            id: 4,
+                            value: 2,
+                            children: []
+                        },
+                        {
+                            id: 5,
+                            value: 1,
+                            children: []
+                        }
+                    ]
+                },
+                {
+                    id: 3,
+                    value: 4,
+                    children: [
+                        {
+                            id: 6,
+                            value: 7,
+                            children: []
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // Node positions
+        const nodePositions = {
+            1: { x: 400, y: 80 },
+            2: { x: 250, y: 180 },
+            3: { x: 550, y: 180 },
+            4: { x: 180, y: 280 },
+            5: { x: 320, y: 280 },
+            6: { x: 550, y: 280 }
+        };
+
+        // Animation steps
+        let steps = [];
+        let currentStep = 0;
+
+        // Generate HTML elements for the tree
+        function createTreeElements() {
+            const animation = document.getElementById('animation');
+            
+            // Create nodes
+            for (const id in nodePositions) {
+                // Find node data
+                let nodeData = findNodeById(tree, parseInt(id));
+                
+                // Create node
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.id = `node-${id}`;
+                node.style.left = `${nodePositions[id].x - 30}px`;
+                node.style.top = `${nodePositions[id].y - 30}px`;
+                node.textContent = nodeData.value;
+                animation.appendChild(node);
+                
+                // Create node value display
+                const nodeValue = document.createElement('div');
+                nodeValue.className = 'node-value';
+                nodeValue.id = `value-${id}`;
+                nodeValue.style.left = `${nodePositions[id].x - 45}px`;
+                nodeValue.style.top = `${nodePositions[id].y + 35}px`;
+                nodeValue.innerHTML = "[?, ?]";
+                animation.appendChild(nodeValue);
+            }
+            
+            // Create edges
+            createEdge(1, 2);
+            createEdge(1, 3);
+            createEdge(2, 4);
+            createEdge(2, 5);
+            createEdge(3, 6);
+        }
+
+        function createEdge(fromId, toId) {
+            const animation = document.getElementById('animation');
+            const from = nodePositions[fromId];
+            const to = nodePositions[toId];
+            
+            // Calculate length and angle
+            const dx = to.x - from.x;
+            const dy = to.y - from.y;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            
+            // Create edge
+            const edge = document.createElement('div');
+            edge.className = 'edge';
+            edge.id = `edge-${fromId}-${toId}`;
+            edge.style.width = `${length}px`;
+            edge.style.left = `${from.x}px`;
+            edge.style.top = `${from.y}px`;
+            edge.style.transform = `rotate(${angle}deg)`;
+            animation.appendChild(edge);
+        }
+
+        // Find node by ID
+        function findNodeById(node, id) {
+            if (node.id === id) {
+                return node;
+            }
+            
+            for (const child of node.children) {
+                const found = findNodeById(child, id);
+                if (found) {
+                    return found;
+                }
+            }
+            
+            return null;
+        }
+
+        // Generate the steps for animation
+        function generateSteps() {
+            steps = [];
+            
+            // Initial state
+            steps.push({
+                title: "Initial State",
+                description: "We have a tree where each node has a value. We need to calculate the maximum independent set.",
+                nodes: {},
+                calculation: "Starting with leaf nodes, we'll calculate [include, exclude] values for each node."
+            });
+            
+            // Process node 4 (leaf)
+            steps.push({
+                title: "Process Node 4 (Leaf)",
+                description: "Calculate [include, exclude] for Node 4",
+                nodes: { 4: true },
+                calculation: "Node 4 (value = 2):\n[include, exclude] = [2, 0]\n\ninclude = node value = 2\nexclude = 0 (no children)"
+            });
+            
+            // Process node 5 (leaf)
+            steps.push({
+                title: "Process Node 5 (Leaf)",
+                description: "Calculate [include, exclude] for Node 5",
+                nodes: { 5: true },
+                values: { 4: "[2, 0]" },
+                calculation: "Node 5 (value = 1):\n[include, exclude] = [1, 0]\n\ninclude = node value = 1\nexclude = 0 (no children)"
+            });
+            
+            // Process node 6 (leaf)
+            steps.push({
+                title: "Process Node 6 (Leaf)",
+                description: "Calculate [include, exclude] for Node 6",
+                nodes: { 6: true },
+                values: { 4: "[2, 0]", 5: "[1, 0]" },
+                calculation: "Node 6 (value = 7):\n[include, exclude] = [7, 0]\n\ninclude = node value = 7\nexclude = 0 (no children)"
+            });
+            
+            // Process node 2
+            steps.push({
+                title: "Process Node 2",
+                description: "Calculate [include, exclude] for Node 2 based on children nodes 4 and 5",
+                nodes: { 2: true },
+                values: { 4: "[2, 0]", 5: "[1, 0]", 6: "[7, 0]" },
+                edges: { "2-4": true, "2-5": true },
+                calculation: "Node 2 (value = 3):\n\ninclude = 3 + sum(children's exclude)\n= 3 + 0 + 0 = 3\n\nexclude = sum(max of each child's values)\n= max(2,0) + max(1,0) = 2 + 1 = 3"
+            });
+            
+            // Process node 3
+            steps.push({
+                title: "Process Node 3",
+                description: "Calculate [include, exclude] for Node 3 based on child node 6",
+                nodes: { 3: true },
+                values: { 4: "[2, 0]", 5: "[1, 0]", 6: "[7, 0]", 2: "[3, 3]" },
+                edges: { "3-6": true },
+                calculation: "Node 3 (value = 4):\n\ninclude = 4 + sum(children's exclude)\n= 4 + 0 = 4\n\nexclude = sum(max of each child's values)\n= max(7,0) = 7"
+            });
+            
+            // Process root (node 1)
+            steps.push({
+                title: "Process Root Node (1)",
+                description: "Calculate [include, exclude] for root based on children nodes 2 and 3",
+                nodes: { 1: true },
+                values: { 4: "[2, 0]", 5: "[1, 0]", 6: "[7, 0]", 2: "[3, 3]", 3: "[4, 7]" },
+                edges: { "1-2": true, "1-3": true },
+                calculation: "Node 1 (value = 5):\n\ninclude = 5 + sum(children's exclude)\n= 5 + 3 + 7 = 15\n\nexclude = sum(max of each child's values)\n= max(3,3) + max(4,7) = 3 + 7 = 10"
+            });
+            
+            // Final result
+            steps.push({
+                title: "Final Result",
+                description: "The root has [include, exclude] = [15, 10], so the maximum independent set has sum 15",
+                values: { 4: "[2, 0]", 5: "[1, 0]", 6: "[7, 0]", 2: "[3, 3]", 3: "[4, 7]", 1: "[15, 10]" },
+                calculation: "Final maximum = max(15, 10) = 15\n\nThe optimal solution is to include the root node (1), exclude its children (2, 3), and include the leaf nodes 4, 5 and 6."
+            });
+        }
+
+        // Update the animation based on current step
+        function updateAnimation() {
+            const step = steps[currentStep];
+            
+            // Reset highlighting
+            document.querySelectorAll('.node').forEach(node => {
+                node.classList.remove('highlight');
+            });
+            
+            document.querySelectorAll('.edge').forEach(edge => {
+                edge.style.backgroundColor = '#FF4800';
+                edge.style.height = '2px';
+            });
+            
+            // Apply current step changes
+            if (step.nodes) {
+                for (const nodeId in step.nodes) {
+                    const node = document.getElementById(`node-${nodeId}`);
+                    if (node && step.nodes[nodeId]) {
+                        node.classList.add('highlight');
+                    }
+                }
+            }
+            
+            if (step.edges) {
+                for (const edgeId in step.edges) {
+                    const edge = document.getElementById(`edge-${edgeId}`);
+                    if (edge && step.edges[edgeId]) {
+                        edge.style.backgroundColor = '#FF4800';
+                        edge.style.height = '4px';
+                    }
+                }
+            }
+            
+            // Update node values
+            if (step.values) {
+                for (const nodeId in step.values) {
+                    const valueElement = document.getElementById(`value-${nodeId}`);
+                    if (valueElement) {
+                        valueElement.innerHTML = step.values[nodeId];
+                        valueElement.style.opacity = 1;
+                    }
+                }
+            }
+            
+            // Update calculation box
+            const calculationBox = document.getElementById('calculation');
+            const calculationContent = document.getElementById('calculation-content');
+            
+            if (step.calculation) {
+                calculationContent.innerHTML = step.calculation.replace(/\n/g, '<br>');
+                calculationBox.style.opacity = 1;
+            } else {
+                calculationBox.style.opacity = 0;
+            }
+            
+            // Update step indicator
+            document.getElementById('stepIndicator').textContent = `Step ${currentStep} of ${steps.length - 1}`;
+            
+            // Update buttons
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === steps.length - 1;
+        }
+
+        // Next button click handler
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateAnimation();
+            }
+        });
+        
+        // Previous button click handler
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateAnimation();
+            }
+        });
+        
+        // Initialize the animation
+        window.onload = function() {
+            createTreeElements();
+            generateSteps();
+            updateAnimation();
+        };
+    </script>
+</body>
+</html>
