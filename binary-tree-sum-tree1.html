@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valid Sum Tree Explanation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        .canvas-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        canvas {
+            border: 1px solid #FD9F78;
+            border-radius: 8px;
+        }
+        .explanation {
+            background-color: #FD9F78;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #000000;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Valid Sum Tree Explanation</h1>
+        
+        <div class="explanation" id="explanation">
+            A Sum Tree is a binary tree where the value of each node equals the sum of all values in its left and right subtrees.
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="treeCanvas" width="700" height="400"></canvas>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">Step 1 of 5</div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        const explanationDiv = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        
+        let currentStep = 1;
+        const totalSteps = 5;
+        
+        // Node class for tree representation
+        class TreeNode {
+            constructor(value, x, y, radius = 30) {
+                this.value = value;
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.left = null;
+                this.right = null;
+                this.highlighted = false;
+                this.checked = false;
+            }
+            
+            draw(ctx, label = '') {
+                // Draw circle
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                
+                if (this.highlighted) {
+                    ctx.fillStyle = '#FF4800';
+                } else if (this.checked) {
+                    ctx.fillStyle = '#FD9F78';
+                } else {
+                    ctx.fillStyle = '#FFFFFF';
+                }
+                
+                ctx.fill();
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Draw value
+                ctx.fillStyle = '#000000';
+                ctx.font = '20px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.value, this.x, this.y);
+                
+                // Draw label if provided
+                if (label) {
+                    ctx.font = '16px Arial';
+                    ctx.fillText(label, this.x, this.y - this.radius - 10);
+                }
+            }
+            
+            drawEdge(ctx, child) {
+                if (!child) return;
+                
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y + this.radius);
+                ctx.lineTo(child.x, child.y - child.radius);
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+        
+        // Create tree
+        const root = new TreeNode(20, 350, 80);
+        const node1 = new TreeNode(8, 200, 180);
+        const node2 = new TreeNode(12, 500, 180);
+        const node3 = new TreeNode(4, 150, 280);
+        const node4 = new TreeNode(4, 250, 280);
+        
+        root.left = node1;
+        root.right = node2;
+        node1.left = node3;
+        node1.right = node4;
+        
+        // Draw tree function
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges first
+            root.drawEdge(ctx, root.left);
+            root.drawEdge(ctx, root.right);
+            node1.drawEdge(ctx, node1.left);
+            node1.drawEdge(ctx, node1.right);
+            
+            // Draw nodes
+            root.draw(ctx, 'Root');
+            node1.draw(ctx);
+            node2.draw(ctx);
+            node3.draw(ctx);
+            node4.draw(ctx);
+        }
+        
+        // Step explanations
+        const explanations = [
+            "A Sum Tree is a binary tree where the value of each node equals the sum of all values in its left and right subtrees.",
+            "Let's start from the leaf nodes. Both leaf nodes have a value of 4. Since they don't have any children, they are valid sum trees by default.",
+            "Now let's check the node with value 8. Its left child is 4 and right child is 4. The sum is 4 + 4 = 8, which equals the node's value. So this is a valid sum tree node.",
+            "Next, let's check the node with value 12. It has no children, so it's also a valid sum tree node by default.",
+            "Finally, let's check the root node with value 20. Its left subtree sum is 8 and right subtree sum is 12. The sum is 8 + 12 = 20, which equals the root's value. So the entire tree is a valid sum tree!"
+        ];
+        
+        // Update steps
+        function updateStep() {
+            explanationDiv.textContent = explanations[currentStep - 1];
+            stepIndicator.textContent = `Step ${currentStep} of ${totalSteps}`;
+            
+            // Reset all highlights
+            root.highlighted = false;
+            node1.highlighted = false;
+            node2.highlighted = false;
+            node3.highlighted = false;
+            node4.highlighted = false;
+            
+            root.checked = false;
+            node1.checked = false;
+            node2.checked = false;
+            node3.checked = false;
+            node4.checked = false;
+            
+            // Apply highlights based on current step
+            switch(currentStep) {
+                case 2:
+                    node3.highlighted = true;
+                    node4.highlighted = true;
+                    break;
+                case 3:
+                    node1.highlighted = true;
+                    node3.checked = true;
+                    node4.checked = true;
+                    break;
+                case 4:
+                    node2.highlighted = true;
+                    break;
+                case 5:
+                    root.highlighted = true;
+                    node1.checked = true;
+                    node2.checked = true;
+                    break;
+            }
+            
+            // Update buttons
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === totalSteps;
+            
+            drawTree();
+        }
+        
+        // Event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStep();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateStep();
+            }
+        });
+        
+        // Initial draw
+        updateStep();
+    </script>
+</body>
+</html>
