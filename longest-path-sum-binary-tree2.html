@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DFS Traversal with Path Tracking</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .canvas-container {
+            position: relative;
+            margin: 30px auto;
+            width: 800px;
+            height: 500px;
+        }
+        
+        canvas {
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .info-panel {
+            background-color: #FFFFFF;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .step-info {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .highlight {
+            color: #FF4800;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DFS Traversal with Path Tracking</h1>
+        
+        <div class="info-panel">
+            <div class="step-info" id="stepInfo">
+                Welcome to DFS Traversal Animation. Click "Next" to start the animation.
+            </div>
+            <div class="step-info">
+                <strong>Current Depth:</strong> <span id="currentDepth" class="highlight">0</span>
+                <strong style="margin-left: 20px;">Current Sum:</strong> <span id="currentSum" class="highlight">0</span>
+                <strong style="margin-left: 20px;">Max Depth:</strong> <span id="maxDepth" class="highlight">0</span>
+                <strong style="margin-left: 20px;">Result Sum:</strong> <span id="resultSum" class="highlight">0</span>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="treeCanvas" width="800" height="500"></canvas>
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Tree definition
+        class TreeNode {
+            constructor(value, x, y) {
+                this.value = value;
+                this.left = null;
+                this.right = null;
+                this.x = x;
+                this.y = y;
+                this.depth = 0;
+            }
+        }
+        
+        // Create a sample tree
+        //       3
+        //     /   \
+        //    9     20
+        //   / \    / \
+        //  5   1  15   7
+        
+        function createTree() {
+            const root = new TreeNode(3, 400, 60);
+            root.depth = 1;
+            
+            root.left = new TreeNode(9, 200, 150);
+            root.right = new TreeNode(20, 600, 150);
+            root.left.depth = root.right.depth = 2;
+            
+            root.left.left = new TreeNode(5, 150, 240);
+            root.left.right = new TreeNode(1, 250, 240);
+            root.right.left = new TreeNode(15, 550, 240);
+            root.right.right = new TreeNode(7, 650, 240);
+            root.left.left.depth = root.left.right.depth = 
+            root.right.left.depth = root.right.right.depth = 3;
+            
+            return root;
+        }
+        
+        const tree = createTree();
+        
+        // Animation states
+        const states = [];
+        let currentStateIndex = -1;
+        
+        // DFS simulation
+        function simulateDFS(node, path = [], currentDepth = 1, currentSum = 0, maxDepth = 0, resultSum = 0, visitedNodes = []) {
+            if (!node) return { maxDepth, resultSum };
+            
+            const newPath = [...path, node];
+            const newSum = currentSum + node.value;
+            const newMaxDepth = Math.max(maxDepth, currentDepth);
+            
+            const newVisited = [...visitedNodes, node];
+            
+            // Add state - node visit
+            states.push({
+                path: [...newPath],
+                visitedNodes: [...newVisited],
+                currentNode: node,
+                currentDepth,
+                currentSum: newSum,
+                maxDepth: newMaxDepth,
+                resultSum,
+                isLeaf: !node.left && !node.right,
+                message: `Visiting node with value ${node.value} at depth ${currentDepth}. Current sum = ${newSum}.`
+            });
+            
+            // If it's a leaf node
+            if (!node.left && !node.right) {
+                if (currentDepth > maxDepth) {
+                    // Add state - found deeper leaf
+                    states.push({
+                        path: [...newPath],
+                        visitedNodes: [...newVisited],
+                        currentNode: node,
+                        currentDepth,
+                        currentSum: newSum,
+                        maxDepth: currentDepth,
+                        resultSum: newSum,
+                        isLeaf: true,
+                        isDeepest: true,
+                        message: `Found leaf node with value ${node.value} at depth ${currentDepth}. This is deeper than previous max depth ${maxDepth}. Updating max depth to ${currentDepth} and result sum to ${newSum}.`
+                    });
+                    return { maxDepth: currentDepth, resultSum: newSum };
+                } else if (currentDepth === maxDepth) {
+                    // Add state - found same level leaf
+                    const updatedResultSum = resultSum + node.value;
+                    states.push({
+                        path: [...newPath],
+                        visitedNodes: [...newVisited],
+                        currentNode: node,
+                        currentDepth,
+                        currentSum: newSum,
+                        maxDepth,
+                        resultSum: updatedResultSum,
+                        isLeaf: true,
+                        isSameLevel: true,
+                        message: `Found leaf node with value ${node.value} at depth ${currentDepth}. This is at the same depth as max depth. Adding value to result sum: ${resultSum} + ${node.value} = ${updatedResultSum}.`
+                    });
+                    return { maxDepth, resultSum: updatedResultSum };
+                } else {
+                    // Add state - found shorter leaf
+                    states.push({
+                        path: [...newPath],
+                        visitedNodes: [...newVisited],
+                        currentNode: node,
+                        currentDepth,
+                        currentSum: newSum,
+                        maxDepth,
+                        resultSum,
+                        isLeaf: true,
+                        isShorter: true,
+                        message: `Found leaf node with value ${node.value} at depth ${currentDepth}. This is shallower than max depth ${maxDepth}, so we ignore it.`
+                    });
+                    return { maxDepth, resultSum };
+                }
+            }
+            
+            // Recurse left
+            const leftResult = simulateDFS(node.left, newPath, currentDepth + 1, newSum, newMaxDepth, resultSum, newVisited);
+            
+            // Backtrack state
+            if (node.left) {
+                states.push({
+                    path: [...newPath],
+                    visitedNodes: [...newVisited],
+                    currentNode: node,
+                    currentDepth,
+                    currentSum: newSum,
+                    maxDepth: leftResult.maxDepth,
+                    resultSum: leftResult.resultSum,
+                    backtracking: true,
+                    message: `Backtracking to node with value ${node.value} after exploring left subtree. Current max depth = ${leftResult.maxDepth}, result sum = ${leftResult.resultSum}.`
+                });
+            }
+            
+            // Recurse right
+            const rightResult = simulateDFS(node.right, newPath, currentDepth + 1, newSum, leftResult.maxDepth, leftResult.resultSum, newVisited);
+            
+            // Backtrack state for right (only if we're not at the root)
+            if (node.right && currentDepth > 1) {
+                states.push({
+                    path: [...newPath],
+                    visitedNodes: [...newVisited],
+                    currentNode: node,
+                    currentDepth,
+                    currentSum: newSum,
+                    maxDepth: rightResult.maxDepth,
+                    resultSum: rightResult.resultSum,
+                    backtracking: true,
+                    message: `Backtracking to parent after exploring right subtree. Final values for this subtree: max depth = ${rightResult.maxDepth}, result sum = ${rightResult.resultSum}.`
+                });
+            }
+            
+            return rightResult;
+        }
+        
+        // Initialize the simulation
+        simulateDFS(tree);
+        
+        // Add final state
+        states.push({
+            path: [],
+            visitedNodes: [],
+            currentNode: null,
+            currentDepth: 0,
+            currentSum: 0,
+            maxDepth: states[states.length-1].maxDepth,
+            resultSum: states[states.length-1].resultSum,
+            isFinal: true,
+            message: `DFS traversal complete! Final result: max depth = ${states[states.length-1].maxDepth}, sum of values at max depth = ${states[states.length-1].resultSum}.`
+        });
+        
+        // Drawing functions
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges first
+            drawEdges(tree);
+            
+            // Then draw nodes
+            drawNodes(tree);
+            
+            // If we have a current state, highlight accordingly
+            if (currentStateIndex >= 0 && currentStateIndex < states.length) {
+                highlightCurrentState(states[currentStateIndex]);
+            }
+        }
+        
+        function drawEdges(node) {
+            if (!node) return;
+            
+            if (node.left) {
+                ctx.beginPath();
+                ctx.moveTo(node.x, node.y);
+                ctx.lineTo(node.left.x, node.left.y);
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                drawEdges(node.left);
+            }
+            
+            if (node.right) {
+                ctx.beginPath();
+                ctx.moveTo(node.x, node.y);
+                ctx.lineTo(node.right.x, node.right.y);
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                drawEdges(node.right);
+            }
+        }
+        
+        function drawNodes(node) {
+            if (!node) return;
+            
+            // Draw the node
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 25, 0, Math.PI * 2);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fill();
+            ctx.strokeStyle = '#FD9F78';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw the value
+            ctx.fillStyle = '#000000';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.value, node.x, node.y);
+            
+            // Recurse
+            drawNodes(node.left);
+            drawNodes(node.right);
+        }
+        
+        function highlightCurrentState(state) {
+            // Highlight the current path
+            if (state.path) {
+                for (let i = 0; i < state.path.length - 1; i++) {
+                    const from = state.path[i];
+                    const to = state.path[i + 1];
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(from.x, from.y);
+                    ctx.lineTo(to.x, to.y);
+                    ctx.strokeStyle = '#FF4800';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+            }
+            
+            // Highlight visited nodes
+            if (state.visitedNodes) {
+                state.visitedNodes.forEach(node => {
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, 25, 0, Math.PI * 2);
+                    ctx.fillStyle = '#FD9F78';
+                    ctx.fill();
+                    ctx.strokeStyle = '#FF4800';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = 'bold 16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(node.value, node.x, node.y);
+                });
+            }
+            
+            // Highlight current node
+            if (state.currentNode) {
+                ctx.beginPath();
+                ctx.arc(state.currentNode.x, state.currentNode.y, 28, 0, Math.PI * 2);
+                
+                if (state.isLeaf) {
+                    if (state.isDeepest) {
+                        ctx.strokeStyle = '#00CC00'; // Green for deepest leaf
+                    } else if (state.isSameLevel) {
+                        ctx.strokeStyle = '#0000FF'; // Blue for same level leaf
+                    } else if (state.isShorter) {
+                        ctx.strokeStyle = '#FF0000'; // Red for shorter leaf
+                    }
+                    ctx.lineWidth = 4;
+                    ctx.stroke();
+                }
+                
+                ctx.beginPath();
+                ctx.arc(state.currentNode.x, state.currentNode.y, 25, 0, Math.PI * 2);
+                ctx.fillStyle = '#FF4800';
+                ctx.fill();
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(state.currentNode.value, state.currentNode.x, state.currentNode.y);
+            }
+        }
+        
+        // Navigation functions
+        function goToNextState() {
+            if (currentStateIndex < states.length - 1) {
+                currentStateIndex++;
+                updateUI();
+            }
+        }
+        
+        function goToPrevState() {
+            if (currentStateIndex > 0) {
+                currentStateIndex--;
+                updateUI();
+            }
+        }
+        
+        function updateUI() {
+            const state = states[currentStateIndex];
+            
+            // Update info panel
+            document.getElementById('stepInfo').textContent = state.message;
+            document.getElementById('currentDepth').textContent = state.currentDepth;
+            document.getElementById('currentSum').textContent = state.currentSum;
+            document.getElementById('maxDepth').textContent = state.maxDepth;
+            document.getElementById('resultSum').textContent = state.resultSum;
+            
+            // Update buttons
+            document.getElementById('prevBtn').disabled = currentStateIndex <= 0;
+            document.getElementById('nextBtn').disabled = currentStateIndex >= states.length - 1;
+            
+            // Redraw the tree
+            drawTree();
+        }
+        
+        // Event listeners
+        document.getElementById('nextBtn').addEventListener('click', goToNextState);
+        document.getElementById('prevBtn').addEventListener('click', goToPrevState);
+        
+        // Initial drawing
+        drawTree();
+    </script>
+</body>
+</html>
