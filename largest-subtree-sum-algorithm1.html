@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Tree with Subtree Sums</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #FFFFFF;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .description {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            color: #000000;
+            max-width: 600px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Tree with Subtree Sums</h1>
+        <div class="canvas-container">
+            <canvas id="treeCanvas" width="800" height="400"></canvas>
+        </div>
+        <div class="description" id="description">
+            Welcome to Binary Tree with Subtree Sums visualization. This animation shows how to calculate the sum of each subtree in a binary tree.
+        </div>
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const description = document.getElementById('description');
+
+        // Tree node structure
+        class TreeNode {
+            constructor(value, x, y) {
+                this.value = value;
+                this.left = null;
+                this.right = null;
+                this.x = x;
+                this.y = y;
+                this.sum = value; // Initial sum is just the node value
+            }
+        }
+
+        // Create the example tree
+        function createTree() {
+            const root = new TreeNode(1, canvas.width / 2, 60);
+            root.left = new TreeNode(2, root.x - 150, root.y + 80);
+            root.right = new TreeNode(3, root.x + 150, root.y + 80);
+            root.left.left = new TreeNode(4, root.left.x - 60, root.left.y + 80);
+            root.left.right = new TreeNode(5, root.left.x + 60, root.left.y + 80);
+            return root;
+        }
+
+        // Calculate subtree sums
+        function calculateSubtreeSums(node) {
+            if (!node) return 0;
+            
+            const leftSum = calculateSubtreeSums(node.left);
+            const rightSum = calculateSubtreeSums(node.right);
+            
+            node.sum = node.value + leftSum + rightSum;
+            return node.sum;
+        }
+
+        const tree = createTree();
+        calculateSubtreeSums(tree);
+
+        // Animation states
+        const states = [
+            { node: null, description: "We have a binary tree with 5 nodes. We want to find the sum of each subtree." },
+            { node: tree.left.left, description: "Node 4 has no children. Its subtree sum is just its own value: 4." },
+            { node: tree.left.right, description: "Node 5 has no children. Its subtree sum is just its own value: 5." },
+            { node: tree.left, description: "Node 2 has two children (4 and 5). Its subtree sum is 2 + 4 + 5 = 11." },
+            { node: tree.right, description: "Node 3 has no children. Its subtree sum is just its own value: 3." },
+            { node: tree, description: "The root node 1 has subtree sum equal to 1 + 11 + 3 = 15, which is the sum of the entire tree." },
+            { node: null, description: "This completes our visualization of subtree sums in a binary tree." }
+        ];
+
+        let currentState = 0;
+
+        // Draw a node
+        function drawNode(node, highlighted = false) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 25, 0, Math.PI * 2);
+            
+            if (highlighted) {
+                ctx.fillStyle = '#FD9F78';
+            } else {
+                ctx.fillStyle = '#FFFFFF';
+            }
+            
+            ctx.fill();
+            ctx.strokeStyle = '#FF4800';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#000000';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.value, node.x, node.y);
+            
+            if (highlighted) {
+                // Draw sum label
+                ctx.font = '14px Arial';
+                ctx.fillStyle = '#FF4800';
+                ctx.fillText(`Sum: ${node.sum}`, node.x, node.y + 45);
+            }
+        }
+
+        // Draw an edge between two nodes
+        function drawEdge(parent, child) {
+            ctx.beginPath();
+            ctx.moveTo(parent.x, parent.y + 25); // Start from bottom of parent node
+            ctx.lineTo(child.x, child.y - 25);   // End at top of child node
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        // Draw the entire tree
+        function drawTree(tree, highlightedNode = null) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw all edges first
+            if (tree.left) drawEdge(tree, tree.left);
+            if (tree.right) drawEdge(tree, tree.right);
+            if (tree.left && tree.left.left) drawEdge(tree.left, tree.left.left);
+            if (tree.left && tree.left.right) drawEdge(tree.left, tree.left.right);
+            
+            // Then draw all nodes
+            drawNode(tree, highlightedNode === tree);
+            if (tree.left) drawNode(tree.left, highlightedNode === tree.left);
+            if (tree.right) drawNode(tree.right, highlightedNode === tree.right);
+            if (tree.left && tree.left.left) drawNode(tree.left.left, highlightedNode === tree.left.left);
+            if (tree.left && tree.left.right) drawNode(tree.left.right, highlightedNode === tree.left.right);
+        }
+
+        // Update the visualization based on current state
+        function updateVisualization() {
+            drawTree(tree, states[currentState].node);
+            description.textContent = states[currentState].description;
+            
+            prevBtn.disabled = currentState === 0;
+            nextBtn.disabled = currentState === states.length - 1;
+        }
+
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentState > 0) {
+                currentState--;
+                updateVisualization();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentState < states.length - 1) {
+                currentState++;
+                updateVisualization();
+            }
+        });
+
+        // Initial drawing
+        updateVisualization();
+    </script>
+</body>
+</html>
