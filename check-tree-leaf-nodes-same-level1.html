@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valid vs Invalid Leaf Level Trees</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin: 20px auto;
+            max-width: 1200px;
+        }
+        
+        .tree-container {
+            text-align: center;
+            margin: 10px;
+            width: 45%;
+            min-width: 300px;
+        }
+        
+        canvas {
+            margin: 0 auto;
+            display: block;
+            border: 1px solid #FD9F78;
+        }
+        
+        .title {
+            font-size: 20px;
+            margin: 10px 0;
+            color: #FF4800;
+            font-weight: bold;
+        }
+        
+        .description {
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px auto;
+            max-width: 800px;
+            text-align: left;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin: 10px 0;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Valid vs Invalid Leaf Level Trees</h1>
+    
+    <div class="container">
+        <div class="tree-container">
+            <div class="title">Valid Leaf Level Tree</div>
+            <canvas id="validTreeCanvas" width="400" height="300"></canvas>
+        </div>
+        
+        <div class="tree-container">
+            <div class="title">Invalid Leaf Level Tree</div>
+            <canvas id="invalidTreeCanvas" width="400" height="300"></canvas>
+        </div>
+    </div>
+    
+    <div class="description" id="description">
+        Step 1: In a valid leaf level tree, all leaf nodes must be at the same level (depth). The tree on the left shows a valid tree where all leaf nodes (shown in green) are at level 3.
+    </div>
+    
+    <div class="step-indicator" id="stepIndicator">
+        Step 1 of 4
+    </div>
+    
+    <div class="navigation">
+        <button class="nav-button" id="prevBtn" disabled>Previous</button>
+        <button class="nav-button" id="nextBtn">Next</button>
+    </div>
+    
+    <script>
+        // Canvas setup
+        const validCanvas = document.getElementById('validTreeCanvas');
+        const invalidCanvas = document.getElementById('invalidTreeCanvas');
+        const validCtx = validCanvas.getContext('2d');
+        const invalidCtx = invalidCanvas.getContext('2d');
+        
+        // Colors
+        const nodeColor = '#FF4800';
+        const leafColor = '#00CC00';  // Green for leaf nodes
+        const highlightColor = '#FD9F78';
+        const lineColor = '#000000';
+        
+        // Navigation
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const description = document.getElementById('description');
+        const stepIndicator = document.getElementById('stepIndicator');
+        let currentStep = 1;
+        const totalSteps = 4;
+        
+        // Tree definitions
+        const validTree = {
+            nodes: [
+                { x: 200, y: 50, level: 1, isLeaf: false },  // Root
+                { x: 100, y: 120, level: 2, isLeaf: false }, // Left child
+                { x: 300, y: 120, level: 2, isLeaf: false }, // Right child
+                { x: 50, y: 190, level: 3, isLeaf: true },   // Left-left leaf
+                { x: 150, y: 190, level: 3, isLeaf: true },  // Left-right leaf
+                { x: 250, y: 190, level: 3, isLeaf: true },  // Right-left leaf
+                { x: 350, y: 190, level: 3, isLeaf: true }   // Right-right leaf
+            ],
+            edges: [
+                { from: 0, to: 1 },
+                { from: 0, to: 2 },
+                { from: 1, to: 3 },
+                { from: 1, to: 4 },
+                { from: 2, to: 5 },
+                { from: 2, to: 6 }
+            ]
+        };
+        
+        const invalidTree = {
+            nodes: [
+                { x: 200, y: 50, level: 1, isLeaf: false },   // Root
+                { x: 100, y: 120, level: 2, isLeaf: true },   // Left child (leaf at level 2!)
+                { x: 300, y: 120, level: 2, isLeaf: false },  // Right child
+                { x: 250, y: 190, level: 3, isLeaf: false },  // Right-left
+                { x: 350, y: 190, level: 3, isLeaf: false },  // Right-right
+                { x: 225, y: 260, level: 4, isLeaf: true },   // Level 4 leaf
+                { x: 275, y: 260, level: 4, isLeaf: true },   // Level 4 leaf
+                { x: 350, y: 260, level: 4, isLeaf: true }    // Level 4 leaf
+            ],
+            edges: [
+                { from: 0, to: 1 },
+                { from: 0, to: 2 },
+                { from: 2, to: 3 },
+                { from: 2, to: 4 },
+                { from: 3, to: 5 },
+                { from: 3, to: 6 },
+                { from: 4, to: 7 }
+            ]
+        };
+        
+        // Animation variables
+        let highlightedNodes = [];
+        let animationFrame;
+        
+        // Draw a node
+        function drawNode(ctx, node, highlighted = false) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 20, 0, Math.PI * 2);
+            ctx.fillStyle = node.isLeaf ? leafColor : (highlighted ? highlightColor : nodeColor);
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw level number inside node
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.level.toString(), node.x, node.y);
+        }
+        
+        // Draw an edge between nodes
+        function drawEdge(ctx, fromNode, toNode) {
+            ctx.beginPath();
+            ctx.moveTo(fromNode.x, fromNode.y + 20); // Start from bottom of the node
+            ctx.lineTo(toNode.x, toNode.y - 20);     // End at top of the node
+            ctx.strokeStyle = lineColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        // Draw the tree
+        function drawTree(ctx, tree, highlightedNodes = []) {
+            // Clear canvas
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            
+            // Draw edges first
+            for (const edge of tree.edges) {
+                drawEdge(ctx, tree.nodes[edge.from], tree.nodes[edge.to]);
+            }
+            
+            // Draw nodes
+            for (let i = 0; i < tree.nodes.length; i++) {
+                const node = tree.nodes[i];
+                const isHighlighted = highlightedNodes.includes(i);
+                drawNode(ctx, node, isHighlighted);
+            }
+        }
+        
+        // Update the animation based on the current step
+        function updateAnimation() {
+            switch(currentStep) {
+                case 1:
+                    // Initial state showing both trees
+                    description.innerHTML = "Step 1: In a valid leaf level tree, all leaf nodes must be at the same level (depth). The tree on the left shows a valid tree where all leaf nodes (shown in green) are at level 3.";
+                    
+                    // Draw both trees
+                    drawTree(validCtx, validTree);
+                    drawTree(invalidCtx, invalidTree);
+                    break;
+                    
+                case 2:
+                    // Highlight leaf nodes in valid tree
+                    description.innerHTML = "Step 2: Notice that in the valid tree, all leaf nodes (highlighted in orange) are at the same level (level 3). This is what makes it valid.";
+                    
+                    // Highlight leaf nodes in valid tree
+                    const validLeafIndices = validTree.nodes
+                        .map((node, index) => node.isLeaf ? index : -1)
+                        .filter(index => index !== -1);
+                    
+                    drawTree(validCtx, validTree, validLeafIndices);
+                    drawTree(invalidCtx, invalidTree);
+                    break;
+                    
+                case 3:
+                    // Highlight leaf nodes in invalid tree
+                    description.innerHTML = "Step 3: In the invalid tree, notice that there are leaf nodes at different levels. The left child is a leaf at level 2, while other leaves are at level 4. This inconsistency makes it an invalid leaf level tree.";
+                    
+                    // Highlight leaf nodes in invalid tree
+                    const invalidLeafIndices = invalidTree.nodes
+                        .map((node, index) => node.isLeaf ? index : -1)
+                        .filter(index => index !== -1);
+                    
+                    drawTree(validCtx, validTree);
+                    drawTree(invalidCtx, invalidTree, invalidLeafIndices);
+                    break;
+                    
+                case 4:
+                    // Summary
+                    description.innerHTML = "Step 4: To summarize, a tree has valid leaf levels if and only if all leaf nodes appear at the same depth/level. This property is important in many balanced tree data structures, like B-trees and certain types of binary trees.";
+                    
+                    // Draw final state
+                    drawTree(validCtx, validTree);
+                    drawTree(invalidCtx, invalidTree);
+                    break;
+            }
+            
+            // Update step indicator
+            stepIndicator.textContent = `Step ${currentStep} of ${totalSteps}`;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === totalSteps;
+        }
+        
+        // Event listeners for navigation
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateAnimation();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateAnimation();
+            }
+        });
+        
+        // Initialize the animation
+        updateAnimation();
+    </script>
+</body>
+</html>
