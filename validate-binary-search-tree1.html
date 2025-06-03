@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BST Range Validation Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .description {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        #canvas-container {
+            width: 100%;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .nav-button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BST Range Validation Visualization</h1>
+        
+        <div class="description">
+            <p>This visualization demonstrates how range constraints propagate in a Binary Search Tree (BST). Each node in a BST must satisfy specific range constraints based on its position in the tree.</p>
+        </div>
+        
+        <div id="canvas-container">
+            <canvas id="bstCanvas" width="900" height="500"></canvas>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" class="nav-button">Previous</button>
+            <button id="nextBtn" class="nav-button">Next</button>
+        </div>
+        
+        <div class="step-indicator">
+            <span id="currentStep">Step 1</span> of <span id="totalSteps">5</span>
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('bstCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Colors
+        const primaryColor = '#FF4800';
+        const secondaryColor = '#FD9F78';
+        const blackColor = '#000000';
+        const whiteColor = '#FFFFFF';
+        
+        // Node data
+        const nodes = [
+            { id: 0, value: 5, x: 450, y: 80, left: 1, right: 2, range: { min: '-∞', max: '+∞' } },
+            { id: 1, value: 3, x: 250, y: 180, left: 3, right: 4, range: { min: '-∞', max: '5' } },
+            { id: 2, value: 8, x: 650, y: 180, left: 5, right: 6, range: { min: '5', max: '+∞' } },
+            { id: 3, value: 1, x: 150, y: 280, left: null, right: null, range: { min: '-∞', max: '3' } },
+            { id: 4, value: 4, x: 350, y: 280, left: null, right: null, range: { min: '3', max: '5' } },
+            { id: 5, value: 7, x: 550, y: 280, left: null, right: null, range: { min: '5', max: '8' } },
+            { id: 6, value: 9, x: 750, y: 280, left: null, right: null, range: { min: '8', max: '+∞' } }
+        ];
+        
+        // Animation state
+        let currentStep = 1;
+        const totalSteps = 5;
+        let animationInProgress = false;
+        
+        // Update navigation buttons
+        function updateNavButtons() {
+            document.getElementById('prevBtn').disabled = currentStep === 1 || animationInProgress;
+            document.getElementById('nextBtn').disabled = currentStep === totalSteps || animationInProgress;
+            document.getElementById('currentStep').textContent = `Step ${currentStep}`;
+            document.getElementById('totalSteps').textContent = totalSteps;
+        }
+        
+        // Draw a node
+        function drawNode(node, highlighted = false, showRange = false) {
+            const radius = 25;
+            
+            // Draw connection lines to children
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = blackColor;
+            
+            if (node.left !== null) {
+                const childNode = nodes[node.left];
+                ctx.beginPath();
+                ctx.moveTo(node.x, node.y + radius);
+                ctx.lineTo(childNode.x, childNode.y - radius);
+                ctx.stroke();
+            }
+            
+            if (node.right !== null) {
+                const childNode = nodes[node.right];
+                ctx.beginPath();
+                ctx.moveTo(node.x, node.y + radius);
+                ctx.lineTo(childNode.x, childNode.y - radius);
+                ctx.stroke();
+            }
+            
+            // Draw node circle
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = highlighted ? primaryColor : whiteColor;
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = highlighted ? secondaryColor : primaryColor;
+            ctx.stroke();
+            
+            // Draw node value
+            ctx.font = 'bold 20px Arial';
+            ctx.fillStyle = highlighted ? whiteColor : blackColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.value, node.x, node.y);
+            
+            // Draw range if requested
+            if (showRange) {
+                ctx.font = '14px Arial';
+                ctx.fillStyle = blackColor;
+                ctx.textAlign = 'center';
+                ctx.fillText(`(${node.range.min}, ${node.range.max})`, node.x, node.y + radius + 20);
+            }
+        }
+        
+        // Draw the entire tree
+        function drawTree(step) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw description based on current step
+            ctx.font = '16px Arial';
+            ctx.fillStyle = blackColor;
+            ctx.textAlign = 'center';
+            
+            let description = '';
+            switch(step) {
+                case 1:
+                    description = 'BST Range Validation: Root node 5 has range (-∞, +∞)';
+                    break;
+                case 2:
+                    description = 'Left subtree of 5: All nodes must be less than 5, so range becomes (-∞, 5)';
+                    break;
+                case 3:
+                    description = 'Right subtree of 5: All nodes must be greater than 5, so range becomes (5, +∞)';
+                    break;
+                case 4:
+                    description = 'Further propagation: Node 3 constrains its children to (-∞, 3) and (3, 5)';
+                    break;
+                case 5:
+                    description = 'Further propagation: Node 8 constrains its children to (5, 8) and (8, +∞)';
+                    break;
+            }
+            
+            ctx.fillText(description, canvas.width / 2, 30);
+            
+            // Draw nodes based on current step
+            for (let i = 0; i < nodes.length; i++) {
+                const node = nodes[i];
+                let highlighted = false;
+                let showRange = false;
+                
+                if (step === 1 && i === 0) {
+                    highlighted = true;
+                    showRange = true;
+                } else if (step === 2 && (i === 0 || i === 1 || i === 3 || i === 4)) {
+                    highlighted = (i === 1 || i === 3 || i === 4);
+                    showRange = true;
+                } else if (step === 3 && (i === 0 || i === 2 || i === 5 || i === 6)) {
+                    highlighted = (i === 2 || i === 5 || i === 6);
+                    showRange = true;
+                } else if (step === 4) {
+                    highlighted = (i === 3 || i === 4);
+                    showRange = true;
+                } else if (step === 5) {
+                    highlighted = (i === 5 || i === 6);
+                    showRange = true;
+                }
+                
+                drawNode(node, highlighted, showRange);
+            }
+        }
+        
+        // Event handlers
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentStep > 1 && !animationInProgress) {
+                currentStep--;
+                updateNavButtons();
+                drawTree(currentStep);
+            }
+        });
+        
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentStep < totalSteps && !animationInProgress) {
+                currentStep++;
+                updateNavButtons();
+                drawTree(currentStep);
+            }
+        });
+        
+        // Initial setup
+        updateNavButtons();
+        drawTree(currentStep);
+    </script>
+</body>
+</html>
