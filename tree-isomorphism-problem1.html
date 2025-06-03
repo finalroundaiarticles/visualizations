@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Isomorphic Trees Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #000000;
+        }
+
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            position: relative;
+        }
+
+        .slide {
+            display: none;
+            text-align: center;
+        }
+
+        .active {
+            display: block;
+        }
+
+        .canvas-container {
+            margin: 20px auto;
+            position: relative;
+            height: 350px;
+        }
+
+        canvas {
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+            background-color: #FFFFFF;
+        }
+
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #FFF;
+            border-left: 5px solid #FF4800;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+
+        button {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #FD9F78;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .node {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FF4800;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+
+        .edge {
+            position: absolute;
+            background-color: #FD9F78;
+            height: 2px;
+            transform-origin: left center;
+            transition: all 0.5s ease;
+        }
+
+        .arrow {
+            position: absolute;
+            width: 60px;
+            height: 40px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .arrow svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .arrow path {
+            fill: #FF4800;
+        }
+
+        .tree-label {
+            position: absolute;
+            top: 10px;
+            font-weight: bold;
+            color: #FF4800;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Isomorphic Trees Example</h1>
+    
+    <div class="container">
+        <div class="slide active" id="slide1">
+            <div class="canvas-container" id="canvas1">
+                <div class="tree-label" style="left: 150px;">Tree 1</div>
+                <div class="tree-label" style="left: 550px;">Tree 2</div>
+                
+                <!-- Tree 1 -->
+                <div class="node" id="node1-1" style="left: 150px; top: 50px;">1</div>
+                <div class="node" id="node1-2" style="left: 100px; top: 150px;">2</div>
+                <div class="node" id="node1-3" style="left: 200px; top: 150px;">3</div>
+                
+                <!-- Edges for Tree 1 -->
+                <div class="edge" id="edge1-1-2"></div>
+                <div class="edge" id="edge1-1-3"></div>
+                
+                <!-- Tree 2 -->
+                <div class="node" id="node2-1" style="left: 550px; top: 50px;">1</div>
+                <div class="node" id="node2-3" style="left: 500px; top: 150px;">3</div>
+                <div class="node" id="node2-2" style="left: 600px; top: 150px;">2</div>
+                
+                <!-- Edges for Tree 2 -->
+                <div class="edge" id="edge2-1-3"></div>
+                <div class="edge" id="edge2-1-2"></div>
+            </div>
+            <div class="explanation">
+                <p>Here we have two trees. In <strong>Tree 1</strong>, node 1 is the root with left child 2 and right child 3. In <strong>Tree 2</strong>, node 1 is also the root but with left child 3 and right child 2.</p>
+                <p>These trees look different, but they have the same structure. They are called <strong>isomorphic trees</strong>.</p>
+            </div>
+        </div>
+
+        <div class="slide" id="slide2">
+            <div class="canvas-container" id="canvas2">
+                <div class="tree-label" style="left: 150px;">Tree 1</div>
+                <div class="tree-label" style="left: 550px;">Tree 2</div>
+                
+                <!-- Tree 1 -->
+                <div class="node" id="node1-1-s2" style="left: 150px; top: 50px;">1</div>
+                <div class="node" id="node1-2-s2" style="left: 100px; top: 150px;">2</div>
+                <div class="node" id="node1-3-s2" style="left: 200px; top: 150px;">3</div>
+                
+                <!-- Edges for Tree 1 -->
+                <div class="edge" id="edge1-1-2-s2"></div>
+                <div class="edge" id="edge1-1-3-s2"></div>
+                
+                <!-- Tree 2 -->
+                <div class="node" id="node2-1-s2" style="left: 550px; top: 50px;">1</div>
+                <div class="node" id="node2-3-s2" style="left: 500px; top: 150px;">3</div>
+                <div class="node" id="node2-2-s2" style="left: 600px; top: 150px;">2</div>
+                
+                <!-- Edges for Tree 2 -->
+                <div class="edge" id="edge2-1-3-s2"></div>
+                <div class="edge" id="edge2-1-2-s2"></div>
+                
+                <!-- Arrows showing the swap -->
+                <div class="arrow" id="arrow1">
+                    <svg viewBox="0 0 100 60">
+                        <path d="M10,30 C30,10 70,10 90,30" stroke="#FF4800" stroke-width="3" fill="none"/>
+                        <polygon points="90,30 80,20 85,35" fill="#FF4800"/>
+                    </svg>
+                </div>
+                <div class="arrow" id="arrow2">
+                    <svg viewBox="0 0 100 60">
+                        <path d="M90,40 C70,60 30,60 10,40" stroke="#FF4800" stroke-width="3" fill="none"/>
+                        <polygon points="10,40 20,50 15,35" fill="#FF4800"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="explanation">
+                <p>Isomorphic trees can be transformed into each other by swapping the positions of children.</p>
+                <p>If we swap the children of node 1 in Tree 1 (swap nodes 2 and 3), we get the exact structure of Tree 2.</p>
+            </div>
+        </div>
+
+        <div class="slide" id="slide3">
+            <div class="canvas-container" id="canvas3">
+                <div class="tree-label" style="left: 150px;">Tree 1</div>
+                <div class="tree-label" style="left: 550px;">Tree 2</div>
+                
+                <!-- Animated nodes that will move -->
+                <div class="node" id="node1-1-s3" style="left: 150px; top: 50px;">1</div>
+                <div class="node" id="node1-2-s3" style="left: 100px; top: 150px;">2</div>
+                <div class="node" id="node1-3-s3" style="left: 200px; top: 150px;">3</div>
+                
+                <!-- Edges that will be redrawn -->
+                <div class="edge" id="edge1-1-2-s3"></div>
+                <div class="edge" id="edge1-1-3-s3"></div>
+                
+                <!-- Tree 2 (for reference) -->
+                <div class="node" id="node2-1-s3" style="left: 550px; top: 50px; opacity: 0.5;">1</div>
+                <div class="node" id="node2-3-s3" style="left: 500px; top: 150px; opacity: 0.5;">3</div>
+                <div class="node" id="node2-2-s3" style="left: 600px; top: 150px; opacity: 0.5;">2</div>
+                
+                <!-- Edges for Tree 2 -->
+                <div class="edge" id="edge2-1-3-s3" style="opacity: 0.5;"></div>
+                <div class="edge" id="edge2-1-2-s3" style="opacity: 0.5;"></div>
+            </div>
+            <div class="explanation">
+                <p>Watch the animation as we swap the children of node 1 in Tree 1.</p>
+                <p>This transformation demonstrates that these trees are isomorphic - they have the same structure but the children of certain nodes are swapped.</p>
+            </div>
+        </div>
+
+        <div class="slide" id="slide4">
+            <div class="canvas-container" id="canvas4">
+                <div class="tree-label" style="left: 350px;">Isomorphic Trees</div>
+                
+                <!-- Tree 1 -->
+                <div class="node" id="node1-1-s4" style="left: 250px; top: 50px;">1</div>
+                <div class="node" id="node1-2-s4" style="left: 200px; top: 150px;">2</div>
+                <div class="node" id="node1-3-s4" style="left: 300px; top: 150px;">3</div>
+                
+                <!-- Edges for Tree 1 -->
+                <div class="edge" id="edge1-1-2-s4"></div>
+                <div class="edge" id="edge1-1-3-s4"></div>
+                
+                <!-- Tree 2 -->
+                <div class="node" id="node2-1-s4" style="left: 450px; top: 50px;">1</div>
+                <div class="node" id="node2-3-s4" style="left: 400px; top: 150px;">3</div>
+                <div class="node" id="node2-2-s4" style="left: 500px; top: 150px;">2</div>
+                
+                <!-- Edges for Tree 2 -->
+                <div class="edge" id="edge2-1-3-s4"></div>
+                <div class="edge" id="edge2-1-2-s4"></div>
+                
+                <!-- Bidirectional arrow -->
+                <div class="arrow" id="arrow-bi" style="left: 325px; top: 90px; opacity: 1; width: 50px;">
+                    <svg viewBox="0 0 50 30">
+                        <line x1="5" y1="15" x2="45" y2="15" stroke="#FF4800" stroke-width="2"/>
+                        <polygon points="45,15 38,10 38,20" fill="#FF4800"/>
+                        <polygon points="5,15 12,10 12,20" fill="#FF4800"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="explanation">
+                <p><strong>Definition:</strong> Two trees are isomorphic if one can be obtained from the other by swapping the left and right children of a node (or multiple nodes).</p>
+                <p>In our example, Tree 1 and Tree 2 are isomorphic because we only needed to swap the children of the root node to transform one into the other.</p>
+                <p>Isomorphic trees have the same structure but might look different at first glance.</p>
+            </div>
+        </div>
+
+        <div class="nav-buttons">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Slide navigation
+            const slides = document.querySelectorAll('.slide');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            let currentSlide = 0;
+
+            function showSlide(index) {
+                slides.forEach(slide => slide.classList.remove('active'));
+                slides[index].classList.add('active');
+                
+                prevBtn.disabled = index === 0;
+                nextBtn.disabled = index === slides.length - 1;
+                
+                // Reset and reinitialize the current slide
+                initializeSlide(index);
+            }
+
+            prevBtn.addEventListener('click', function() {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    showSlide(currentSlide);
+                }
+            });
+
+            nextBtn.addEventListener('click', function() {
+                if (currentSlide < slides.length - 1) {
+                    currentSlide++;
+                    showSlide(currentSlide);
+                }
+            });
+
+            // Helper function to draw edges
+            function drawEdge(edgeId, fromX, fromY, toX, toY) {
+                const edge = document.getElementById(edgeId);
+                const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+                const angle = Math.atan2(toY - fromY, toX - fromX);
+                
+                edge.style.width = `${length}px`;
+                edge.style.left = `${fromX}px`;
+                edge.style.top = `${fromY}px`;
+                edge.style.transform = `rotate(${angle}rad)`;
+            }
+
+            // Initialize each slide's specific elements
+            function initializeSlide(slideIndex) {
+                // Common edges for slide 1
+                if (slideIndex === 0 || slideIndex === 1 || slideIndex === 2 || slideIndex === 3) {
+                    // Draw edges for slide 1
+                    if (slideIndex === 0) {
+                        drawEdge('edge1-1-2', 150, 70, 100, 150);
+                        drawEdge('edge1-1-3', 150, 70, 200, 150);
+                        drawEdge('edge2-1-3', 550, 70, 500, 150);
+                        drawEdge('edge2-1-2', 550, 70, 600, 150);
+                    }
+                    
+                    // Draw edges for slide 2
+                    if (slideIndex === 1) {
+                        drawEdge('edge1-1-2-s2', 150, 70, 100, 150);
+                        drawEdge('edge1-1-3-s2', 150, 70, 200, 150);
+                        drawEdge('edge2-1-3-s2', 550, 70, 500, 150);
+                        drawEdge('edge2-1-2-s2', 550, 70, 600, 150);
+                        
+                        // Show arrows for swap animation
+                        setTimeout(() => {
+                            document.getElementById('arrow1').style.opacity = '1';
+                            document.getElementById('arrow1').style.left = '130px';
+                            document.getElementById('arrow1').style.top = '100px';
+                            
+                            document.getElementById('arrow2').style.opacity = '1';
+                            document.getElementById('arrow2').style.left = '130px';
+                            document.getElementById('arrow2').style.top = '120px';
+                        }, 500);
+                    }
+                    
+                    // Animation for slide 3
+                    if (slideIndex === 2) {
+                        // Initial positions
+                        const node2 = document.getElementById('node1-2-s3');
+                        const node3 = document.getElementById('node1-3-s3');
+                        
+                        // Draw initial edges
+                        drawEdge('edge1-1-2-s3', 150, 70, 100, 150);
+                        drawEdge('edge1-1-3-s3', 150, 70, 200, 150);
+                        drawEdge('edge2-1-3-s3', 550, 70, 500, 150);
+                        drawEdge('edge2-1-2-s3', 550, 70, 600, 150);
+                        
+                        // Start animation after a delay
+                        setTimeout(() => {
+                            // Swap positions
+                            node2.style.left = '200px';
+                            node3.style.left = '100px';
+                            
+                            // Redraw edges after position change
+                            setTimeout(() => {
+                                drawEdge('edge1-1-2-s3', 150, 70, 200, 150);
+                                drawEdge('edge1-1-3-s3', 150, 70, 100, 150);
+                            }, 500);
+                            
+                            // Move to Tree 2 position
+                            setTimeout(() => {
+                                document.getElementById('node1-1-s3').style.left = '350px';
+                                node2.style.left = '400px';
+                                node3.style.left = '300px';
+                                
+                                // Final edge redraw
+                                setTimeout(() => {
+                                    drawEdge('edge1-1-2-s3', 350, 70, 400, 150);
+                                    drawEdge('edge1-1-3-s3', 350, 70, 300, 150);
+                                }, 500);
+                                
+                                // Show the equivalence
+                                setTimeout(() => {
+                                    document.getElementById('node1-1-s3').style.left = '550px';
+                                    node2.style.left = '600px';
+                                    node3.style.left = '500px';
+                                    
+                                    // Final edge redraw
+                                    setTimeout(() => {
+                                        drawEdge('edge1-1-2-s3', 550, 70, 600, 150);
+                                        drawEdge('edge1-1-3-s3', 550, 70, 500, 150);
+                                    }, 500);
+                                }, 2000);
+                            }, 2000);
+                        }, 1000);
+                    }
+                    
+                    // Draw edges for slide 4
+                    if (slideIndex === 3) {
+                        drawEdge('edge1-1-2-s4', 250, 70, 200, 150);
+                        drawEdge('edge1-1-3-s4', 250, 70, 300, 150);
+                        drawEdge('edge2-1-3-s4', 450, 70, 400, 150);
+                        drawEdge('edge2-1-2-s4', 450, 70, 500, 150);
+                    }
+                }
+            }
+
+            // Initialize the first slide
+            showSlide(currentSlide);
+        });
+    </script>
+</body>
+</html>
