@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracking Previous Node During Traversal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 800px;
+            max-width: 95%;
+        }
+        
+        .explanation {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #000000;
+        }
+        
+        .animation-container {
+            position: relative;
+            height: 400px;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .node {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        
+        .node.current {
+            background-color: #FF4800;
+            color: white;
+            transform: scale(1.2);
+        }
+        
+        .node.prev {
+            background-color: #000000;
+            color: white;
+        }
+        
+        .edge {
+            position: absolute;
+            background-color: #000000;
+            height: 2px;
+            transform-origin: left center;
+        }
+        
+        .next-pointer {
+            position: absolute;
+            height: 2px;
+            background-color: #FF4800;
+            transform-origin: left center;
+            z-index: 10;
+        }
+        
+        .arrow-head {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 8px solid #FF4800;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-counter {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tracking Previous Node During Inorder Traversal</h1>
+        
+        <div class="explanation" id="explanation">
+            Inorder traversal visits nodes in the order: left subtree, current node, right subtree. By tracking the previous node during traversal, we can create next pointers for a linked list representation.
+        </div>
+        
+        <div class="animation-container" id="animation-container">
+            <!-- Nodes and edges will be added by JavaScript -->
+        </div>
+        
+        <div class="nav-buttons">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+        
+        <div class="step-counter" id="step-counter">Step 1/8</div>
+    </div>
+
+    <script>
+        // Tree structure
+        const nodes = [
+            { id: 1, value: 4, x: 400, y: 50 },
+            { id: 2, value: 2, x: 250, y: 150 },
+            { id: 3, value: 6, x: 550, y: 150 },
+            { id: 4, value: 1, x: 175, y: 250 },
+            { id: 5, value: 3, x: 325, y: 250 },
+            { id: 6, value: 5, x: 475, y: 250 },
+            { id: 7, value: 7, x: 625, y: 250 }
+        ];
+
+        const edges = [
+            { from: 1, to: 2 },
+            { from: 1, to: 3 },
+            { from: 2, to: 4 },
+            { from: 2, to: 5 },
+            { from: 3, to: 6 },
+            { from: 3, to: 7 }
+        ];
+
+        // Inorder traversal steps: 1, 2, 3, 4, 5, 6, 7
+        const steps = [
+            {
+                title: "Initial Tree",
+                description: "This is our binary search tree. Inorder traversal visits nodes in ascending order for a BST. We'll track the previous node to create next pointers.",
+                currentNode: null,
+                prevNode: null,
+                nextPointers: []
+            },
+            {
+                title: "Step 1: Visit Node 1",
+                description: "We start by going to the leftmost node. Node 1 is visited first in inorder traversal. Since there's no previous node yet, prevNode is null.",
+                currentNode: 4,
+                prevNode: null,
+                nextPointers: []
+            },
+            {
+                title: "Step 2: Visit Node 2",
+                description: "Next, we visit node 2. We set node 1 as the previous node and create a next pointer from node 1 to node 2.",
+                currentNode: 5,
+                prevNode: 4,
+                nextPointers: [{from: 4, to: 5}]
+            },
+            {
+                title: "Step 3: Visit Node 3",
+                description: "After visiting left subtree and current node, we visit node 3. Node 2 becomes the previous node, and we create a next pointer from node 2 to node 3.",
+                currentNode: 2,
+                prevNode: 5,
+                nextPointers: [{from: 4, to: 5}, {from: 5, to: 2}]
+            },
+            {
+                title: "Step 4: Visit Node 4",
+                description: "We move to node 4. Node 3 becomes the previous node, and we create a next pointer from node 3 to node 4.",
+                currentNode: 6,
+                prevNode: 2,
+                nextPointers: [{from: 4, to: 5}, {from: 5, to: 2}, {from: 2, to: 6}]
+            },
+            {
+                title: "Step 5: Visit Node 5",
+                description: "We visit node 5. Node 4 becomes the previous node, and we create a next pointer from node 4 to node 5.",
+                currentNode: 3,
+                prevNode: 6,
+                nextPointers: [{from: 4, to: 5}, {from: 5, to: 2}, {from: 2, to: 6}, {from: 6, to: 3}]
+            },
+            {
+                title: "Step 6: Visit Node 6",
+                description: "We continue to node 6. Node 5 becomes the previous node, and we create a next pointer from node 5 to node 6.",
+                currentNode: 7,
+                prevNode: 3,
+                nextPointers: [{from: 4, to: 5}, {from: 5, to: 2}, {from: 2, to: 6}, {from: 6, to: 3}, {from: 3, to: 7}]
+            },
+            {
+                title: "Step 7: Complete Traversal",
+                description: "We've completed the inorder traversal and created next pointers for all nodes. Now we have a linked list representation of our BST in sorted order: 1→2→3→4→5→6→7.",
+                currentNode: null,
+                prevNode: 7,
+                nextPointers: [{from: 4, to: 5}, {from: 5, to: 2}, {from: 2, to: 6}, {from: 6, to: 3}, {from: 3, to: 7}]
+            }
+        ];
+
+        let currentStep = 0;
+        const container = document.getElementById('animation-container');
+        const explanation = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepCounter = document.getElementById('step-counter');
+
+        // Initialize tree
+        function initializeTree() {
+            container.innerHTML = '';
+            
+            // Add nodes
+            nodes.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'node';
+                nodeElement.id = `node-${node.id}`;
+                nodeElement.style.left = `${node.x - 25}px`;
+                nodeElement.style.top = `${node.y - 25}px`;
+                nodeElement.textContent = node.value;
+                container.appendChild(nodeElement);
+            });
+            
+            // Add edges
+            edges.forEach(edge => {
+                const fromNode = nodes.find(n => n.id === edge.from);
+                const toNode = nodes.find(n => n.id === edge.to);
+                
+                const dx = toNode.x - fromNode.x;
+                const dy = toNode.y - fromNode.y;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx);
+                
+                const edgeElement = document.createElement('div');
+                edgeElement.className = 'edge';
+                edgeElement.style.width = `${length}px`;
+                edgeElement.style.left = `${fromNode.x}px`;
+                edgeElement.style.top = `${fromNode.y}px`;
+                edgeElement.style.transform = `rotate(${angle}rad)`;
+                
+                container.appendChild(edgeElement);
+            });
+            
+            updateStep();
+        }
+
+        // Update the visualization based on current step
+        function updateStep() {
+            const step = steps[currentStep];
+            
+            // Update explanation
+            explanation.innerHTML = `<strong>${step.title}</strong><br>${step.description}`;
+            
+            // Reset all nodes
+            nodes.forEach(node => {
+                const nodeElement = document.getElementById(`node-${node.id}`);
+                nodeElement.className = 'node';
+            });
+            
+            // Highlight current and previous nodes
+            if (step.currentNode) {
+                const currentNodeElement = document.getElementById(`node-${step.currentNode}`);
+                currentNodeElement.classList.add('current');
+            }
+            
+            if (step.prevNode) {
+                const prevNodeElement = document.getElementById(`node-${step.prevNode}`);
+                prevNodeElement.classList.add('prev');
+            }
+            
+            // Remove existing next pointers
+            const existingPointers = document.querySelectorAll('.next-pointer, .arrow-head');
+            existingPointers.forEach(pointer => pointer.remove());
+            
+            // Add next pointers
+            step.nextPointers.forEach(pointer => {
+                const fromNode = nodes.find(n => n.id === pointer.from);
+                const toNode = nodes.find(n => n.id === pointer.to);
+                
+                const dx = toNode.x - fromNode.x;
+                const dy = toNode.y - fromNode.y;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx);
+                
+                const pointerElement = document.createElement('div');
+                pointerElement.className = 'next-pointer';
+                pointerElement.style.width = `${length - 8}px`;
+                pointerElement.style.left = `${fromNode.x}px`;
+                pointerElement.style.top = `${fromNode.y}px`;
+                pointerElement.style.transform = `rotate(${angle}rad)`;
+                
+                const arrowHead = document.createElement('div');
+                arrowHead.className = 'arrow-head';
+                arrowHead.style.left = `${toNode.x - 8 * Math.cos(angle)}px`;
+                arrowHead.style.top = `${toNode.y - 8 * Math.sin(angle)}px`;
+                arrowHead.style.transform = `rotate(${angle}rad)`;
+                
+                container.appendChild(pointerElement);
+                container.appendChild(arrowHead);
+            });
+            
+            // Update step counter
+            stepCounter.textContent = `Step ${currentStep + 1}/${steps.length}`;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateStep();
+            }
+        });
+
+        // Initialize the tree when the page loads
+        initializeTree();
+    </script>
+</body>
+</html>
