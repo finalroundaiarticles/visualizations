@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Successor vs. Predecessor Replacement Strategy</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+        
+        .section {
+            flex: 1;
+            min-width: 300px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #FF4800;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        canvas {
+            margin: 10px 0;
+        }
+        
+        .explanation {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            gap: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .step-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #FD9F78;
+            border-radius: 50%;
+            margin: 0 5px;
+        }
+        
+        .step-dot.active {
+            background-color: #FF4800;
+            transform: scale(1.3);
+        }
+    </style>
+</head>
+<body>
+    <h1>Successor vs. Predecessor Replacement Strategy</h1>
+    
+    <div class="container">
+        <div class="section">
+            <div class="title">Inorder Successor Replacement</div>
+            <canvas id="successorCanvas" width="400" height="300"></canvas>
+            <div class="explanation" id="successorExplanation">
+                Initial Binary Search Tree with node 5 to be deleted
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="title">Inorder Predecessor Replacement</div>
+            <canvas id="predecessorCanvas" width="400" height="300"></canvas>
+            <div class="explanation" id="predecessorExplanation">
+                Initial Binary Search Tree with node 5 to be deleted
+            </div>
+        </div>
+    </div>
+    
+    <div class="step-indicator" id="stepIndicator">
+        <!-- Step dots will be added here by JavaScript -->
+    </div>
+    
+    <div class="navigation">
+        <button id="prevBtn" disabled>Previous</button>
+        <button id="nextBtn">Next</button>
+    </div>
+
+    <script>
+        // Setup canvas contexts
+        const successorCanvas = document.getElementById('successorCanvas');
+        const predecessorCanvas = document.getElementById('predecessorCanvas');
+        const successorCtx = successorCanvas.getContext('2d');
+        const predecessorCtx = predecessorCanvas.getContext('2d');
+        
+        // Setup explanation elements
+        const successorExplanation = document.getElementById('successorExplanation');
+        const predecessorExplanation = document.getElementById('predecessorExplanation');
+        
+        // Navigation elements
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        
+        // Define colors
+        const nodeColor = '#FFFFFF';
+        const nodeOutline = '#000000';
+        const highlightColor = '#FF4800';
+        const linkColor = '#000000';
+        const textColor = '#000000';
+        const deletedNodeColor = '#FD9F78';
+        const successorColor = '#FF4800';
+        const predecessorColor = '#FF4800';
+        
+        // Tree node class
+        class TreeNode {
+            constructor(value, x, y) {
+                this.value = value;
+                this.x = x;
+                this.y = y;
+                this.left = null;
+                this.right = null;
+                this.highlighted = false;
+                this.deleted = false;
+                this.successor = false;
+                this.predecessor = false;
+            }
+        }
+        
+        // Create initial tree
+        function createInitialTree() {
+            const root = new TreeNode(10, 200, 40);
+            
+            // Left subtree
+            root.left = new TreeNode(5, 100, 100);
+            root.left.left = new TreeNode(3, 50, 160);
+            root.left.right = new TreeNode(7, 150, 160);
+            root.left.right.left = new TreeNode(6, 130, 220);
+            root.left.right.right = new TreeNode(8, 170, 220);
+            root.left.left.left = new TreeNode(1, 30, 220);
+            root.left.left.right = new TreeNode(4, 70, 220);
+            
+            // Right subtree
+            root.right = new TreeNode(15, 300, 100);
+            root.right.left = new TreeNode(12, 250, 160);
+            root.right.right = new TreeNode(20, 350, 160);
+            
+            return root;
+        }
+        
+        // Draw tree function
+        function drawTree(ctx, root, nodeRadius = 20) {
+            if (!root) return;
+            
+            // Draw connections to children
+            if (root.left) {
+                ctx.beginPath();
+                ctx.moveTo(root.x, root.y + nodeRadius);
+                ctx.lineTo(root.left.x, root.left.y - nodeRadius);
+                ctx.strokeStyle = linkColor;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                drawTree(ctx, root.left, nodeRadius);
+            }
+            
+            if (root.right) {
+                ctx.beginPath();
+                ctx.moveTo(root.x, root.y + nodeRadius);
+                ctx.lineTo(root.right.x, root.right.y - nodeRadius);
+                ctx.strokeStyle = linkColor;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                drawTree(ctx, root.right, nodeRadius);
+            }
+            
+            // Draw node
+            ctx.beginPath();
+            ctx.arc(root.x, root.y, nodeRadius, 0, 2 * Math.PI);
+            
+            if (root.deleted) {
+                ctx.fillStyle = deletedNodeColor;
+            } else if (root.successor) {
+                ctx.fillStyle = successorColor;
+            } else if (root.predecessor) {
+                ctx.fillStyle = predecessorColor;
+            } else if (root.highlighted) {
+                ctx.fillStyle = highlightColor;
+            } else {
+                ctx.fillStyle = nodeColor;
+            }
+            
+            ctx.fill();
+            ctx.strokeStyle = nodeOutline;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw value
+            ctx.fillStyle = textColor;
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(root.value, root.x, root.y);
+        }
+        
+        // Steps for the animation
+        const steps = [
+            {
+                title: "Initial Tree",
+                action: (successorTree, predecessorTree) => {
+                    // Mark node 5 to be deleted
+                    findNode(successorTree, 5).highlighted = true;
+                    findNode(predecessorTree, 5).highlighted = true;
+                },
+                successorExplanation: "This is our initial Binary Search Tree. Node 5 (highlighted) will be deleted.",
+                predecessorExplanation: "This is our initial Binary Search Tree. Node 5 (highlighted) will be deleted."
+            },
+            {
+                title: "Identify Replacements",
+                action: (successorTree, predecessorTree) => {
+                    // Mark successor and predecessor
+                    findNode(successorTree, 6).successor = true;
+                    findNode(predecessorTree, 4).predecessor = true;
+                },
+                successorExplanation: "For Successor replacement, we identify node 6 as the inorder successor (next value after 5).",
+                predecessorExplanation: "For Predecessor replacement, we identify node 4 as the inorder predecessor (previous value before 5)."
+            },
+            {
+                title: "Mark Node for Deletion",
+                action: (successorTree, predecessorTree) => {
+                    // Change node 5 to deleted state
+                    findNode(successorTree, 5).deleted = true;
+                    findNode(successorTree, 5).highlighted = false;
+                    findNode(predecessorTree, 5).deleted = true;
+                    findNode(predecessorTree, 5).highlighted = false;
+                },
+                successorExplanation: "Node 5 will be replaced. Its left and right subtrees must be preserved.",
+                predecessorExplanation: "Node 5 will be replaced. Its left and right subtrees must be preserved."
+            },
+            {
+                title: "Replace with Successor/Predecessor",
+                action: (successorTree, predecessorTree) => {
+                    // Replace node 5 with successor/predecessor
+                    replaceWithSuccessor(successorTree);
+                    replaceWithPredecessor(predecessorTree);
+                },
+                successorExplanation: "Node 5 is replaced with its successor (node 6). Node 6 is removed from its original position.",
+                predecessorExplanation: "Node 5 is replaced with its predecessor (node 4). Node 4 is removed from its original position."
+            },
+            {
+                title: "Final Trees",
+                action: (successorTree, predecessorTree) => {
+                    // Reset highlights
+                    resetHighlights(successorTree);
+                    resetHighlights(predecessorTree);
+                },
+                successorExplanation: "Final tree after successor replacement. Notice how node 6 took the place of node 5 and maintains BST properties.",
+                predecessorExplanation: "Final tree after predecessor replacement. Notice how node 4 took the place of node 5 and maintains BST properties."
+            }
+        ];
+        
+        // Helper function to find a node by value
+        function findNode(root, value) {
+            if (!root) return null;
+            if (root.value === value) return root;
+            
+            const leftResult = findNode(root.left, value);
+            if (leftResult) return leftResult;
+            
+            return findNode(root.right, value);
+        }
+        
+        // Helper function to reset highlights
+        function resetHighlights(root) {
+            if (!root) return;
+            root.highlighted = false;
+            root.deleted = false;
+            root.successor = false;
+            root.predecessor = false;
+            resetHighlights(root.left);
+            resetHighlights(root.right);
+        }
+        
+        // Replace node 5 with successor (node 6)
+        function replaceWithSuccessor(root) {
+            const node5 = findNode(root, 5);
+            const node6 = findNode(root, 6);
+            const node7 = findNode(root, 7);
+            
+            // Remove connection to node 6
+            node7.left = null;
+            
+            // Replace node 5's value with successor's value
+            node5.value = 6;
+            node5.deleted = false;
+            node5.successor = true;
+        }
+        
+        // Replace node 5 with predecessor (node 4)
+        function replaceWithPredecessor(root) {
+            const node5 = findNode(root, 5);
+            const node4 = findNode(root, 4);
+            const node3 = findNode(root, 3);
+            
+            // Remove connection to node 4
+            node3.right = null;
+            
+            // Replace node 5's value with predecessor's value
+            node5.value = 4;
+            node5.deleted = false;
+            node5.predecessor = true;
+        }
+        
+        // Current step index
+        let currentStep = 0;
+        
+        // Create trees
+        let successorTree = createInitialTree();
+        let predecessorTree = createInitialTree();
+        
+        // Initialize step indicator
+        function initStepIndicator() {
+            stepIndicator.innerHTML = '';
+            for (let i = 0; i < steps.length; i++) {
+                const dot = document.createElement('div');
+                dot.className = i === 0 ? 'step-dot active' : 'step-dot';
+                stepIndicator.appendChild(dot);
+            }
+        }
+        
+        // Update step indicator
+        function updateStepIndicator() {
+            const dots = document.querySelectorAll('.step-dot');
+            dots.forEach((dot, index) => {
+                dot.className = index === currentStep ? 'step-dot active' : 'step-dot';
+            });
+        }
+        
+        // Render current step
+        function renderStep() {
+            // Clear canvases
+            successorCtx.clearRect(0, 0, successorCanvas.width, successorCanvas.height);
+            predecessorCtx.clearRect(0, 0, predecessorCanvas.width, predecessorCanvas.height);
+            
+            // Apply step action
+            steps[currentStep].action(successorTree, predecessorTree);
+            
+            // Update explanations
+            successorExplanation.textContent = steps[currentStep].successorExplanation;
+            predecessorExplanation.textContent = steps[currentStep].predecessorExplanation;
+            
+            // Draw trees
+            drawTree(successorCtx, successorTree);
+            drawTree(predecessorCtx, predecessorTree);
+            
+            // Update navigation buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+            
+            // Update step indicator
+            updateStepIndicator();
+        }
+        
+        // Event listeners for navigation
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                // Reset trees
+                successorTree = createInitialTree();
+                predecessorTree = createInitialTree();
+                // Apply all steps up to the current one
+                for (let i = 0; i <= currentStep; i++) {
+                    steps[i].action(successorTree, predecessorTree);
+                }
+                renderStep();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                renderStep();
+            }
+        });
+        
+        // Initialize
+        initStepIndicator();
+        renderStep();
+    </script>
+</body>
+</html>
