@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tree Distance Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        
+        #tree-canvas {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #FD9F78;
+            color: #000000;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+        }
+        
+        button:hover:not(:disabled) {
+            background-color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tree Distance Visualization</h1>
+        
+        <div class="explanation" id="explanation">
+            <p>This visualization shows a binary tree with node 1 as the root. We'll demonstrate how to find the distance between nodes 4 and 6.</p>
+        </div>
+        
+        <canvas id="tree-canvas"></canvas>
+        
+        <div class="navigation">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('tree-canvas');
+        const ctx = canvas.getContext('2d');
+        const explanationDiv = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        
+        // Set canvas size
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // Define tree structure
+        const tree = {
+            value: 1,
+            left: {
+                value: 2,
+                left: {
+                    value: 4,
+                    left: null,
+                    right: null
+                },
+                right: {
+                    value: 5,
+                    left: null,
+                    right: null
+                }
+            },
+            right: {
+                value: 3,
+                left: null,
+                right: {
+                    value: 6,
+                    left: null,
+                    right: null
+                }
+            }
+        };
+        
+        // Define node positions
+        const nodePositions = {
+            1: { x: canvas.width / 2, y: 60 },
+            2: { x: canvas.width / 3, y: 120 },
+            3: { x: (2 * canvas.width) / 3, y: 120 },
+            4: { x: canvas.width / 4, y: 180 },
+            5: { x: canvas.width / 2.5, y: 180 },
+            6: { x: (3 * canvas.width) / 4, y: 180 }
+        };
+        
+        // Path from node 4 to node 6: 4 -> 2 -> 1 -> 3 -> 6
+        const path = [4, 2, 1, 3, 6];
+        
+        // Define steps for the animation
+        const steps = [
+            {
+                explanation: "This is a binary tree with node 1 as the root. We want to find the distance between nodes 4 and 6.",
+                highlightNodes: [],
+                highlightEdges: []
+            },
+            {
+                explanation: "To find the distance between nodes 4 and 6, we need to find the path between them.",
+                highlightNodes: [4, 6],
+                highlightEdges: []
+            },
+            {
+                explanation: "First, we go from node 4 to its parent, node 2.",
+                highlightNodes: [4, 6],
+                highlightEdges: [[4, 2]]
+            },
+            {
+                explanation: "Then, we go from node 2 to its parent, the root node 1.",
+                highlightNodes: [4, 6],
+                highlightEdges: [[4, 2], [2, 1]]
+            },
+            {
+                explanation: "From the root node 1, we go to node 3, which is on the path to node 6.",
+                highlightNodes: [4, 6],
+                highlightEdges: [[4, 2], [2, 1], [1, 3]]
+            },
+            {
+                explanation: "Finally, we go from node 3 to node 6.",
+                highlightNodes: [4, 6],
+                highlightEdges: [[4, 2], [2, 1], [1, 3], [3, 6]]
+            },
+            {
+                explanation: "The complete path from node 4 to node 6 is: 4 → 2 → 1 → 3 → 6. This path has 4 edges, so the distance between nodes 4 and 6 is 4.",
+                highlightNodes: path,
+                highlightEdges: [[4, 2], [2, 1], [1, 3], [3, 6]]
+            }
+        ];
+        
+        let currentStep = 0;
+        
+        // Draw the tree
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges
+            drawEdges();
+            
+            // Draw nodes
+            drawNodes();
+            
+            // Update explanation
+            explanationDiv.innerHTML = `<p>${steps[currentStep].explanation}</p>`;
+            
+            // Update buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        function drawEdges() {
+            const regularEdges = [
+                [1, 2], [1, 3], [2, 4], [2, 5], [3, 6]
+            ];
+            
+            // Draw regular edges
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#000000';
+            
+            for (const [from, to] of regularEdges) {
+                const isHighlighted = steps[currentStep].highlightEdges.some(
+                    edge => (edge[0] === from && edge[1] === to) || (edge[0] === to && edge[1] === from)
+                );
+                
+                if (!isHighlighted) {
+                    ctx.beginPath();
+                    ctx.moveTo(nodePositions[from].x, nodePositions[from].y);
+                    ctx.lineTo(nodePositions[to].x, nodePositions[to].y);
+                    ctx.stroke();
+                }
+            }
+            
+            // Draw highlighted edges
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#FF4800';
+            
+            for (const [from, to] of steps[currentStep].highlightEdges) {
+                ctx.beginPath();
+                ctx.moveTo(nodePositions[from].x, nodePositions[from].y);
+                ctx.lineTo(nodePositions[to].x, nodePositions[to].y);
+                ctx.stroke();
+            }
+        }
+        
+        function drawNodes() {
+            for (const nodeId in nodePositions) {
+                const pos = nodePositions[nodeId];
+                const isHighlighted = steps[currentStep].highlightNodes.includes(parseInt(nodeId));
+                
+                // Draw node circle
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 20, 0, 2 * Math.PI);
+                ctx.fillStyle = isHighlighted ? '#FF4800' : '#FD9F78';
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#000000';
+                ctx.stroke();
+                
+                // Draw node value
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(nodeId, pos.x, pos.y);
+            }
+        }
+        
+        // Navigation handlers
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                drawTree();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                drawTree();
+            }
+        });
+        
+        // Initial draw
+        drawTree();
+    </script>
+</body>
+</html>
