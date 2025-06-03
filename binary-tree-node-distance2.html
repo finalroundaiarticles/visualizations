@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimized Distance Calculation in Trees</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .animation-container {
+            width: 100%;
+            height: 500px;
+            position: relative;
+            margin: 20px 0;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        canvas {
+            background-color: #FFFFFF;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #FFF;
+            border-left: 5px solid #FF4800;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .step-counter {
+            text-align: center;
+            color: #FF4800;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Optimized Distance Calculation Workflow</h1>
+        <div class="explanation" id="explanation">
+            Starting our journey through distance calculation in trees...
+        </div>
+        <div class="animation-container">
+            <canvas id="treeCanvas" width="900" height="500"></canvas>
+        </div>
+        <div class="step-counter" id="stepCounter">Step 1 of 8</div>
+        <div class="navigation">
+            <button class="nav-btn" id="prevBtn" disabled>Previous</button>
+            <button class="nav-btn" id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Animation state
+        let currentStep = 0;
+        const totalSteps = 8;
+        
+        // Tree structure
+        const nodes = {
+            1: { x: 450, y: 50, value: 1, left: 2, right: 3 },
+            2: { x: 250, y: 150, value: 2, left: 4, right: 5 },
+            3: { x: 650, y: 150, value: 3, left: 6, right: 7 },
+            4: { x: 150, y: 250, value: 4, left: null, right: null },
+            5: { x: 350, y: 250, value: 5, left: null, right: null },
+            6: { x: 550, y: 250, value: 6, left: null, right: null },
+            7: { x: 750, y: 250, value: 7, left: null, right: null }
+        };
+
+        // Step explanations
+        const explanations = [
+            "Let's understand how to calculate the distance between two nodes in a tree. We have a binary tree with 7 nodes. We want to find the distance between node 4 and node 7.",
+            "Step 1: We start by finding the Lowest Common Ancestor (LCA) of the two nodes. The distance between two nodes is the sum of distances from each node to their LCA.",
+            "Step 2: Begin the recursive process. We start at the root (Node 1) and check if it's one of our target nodes (4 or 7). It's not, so we need to explore both subtrees.",
+            "Step 3: The recursive function first explores the left subtree (Node 2). We check if Node 2 is one of our targets or contains any of them in its subtree.",
+            "Step 4: Node 2 contains Node 4 in its subtree. So we continue and find Node 4. We've found one of our target nodes! We return distance 2 (from root to Node 4).",
+            "Step 5: Similarly, we explore the right subtree from the root (Node 3). We find that Node 7 is in this subtree with distance 2 from the root.",
+            "Step 6: Since both target nodes are found in different subtrees, the LCA is the root (Node 1). We've found the Lowest Common Ancestor!",
+            "Step 7: The final distance between Node 4 and Node 7 is the sum of distances: distance(Root to Node 4) + distance(Root to Node 7) = 2 + 2 = 4 edges."
+        ];
+
+        // Navigation buttons
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepCounter = document.getElementById('stepCounter');
+        const explanationDiv = document.getElementById('explanation');
+        
+        // Event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateUI();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateUI();
+            }
+        });
+        
+        // Update UI based on current step
+        function updateUI() {
+            // Update buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+            
+            // Update step counter
+            stepCounter.textContent = `Step ${currentStep + 1} of ${totalSteps}`;
+            
+            // Update explanation
+            explanationDiv.textContent = explanations[currentStep];
+            
+            // Render the tree
+            drawTree();
+        }
+        
+        // Draw the tree and animation based on current step
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw connections first
+            drawConnections();
+            
+            // Draw nodes
+            for (const nodeId in nodes) {
+                const node = nodes[nodeId];
+                drawNode(node, nodeId);
+            }
+            
+            // Draw animation based on current step
+            drawStepAnimation();
+        }
+        
+        // Draw connections between nodes
+        function drawConnections() {
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            
+            for (const nodeId in nodes) {
+                const node = nodes[nodeId];
+                
+                if (node.left) {
+                    const leftNode = nodes[node.left];
+                    ctx.beginPath();
+                    ctx.moveTo(node.x, node.y);
+                    ctx.lineTo(leftNode.x, leftNode.y);
+                    ctx.stroke();
+                }
+                
+                if (node.right) {
+                    const rightNode = nodes[node.right];
+                    ctx.beginPath();
+                    ctx.moveTo(node.x, node.y);
+                    ctx.lineTo(rightNode.x, rightNode.y);
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        // Draw a node
+        function drawNode(node, nodeId) {
+            // Special highlighting based on the current step
+            let fillColor = '#FFFFFF';
+            let strokeColor = '#000000';
+            
+            // Default styling
+            ctx.fillStyle = fillColor;
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 2;
+            
+            // Draw circle
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 30, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Draw node value
+            ctx.fillStyle = '#000000';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.value, node.x, node.y);
+        }
+        
+        // Draw animations specific to each step
+        function drawStepAnimation() {
+            switch(currentStep) {
+                case 0:
+                    // Highlight nodes 4 and 7
+                    highlightNode(nodes[4], '#FD9F78');
+                    highlightNode(nodes[7], '#FD9F78');
+                    
+                    // Draw a question mark between them
+                    ctx.font = '24px Arial';
+                    ctx.fillStyle = '#FF4800';
+                    ctx.fillText('?', 450, 350);
+                    ctx.fillText('Distance?', 450, 380);
+                    break;
+                    
+                case 1:
+                    // Highlight nodes 4 and 7 and potential LCA
+                    highlightNode(nodes[4], '#FD9F78');
+                    highlightNode(nodes[7], '#FD9F78');
+                    highlightNode(nodes[1], '#FF4800');
+                    
+                    // Draw LCA label
+                    ctx.font = '18px Arial';
+                    ctx.fillStyle = '#FF4800';
+                    ctx.fillText('Potential LCA', nodes[1].x, nodes[1].y - 45);
+                    break;
+                    
+                case 2:
+                    // Start at root
+                    highlightNode(nodes[1], '#FF4800');
+                    drawArrow(nodes[1].x - 80, nodes[1].y, nodes[1].x - 30, nodes[1].y);
+                    ctx.font = '18px Arial';
+                    ctx.fillStyle = '#FF4800';
+                    ctx.fillText('Start here', nodes[1].x - 100, nodes[1].y - 20);
+                    
+                    // Target nodes
+                    highlightNode(nodes[4], '#FD9F78');
+                    highlightNode(nodes[7], '#FD9F78');
+                    break;
+                    
+                case 3:
+                    // Explore left subtree
+                    highlightNode(nodes[1], '#FF4800');
+                    highlightNode(nodes[2], '#FF4800');
+                    highlightPath(nodes[1], nodes[2], '#FF4800');
+                    
+                    // Target nodes
+                    highlightNode(nodes[4], '#FD9F78');
+                    highlightNode(nodes[7], '#FD9F78');
+                    
+                    // Add text
+                    ctx.font = '18px Arial';
+                    ctx.fillStyle = '#FF4800';
+                    ctx.fillText('Explore left subtree', 200, 100);
+                    break;
+                    
+                case 4:
+                    // Found node 4
+                    highlightNode(nodes[1], '#FF4800');
+                    highlightNode(nodes[2], '#FF4800');
+                    highlightNode(nodes[4], '#FF4800');
+                    highlightPath(nodes[1], nodes[2], '#FF4800');
+                    highlightPath(nodes[2], nodes[4], '#FF4800');
+                    
+                    // Show distance
+                    ctx.font = '18px Arial';
+                    ctx.fillStyle = '#FF4800';
+                    ctx.fillText('Found Node 4!', 150, 220);
+                    ctx.fillText('Distance from root: 2', 150, 300);
+                    
+                    // Still highlight other target
+                    highlightNode(nodes[7], '#FD9F78');
+                    break;
+                    
+                case 5:
+                    // Found node 7
+                    highlightNode(nodes[1], '#FF4800');
+                    highlightNode(nodes[3], '#FF4800');
+                    highlightNode(nodes[7], '#FF4800');
+                    highlightPath(nodes[1], nodes[3], '#FF4800');
+                    highlightPath(nodes[3], nodes[7], '#FF4800');
+                    
+                    // Show distance
+                    ctx.font = '18px Arial';
+                    ctx.fillStyle = '#FF4800';
+                    ctx.fillText('Found Node 7!', 750, 220);
+                    ctx.fillText('Distance from root: 2', 750, 300);
+                    
+                    // Still highlight other path
+                    highlightNode(nodes[2], '#FD9F78');
+                    highlightNode(nodes[4], '#FD9F78');
+                    highlightPath(nodes[1], nodes[2], '#FD9F78');
+                    highlightPath(nodes[2], nodes[4], '#FD9F78');
+                    break;
+                    
+                case 6:
+                    // LCA found
+                    highlightNode(nodes[1], '#FF4800');
+                    drawStar(nodes[1].x, nodes[1].y, 45);
+                    
+                    // Highlight both paths
+                    highlightNode(nodes[2], '#FD9F78');
+                    highlightNode(nodes[4], '#FD9F78');
+                    highlightPath(nodes[1], nodes[2], '#FD9F78');
+                    highlightPath(nodes[2], nodes[4], '#FD9F78');
+                    
+                    highlightNode(nodes[3], '#FD9F78');
+                    highlightNode(nodes[7], '#FD9F78');
+                    highlightPath(nodes[1], nodes[3], '#FD9F78');
+                    highlightPath(nodes[3], nodes[7], '#FD9F78');
+                    
+                    // LCA label
+                    ctx.font = '20px Arial';
+                    ctx.fillStyle = '#FF4800';
+                    ctx.fillText('LCA Found!', nodes[1].x, nodes[1].y - 50);
+                    break;
+                    
+                case 7:
+                    // Final distance calculation
+                    highlightNode(nodes[1], '#FF4800');
+                    highlightNode(nodes[4], '#FD9F78');
+                    highlightNode(nodes[7], '#FD9F78');
+                    
+                    // Highlight both paths
+                    highlightPath(nodes[1], nodes[2], '#FD9F78');
+                    highlightPath(nodes[2], nodes[4], '#FD9F78');
+                    highlightPath(nodes[1], nodes[3], '#FD9F78');
+                    highlightPath(nodes[3], nodes[7], '#FD9F78');
+                    
+                    // Show formula
+                    ctx.font = '22px Arial';
+                    ctx.fillStyle = '#FF4800';
+                    ctx.fillText('Total Distance = 2 + 2 = 4', 450, 350);
+                    
+                    // Draw arrows and distances
+                    drawArrow(nodes[1].x - 100, 350, nodes[4].x, nodes[4].y + 30);
+                    drawArrow(nodes[1].x + 100, 350, nodes[7].x, nodes[7].y + 30);
+                    
+                    ctx.font = '18px Arial';
+                    ctx.fillText('2 edges', 300, 320);
+                    ctx.fillText('2 edges', 600, 320);
+                    break;
+            }
+        }
+        
+        // Highlight a node with specific color
+        function highlightNode(node, color) {
+            ctx.fillStyle = color;
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 3;
+            
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 30, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.value, node.x, node.y);
+        }
+        
+        // Highlight path between two nodes
+        function highlightPath(nodeA, nodeB, color) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 4;
+            
+            ctx.beginPath();
+            ctx.moveTo(nodeA.x, nodeA.y);
+            ctx.lineTo(nodeB.x, nodeB.y);
+            ctx.stroke();
+        }
+        
+        // Draw an arrow
+        function drawArrow(fromX, fromY, toX, toY) {
+            const headLength = 15;
+            const dx = toX - fromX;
+            const dy = toY - fromY;
+            const angle = Math.atan2(dy, dx);
+            
+            ctx.strokeStyle = '#FF4800';
+            ctx.fillStyle = '#FF4800';
+            ctx.lineWidth = 2;
+            
+            // Draw line
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.stroke();
+            
+            // Draw arrowhead
+            ctx.beginPath();
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(toX - headLength * Math.cos(angle - Math.PI/6), 
+                      toY - headLength * Math.sin(angle - Math.PI/6));
+            ctx.lineTo(toX - headLength * Math.cos(angle + Math.PI/6), 
+                      toY - headLength * Math.sin(angle + Math.PI/6));
+            ctx.closePath();
+            ctx.fill();
+        }
+        
+        // Draw a star (for LCA highlight)
+        function drawStar(cx, cy, radius) {
+            const spikes = 5;
+            const outerRadius = radius;
+            const innerRadius = radius / 2;
+            
+            ctx.beginPath();
+            ctx.strokeStyle = '#FF4800';
+            ctx.fillStyle = 'rgba(255, 72, 0, 0.2)';
+            ctx.lineWidth = 3;
+            
+            let rot = Math.PI / 2 * 3;
+            let x = cx;
+            let y = cy;
+            let step = Math.PI / spikes;
+            
+            ctx.moveTo(cx, cy - outerRadius);
+            
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius;
+                y = cy + Math.sin(rot) * outerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+                
+                x = cx + Math.cos(rot) * innerRadius;
+                y = cy + Math.sin(rot) * innerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+            }
+            
+            ctx.lineTo(cx, cy - outerRadius);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.fill();
+        }
+        
+        // Initialize the UI
+        updateUI();
+    </script>
+</body>
+</html>
