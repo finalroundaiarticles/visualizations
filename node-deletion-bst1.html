@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BST Node Deletion Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .case-title {
+            color: #FF4800;
+            font-weight: bold;
+            font-size: 24px;
+            margin: 10px 0;
+        }
+        .case-description {
+            color: #000000;
+            margin-bottom: 20px;
+            text-align: center;
+            max-width: 600px;
+        }
+        #animation-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            margin: 20px 0;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            width: 100%;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .node {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            position: absolute;
+            transition: all 0.5s ease-in-out;
+        }
+        .node.highlight {
+            background-color: #FD9F78;
+            transform: scale(1.2);
+        }
+        .node.delete {
+            background-color: red;
+            opacity: 0.7;
+        }
+        .edge {
+            height: 2px;
+            background-color: #000000;
+            position: absolute;
+            transform-origin: 0 0;
+            transition: all 0.5s ease-in-out;
+        }
+        .step-indicator {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BST Node Deletion Cases</h1>
+        
+        <div id="case-info">
+            <div class="case-title" id="current-case-title">Case 1: Deleting a Leaf Node</div>
+            <div class="case-description" id="current-case-description">
+                When deleting a leaf node (a node with no children), we simply remove it from the tree.
+            </div>
+        </div>
+        
+        <div id="animation-container"></div>
+        
+        <div class="step-indicator" id="step-indicator">Step 1/3</div>
+        
+        <div class="navigation">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const cases = [
+            {
+                title: "Case 1: Deleting a Leaf Node",
+                description: "When deleting a leaf node (a node with no children), we simply remove it from the tree.",
+                steps: [
+                    {
+                        nodes: [
+                            { id: 1, value: 10, x: 400, y: 50 },
+                            { id: 2, value: 5, x: 300, y: 120 },
+                            { id: 3, value: 15, x: 500, y: 120 },
+                            { id: 4, value: 3, x: 250, y: 190 },
+                            { id: 5, value: 7, x: 350, y: 190 },
+                            { id: 6, value: 12, x: 450, y: 190 },
+                            { id: 7, value: 17, x: 550, y: 190 }
+                        ],
+                        edges: [
+                            { from: 1, to: 2 },
+                            { from: 1, to: 3 },
+                            { from: 2, to: 4 },
+                            { from: 2, to: 5 },
+                            { from: 3, to: 6 },
+                            { from: 3, to: 7 }
+                        ],
+                        highlights: [],
+                        deleted: [],
+                        stepDescription: "Initial Binary Search Tree"
+                    },
+                    {
+                        nodes: [
+                            { id: 1, value: 10, x: 400, y: 50 },
+                            { id: 2, value: 5, x: 300, y: 120 },
+                            { id: 3, value: 15, x: 500, y: 120 },
+                            { id: 4, value: 3, x: 250, y: 190 },
+                            { id: 5, value: 7, x: 350, y: 190 },
+                            { id: 6, value: 12, x: 450, y: 190 },
+                            { id: 7, value: 17, x: 550, y: 190 }
+                        ],
+                        edges: [
+                            { from: 1, to: 2 },
+                            { from: 1, to: 3 },
+                            { from: 2, to: 4 },
+                            { from: 2, to: 5 },
+                            { from: 3, to: 6 },
+                            { from: 3, to: 7 }
+                        ],
+                        highlights: [4],
+                        deleted: [],
+                        stepDescription: "We want to delete the leaf node with value 3"
+                    },
+                    {
+                        nodes: [
+                            { id: 1, value: 10, x: 400, y: 50 },
+                            { id: 2, value: 5, x: 300, y: 120 },
+                            { id: 3, value: 15, x: 500, y: 120 },
+                            { id: 5, value: 7, x: 350, y: 190 },
+                            { id: 6, value: 12, x: 450, y: 190 },
+                            { id: 7, value: 17, x: 550, y: 190 }
+                        ],
+                        edges: [
+                            { from: 1, to: 2 },
+                            { from: 1, to: 3 },
+                            { from: 2, to: 5 },
+                            { from: 3, to: 6 },
+                            { from: 3, to: 7 }
+                        ],
+                        highlights: [],
+                        deleted: [],
+                        stepDescription: "Since it's a leaf node, we simply remove it from the tree"
+                    }
+                ]
+            },
+            {
+                title: "Case 2: Deleting a Node with One Child",
+                description: "When deleting a node with one child, we replace the node with its child.",
+                steps: [
+                    {
+                        nodes: [
+                            { id: 1, value: 10, x: 400, y: 50 },
+                            { id: 2, value: 5, x: 300, y: 120 },
+                            { id: 3, value: 15, x: 500, y: 120 },
+                            { id: 5, value: 7, x: 350, y: 190 },
+                            { id: 6, value: 12, x: 450, y: 190 }
+                        ],
+                        edges: [
+                            { from: 1, to: 2 },
+                            { from: 1, to: 3 },
+                            { from: 2, to: 5 },
+                            { from: 3, to: 6 }
+                        ],
+                        highlights: [],
+                        deleted: [],
+                        stepDescription: "Initial Binary Search Tree"
+                    },
+                    {
+                        nodes: [
+                            { id: 1, value: 10, x: 400, y: 50 },
+                            { id: 2, value: 5, x: 300, y: 120 },
+                            { id: 3, value: 15, x: 500, y: 120 },
+                            { id: 5, value: 7, x: 350, y: 190 },
+                            { id: 6, value: 12, x: 450, y: 190 }
+                        ],
+                        edges: [
+                            { from: 1, to: 2 },
+                            { from: 1, to: 3 },
+                            { from: 2, to: 5 },
+                            { from: 3, to: 6 }
+                        ],
+                        highlights: [3],
+                        deleted: [],
+                        stepDescription: "We want to delete node 15, which has one child (12)"
+                    },
+                    {
+                        nodes: [
+                            { id: 1, value: 10, x: 400, y: 50 },
+                            { id: 2, value: 5, x: 300, y: 120 },
+                            { id: 6, value: 12, x: 500, y: 120 },
+                            { id: 5, value: 7, x: 350, y: 190 }
+                        ],
+                        edges: [
+                            { from: 1, to: 2 },
+                            { from: 1, to: 6 },
+                            { from: 2, to: 5 }
+                        ],
+                        highlights: [6],
+                        deleted: [],
+                        stepDescription: "Replace node 15 with its child node 12"
+                    }
+                ]
+            },
+            {
+                title: "Case 3: Deleting a Node with Two Children",
+                description: "When deleting a node with two children, we replace it with its inorder successor (smallest node in right subtree).",
+                steps: [
+                    {
+                        nodes: [
+                            { id: 1, value: 10, x: 400, y: 50 },
+                            { id: 2, value: 5, x: 300, y: 120 },
+                            { id: 3, value: 20, x: 500, y: 120 },
+                            { id: 4, value: 3, x: 250, y: 190 },
+                            { id: 5, value: 7, x: 350, y: 190 },
+                            { id: 6, value: 15, x: 450, y: 190 },
+                            { id: 7, value: 25, x: 550, y: 190 },
+                            { id: 8, value: 13, x: 420, y: 260 },
+                            { id: 9, value: 17, x: 480, y: 260 }
+                        ],
+                        edges: [
+                            { from: 1, to: 2 },
+                            { from: 1, to: 3 },
+                            { from: 2, to: 4 },
+                            { from: 2, to: 5 },
+                            { from: 3, to: 6 },
+                            { from: 3, to: 7 },
+                            { from: 6, to: 8 },
+                            { from: 6, to: 9 }
+                        ],
+                        highlights: [],
+                        deleted: [],
+                        stepDescription: "Initial Binary Search Tree"
+                    },
+                    {
+                        nodes: [
+                            { id: 1, value: 10, x: 400, y: 50 },
+                            { id: 2, value: 5, x: 300, y: 120 },
+                            { id: 3, value: 20, x: 500, y: 120 },
+                            { id: 4, value: 3, x: 250, y: 190 },
+                            { id: 5, value: 7, x: 350, y: 190 },
+                            { id: 6, value: 15, x: 450, y: 190 },
+                            { id: 7, value: 25, x: 550, y: 190 },
+                            { id: 8, value: 13, x: 420, y: 260 },
+                            { id: 9, value: 17, x: 480, y: 260 }
+                        ],
+                        edges: [
+                            { from: 1, to: 2 },
+                            { from: 1, to: 3 },
+                            { from: 2, to: 4 },
+                            { from: 2, to: 5 },
+                            { from: 3, to: 6 },
+                            { from: 3, to: 7 },
+                            { from: 6, to: 8 },
+                            { from: 6, to: 9 }
+                        ],
+                        highlights: [3],
+                        deleted: [],
+                        stepDescription: "We want to delete node 20, which has two children"
+                    },
+                    {
+                        nodes: [
+                            { id: 1, value: 10, x: 400, y: 50 },
+                            { id: 2, value: 5, x: 300, y: 120 },
+                            { id: 3, value: 20, x: 500, y: 120 },
+                            { id: 4, value: 3, x: 250, y: 190 },
+                            { id: 5, value: 7, x: 350, y: 190 },
+                            { id: 6, value: 15, x: 450, y: 190 },
+                            { id: 7, value: 25, x: 550, y: 190 },
+                            { id: 8, value: 13, x: 420, y: 260 },
+                            { id: 9, value: 17, x: 480, y: 260 }
+                        ],
+                        edges: [
+                            { from: 1, to: 2 },
+                            { from: 1, to: 3 },
+                            { from: 2, to: 4 },
+                            { from: 2, to: 5 },
+                            { from: 3, to: 6 },
+                            { from: 3, to: 7 },
+                            { from: 6, to: 8 },
+                            { from: 6, to: 9 }
+                        ],
+                        highlights: [9],
+                        deleted: [],
+                        stepDescription: "Find the inorder successor (smallest node in right subtree, which is 17)"
+                    },
+                    {
+                        nodes: [
+                            { id: 1, value: 10, x: 400, y: 50 },
+                            { id: 2, value: 5, x: 300, y: 120 },
+                            { id: 9, value: 17, x: 500, y: 120 },
+                            { id: 4, value: 3, x: 250, y: 190 },
+                            { id: 5, value: 7, x: 350, y: 190 },
+                            { id: 6, value: 15, x: 450, y: 190 },
+                            { id: 7, value: 25, x: 550, y: 190 },
+                            { id: 8, value: 13, x: 420, y: 260 }
+                        ],
+                        edges: [
+                            { from: 1, to: 2 },
+                            { from: 1, to: 9 },
+                            { from: 2, to: 4 },
+                            { from: 2, to: 5 },
+                            { from: 9, to: 6 },
+                            { from: 9, to: 7 },
+                            { from: 6, to: 8 }
+                        ],
+                        highlights: [9],
+                        deleted: [],
+                        stepDescription: "Replace node 20 with its inorder successor (17) and adjust the tree"
+                    }
+                ]
+            }
+        ];
+
+        let currentCaseIndex = 0;
+        let currentStepIndex = 0;
+        
+        const animationContainer = document.getElementById('animation-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const caseTitleElement = document.getElementById('current-case-title');
+        const caseDescriptionElement = document.getElementById('current-case-description');
+        const stepIndicator = document.getElementById('step-indicator');
+        
+        function renderCurrentStep() {
+            const currentCase = cases[currentCaseIndex];
+            const currentStep = currentCase.steps[currentStepIndex];
+            
+            // Update case info
+            caseTitleElement.textContent = currentCase.title;
+            caseDescriptionElement.textContent = currentCase.description;
+            
+            // Update step indicator
+            stepIndicator.textContent = `Step ${currentStepIndex + 1}/${currentCase.steps.length} - ${currentStep.stepDescription}`;
+            
+            // Clear previous visualization
+            animationContainer.innerHTML = '';
+            
+            // Draw edges first (so they appear below nodes)
+            currentStep.edges.forEach(edge => {
+                const fromNode = currentStep.nodes.find(n => n.id === edge.from);
+                const toNode = currentStep.nodes.find(n => n.id === edge.to);
+                
+                if (fromNode && toNode) {
+                    const edgeElement = document.createElement('div');
+                    edgeElement.className = 'edge';
+                    
+                    const length = Math.sqrt(Math.pow(toNode.x - fromNode.x, 2) + Math.pow(toNode.y - fromNode.y, 2));
+                    const angle = Math.atan2(toNode.y - fromNode.y, toNode.x - fromNode.x);
+                    
+                    edgeElement.style.width = `${length}px`;
+                    edgeElement.style.left = `${fromNode.x + 25}px`;
+                    edgeElement.style.top = `${fromNode.y + 25}px`;
+                    edgeElement.style.transform = `rotate(${angle}rad)`;
+                    
+                    animationContainer.appendChild(edgeElement);
+                }
+            });
+            
+            // Draw nodes
+            currentStep.nodes.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'node';
+                if (currentStep.highlights.includes(node.id)) {
+                    nodeElement.classList.add('highlight');
+                }
+                if (currentStep.deleted.includes(node.id)) {
+                    nodeElement.classList.add('delete');
+                }
+                
+                nodeElement.style.left = `${node.x}px`;
+                nodeElement.style.top = `${node.y}px`;
+                nodeElement.textContent = node.value;
+                
+                animationContainer.appendChild(nodeElement);
+            });
+            
+            // Update button states
+            prevBtn.disabled = currentCaseIndex === 0 && currentStepIndex === 0;
+            nextBtn.disabled = currentCaseIndex === cases.length - 1 && currentStepIndex === cases[currentCaseIndex].steps.length - 1;
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStepIndex > 0) {
+                currentStepIndex--;
+            } else if (currentCaseIndex > 0) {
+                currentCaseIndex--;
+                currentStepIndex = cases[currentCaseIndex].steps.length - 1;
+            }
+            renderCurrentStep();
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStepIndex < cases[currentCaseIndex].steps.length - 1) {
+                currentStepIndex++;
+            } else if (currentCaseIndex < cases.length - 1) {
+                currentCaseIndex++;
+                currentStepIndex = 0;
+            }
+            renderCurrentStep();
+        });
+        
+        // Initial render
+        renderCurrentStep();
+    </script>
+</body>
+</html>
