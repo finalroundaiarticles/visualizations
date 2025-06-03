@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>In-order Traversal Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+
+        .container {
+            width: 800px;
+            max-width: 100%;
+            margin: 20px auto;
+        }
+
+        .tree-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+
+        .node {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+
+        .node.active {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.2);
+        }
+
+        .node.visited {
+            background-color: #FFFFFF;
+            color: #000000;
+            border: 2px solid #FF4800;
+        }
+
+        .edge {
+            position: absolute;
+            background-color: #000000;
+            height: 2px;
+            transform-origin: 0 0;
+        }
+
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+
+        .collected-values {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .value-box {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 5px;
+            font-weight: bold;
+            opacity: 0.3;
+            transition: all 0.5s ease;
+        }
+
+        .value-box.active {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #FD9F78;
+        }
+
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 20px;
+            font-weight: bold;
+            color: #FF4800;
+            text-align: center;
+            font-size: 18px;
+            height: 25px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>In-order Traversal Animation</h1>
+        
+        <div class="tree-container" id="tree-container"></div>
+        
+        <div class="explanation" id="explanation">
+            Welcome to the In-order Traversal animation! Click "Next" to start the traversal process.
+        </div>
+        
+        <div class="collected-values" id="collected-values">
+            <div class="value-box">1</div>
+            <div class="value-box">3</div>
+            <div class="value-box">4</div>
+            <div class="value-box">5</div>
+            <div class="value-box">7</div>
+            <div class="value-box">8</div>
+            <div class="value-box">9</div>
+        </div>
+        
+        <div class="result" id="result"></div>
+        
+        <div class="button-container">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Tree nodes and their positions
+        const nodes = [
+            { id: 0, value: 5, x: 400, y: 50 },
+            { id: 1, value: 3, x: 250, y: 150 },
+            { id: 2, value: 8, x: 550, y: 150 },
+            { id: 3, value: 1, x: 175, y: 250 },
+            { id: 4, value: 4, x: 325, y: 250 },
+            { id: 5, value: 7, x: 475, y: 250 },
+            { id: 6, value: 9, x: 625, y: 250 }
+        ];
+
+        // Edges connecting nodes
+        const edges = [
+            { from: 0, to: 1 }, // 5 to 3
+            { from: 0, to: 2 }, // 5 to 8
+            { from: 1, to: 3 }, // 3 to 1
+            { from: 1, to: 4 }, // 3 to 4
+            { from: 2, to: 5 }, // 8 to 7
+            { from: 2, to: 6 }  // 8 to 9
+        ];
+
+        // Steps for the in-order traversal animation
+        const steps = [
+            { 
+                node: null, 
+                explanation: "In-order traversal visits nodes in the following order: left subtree, current node, right subtree. Let's start with the root node 5.", 
+                collected: [] 
+            },
+            { 
+                node: 0, 
+                explanation: "We start at the root node 5. In in-order traversal, we first visit the left subtree.", 
+                collected: [] 
+            },
+            { 
+                node: 1, 
+                explanation: "Moving to node 3. Again, we first visit its left subtree.", 
+                collected: [] 
+            },
+            { 
+                node: 3, 
+                explanation: "Moving to node 1. It has no left child, so we visit the node itself.", 
+                collected: [] 
+            },
+            { 
+                node: 3, 
+                explanation: "We collect the value 1. Since it has no right child, we go back to its parent.", 
+                collected: [0] 
+            },
+            { 
+                node: 1, 
+                explanation: "Back at node 3. We've visited its left subtree, now we visit the node itself.", 
+                collected: [0] 
+            },
+            { 
+                node: 1, 
+                explanation: "We collect the value 3. Now we visit its right subtree.", 
+                collected: [0, 1] 
+            },
+            { 
+                node: 4, 
+                explanation: "Moving to node 4. It has no left child, so we visit the node itself.", 
+                collected: [0, 1] 
+            },
+            { 
+                node: 4, 
+                explanation: "We collect the value 4. Since it has no right child, we go back to its parent's parent.", 
+                collected: [0, 1, 2] 
+            },
+            { 
+                node: 0, 
+                explanation: "Back at the root node 5. We've visited its left subtree, now we visit the node itself.", 
+                collected: [0, 1, 2] 
+            },
+            { 
+                node: 0, 
+                explanation: "We collect the value 5. Now we visit its right subtree.", 
+                collected: [0, 1, 2, 3] 
+            },
+            { 
+                node: 2, 
+                explanation: "Moving to node 8. In in-order traversal, we first visit its left subtree.", 
+                collected: [0, 1, 2, 3] 
+            },
+            { 
+                node: 5, 
+                explanation: "Moving to node 7. It has no left child, so we visit the node itself.", 
+                collected: [0, 1, 2, 3] 
+            },
+            { 
+                node: 5, 
+                explanation: "We collect the value 7. Since it has no right child, we go back to its parent.", 
+                collected: [0, 1, 2, 3, 4] 
+            },
+            { 
+                node: 2, 
+                explanation: "Back at node 8. We've visited its left subtree, now we visit the node itself.", 
+                collected: [0, 1, 2, 3, 4] 
+            },
+            { 
+                node: 2, 
+                explanation: "We collect the value 8. Now we visit its right subtree.", 
+                collected: [0, 1, 2, 3, 4, 5] 
+            },
+            { 
+                node: 6, 
+                explanation: "Moving to node 9. It has no left child, so we visit the node itself.", 
+                collected: [0, 1, 2, 3, 4, 5] 
+            },
+            { 
+                node: 6, 
+                explanation: "We collect the value 9. Since it has no right child, we are done with the traversal.", 
+                collected: [0, 1, 2, 3, 4, 5, 6] 
+            },
+            { 
+                node: null, 
+                explanation: "In-order traversal complete! We collected the values [1, 3, 4, 5, 7, 8, 9]. Notice that they are in ascending order. This is a property of in-order traversal on a binary search tree.", 
+                collected: [0, 1, 2, 3, 4, 5, 6],
+                final: true
+            }
+        ];
+
+        let currentStep = 0;
+        const nodeElements = [];
+        const valueBoxes = document.querySelectorAll('.value-box');
+        const explanationEl = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const resultEl = document.getElementById('result');
+        const treeContainer = document.getElementById('tree-container');
+
+        // Create the tree visualization
+        function createTree() {
+            // Create edges first so they appear behind nodes
+            edges.forEach(edge => {
+                const fromNode = nodes[edge.from];
+                const toNode = nodes[edge.to];
+                
+                const dx = toNode.x - fromNode.x;
+                const dy = toNode.y - fromNode.y;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                const edgeEl = document.createElement('div');
+                edgeEl.className = 'edge';
+                edgeEl.style.width = `${length}px`;
+                edgeEl.style.left = `${fromNode.x + 25}px`;
+                edgeEl.style.top = `${fromNode.y + 25}px`;
+                edgeEl.style.transform = `rotate(${angle}deg)`;
+                
+                treeContainer.appendChild(edgeEl);
+            });
+            
+            // Create nodes
+            nodes.forEach(node => {
+                const nodeEl = document.createElement('div');
+                nodeEl.className = 'node';
+                nodeEl.textContent = node.value;
+                nodeEl.style.left = `${node.x}px`;
+                nodeEl.style.top = `${node.y}px`;
+                
+                treeContainer.appendChild(nodeEl);
+                nodeElements.push(nodeEl);
+            });
+        }
+
+        // Update the visualization based on the current step
+        function updateVisualization() {
+            // Reset all nodes
+            nodeElements.forEach(el => {
+                el.className = 'node';
+            });
+            
+            // Reset all value boxes
+            valueBoxes.forEach(box => {
+                box.className = 'value-box';
+            });
+            
+            const step = steps[currentStep];
+            
+            // Update explanation
+            explanationEl.textContent = step.explanation;
+            
+            // Highlight current node
+            if (step.node !== null) {
+                nodeElements[step.node].className = 'node active';
+            }
+            
+            // Highlight collected values
+            step.collected.forEach(index => {
+                valueBoxes[index].className = 'value-box active';
+            });
+            
+            // Show final result if we're at the end
+            if (step.final) {
+                resultEl.textContent = "All nodes have been visited in ascending order!";
+            } else {
+                resultEl.textContent = "";
+            }
+            
+            // Update buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+
+        // Initialize the visualization
+        createTree();
+        updateVisualization();
+
+        // Event listeners for buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+    </script>
+</body>
+</html>
