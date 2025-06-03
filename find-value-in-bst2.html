@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BST Search Path Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .explanation {
+            text-align: left;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #FD9F78;
+            color: #000000;
+        }
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #999999;
+            cursor: not-allowed;
+        }
+        .step-counter {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BST Search Path Visualization</h1>
+        <h2>Finding value 3 in a Binary Search Tree</h2>
+        
+        <div class="canvas-container">
+            <canvas id="bstCanvas"></canvas>
+        </div>
+        
+        <div class="explanation" id="stepExplanation">
+            Welcome to the BST Search Path Visualization! Click "Next" to start.
+        </div>
+        
+        <div class="step-counter" id="stepCounter">Step 0/4</div>
+        
+        <div class="btn-container">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('bstCanvas');
+        const ctx = canvas.getContext('2d');
+        const stepExplanation = document.getElementById('stepExplanation');
+        const stepCounter = document.getElementById('stepCounter');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        // Set canvas dimensions
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // BST Node definition
+        class Node {
+            constructor(value, x, y) {
+                this.value = value;
+                this.left = null;
+                this.right = null;
+                this.x = x;
+                this.y = y;
+            }
+        }
+        
+        // Create a sample BST
+        const root = new Node(4, canvas.width / 2, 60);
+        root.left = new Node(2, canvas.width / 3, 130);
+        root.right = new Node(6, 2 * canvas.width / 3, 130);
+        root.left.left = new Node(1, canvas.width / 4, 200);
+        root.left.right = new Node(3, 5 * canvas.width / 12, 200);
+        root.right.left = new Node(5, 7 * canvas.width / 12, 200);
+        root.right.right = new Node(7, 3 * canvas.width / 4, 200);
+        
+        // States and step definitions
+        let currentStep = 0;
+        const totalSteps = 4;
+        
+        const steps = [
+            {
+                explanation: "We start at the root node with value 4. We're searching for the value 3.",
+                highlight: [root],
+                comparison: null,
+                arrow: null
+            },
+            {
+                explanation: "Since 3 < 4, we move to the left child of the root.",
+                highlight: [root, root.left],
+                comparison: "4 > 3, go left",
+                arrow: { from: root, to: root.left }
+            },
+            {
+                explanation: "Now we're at node 2. Since 3 > 2, we move to the right child.",
+                highlight: [root.left, root.left.right],
+                comparison: "2 < 3, go right",
+                arrow: { from: root.left, to: root.left.right }
+            },
+            {
+                explanation: "We've found the node with value 3! Search is complete.",
+                highlight: [root.left.right],
+                comparison: "Found 3!",
+                arrow: null
+            }
+        ];
+        
+        // Update buttons
+        function updateButtons() {
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+        }
+        
+        // Draw an arrow between nodes
+        function drawArrow(fromNode, toNode) {
+            const headSize = 10;
+            const dx = toNode.x - fromNode.x;
+            const dy = toNode.y - fromNode.y;
+            const angle = Math.atan2(dy, dx);
+            
+            // Calculate the starting and ending points
+            const startX = fromNode.x + 25 * Math.cos(angle);
+            const startY = fromNode.y + 25 * Math.sin(angle);
+            const endX = toNode.x - 25 * Math.cos(angle);
+            const endY = toNode.y - 25 * Math.sin(angle);
+            
+            // Draw the line
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = '#FF4800';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // Draw the arrowhead
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(
+                endX - headSize * Math.cos(angle - Math.PI / 6),
+                endY - headSize * Math.sin(angle - Math.PI / 6)
+            );
+            ctx.lineTo(
+                endX - headSize * Math.cos(angle + Math.PI / 6),
+                endY - headSize * Math.sin(angle + Math.PI / 6)
+            );
+            ctx.closePath();
+            ctx.fillStyle = '#FF4800';
+            ctx.fill();
+        }
+        
+        // Draw a node
+        function drawNode(node, isHighlighted) {
+            // Draw connections to children
+            ctx.beginPath();
+            if (node.left) {
+                ctx.moveTo(node.x, node.y);
+                ctx.lineTo(node.left.x, node.left.y);
+            }
+            if (node.right) {
+                ctx.moveTo(node.x, node.y);
+                ctx.lineTo(node.right.x, node.right.y);
+            }
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw circle for the node
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 25, 0, 2 * Math.PI);
+            
+            if (isHighlighted) {
+                ctx.fillStyle = '#FF4800';
+            } else {
+                ctx.fillStyle = '#FD9F78';
+            }
+            
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw value
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.value, node.x, node.y);
+        }
+        
+        // Draw the entire BST
+        function drawBST() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw all nodes
+            function traverseAndDraw(node) {
+                if (!node) return;
+                
+                const isHighlighted = steps[currentStep].highlight.includes(node);
+                drawNode(node, isHighlighted);
+                
+                traverseAndDraw(node.left);
+                traverseAndDraw(node.right);
+            }
+            
+            traverseAndDraw(root);
+            
+            // Draw arrow if present in the current step
+            if (steps[currentStep].arrow) {
+                drawArrow(steps[currentStep].arrow.from, steps[currentStep].arrow.to);
+            }
+            
+            // Draw comparison text if present
+            if (steps[currentStep].comparison) {
+                ctx.fillStyle = '#000000';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(steps[currentStep].comparison, canvas.width / 2, canvas.height - 20);
+            }
+        }
+        
+        // Update the visualization
+        function updateVisualization() {
+            drawBST();
+            stepExplanation.textContent = steps[currentStep].explanation;
+            stepCounter.textContent = `Step ${currentStep + 1}/${totalSteps}`;
+            updateButtons();
+        }
+        
+        // Event listeners for buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+        
+        // Initial draw
+        updateVisualization();
+    </script>
+</body>
+</html>
