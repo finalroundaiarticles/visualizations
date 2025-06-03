@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lowest Common Ancestor Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .description {
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .canvas-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        canvas {
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .step-info {
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 16px;
+        }
+        
+        .highlight {
+            color: #FF4800;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lowest Common Ancestor (LCA) Visualization</h1>
+        
+        <div class="description">
+            <p>The Lowest Common Ancestor (LCA) of two nodes in a tree is the deepest node that has both nodes as descendants. This visualization shows how to find the LCA of nodes 4 and 6 in our example tree.</p>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="treeCanvas" width="700" height="400"></canvas>
+        </div>
+        
+        <div class="step-info" id="stepInfo">
+            Step 1: This is our binary tree. We want to find the Lowest Common Ancestor (LCA) of nodes 4 and 6.
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous Step</button>
+            <button id="nextBtn">Next Step</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        const stepInfo = document.getElementById('stepInfo');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        // Tree structure
+        const tree = {
+            value: 1,
+            left: {
+                value: 2,
+                left: {
+                    value: 4,
+                    left: null,
+                    right: null
+                },
+                right: {
+                    value: 5,
+                    left: null,
+                    right: null
+                }
+            },
+            right: {
+                value: 3,
+                left: {
+                    value: 6,
+                    left: null,
+                    right: null
+                },
+                right: {
+                    value: 7,
+                    left: null,
+                    right: null
+                }
+            }
+        };
+        
+        // Node positions
+        const nodePositions = {
+            1: { x: 350, y: 50 },
+            2: { x: 200, y: 120 },
+            3: { x: 500, y: 120 },
+            4: { x: 150, y: 190 },
+            5: { x: 250, y: 190 },
+            6: { x: 450, y: 190 },
+            7: { x: 550, y: 190 }
+        };
+        
+        // Colors
+        const colors = {
+            regular: '#000000',
+            highlight: '#FF4800',
+            secondary: '#FD9F78',
+            white: '#FFFFFF'
+        };
+        
+        // Animation steps
+        const steps = [
+            {
+                description: "Step 1: This is our binary tree. We want to find the Lowest Common Ancestor (LCA) of nodes 4 and 6.",
+                draw: function() {
+                    drawTree();
+                }
+            },
+            {
+                description: "Step 2: First, we identify our target nodes: Node 4 and Node 6.",
+                draw: function() {
+                    drawTree();
+                    highlightNode(4);
+                    highlightNode(6);
+                }
+            },
+            {
+                description: "Step 3: We need to find the paths from the root to these nodes. Let's trace the path to Node 4 first.",
+                draw: function() {
+                    drawTree();
+                    highlightNode(4);
+                    highlightNode(6, colors.secondary);
+                    highlightPath([1, 2, 4]);
+                }
+            },
+            {
+                description: "Step 4: Now, let's trace the path from the root to Node 6.",
+                draw: function() {
+                    drawTree();
+                    highlightNode(4, colors.secondary);
+                    highlightNode(6);
+                    highlightPath([1, 3, 6]);
+                }
+            },
+            {
+                description: "Step 5: Looking at both paths, we can see that Node 1 is the lowest (deepest) common node in both paths.",
+                draw: function() {
+                    drawTree();
+                    highlightNode(4);
+                    highlightNode(6);
+                    highlightPath([1, 2, 4], colors.secondary);
+                    highlightPath([1, 3, 6], colors.secondary);
+                    highlightNode(1);
+                }
+            },
+            {
+                description: "Step 6: Therefore, Node 1 is our Lowest Common Ancestor (LCA).",
+                draw: function() {
+                    drawTree();
+                    highlightNode(4);
+                    highlightNode(6);
+                    highlightNode(1);
+                }
+            },
+            {
+                description: "Step 7: Let's calculate the distance from LCA to Node 4: Root→2→4 is 2 steps.",
+                draw: function() {
+                    drawTree();
+                    highlightNode(1);
+                    highlightNode(4);
+                    highlightPath([1, 2, 4]);
+                    
+                    // Show distance calculation
+                    ctx.fillStyle = colors.highlight;
+                    ctx.font = "15px Arial";
+                    ctx.fillText("Distance: 2 steps", 80, 220);
+                }
+            },
+            {
+                description: "Step 8: Now, let's calculate the distance from LCA to Node 6: Root→3→6 is 2 steps.",
+                draw: function() {
+                    drawTree();
+                    highlightNode(1);
+                    highlightNode(6);
+                    highlightPath([1, 3, 6]);
+                    
+                    // Show distance calculation
+                    ctx.fillStyle = colors.highlight;
+                    ctx.font = "15px Arial";
+                    ctx.fillText("Distance: 2 steps", 450, 220);
+                }
+            },
+            {
+                description: "Step 9: Total distance between Node 4 and Node 6 = 2 + 2 = 4 steps through their LCA (Node 1).",
+                draw: function() {
+                    drawTree();
+                    highlightNode(1);
+                    highlightNode(4);
+                    highlightNode(6);
+                    highlightPath([1, 2, 4], colors.secondary);
+                    highlightPath([1, 3, 6], colors.secondary);
+                    
+                    // Show total distance calculation
+                    ctx.fillStyle = colors.highlight;
+                    ctx.font = "18px Arial";
+                    ctx.fillText("Total Distance: 2 + 2 = 4 steps", 250, 250);
+                }
+            }
+        ];
+        
+        let currentStep = 0;
+        
+        // Initialize the visualization
+        function init() {
+            drawCurrentStep();
+            updateControls();
+        }
+        
+        // Draw the current step
+        function drawCurrentStep() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            steps[currentStep].draw();
+            stepInfo.textContent = steps[currentStep].description;
+        }
+        
+        // Draw the entire tree
+        function drawTree() {
+            // Draw edges
+            drawEdge(1, 2);
+            drawEdge(1, 3);
+            drawEdge(2, 4);
+            drawEdge(2, 5);
+            drawEdge(3, 6);
+            drawEdge(3, 7);
+            
+            // Draw nodes
+            for (let nodeValue in nodePositions) {
+                drawNode(nodeValue);
+            }
+        }
+        
+        // Draw a node
+        function drawNode(value, color = colors.regular) {
+            const pos = nodePositions[value];
+            
+            // Draw circle
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, 20, 0, 2 * Math.PI);
+            ctx.fillStyle = colors.white;
+            ctx.fill();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw node value
+            ctx.font = "16px Arial";
+            ctx.fillStyle = color;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(value, pos.x, pos.y);
+        }
+        
+        // Highlight a node
+        function highlightNode(value, color = colors.highlight) {
+            drawNode(value, color);
+        }
+        
+        // Draw an edge between two nodes
+        function drawEdge(fromValue, toValue, color = colors.regular) {
+            const from = nodePositions[fromValue];
+            const to = nodePositions[toValue];
+            
+            ctx.beginPath();
+            ctx.moveTo(from.x, from.y);
+            ctx.lineTo(to.x, to.y);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        // Highlight a path in the tree
+        function highlightPath(path, color = colors.highlight) {
+            for (let i = 0; i < path.length - 1; i++) {
+                drawEdge(path[i], path[i+1], color);
+            }
+            
+            for (let i = 0; i < path.length; i++) {
+                highlightNode(path[i], color);
+            }
+        }
+        
+        // Update control buttons
+        function updateControls() {
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        // Event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                drawCurrentStep();
+                updateControls();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                drawCurrentStep();
+                updateControls();
+            }
+        });
+        
+        // Start the visualization
+        init();
+    </script>
+</body>
+</html>
