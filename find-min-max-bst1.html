@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BST with Min/Max Highlighted</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        #bst-container {
+            height: 400px;
+            position: relative;
+            margin-top: 30px;
+        }
+        
+        .node {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            border: 2px solid #FF4800;
+        }
+        
+        .node.min-node {
+            background-color: #6495ED; /* Blue for minimum */
+            color: #FFFFFF;
+        }
+        
+        .node.max-node {
+            background-color: #FF4800; /* Red for maximum */
+            color: #FFFFFF;
+        }
+        
+        .edge {
+            position: absolute;
+            height: 2px;
+            background-color: #FF4800;
+            transform-origin: 0 0;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+            color: #000000;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Search Tree with Min/Max Highlighted</h1>
+        
+        <div id="bst-container"></div>
+        
+        <div class="explanation" id="explanation">
+            <p>This is a Binary Search Tree (BST) with the values 8, 3, 10, 1, 6, 14, 4, 7, 13. In a BST:</p>
+            <p>- Each node has at most two children (left and right)</p>
+            <p>- All nodes in the left subtree have values less than the node's value</p>
+            <p>- All nodes in the right subtree have values greater than the node's value</p>
+            <p>The <span style="color: #6495ED; font-weight: bold;">minimum value (1)</span> is highlighted in blue, and the <span style="color: #FF4800; font-weight: bold;">maximum value (14)</span> is highlighted in red.</p>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" class="nav-btn" disabled>Previous</button>
+            <button id="nextBtn" class="nav-btn">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">Step 1 of 5</div>
+    </div>
+
+    <script>
+        const treeValues = [8, 3, 10, 1, 6, 14, 4, 7, 13];
+        const minValue = 1;
+        const maxValue = 14;
+        
+        class TreeNode {
+            constructor(value) {
+                this.value = value;
+                this.left = null;
+                this.right = null;
+            }
+        }
+        
+        function buildBST(values) {
+            if (values.length === 0) return null;
+            
+            const root = new TreeNode(values[0]);
+            
+            for (let i = 1; i < values.length; i++) {
+                insertNode(root, values[i]);
+            }
+            
+            return root;
+        }
+        
+        function insertNode(root, value) {
+            if (value < root.value) {
+                if (root.left === null) {
+                    root.left = new TreeNode(value);
+                } else {
+                    insertNode(root.left, value);
+                }
+            } else {
+                if (root.right === null) {
+                    root.right = new TreeNode(value);
+                } else {
+                    insertNode(root.right, value);
+                }
+            }
+        }
+        
+        // Animation steps
+        const steps = [
+            {
+                title: "Initial BST Structure",
+                description: "This is the Binary Search Tree (BST) with values 8, 3, 10, 1, 6, 14, 4, 7, 13. The tree follows the BST property where all left child nodes are less than their parent and all right child nodes are greater than their parent.",
+                showMinMax: false
+            },
+            {
+                title: "Finding the Minimum Value",
+                description: "To find the minimum value in a BST, we start at the root and keep going to the left child until we reach a node with no left child. In this tree, the minimum value is 1 (highlighted in blue).",
+                showMin: true,
+                showMax: false
+            },
+            {
+                title: "Finding the Maximum Value",
+                description: "To find the maximum value in a BST, we start at the root and keep going to the right child until we reach a node with no right child. In this tree, the maximum value is 14 (highlighted in red).",
+                showMin: false,
+                showMax: true
+            },
+            {
+                title: "Both Min and Max Values",
+                description: "The minimum value (1) is highlighted in blue and is found at the leftmost node of the BST. The maximum value (14) is highlighted in red and is found at the rightmost node of the BST.",
+                showMin: true,
+                showMax: true
+            },
+            {
+                title: "BST Properties",
+                description: "In a BST, the minimum value is always at the leftmost node (follow left children from root), and the maximum value is always at the rightmost node (follow right children from root). This makes finding min/max operations very efficient (O(h) time complexity where h is the height of the tree).",
+                showMin: true,
+                showMax: true
+            }
+        ];
+        
+        let currentStep = 0;
+        const bstContainer = document.getElementById('bst-container');
+        const explanation = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        
+        // Create a BST from the given values
+        const rootNode = buildBST(treeValues);
+        
+        // Display tree nodes and edges
+        function displayTree(root, x, y, level = 0, parentX = null, parentY = null) {
+            if (!root) return;
+            
+            const horizontalSpacing = 180 / (Math.pow(2, level) + 1);
+            
+            // Create node element
+            const nodeElement = document.createElement('div');
+            nodeElement.className = 'node';
+            if (root.value === minValue && (steps[currentStep].showMin || steps[currentStep].showMinMax)) {
+                nodeElement.classList.add('min-node');
+            }
+            if (root.value === maxValue && (steps[currentStep].showMax || steps[currentStep].showMinMax)) {
+                nodeElement.classList.add('max-node');
+            }
+            nodeElement.textContent = root.value;
+            nodeElement.style.left = `${x}px`;
+            nodeElement.style.top = `${y}px`;
+            bstContainer.appendChild(nodeElement);
+            
+            // Create edge from parent if exists
+            if (parentX !== null && parentY !== null) {
+                const edge = document.createElement('div');
+                edge.className = 'edge';
+                
+                // Calculate the length and angle of the edge
+                const deltaX = x - parentX;
+                const deltaY = y - parentY;
+                const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+                
+                edge.style.width = `${length}px`;
+                edge.style.left = `${parentX + 20}px`;
+                edge.style.top = `${parentY + 20}px`;
+                edge.style.transform = `rotate(${angle}deg)`;
+                
+                bstContainer.appendChild(edge);
+            }
+            
+            // Recursively display left and right subtrees
+            const nextLevel = level + 1;
+            const verticalSpacing = 70;
+            
+            if (root.left) {
+                displayTree(root.left, x - horizontalSpacing * (Math.pow(2, 3 - level)), y + verticalSpacing, nextLevel, x, y);
+            }
+            
+            if (root.right) {
+                displayTree(root.right, x + horizontalSpacing * (Math.pow(2, 3 - level)), y + verticalSpacing, nextLevel, x, y);
+            }
+        }
+        
+        function updateExplanation() {
+            const step = steps[currentStep];
+            explanation.innerHTML = `<h3>${step.title}</h3><p>${step.description}</p>`;
+            stepIndicator.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+            
+            // Enable/disable navigation buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        function renderTree() {
+            bstContainer.innerHTML = '';
+            displayTree(rootNode, bstContainer.offsetWidth / 2, 30);
+            updateExplanation();
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                renderTree();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                renderTree();
+            }
+        });
+        
+        // Initial render
+        window.addEventListener('load', renderTree);
+        window.addEventListener('resize', renderTree);
+    </script>
+</body>
+</html>
