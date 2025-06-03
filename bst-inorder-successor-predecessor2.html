@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BST Successor and Predecessor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        #canvas-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        canvas {
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            background-color: #FFFFFF;
+        }
+        
+        .explanation {
+            width: 100%;
+            padding: 15px;
+            background-color: #FD9F78;
+            border-radius: 8px;
+            color: #000000;
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 300px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            border: none;
+            border-radius: 5px;
+            color: #FFFFFF;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            border: 1px solid #000000;
+        }
+        
+        .step-counter {
+            font-weight: bold;
+            color: #FF4800;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Finding Successor and Predecessor in BST</h1>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FF4800;"></div>
+                <span>Current Node</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #00AA00;"></div>
+                <span>Potential Predecessor</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #0000FF;"></div>
+                <span>Potential Successor</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FD9F78;"></div>
+                <span>Target Node</span>
+            </div>
+        </div>
+        
+        <div class="step-counter">Step <span id="current-step">1</span> of <span id="total-steps">10</span></div>
+        
+        <div id="canvas-container">
+            <canvas id="bstCanvas" width="800" height="400"></canvas>
+        </div>
+        
+        <div class="explanation" id="explanation-text">
+            Starting our search for the successor and predecessor of key 10 in the BST.
+        </div>
+        
+        <div class="controls">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('bstCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const explanationText = document.getElementById('explanation-text');
+        const currentStepEl = document.getElementById('current-step');
+        const totalStepsEl = document.getElementById('total-steps');
+        
+        // Define tree nodes
+        const tree = {
+            value: 10,
+            left: {
+                value: 5,
+                left: {
+                    value: 3,
+                    left: null,
+                    right: null
+                },
+                right: {
+                    value: 7,
+                    left: null,
+                    right: null
+                }
+            },
+            right: {
+                value: 15,
+                left: {
+                    value: 12,
+                    left: null,
+                    right: null
+                },
+                right: {
+                    value: 18,
+                    left: null,
+                    right: null
+                }
+            }
+        };
+        
+        // Steps for the animation
+        const steps = [
+            {
+                text: "Starting our search for the successor and predecessor of key 10 in the BST. We'll need to explore the tree to find these values.",
+                highlightedNode: null,
+                predecessorNode: null,
+                successorNode: null,
+                targetNode: 10
+            },
+            {
+                text: "To find the successor of 10: We start at the root (10). Since we're looking for a successor, we need to look to the right of 10.",
+                highlightedNode: 10,
+                predecessorNode: null,
+                successorNode: null,
+                targetNode: 10
+            },
+            {
+                text: "We move to the right child of 10, which is 15. This becomes a potential successor since it's greater than 10.",
+                highlightedNode: 15,
+                predecessorNode: null,
+                successorNode: 15,
+                targetNode: 10
+            },
+            {
+                text: "Since 15 has a left child (12) which is still greater than 10, we can look for a closer successor by going left.",
+                highlightedNode: 12,
+                predecessorNode: null,
+                successorNode: 12,
+                targetNode: 10
+            },
+            {
+                text: "Since 12 has no left child, it is the successor of 10. The successor is 12.",
+                highlightedNode: 12,
+                predecessorNode: null,
+                successorNode: 12,
+                targetNode: 10
+            },
+            {
+                text: "Now, let's find the predecessor of 10. We start again at the root (10).",
+                highlightedNode: 10,
+                predecessorNode: null,
+                successorNode: 12,
+                targetNode: 10
+            },
+            {
+                text: "To find the predecessor, we need to look to the left of 10.",
+                highlightedNode: 10,
+                predecessorNode: null,
+                successorNode: 12,
+                targetNode: 10
+            },
+            {
+                text: "We move to the left child of 10, which is 5. This becomes a potential predecessor since it's less than 10.",
+                highlightedNode: 5,
+                predecessorNode: 5,
+                successorNode: 12,
+                targetNode: 10
+            },
+            {
+                text: "Since 5 has a right child (7) which is still less than 10, we look for a closer predecessor by going right.",
+                highlightedNode: 7,
+                predecessorNode: 7,
+                successorNode: 12,
+                targetNode: 10
+            },
+            {
+                text: "Since 7 has no right child, it is the predecessor of 10. The predecessor is 7.",
+                highlightedNode: 7,
+                predecessorNode: 7,
+                successorNode: 12,
+                targetNode: 10
+            },
+            {
+                text: "Summary: For key 10 in our BST, the successor is 12 and the predecessor is 7. The successor is the smallest key greater than 10, and the predecessor is the largest key less than 10.",
+                highlightedNode: 10,
+                predecessorNode: 7,
+                successorNode: 12,
+                targetNode: 10
+            }
+        ];
+        
+        let currentStep = 0;
+        totalStepsEl.textContent = steps.length;
+        
+        // Draw a node
+        function drawNode(x, y, value, color = '#FFFFFF', textColor = '#000000') {
+            // Draw circle
+            ctx.beginPath();
+            ctx.arc(x, y, 25, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw text
+            ctx.font = '16px Arial';
+            ctx.fillStyle = textColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(value, x, y);
+        }
+        
+        // Draw an edge between nodes
+        function drawEdge(fromX, fromY, toX, toY) {
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY + 25); // Start from bottom of the node
+            ctx.lineTo(toX, toY - 25); // End at top of the node
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        // Draw the BST
+        function drawBST() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const step = steps[currentStep];
+            
+            // Position for the root
+            const rootX = canvas.width / 2;
+            const rootY = 50;
+            
+            // Draw tree recursively
+            drawTreeNode(tree, rootX, rootY, canvas.width / 4, step);
+        }
+        
+        // Recursively draw tree nodes
+        function drawTreeNode(node, x, y, xOffset, step) {
+            if (!node) return;
+            
+            // Determine node color based on current step
+            let nodeColor = '#FFFFFF';
+            let textColor = '#000000';
+            
+            if (node.value === step.targetNode) {
+                nodeColor = '#FD9F78';
+            } else if (node.value === step.highlightedNode) {
+                nodeColor = '#FF4800';
+                textColor = '#FFFFFF';
+            } else if (node.value === step.predecessorNode) {
+                nodeColor = '#00AA00';
+                textColor = '#FFFFFF';
+            } else if (node.value === step.successorNode) {
+                nodeColor = '#0000FF';
+                textColor = '#FFFFFF';
+            }
+            
+            // Draw current node
+            drawNode(x, y, node.value, nodeColor, textColor);
+            
+            // Draw left child if exists
+            if (node.left) {
+                const leftX = x - xOffset;
+                const leftY = y + 80;
+                drawEdge(x, y, leftX, leftY);
+                drawTreeNode(node.left, leftX, leftY, xOffset / 2, step);
+            }
+            
+            // Draw right child if exists
+            if (node.right) {
+                const rightX = x + xOffset;
+                const rightY = y + 80;
+                drawEdge(x, y, rightX, rightY);
+                drawTreeNode(node.right, rightX, rightY, xOffset / 2, step);
+            }
+        }
+        
+        // Handle next button click
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateUI();
+            }
+        });
+        
+        // Handle previous button click
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateUI();
+            }
+        });
+        
+        // Update UI based on current step
+        function updateUI() {
+            drawBST();
+            explanationText.textContent = steps[currentStep].text;
+            currentStepEl.textContent = currentStep + 1;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        // Initial draw
+        updateUI();
+    </script>
+</body>
+</html>
