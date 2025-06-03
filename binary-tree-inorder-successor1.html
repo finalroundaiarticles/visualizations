@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inorder Traversal of Binary Tree</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #000000;
+        }
+        h1 {
+            color: #FF4800;
+            margin-bottom: 20px;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .explanation {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .tree-container {
+            width: 100%;
+            height: 380px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .node.highlighted {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .edge {
+            position: absolute;
+            background-color: #000000;
+            height: 2px;
+            transform-origin: 0 0;
+        }
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        .arrow.visible {
+            opacity: 1;
+        }
+        .result {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+            height: 60px;
+        }
+        .result-node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            font-weight: bold;
+            opacity: 0.3;
+            transition: opacity 0.3s, background-color 0.3s;
+        }
+        .result-node.visible {
+            opacity: 1;
+        }
+        .result-node.current {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .result-arrow {
+            width: 20px;
+            height: 20px;
+            position: relative;
+        }
+        .result-arrow::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #000000;
+            transform: translateY(-50%);
+        }
+        .result-arrow::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            right: 0;
+            width: 8px;
+            height: 8px;
+            border-top: 2px solid #000000;
+            border-right: 2px solid #000000;
+            transform: translateY(-50%) rotate(45deg);
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #FD9F78;
+        }
+        .btn:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .step-info {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #FF4800;
+            border-radius: 5px;
+            text-align: center;
+            min-height: 60px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Inorder Traversal of Binary Tree</h1>
+        
+        <div class="explanation">
+            <p>Inorder traversal visits nodes in the order: <strong>left subtree, current node, right subtree</strong>.</p>
+        </div>
+        
+        <div class="tree-container" id="tree">
+            <!-- Tree nodes and edges will be added here by JavaScript -->
+        </div>
+        
+        <div class="result" id="result">
+            <!-- Result nodes will be added here by JavaScript -->
+        </div>
+        
+        <div class="step-info" id="stepInfo">
+            Click "Next" to start the inorder traversal animation.
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="btn" id="prevBtn" disabled>Previous</button>
+            <button class="btn" id="nextBtn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        // Define the binary tree structure
+        const tree = {
+            value: 4,
+            left: {
+                value: 2,
+                left: {
+                    value: 1,
+                    left: null,
+                    right: null
+                },
+                right: {
+                    value: 3,
+                    left: null,
+                    right: null
+                }
+            },
+            right: {
+                value: 6,
+                left: {
+                    value: 5,
+                    left: null,
+                    right: null
+                },
+                right: {
+                    value: 7,
+                    left: null,
+                    right: null
+                }
+            }
+        };
+        
+        // Inorder traversal to get the correct order
+        function inorderTraversal(node, result = []) {
+            if (!node) return result;
+            inorderTraversal(node.left, result);
+            result.push(node.value);
+            inorderTraversal(node.right, result);
+            return result;
+        }
+        
+        const inorderResult = inorderTraversal(tree);
+        
+        // Steps for the animation
+        const steps = [];
+        
+        function generateSteps(node, path = []) {
+            if (!node) return;
+            
+            // Going down to the left
+            steps.push({
+                type: 'visit',
+                node: node.value,
+                message: `Visit node ${node.value}: Going to check if left child exists`
+            });
+            
+            if (node.left) {
+                steps.push({
+                    type: 'goLeft',
+                    from: node.value,
+                    to: node.left.value,
+                    message: `Moving to left child of ${node.value}`
+                });
+                generateSteps(node.left, [...path, node.value]);
+            } else {
+                steps.push({
+                    type: 'noLeft',
+                    node: node.value,
+                    message: `Node ${node.value} has no left child`
+                });
+            }
+            
+            // Process current node
+            steps.push({
+                type: 'process',
+                node: node.value,
+                message: `Process node ${node.value}: Add to result`
+            });
+            
+            // Going to the right
+            if (node.right) {
+                steps.push({
+                    type: 'goRight',
+                    from: node.value,
+                    to: node.right.value,
+                    message: `Moving to right child of ${node.value}`
+                });
+                generateSteps(node.right, [...path, node.value]);
+            } else {
+                steps.push({
+                    type: 'noRight',
+                    node: node.value,
+                    message: `Node ${node.value} has no right child`
+                });
+            }
+            
+            // Going back up if not the root
+            if (path.length > 0) {
+                steps.push({
+                    type: 'goUp',
+                    from: node.value,
+                    to: path[path.length - 1],
+                    message: `Returning to parent node ${path[path.length - 1]}`
+                });
+            }
+        }
+        
+        generateSteps(tree);
+        
+        // DOM elements
+        const treeContainer = document.getElementById('tree');
+        const resultContainer = document.getElementById('result');
+        const stepInfoElement = document.getElementById('stepInfo');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        // Create tree visualization
+        function createTreeVisualization() {
+            // Node positions (manually positioned for better visibility)
+            const nodePositions = {
+                4: { x: 400, y: 50 },
+                2: { x: 200, y: 150 },
+                6: { x: 600, y: 150 },
+                1: { x: 100, y: 250 },
+                3: { x: 300, y: 250 },
+                5: { x: 500, y: 250 },
+                7: { x: 700, y: 250 }
+            };
+            
+            // Create nodes
+            for (const [value, position] of Object.entries(nodePositions)) {
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.id = `node-${value}`;
+                node.textContent = value;
+                node.style.left = `${position.x - 20}px`;  // center the node
+                node.style.top = `${position.y - 20}px`;   // center the node
+                treeContainer.appendChild(node);
+            }
+            
+            // Create edges
+            createEdge(4, 2);
+            createEdge(4, 6);
+            createEdge(2, 1);
+            createEdge(2, 3);
+            createEdge(6, 5);
+            createEdge(6, 7);
+            
+            // Create traversal arrows
+            createTraversalArrows();
+            
+            // Create result nodes
+            for (let i = 0; i < inorderResult.length; i++) {
+                const value = inorderResult[i];
+                
+                if (i > 0) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'result-arrow';
+                    resultContainer.appendChild(arrow);
+                }
+                
+                const node = document.createElement('div');
+                node.className = 'result-node';
+                node.id = `result-${value}`;
+                node.textContent = value;
+                resultContainer.appendChild(node);
+            }
+        }
+        
+        function createEdge(from, to) {
+            const fromPos = {
+                x: document.getElementById(`node-${from}`).offsetLeft + 20,
+                y: document.getElementById(`node-${from}`).offsetTop + 20
+            };
+            
+            const toPos = {
+                x: document.getElementById(`node-${to}`).offsetLeft + 20,
+                y: document.getElementById(`node-${to}`).offsetTop + 20
+            };
+            
+            const dx = toPos.x - fromPos.x;
+            const dy = toPos.y - fromPos.y;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            
+            const edge = document.createElement('div');
+            edge.className = 'edge';
+            edge.id = `edge-${from}-${to}`;
+            edge.style.width = `${length}px`;
+            edge.style.left = `${fromPos.x}px`;
+            edge.style.top = `${fromPos.y}px`;
+            edge.style.transform = `rotate(${angle}deg)`;
+            
+            treeContainer.appendChild(edge);
+        }
+        
+        function createTraversalArrows() {
+            // Creating curved arrows for traversal visualization
+            const arrowPaths = [
+                { from: 4, to: 2, id: 'arrow-4-2', path: 'M400,70 Q300,110 220,150', color: '#FF4800' },
+                { from: 2, to: 1, id: 'arrow-2-1', path: 'M200,170 Q150,210 120,250', color: '#FF4800' },
+                { from: 1, to: 2, id: 'arrow-1-2', path: 'M120,270 Q160,260 200,190', color: '#FF4800' },
+                { from: 2, to: 3, id: 'arrow-2-3', path: 'M220,170 Q260,210 300,250', color: '#FF4800' },
+                { from: 3, to: 4, id: 'arrow-3-4', path: 'M320,250 Q360,200 400,90', color: '#FF4800' },
+                { from: 4, to: 6, id: 'arrow-4-6', path: 'M420,70 Q520,110 600,150', color: '#FF4800' },
+                { from: 6, to: 5, id: 'arrow-6-5', path: 'M580,170 Q540,210 520,250', color: '#FF4800' },
+                { from: 5, to: 6, id: 'arrow-5-6', path: 'M520,270 Q560,260 580,190', color: '#FF4800' },
+                { from: 6, to: 7, id: 'arrow-6-7', path: 'M620,170 Q660,210 700,250', color: '#FF4800' }
+            ];
+            
+            for (const arrow of arrowPaths) {
+                const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                svg.setAttribute("class", "arrow");
+                svg.setAttribute("id", arrow.id);
+                svg.setAttribute("width", "800");
+                svg.setAttribute("height", "380");
+                svg.style.position = "absolute";
+                svg.style.top = "0";
+                svg.style.left = "0";
+                svg.style.pointerEvents = "none";
+                
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", arrow.path);
+                path.setAttribute("fill", "none");
+                path.setAttribute("stroke", arrow.color);
+                path.setAttribute("stroke-width", "2");
+                path.setAttribute("marker-end", "url(#arrowhead)");
+                
+                const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+                const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+                marker.setAttribute("id", "arrowhead");
+                marker.setAttribute("markerWidth", "10");
+                marker.setAttribute("markerHeight", "7");
+                marker.setAttribute("refX", "0");
+                marker.setAttribute("refY", "3.5");
+                marker.setAttribute("orient", "auto");
+                
+                const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+                polygon.setAttribute("points", "0 0, 10 3.5, 0 7");
+                polygon.setAttribute("fill", arrow.color);
+                
+                marker.appendChild(polygon);
+                defs.appendChild(marker);
+                svg.appendChild(defs);
+                svg.appendChild(path);
+                treeContainer.appendChild(svg);
+            }
+        }
+        
+        // Animation state
+        let currentStep = -1;
+        let processedNodes = [];
+        
+        // Step functions
+        function updateStep() {
+            // Reset all nodes
+            document.querySelectorAll('.node').forEach(node => {
+                node.classList.remove('highlighted');
+            });
+            
+            // Reset all arrows
+            document.querySelectorAll('.arrow').forEach(arrow => {
+                arrow.classList.remove('visible');
+            });
+            
+            // Update result nodes
+            document.querySelectorAll('.result-node').forEach(node => {
+                node.classList.remove('visible', 'current');
+            });
+            
+            // Show processed nodes in result
+            processedNodes.forEach((value, index) => {
+                const resultNode = document.getElementById(`result-${value}`);
+                resultNode.classList.add('visible');
+                
+                // If this is the last processed node in current step, mark it as current
+                if (index === processedNodes.length - 1 && 
+                    steps[currentStep] && 
+                    steps[currentStep].type === 'process' && 
+                    steps[currentStep].node === value) {
+                    resultNode.classList.add('current');
+                }
+            });
+            
+            // Apply step
+            if (currentStep >= 0 && currentStep < steps.length) {
+                const step = steps[currentStep];
+                stepInfoElement.textContent = step.message;
+                
+                if (step.type === 'visit' || step.type === 'process' || step.type === 'noLeft' || step.type === 'noRight') {
+                    // Highlight the current node
+                    document.getElementById(`node-${step.node}`).classList.add('highlighted');
+                    
+                    // If processing, add to result
+                    if (step.type === 'process' && !processedNodes.includes(step.node)) {
+                        processedNodes.push(step.node);
+                    }
+                } else if (step.type === 'goLeft' || step.type === 'goRight' || step.type === 'goUp') {
+                    // Show arrow
+                    document.getElementById(`arrow-${step.from}-${step.to}`).classList.add('visible');
+                }
+            }
+            
+            // Update button states
+            prevBtn.disabled = currentStep <= -1;
+            nextBtn.disabled = currentStep >= steps.length - 1;
+        }
+        
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateStep();
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > -1) {
+                // If we're undoing a 'process' step, remove the last processed node
+                if (steps[currentStep] && steps[currentStep].type === 'process') {
+                    processedNodes = processedNodes.filter(node => node !== steps[currentStep].node);
+                }
+                
+                currentStep--;
+                updateStep();
+            }
+        }
+        
+        // Initialize
+        createTreeVisualization();
+        updateStep();
+        
+        // Event listeners
+        prevBtn.addEventListener('click', prevStep);
+        nextBtn.addEventListener('click', nextStep);
+    </script>
+</body>
+</html>
