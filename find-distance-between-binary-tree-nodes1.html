@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Tree Node Distance Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 400px;
+            margin: 20px auto;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #canvas-container {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+            position: relative;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            display: block;
+            margin: 0 auto;
+            background-color: #FFFFFF;
+        }
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            color: #000000;
+        }
+        .step-indicator {
+            text-align: center;
+            margin: 10px 0;
+            color: #000000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Tree Node Distance Visualization</h1>
+        
+        <div class="step-indicator">
+            Step <span id="current-step">1</span> of <span id="total-steps">3</span>
+        </div>
+        
+        <div id="canvas-container">
+            <canvas id="treeCanvas" width="800" height="400"></canvas>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <!-- Explanation text will be inserted here -->
+        </div>
+        
+        <div class="nav-buttons">
+            <button id="prevBtn" onclick="prevStep()" disabled>Previous</button>
+            <button id="nextBtn" onclick="nextStep()">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize variables
+        let currentStep = 1;
+        const totalSteps = 3;
+        
+        // Canvas setup
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Node positions (x, y coordinates)
+        const nodePositions = {
+            1: { x: 400, y: 50 },
+            2: { x: 250, y: 150 },
+            3: { x: 550, y: 150 },
+            4: { x: 175, y: 250 },
+            5: { x: 325, y: 250 },
+            6: { x: 625, y: 250 }
+        };
+        
+        // Explanation text for each step
+        const explanations = [
+            "This is a binary tree with 6 nodes. In a binary tree, each node can have at most two children. The distance between two nodes is the number of edges in the shortest path between them.",
+            "The distance between nodes 4 and 5 is 2. The path goes from node 4 up to node 2, then down to node 5. That's a total of 2 edges (highlighted in orange).",
+            "The distance between nodes 4 and 6 is 4. The path goes from node 4 up to node 2, then up to node 1, then down to node 3, and finally down to node 6. That's a total of 4 edges (highlighted in purple)."
+        ];
+        
+        // Function to draw the tree
+        function drawTree(step) {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges
+            drawEdge(1, 2, step);
+            drawEdge(1, 3, step);
+            drawEdge(2, 4, step);
+            drawEdge(2, 5, step);
+            drawEdge(3, 6, step);
+            
+            // Draw nodes
+            for (let i = 1; i <= 6; i++) {
+                drawNode(i, step);
+            }
+        }
+        
+        // Function to draw a node
+        function drawNode(nodeNum, step) {
+            const pos = nodePositions[nodeNum];
+            const radius = 30;
+            
+            // Determine node color based on step and node
+            let fillColor = '#FFFFFF';
+            let strokeColor = '#000000';
+            let textColor = '#000000';
+            
+            if (step === 2 && (nodeNum === 4 || nodeNum === 2 || nodeNum === 5)) {
+                // Highlight nodes in path 4-2-5
+                fillColor = '#FD9F78';
+                strokeColor = '#FF4800';
+                textColor = '#000000';
+            } else if (step === 3 && (nodeNum === 4 || nodeNum === 2 || nodeNum === 1 || nodeNum === 3 || nodeNum === 6)) {
+                // Highlight nodes in path 4-2-1-3-6
+                fillColor = '#D4A8FF';
+                strokeColor = '#8A2BE2';
+                textColor = '#000000';
+            }
+            
+            // Draw the node circle
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = fillColor;
+            ctx.fill();
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // Draw the node number
+            ctx.font = '20px Arial';
+            ctx.fillStyle = textColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(nodeNum, pos.x, pos.y);
+        }
+        
+        // Function to draw an edge between two nodes
+        function drawEdge(from, to, step) {
+            const fromPos = nodePositions[from];
+            const toPos = nodePositions[to];
+            
+            // Determine edge color based on step and nodes
+            let lineColor = '#000000';
+            let lineWidth = 2;
+            
+            if (step === 2 && ((from === 2 && to === 4) || (from === 2 && to === 5))) {
+                // Highlight edge in path 4-2-5
+                lineColor = '#FF4800';
+                lineWidth = 4;
+            } else if (step === 3 && ((from === 2 && to === 4) || (from === 1 && to === 2) || 
+                                      (from === 1 && to === 3) || (from === 3 && to === 6))) {
+                // Highlight edge in path 4-2-1-3-6
+                lineColor = '#8A2BE2';
+                lineWidth = 4;
+            }
+            
+            ctx.beginPath();
+            ctx.moveTo(fromPos.x, fromPos.y);
+            ctx.lineTo(toPos.x, toPos.y);
+            ctx.strokeStyle = lineColor;
+            ctx.lineWidth = lineWidth;
+            ctx.stroke();
+        }
+        
+        // Function to update the UI based on current step
+        function updateUI() {
+            // Update step indicator
+            document.getElementById('current-step').textContent = currentStep;
+            document.getElementById('total-steps').textContent = totalSteps;
+            
+            // Update explanation text
+            document.getElementById('explanation').textContent = explanations[currentStep - 1];
+            
+            // Enable/disable navigation buttons
+            document.getElementById('prevBtn').disabled = (currentStep === 1);
+            document.getElementById('nextBtn').disabled = (currentStep === totalSteps);
+            
+            // Draw the tree for the current step
+            drawTree(currentStep);
+        }
+        
+        // Navigation functions
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateUI();
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateUI();
+            }
+        }
+        
+        // Initialize the visualization
+        updateUI();
+    </script>
+</body>
+</html>
