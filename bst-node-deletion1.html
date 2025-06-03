@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BST Node Deletion Cases</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+        }
+        
+        .slide {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .slide.active {
+            display: flex;
+        }
+        
+        .visualization {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .explanation {
+            width: 100%;
+            padding: 20px;
+            background-color: #FD9F78;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .node {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        
+        .node.highlight {
+            background-color: #FD9F78;
+            transform: scale(1.2);
+        }
+        
+        .node.deleted {
+            opacity: 0.3;
+            border: 2px dashed #FF4800;
+            background-color: transparent;
+            color: #FF4800;
+        }
+        
+        .node.successor {
+            background-color: #000000;
+        }
+        
+        .edge {
+            position: absolute;
+            background-color: #000000;
+            height: 2px;
+            transform-origin: left center;
+            transition: all 0.5s ease;
+        }
+        
+        .edge.deleted {
+            opacity: 0.3;
+            border-top: 2px dashed #000000;
+            background-color: transparent;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .step {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #cccccc;
+            margin: 0 5px;
+        }
+        
+        .step.active {
+            background-color: #FF4800;
+        }
+        
+        .slide-title {
+            color: #FF4800;
+            margin-bottom: 10px;
+        }
+        
+        .before-after {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+        }
+        
+        .before, .after {
+            width: 48%;
+        }
+        
+        .subtitle {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <h1>The Three Cases of BST Node Deletion</h1>
+    
+    <div class="container">
+        <div class="step-indicator">
+            <div class="step active"></div>
+            <div class="step"></div>
+            <div class="step"></div>
+            <div class="step"></div>
+        </div>
+        
+        <!-- Introduction Slide -->
+        <div class="slide active" id="slide1">
+            <h2 class="slide-title">Introduction to BST Node Deletion</h2>
+            <div class="explanation">
+                <p>Deleting a node from a Binary Search Tree (BST) can be complex because we need to maintain the BST property: for any node, all values in its left subtree are less than the node's value, and all values in its right subtree are greater.</p>
+                <p>There are three cases to consider when deleting a node:</p>
+                <ol>
+                    <li><strong>Case 1:</strong> Deleting a leaf node (a node with no children)</li>
+                    <li><strong>Case 2:</strong> Deleting a node with one child</li>
+                    <li><strong>Case 3:</strong> Deleting a node with two children</li>
+                </ol>
+                <p>Let's visualize each case with clear before and after states.</p>
+            </div>
+            <div class="visualization">
+                <!-- Initial BST -->
+                <div class="node" style="top: 30px; left: 50%;">5</div>
+                
+                <div class="edge" style="top: 50px; left: 50%; width: 100px; transform: rotate(45deg);"></div>
+                <div class="node" style="top: 100px; left: 70%;">7</div>
+                
+                <div class="edge" style="top: 50px; left: 50%; width: 100px; transform: rotate(135deg);"></div>
+                <div class="node" style="top: 100px; left: 30%;">3</div>
+                
+                <div class="edge" style="top: 120px; left: 30%; width: 70px; transform: rotate(45deg);"></div>
+                <div class="node" style="top: 170px; left: 40%;">4</div>
+                
+                <div class="edge" style="top: 120px; left: 30%; width: 70px; transform: rotate(135deg);"></div>
+                <div class="node" style="top: 170px; left: 20%;">2</div>
+                
+                <div class="edge" style="top: 120px; left: 70%; width: 70px; transform: rotate(45deg);"></div>
+                <div class="node" style="top: 170px; left: 80%;">8</div>
+                
+                <div class="edge" style="top: 120px; left: 70%; width: 70px; transform: rotate(135deg);"></div>
+                <div class="node" style="top: 170px; left: 60%;">6</div>
+            </div>
+        </div>
+        
+        <!-- Case 1: Deleting a Leaf Node -->
+        <div class="slide" id="slide2">
+            <h2 class="slide-title">Case 1: Deleting a Leaf Node</h2>
+            <div class="explanation">
+                <p>Deleting a leaf node (a node with no children) is the simplest case. Since the node has no children, we simply remove it from the tree by setting its parent's pointer to null.</p>
+                <p>In our example, we'll delete node 2, which is a leaf node.</p>
+                <p><strong>Steps:</strong></p>
+                <ol>
+                    <li>Find the node to delete (node 2)</li>
+                    <li>Set its parent's (node 3) left pointer to null</li>
+                    <li>Remove node 2 from the tree</li>
+                </ol>
+            </div>
+            
+            <div class="before-after">
+                <div class="before">
+                    <div class="subtitle">Before Deletion</div>
+                    <div class="visualization" style="height: 300px;">
+                        <!-- Initial BST -->
+                        <div class="node" style="top: 30px; left: 50%;">5</div>
+                        
+                        <div class="edge" style="top: 50px; left: 50%; width: 80px; transform: rotate(45deg);"></div>
+                        <div class="node" style="top: 100px; left: 70%;">7</div>
+                        
+                        <div class="edge" style="top: 50px; left: 50%; width: 80px; transform: rotate(135deg);"></div>
+                        <div class="node" style="top: 100px; left: 30%;">3</div>
+                        
+                        <div class="edge" style="top: 120px; left: 30%; width: 50px; transform: rotate(45deg);"></div>
+                        <div class="node" style="top: 170px; left: 40%;">4</div>
+                        
+                        <div class="edge" style="top: 120px; left: 30%; width: 50px; transform: rotate(135deg);"></div>
+                        <div class="node highlight" style="top: 170px; left: 20%;">2</div>
+                        
+                        <div class="edge" style="top: 120px; left: 70%; width: 50px; transform: rotate(45deg);"></div>
+                        <div class="node" style="top: 170px; left: 80%;">8</div>
+                        
+                        <div class="edge" style="top: 120px; left: 70%; width: 50px; transform: rotate(135deg);"></div>
+                        <div class="node" style="top: 170px; left: 60%;">6</div>
+                    </div>
+                </div>
+                <div class="after">
+                    <div class="subtitle">After Deletion</div>
+                    <div class="visualization" style="height: 300px;">
+                        <!-- BST after deleting node 2 -->
+                        <div class="node" style="top: 30px; left: 50%;">5</div>
+                        
+                        <div class="edge" style="top: 50px; left: 50%; width: 80px; transform: rotate(45deg);"></div>
+                        <div class="node" style="top: 100px; left: 70%;">7</div>
+                        
+                        <div class="edge" style="top: 50px; left: 50%; width: 80px; transform: rotate(135deg);"></div>
+                        <div class="node" style="top: 100px; left: 30%;">3</div>
+                        
+                        <div class="edge" style="top: 120px; left: 30%; width: 50px; transform: rotate(45deg);"></div>
+                        <div class="node" style="top: 170px; left: 40%;">4</div>
+                        
+                        <div class="edge deleted" style="top: 120px; left: 30%; width: 50px; transform: rotate(135deg);"></div>
+                        <div class="node deleted" style="top: 170px; left: 20%;">2</div>
+                        
+                        <div class="edge" style="top: 120px; left: 70%; width: 50px; transform: rotate(45deg);"></div>
+                        <div class="node" style="top: 170px; left: 80%;">8</div>
+                        
+                        <div class="edge" style="top: 120px; left: 70%; width: 50px; transform: rotate(135deg);"></div>
+                        <div class="node" style="top: 170px; left: 60%;">6</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Case 2: Deleting a Node with One Child -->
+        <div class="slide" id="slide3">
+            <h2 class="slide-title">Case 2: Deleting a Node with One Child</h2>
+            <div class="explanation">
+                <p>When deleting a node with one child, we bypass the node by connecting its parent directly to its child.</p>
+                <p>In our example, we'll delete node 7, which has only one child (node 8) on its right.</p>
+                <p><strong>Steps:</strong></p>
+                <ol>
+                    <li>Find the node to delete (node 7)</li>
+                    <li>Connect its parent (node 5) directly to its child (node 8)</li>
+                    <li>Remove node 7 from the tree</li>
+                </ol>
+            </div>
+            
+            <div class="before-after">
+                <div class="before">
+                    <div class="subtitle">Before Deletion</div>
+                    <div class="visualization" style="height: 300px;">
+                        <!-- Initial BST -->
+                        <div class="node" style="top: 30px; left: 50%;">5</div>
+                        
+                        <div class="edge" style="top: 50px; left: 50%; width: 80px; transform: rotate(45deg);"></div>
+                        <div class="node highlight" style="top: 100px; left: 70%;">7</div>
+                        
+                        <div class="edge" style="top: 50px; left: 50%; width: 80px; transform: rotate(135deg);"></div>
+                        <div class="node" style="top: 100px; left: 30%;">3</div>
+                        
+                        <div class="edge" style="top: 120px; left: 30%; width: 50px; transform: rotate(45deg);"></div>
+                        <div class="node" style="top: 170px; left: 40%;">4</div>
+                        
+                        <div class="edge" style="top: 120px; left: 30%; width: 50px; transform: rotate(135deg);"></div>
+                        <div class="node" style="top: 170px; left: 20%;">2</div>
+                        
+                        <div class="edge" style="top: 120px; left: 70%; width: 50px; transform: rotate(45deg);"></div>
+                        <div class="node" style="top: 170px; left: 80%;">8</div>
+                        
+                        <div class="edge" style="top: 120px; left: 70%; width: 50px; transform: rotate(135deg);"></div>
+                        <div class="node" style="top: 170px; left: 60%;">6</div>
+                    </div>
+                </div>
+                <div class="after">
+                    <div class="subtitle">After Deletion</div>
+                    <div class="visualization" style="height: 300px;">
+                        <!-- BST after deleting node 7 -->
+                        <div class="node" style="top: 30px; left: 50%;">5</div>
+                        
+                        <div class="edge" style="top: 50px; left: 50%; width: 110px; transform: rotate(30deg);"></div>
+                        <div class="node" style="top: 100px; left: 80%;">8</div>
+                        
+                        <div class="edge" style="top: 50px; left: 50%; width: 80px; transform: rotate(135deg);"></div>
+                        <div class="node" style="top: 100px; left: 30%;">3</div>
+                        
+                        <div class="edge" style="top: 120px; left: 30%; width: 50px; transform: rotate(45deg);"></div>
+                        <div class="node" style="top: 170px; left: 40%;">4</div>
+                        
+                        <div class="edge" style="top: 120px; left: 30%; width: 50px; transform: rotate(135deg);"></div>
+                        <div class="node" style="top: 170px; left: 20%;">2</div>
+                        
+                        <div class="edge deleted" style="top: 120px; left: 70%; width: 50px; transform: rotate(45deg);"></div>
+                        <div class="node deleted" style="top: 120px; left: 70%;">7</div>
+                        
+                        <div class="edge" style="top: 100px; left: 65%; width: 60px; transform: rotate(135deg);"></div>
+                        <div class="node" style="top: 170px; left: 60%;">6</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Case 3: Deleting a Node with Two Children -->
+        <div class="slide" id="slide4">
+            <h2 class="slide-title">Case 3: Deleting a Node with Two Children</h2>
+            <div class="explanation">
+                <p>Deleting a node with two children is the most complex case. We can't simply remove the node as it would disconnect the tree.</p>
+                <p>The common approach is to replace the node with its inorder successor (the smallest node in its right subtree) or predecessor (the largest node in its left subtree).</p>
+                <p>In our example, we'll delete node 3, which has two children (nodes 2 and 4). We'll use the inorder successor approach.</p>
+                <p><strong>Steps:</strong></p>
+                <ol>
+                    <li>Find the node to delete (node 3)</li>
+                    <li>Find its inorder successor (node 4, the smallest node in its right subtree)</li>
+                    <li>Replace node 3's value with node 4's value</li>
+                    <li>Delete node 4 (which is either a leaf or has only one child)</li>
+                </ol>
+            </div>
+            
+            <div class="before-after">
+                <div class="before">
+                    <div class="subtitle">Before Deletion</div>
+                    <div class="visualization" style="height: 300px;">
+                        <!-- Initial BST -->
+                        <div class="node" style="top: 30px; left: 50%;">5</div>
+                        
+                        <div class="edge" style="top: 50px; left: 50%; width: 80px; transform: rotate(45deg);"></div>
+                        <div class="node" style="top: 100px; left: 70%;">7</div>
+                        
+                        <div class="edge" style="top: 50px; left: 50%; width: 80px; transform: rotate(135deg);"></div>
+                        <div class="node highlight" style="top: 100px; left: 30%;">3</div>
+                        
+                        <div class="edge" style="top: 120px; left: 30%; width: 50px; transform: rotate(45deg);"></div>
+                        <div class="node successor" style="top: 170px; left: 40%;">4</div>
+                        
+                        <div class="edge" style="top: 120px; left: 30%; width: 50px; transform: rotate(135deg);"></div>
+                        <div class="node" style="top: 170px; left: 20%;">2</div>
+                        
+                        <div class="edge" style="top: 120px; left: 70%; width: 50px; transform: rotate(45deg);"></div>
+                        <div class="node" style="top: 170px; left: 80%;">8</div>
+                        
+                        <div class="edge" style="top: 120px; left: 70%; width: 50px; transform: rotate(135deg);"></div>
+                        <div class="node" style="top: 170px; left: 60%;">6</div>
+                    </div>
+                </div>
+                <div class="after">
+                    <div class="subtitle">After Deletion</div>
+                    <div class="visualization" style="height: 300px;">
+                        <!-- BST after deleting node 3 -->
+                        <div class="node" style="top: 30px; left: 50%;">5</div>
+                        
+                        <div class="edge" style="top: 50px; left: 50%; width: 80px; transform: rotate(45deg);"></div>
+                        <div class="node" style="top: 100px; left: 70%;">7</div>
+                        
+                        <div class="edge" style="top: 50px; left: 50%; width: 80px; transform: rotate(135deg);"></div>
+                        <div class="node" style="top: 100px; left: 30%;">4</div>
+                        
+                        <div class="edge deleted" style="top: 120px; left: 30%; width: 50px; transform: rotate(45deg);"></div>
+                        <div class="node deleted" style="top: 170px; left: 40%;">4</div>
+                        
+                        <div class="edge" style="top: 120px; left: 30%; width: 50px; transform: rotate(135deg);"></div>
+                        <div class="node" style="top: 170px; left: 20%;">2</div>
+                        
+                        <div class="edge" style="top: 120px; left: 70%; width: 50px; transform: rotate(45deg);"></div>
+                        <div class="node" style="top: 170px; left: 80%;">8</div>
+                        
+                        <div class="edge" style="top: 120px; left: 70%; width: 50px; transform: rotate(135deg);"></div>
+                        <div class="node" style="top: 170px; left: 60%;">6</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicators = document.querySelectorAll('.step');
+        let currentSlide = 0;
+        
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                } else {
+                    slide.classList.remove('active');
+                }
+            });
+            
+            stepIndicators.forEach((step, index) => {
+                if (index === currentSlide) {
+                    step.classList.add('active');
+                } else {
+                    step.classList.remove('active');
+                }
+            });
+            
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === slides.length - 1;
+        }
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                updateSlides();
+            }
+        });
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlides();
+            }
+        });
+        
+        // Initial update
+        updateSlides();
+    </script>
+</body>
+</html>
