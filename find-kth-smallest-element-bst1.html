@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BST Example Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        
+        .bst-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        .node {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            position: absolute;
+            transition: all 0.5s ease;
+        }
+        
+        .edge {
+            position: absolute;
+            height: 2px;
+            background-color: #FD9F78;
+            transform-origin: 0 0;
+            transition: all 0.5s ease;
+        }
+        
+        .null-node {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #FFFFFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            position: absolute;
+            opacity: 0.7;
+            transition: all 0.5s ease;
+        }
+        
+        .explanation {
+            background-color: #FFF;
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #000000;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 400px;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Search Tree (BST) Visualization</h1>
+        
+        <div class="explanation" id="explanation">
+            Let's explore a Binary Search Tree with values [3, 1, 4, null, 2]
+        </div>
+        
+        <div class="bst-container" id="bstContainer"></div>
+        
+        <div class="navigation">
+            <button id="prevBtn" class="nav-button" disabled>Previous</button>
+            <button id="nextBtn" class="nav-button">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Animation steps
+        const steps = [
+            {
+                title: "Let's explore a Binary Search Tree with values [3, 1, 4, null, 2]",
+                nodes: [],
+                edges: []
+            },
+            {
+                title: "Step 1: We start with an empty tree and insert the root node with value 3",
+                nodes: [{id: 0, value: 3, x: 400, y: 50}],
+                edges: []
+            },
+            {
+                title: "Step 2: Insert node with value 1. Since 1 < 3, it goes to the left of the root",
+                nodes: [
+                    {id: 0, value: 3, x: 400, y: 50},
+                    {id: 1, value: 1, x: 300, y: 150}
+                ],
+                edges: [
+                    {from: 0, to: 1}
+                ]
+            },
+            {
+                title: "Step 3: Insert node with value 4. Since 4 > 3, it goes to the right of the root",
+                nodes: [
+                    {id: 0, value: 3, x: 400, y: 50},
+                    {id: 1, value: 1, x: 300, y: 150},
+                    {id: 2, value: 4, x: 500, y: 150}
+                ],
+                edges: [
+                    {from: 0, to: 1},
+                    {from: 0, to: 2}
+                ]
+            },
+            {
+                title: "Step 4: The next value is null which means node 1 has no left child",
+                nodes: [
+                    {id: 0, value: 3, x: 400, y: 50},
+                    {id: 1, value: 1, x: 300, y: 150},
+                    {id: 2, value: 4, x: 500, y: 150},
+                    {id: 3, value: "null", x: 250, y: 250, isNull: true}
+                ],
+                edges: [
+                    {from: 0, to: 1},
+                    {from: 0, to: 2},
+                    {from: 1, to: 3}
+                ]
+            },
+            {
+                title: "Step 5: Insert node with value 2. Since 2 > 1, it goes to the right of node 1",
+                nodes: [
+                    {id: 0, value: 3, x: 400, y: 50},
+                    {id: 1, value: 1, x: 300, y: 150},
+                    {id: 2, value: 4, x: 500, y: 150},
+                    {id: 3, value: "null", x: 250, y: 250, isNull: true},
+                    {id: 4, value: 2, x: 350, y: 250}
+                ],
+                edges: [
+                    {from: 0, to: 1},
+                    {from: 0, to: 2},
+                    {from: 1, to: 3},
+                    {from: 1, to: 4}
+                ]
+            },
+            {
+                title: "Final BST: The Binary Search Tree is now complete with values [3, 1, 4, null, 2]",
+                nodes: [
+                    {id: 0, value: 3, x: 400, y: 50},
+                    {id: 1, value: 1, x: 300, y: 150},
+                    {id: 2, value: 4, x: 500, y: 150},
+                    {id: 3, value: "null", x: 250, y: 250, isNull: true},
+                    {id: 4, value: 2, x: 350, y: 250}
+                ],
+                edges: [
+                    {from: 0, to: 1},
+                    {from: 0, to: 2},
+                    {from: 1, to: 3},
+                    {from: 1, to: 4}
+                ]
+            }
+        ];
+        
+        let currentStep = 0;
+        const bstContainer = document.getElementById('bstContainer');
+        const explanation = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        // Function to draw a step
+        function drawStep(step) {
+            // Clear the container
+            bstContainer.innerHTML = '';
+            
+            // Update explanation
+            explanation.textContent = step.title;
+            
+            // Draw edges first (so they appear under nodes)
+            step.edges.forEach(edge => {
+                const fromNode = step.nodes.find(n => n.id === edge.from);
+                const toNode = step.nodes.find(n => n.id === edge.to);
+                
+                if (fromNode && toNode) {
+                    // Calculate edge properties
+                    const dx = toNode.x - fromNode.x;
+                    const dy = toNode.y - fromNode.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    // Create edge element
+                    const edgeElement = document.createElement('div');
+                    edgeElement.className = 'edge';
+                    edgeElement.style.width = `${length}px`;
+                    edgeElement.style.left = `${fromNode.x + 25}px`;
+                    edgeElement.style.top = `${fromNode.y + 25}px`;
+                    edgeElement.style.transform = `rotate(${angle}deg)`;
+                    
+                    bstContainer.appendChild(edgeElement);
+                }
+            });
+            
+            // Draw nodes
+            step.nodes.forEach(node => {
+                const nodeElement = document.createElement('div');
+                
+                if (node.isNull) {
+                    nodeElement.className = 'null-node';
+                    nodeElement.textContent = 'null';
+                } else {
+                    nodeElement.className = 'node';
+                    nodeElement.textContent = node.value;
+                }
+                
+                nodeElement.style.left = `${node.x - 25}px`;
+                nodeElement.style.top = `${node.y - 25}px`;
+                
+                bstContainer.appendChild(nodeElement);
+            });
+            
+            // Update navigation buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                drawStep(steps[currentStep]);
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                drawStep(steps[currentStep]);
+            }
+        });
+        
+        // Initial rendering
+        drawStep(steps[currentStep]);
+    </script>
+</body>
+</html>
