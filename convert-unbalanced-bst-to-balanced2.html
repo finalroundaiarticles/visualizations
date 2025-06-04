@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building a Balanced BST from Sorted Array</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #000000;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            margin-top: 20px;
+        }
+
+        .array-element {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #FF4800;
+            margin: 0 5px;
+            border-radius: 5px;
+            font-weight: bold;
+            color: #000000;
+            transition: all 0.3s ease;
+        }
+
+        .array-element.selected {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: translateY(-10px);
+        }
+
+        .tree-container {
+            height: 350px;
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            font-weight: bold;
+            border: 2px solid #FF4800;
+            color: #000000;
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+
+        .node.active {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+
+        .edge {
+            position: absolute;
+            background-color: #FF4800;
+            height: 2px;
+            transform-origin: 0 0;
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+
+        .explanation {
+            background-color: #FD9F78;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #000000;
+            text-align: center;
+            min-height: 80px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #FD9F78;
+        }
+
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .step-indicator {
+            margin-top: 10px;
+            color: #000000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Building a Balanced BST from Sorted Array</h1>
+        
+        <div class="array-container" id="array-container"></div>
+        
+        <div class="tree-container" id="tree-container"></div>
+        
+        <div class="explanation" id="explanation"></div>
+        
+        <div class="controls">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="step-indicator">Step 0 of 7</div>
+    </div>
+
+    <script>
+        // Initialize animation state
+        let currentStep = 0;
+        const totalSteps = 7;
+        
+        // Array to visualize
+        const array = [1, 2, 3, 4];
+        
+        // Nodes for the tree visualization
+        const nodes = [
+            { id: 0, value: 2, x: 50, y: 20, parent: null, direction: null, step: 1 },
+            { id: 1, value: 1, x: 30, y: 40, parent: 0, direction: 'left', step: 2 },
+            { id: 2, value: 3, x: 70, y: 40, parent: 0, direction: 'right', step: 3 },
+            { id: 3, value: 4, x: 90, y: 60, parent: 2, direction: 'right', step: 4 }
+        ];
+        
+        // Explanations for each step
+        const explanations = [
+            "We start with a sorted array [1, 2, 3, 4]. Our goal is to build a balanced Binary Search Tree.",
+            "First, we find the middle element of the array. For even-length arrays, we choose the left middle (index 1). So, 2 becomes our root node.",
+            "Now we recursively build the left subtree using elements less than 2, which is just [1]. Since there's only one element, 1 becomes the left child of 2.",
+            "For the right subtree, we use elements greater than 2, which are [3, 4]. We find the middle (3) and make it the right child of 2.",
+            "Finally, we process the remaining elements. For the right subtree of 3, we have [4]. It becomes the right child of 3.",
+            "The balanced BST construction is complete! Notice how the tree height is minimized by selecting middle elements as roots.",
+            "The final balanced BST has a height of 2, which is optimal for 4 elements. The inorder traversal of this tree gives us back our sorted array [1, 2, 3, 4]."
+        ];
+        
+        // Initialize the array visualization
+        function initArray() {
+            const arrayContainer = document.getElementById('array-container');
+            arrayContainer.innerHTML = '';
+            
+            array.forEach((value, index) => {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.id = `array-${index}`;
+                element.textContent = value;
+                arrayContainer.appendChild(element);
+            });
+        }
+        
+        // Initialize the tree container
+        function initTreeContainer() {
+            const treeContainer = document.getElementById('tree-container');
+            treeContainer.innerHTML = '';
+            
+            // Create nodes
+            nodes.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'node';
+                nodeElement.id = `node-${node.id}`;
+                nodeElement.textContent = node.value;
+                nodeElement.style.left = `${node.x}%`;
+                nodeElement.style.top = `${node.y}%`;
+                nodeElement.style.opacity = '0';
+                treeContainer.appendChild(nodeElement);
+                
+                // Create edges for child nodes
+                if (node.parent !== null) {
+                    const edge = document.createElement('div');
+                    edge.className = 'edge';
+                    edge.id = `edge-${node.parent}-${node.id}`;
+                    edge.style.opacity = '0';
+                    treeContainer.appendChild(edge);
+                }
+            });
+        }
+        
+        // Update edge positions
+        function updateEdges() {
+            nodes.forEach(node => {
+                if (node.parent !== null) {
+                    const parentNode = document.getElementById(`node-${node.parent}`);
+                    const childNode = document.getElementById(`node-${node.id}`);
+                    const edge = document.getElementById(`edge-${node.parent}-${node.id}`);
+                    
+                    if (parentNode && childNode && edge) {
+                        const parentRect = parentNode.getBoundingClientRect();
+                        const childRect = childNode.getBoundingClientRect();
+                        const containerRect = document.getElementById('tree-container').getBoundingClientRect();
+                        
+                        const startX = (parentRect.left + parentRect.width / 2) - containerRect.left;
+                        const startY = (parentRect.top + parentRect.height / 2) - containerRect.top;
+                        const endX = (childRect.left + childRect.width / 2) - containerRect.left;
+                        const endY = (childRect.top + childRect.height / 2) - containerRect.top;
+                        
+                        const length = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+                        const angle = Math.atan2(endY - startY, endX - startX);
+                        
+                        edge.style.width = `${length}px`;
+                        edge.style.left = `${startX}px`;
+                        edge.style.top = `${startY}px`;
+                        edge.style.transform = `rotate(${angle}rad)`;
+                    }
+                }
+            });
+        }
+        
+        // Update the visualization for the current step
+        function updateVisualization() {
+            // Update explanation
+            document.getElementById('explanation').textContent = explanations[currentStep];
+            
+            // Update step indicator
+            document.getElementById('step-indicator').textContent = `Step ${currentStep + 1} of ${totalSteps}`;
+            
+            // Reset all array elements
+            array.forEach((_, index) => {
+                document.getElementById(`array-${index}`).className = 'array-element';
+            });
+            
+            // Reset all nodes
+            nodes.forEach(node => {
+                const nodeElement = document.getElementById(`node-${node.id}`);
+                nodeElement.className = 'node';
+                nodeElement.style.opacity = '0';
+                
+                if (node.parent !== null) {
+                    const edge = document.getElementById(`edge-${node.parent}-${node.id}`);
+                    edge.style.opacity = '0';
+                }
+            });
+            
+            // Show elements based on current step
+            if (currentStep >= 1) {
+                // Step 1: Root node (2)
+                document.getElementById('array-1').className = 'array-element selected';
+                document.getElementById('node-0').style.opacity = '1';
+                document.getElementById('node-0').className = 'node active';
+            }
+            
+            if (currentStep >= 2) {
+                // Step 2: Left child (1)
+                document.getElementById('array-0').className = 'array-element selected';
+                document.getElementById('node-1').style.opacity = '1';
+                document.getElementById('edge-0-1').style.opacity = '1';
+                document.getElementById('node-1').className = 'node active';
+                document.getElementById('node-0').className = 'node';
+            }
+            
+            if (currentStep >= 3) {
+                // Step 3: Right child (3)
+                document.getElementById('array-2').className = 'array-element selected';
+                document.getElementById('node-2').style.opacity = '1';
+                document.getElementById('edge-0-2').style.opacity = '1';
+                document.getElementById('node-2').className = 'node active';
+                document.getElementById('node-1').className = 'node';
+            }
+            
+            if (currentStep >= 4) {
+                // Step 4: Right child of 3 (4)
+                document.getElementById('array-3').className = 'array-element selected';
+                document.getElementById('node-3').style.opacity = '1';
+                document.getElementById('edge-2-3').style.opacity = '1';
+                document.getElementById('node-3').className = 'node active';
+                document.getElementById('node-2').className = 'node';
+            }
+            
+            if (currentStep >= 5) {
+                // Step 5: Complete tree
+                document.getElementById('node-3').className = 'node';
+                array.forEach((_, index) => {
+                    document.getElementById(`array-${index}`).className = 'array-element';
+                });
+            }
+            
+            updateEdges();
+            
+            // Update button states
+            document.getElementById('prev-btn').disabled = currentStep === 0;
+            document.getElementById('next-btn').disabled = currentStep === totalSteps - 1;
+        }
+        
+        // Handle next button click
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+        
+        // Handle previous button click
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        });
+        
+        // Initialize visualization
+        initArray();
+        initTreeContainer();
+        updateVisualization();
+        
+        // Update edges on window resize
+        window.addEventListener('resize', updateEdges);
+    </script>
+</body>
+</html>
