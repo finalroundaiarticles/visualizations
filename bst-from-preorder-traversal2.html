@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boundary-Based Construction Process</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .content {
+            margin-bottom: 30px;
+        }
+        
+        .animation-container {
+            width: 100%;
+            height: 500px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .explanation {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-left: 4px solid #FF4800;
+            margin-bottom: 20px;
+        }
+        
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .array-element {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 5px;
+            border: 2px solid #000000;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .node {
+            width: 50px;
+            height: 50px;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            font-weight: bold;
+            transition: all 0.5s;
+            color: #000000;
+        }
+        
+        .edge {
+            position: absolute;
+            background-color: #FF4800;
+            height: 2px;
+            transform-origin: 0 0;
+            transition: all 0.5s;
+        }
+        
+        .boundary {
+            padding: 5px 10px;
+            background-color: rgba(253, 159, 120, 0.2);
+            border: 1px dashed #FF4800;
+            border-radius: 5px;
+            position: absolute;
+            transition: all 0.5s;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Boundary-Based Construction Process</h1>
+        
+        <div class="explanation">
+            <p>This animation demonstrates how a Binary Search Tree (BST) is constructed using a recursive optimized approach. We'll use the array [8, 5, 1, 7, 10, 12] as our example, showing how elements are assigned to left and right subtrees based on min/max boundaries.</p>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">Step 1 of 7</div>
+        
+        <div class="array-container" id="arrayContainer"></div>
+        
+        <div class="animation-container" id="animationContainer"></div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const array = [8, 5, 1, 7, 10, 12];
+        const steps = [
+            {
+                description: "Starting with the full array [8, 5, 1, 7, 10, 12]. Our goal is to build a balanced BST.",
+                activeIndices: [],
+                nodes: [],
+                edges: [],
+                boundaries: [
+                    { start: 0, end: 5, min: "MIN", max: "MAX", top: 20, left: 100 }
+                ]
+            },
+            {
+                description: "Choose the middle element (5 or 7) as the root. We'll pick 7 (index 3).",
+                activeIndices: [3],
+                nodes: [
+                    { id: 0, value: 7, x: 450, y: 50 }
+                ],
+                edges: [],
+                boundaries: [
+                    { start: 0, end: 5, min: "MIN", max: "MAX", top: 20, left: 100 }
+                ]
+            },
+            {
+                description: "Elements to the left of 7 (indices 0-2: [8, 5, 1]) go to the left subtree.",
+                activeIndices: [0, 1, 2],
+                nodes: [
+                    { id: 0, value: 7, x: 450, y: 50 }
+                ],
+                edges: [],
+                boundaries: [
+                    { start: 0, end: 2, min: "MIN", max: "7", top: 120, left: 200 },
+                    { start: 4, end: 5, min: "7", max: "MAX", top: 120, left: 600 }
+                ]
+            },
+            {
+                description: "Elements to the right of 7 (indices 4-5: [10, 12]) go to the right subtree.",
+                activeIndices: [4, 5],
+                nodes: [
+                    { id: 0, value: 7, x: 450, y: 50 }
+                ],
+                edges: [],
+                boundaries: [
+                    { start: 0, end: 2, min: "MIN", max: "7", top: 120, left: 200 },
+                    { start: 4, end: 5, min: "7", max: "MAX", top: 120, left: 600 }
+                ]
+            },
+            {
+                description: "For the left subtree [8, 5, 1], choose the middle element 5 (index 1) as the root of this subtree.",
+                activeIndices: [1],
+                nodes: [
+                    { id: 0, value: 7, x: 450, y: 50 },
+                    { id: 1, value: 5, x: 300, y: 150 }
+                ],
+                edges: [
+                    { from: 0, to: 1 }
+                ],
+                boundaries: [
+                    { start: 0, end: 0, min: "MIN", max: "5", top: 220, left: 150 },
+                    { start: 2, end: 2, min: "5", max: "7", top: 220, left: 350 }
+                ]
+            },
+            {
+                description: "For the right subtree [10, 12], choose 10 (index 4) as the root of this subtree.",
+                activeIndices: [4],
+                nodes: [
+                    { id: 0, value: 7, x: 450, y: 50 },
+                    { id: 1, value: 5, x: 300, y: 150 },
+                    { id: 2, value: 10, x: 600, y: 150 }
+                ],
+                edges: [
+                    { from: 0, to: 1 },
+                    { from: 0, to: 2 }
+                ],
+                boundaries: [
+                    { start: 0, end: 0, min: "MIN", max: "5", top: 220, left: 150 },
+                    { start: 2, end: 2, min: "5", max: "7", top: 220, left: 350 },
+                    { start: 5, end: 5, min: "10", max: "MAX", top: 220, left: 700 }
+                ]
+            },
+            {
+                description: "Complete the tree by adding the remaining elements: 8, 1, and 12 in their correct positions.",
+                activeIndices: [0, 2, 5],
+                nodes: [
+                    { id: 0, value: 7, x: 450, y: 50 },
+                    { id: 1, value: 5, x: 300, y: 150 },
+                    { id: 2, value: 10, x: 600, y: 150 },
+                    { id: 3, value: 1, x: 200, y: 250 },
+                    { id: 4, value: 8, x: 375, y: 250 },
+                    { id: 5, value: 12, x: 700, y: 250 }
+                ],
+                edges: [
+                    { from: 0, to: 1 },
+                    { from: 0, to: 2 },
+                    { from: 1, to: 3 },
+                    { from: 1, to: 4 },
+                    { from: 2, to: 5 }
+                ],
+                boundaries: []
+            }
+        ];
+
+        let currentStep = 0;
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        const animationContainer = document.getElementById('animationContainer');
+        const arrayContainer = document.getElementById('arrayContainer');
+
+        // Initialize array display
+        function initializeArray() {
+            arrayContainer.innerHTML = '';
+            array.forEach((value, index) => {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.id = `array-${index}`;
+                element.textContent = value;
+                arrayContainer.appendChild(element);
+            });
+        }
+
+        // Render current step
+        function renderStep(step) {
+            // Update step indicator
+            stepIndicator.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+            
+            // Clear the animation container
+            animationContainer.innerHTML = '';
+            
+            // Add explanation
+            const explanation = document.createElement('div');
+            explanation.className = 'explanation';
+            explanation.style.position = 'absolute';
+            explanation.style.bottom = '10px';
+            explanation.style.left = '10px';
+            explanation.style.right = '10px';
+            explanation.textContent = step.description;
+            animationContainer.appendChild(explanation);
+            
+            // Highlight active array elements
+            document.querySelectorAll('.array-element').forEach((el, index) => {
+                if (step.activeIndices.includes(index)) {
+                    el.style.backgroundColor = '#FF4800';
+                    el.style.color = '#FFFFFF';
+                } else {
+                    el.style.backgroundColor = '#FFFFFF';
+                    el.style.color = '#000000';
+                }
+            });
+            
+            // Draw boundaries
+            step.boundaries.forEach((boundary, index) => {
+                const boundaryEl = document.createElement('div');
+                boundaryEl.className = 'boundary';
+                boundaryEl.style.top = `${boundary.top}px`;
+                boundaryEl.style.left = `${boundary.left}px`;
+                
+                // Get the elements in this boundary
+                const elements = array.slice(boundary.start, boundary.end + 1);
+                
+                boundaryEl.innerHTML = `
+                    <div>Elements: [${elements.join(', ')}]</div>
+                    <div>Min: ${boundary.min}, Max: ${boundary.max}</div>
+                `;
+                
+                animationContainer.appendChild(boundaryEl);
+            });
+            
+            // Draw nodes
+            step.nodes.forEach(node => {
+                const nodeEl = document.createElement('div');
+                nodeEl.className = 'node';
+                nodeEl.style.left = `${node.x}px`;
+                nodeEl.style.top = `${node.y}px`;
+                nodeEl.textContent = node.value;
+                nodeEl.id = `node-${node.id}`;
+                animationContainer.appendChild(nodeEl);
+            });
+            
+            // Draw edges
+            step.edges.forEach(edge => {
+                const fromNode = step.nodes.find(n => n.id === edge.from);
+                const toNode = step.nodes.find(n => n.id === edge.to);
+                
+                if (fromNode && toNode) {
+                    const dx = toNode.x - fromNode.x;
+                    const dy = toNode.y - fromNode.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    const edgeEl = document.createElement('div');
+                    edgeEl.className = 'edge';
+                    edgeEl.style.width = `${length}px`;
+                    edgeEl.style.left = `${fromNode.x + 25}px`;  // Center of the node
+                    edgeEl.style.top = `${fromNode.y + 25}px`;   // Center of the node
+                    edgeEl.style.transform = `rotate(${angle}deg)`;
+                    
+                    animationContainer.appendChild(edgeEl);
+                }
+            });
+        }
+
+        // Event listeners for navigation
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                renderStep(steps[currentStep]);
+                nextBtn.disabled = false;
+                if (currentStep === 0) {
+                    prevBtn.disabled = true;
+                }
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                renderStep(steps[currentStep]);
+                prevBtn.disabled = false;
+                if (currentStep === steps.length - 1) {
+                    nextBtn.disabled = true;
+                }
+            }
+        });
+
+        // Initialize
+        initializeArray();
+        renderStep(steps[currentStep]);
+    </script>
+</body>
+</html>
