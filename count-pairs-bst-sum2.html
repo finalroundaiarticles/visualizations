@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two-Pointer Technique Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .visualization {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            position: relative;
+            min-height: 300px;
+        }
+        .arrays {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+        }
+        .array {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .array-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #FF4800;
+        }
+        .array-container {
+            display: flex;
+            gap: 10px;
+        }
+        .element {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #FF4800;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #FFFFFF;
+            transition: all 0.3s ease;
+        }
+        .element.active {
+            background-color: #FD9F78;
+            color: #FFFFFF;
+            transform: scale(1.1);
+        }
+        .pointer {
+            font-size: 24px;
+            color: #FF4800;
+            margin-top: 5px;
+            transition: all 0.3s ease;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #FFF;
+            border-left: 4px solid #FF4800;
+        }
+        .sum {
+            text-align: center;
+            font-size: 18px;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #FFF;
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+        }
+        .pair-found {
+            background-color: rgba(255, 72, 0, 0.1);
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-counter {
+            text-align: center;
+            margin-top: 10px;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Two-Pointer Technique Visualization</h1>
+        
+        <div class="explanation">
+            <p>The Two-Pointer Technique is used to efficiently find pairs of elements from two different arrays that satisfy a certain condition - in this case, pairs that sum to 7.</p>
+            <p>We have BST1 with values in ascending order [2, 4, 6] and BST2 with values in descending order [5, 3, 1].</p>
+            <p>We'll use two pointers: one starting at the beginning of BST1 and another at the beginning of BST2.</p>
+        </div>
+        
+        <div class="visualization">
+            <div class="arrays">
+                <div class="array">
+                    <div class="array-title">BST1 (ascending order)</div>
+                    <div class="array-container" id="bst1">
+                        <div class="element" data-value="2">2</div>
+                        <div class="element" data-value="4">4</div>
+                        <div class="element" data-value="6">6</div>
+                    </div>
+                    <div class="pointer" id="pointer1">↑</div>
+                </div>
+                
+                <div class="array">
+                    <div class="array-title">BST2 (descending order)</div>
+                    <div class="array-container" id="bst2">
+                        <div class="element" data-value="5">5</div>
+                        <div class="element" data-value="3">3</div>
+                        <div class="element" data-value="1">1</div>
+                    </div>
+                    <div class="pointer" id="pointer2">↑</div>
+                </div>
+            </div>
+            
+            <div class="sum" id="sum">Current Sum: ? (Target: 7)</div>
+            
+            <div id="explanation-text" class="explanation">
+                Let's start by positioning our pointers at the beginning of each array.
+            </div>
+            
+            <div id="pairs-found"></div>
+        </div>
+        
+        <div class="controls">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+        
+        <div class="step-counter" id="step-counter">Step 1 of 7</div>
+    </div>
+
+    <script>
+        const bst1 = [2, 4, 6];
+        const bst2 = [5, 3, 1];
+        const targetSum = 7;
+        
+        let currentStep = 0;
+        const steps = [
+            {
+                p1: 0, 
+                p2: 0, 
+                explanation: "We start with pointer1 at the first element of BST1 (2) and pointer2 at the first element of BST2 (5). Current sum: 2 + 5 = 7. This is equal to our target sum, so we found a pair!",
+                sum: "2 + 5 = 7 ✓",
+                pairFound: true
+            },
+            {
+                p1: 1, 
+                p2: 0, 
+                explanation: "We move pointer1 to the next element (4) and keep pointer2 at the first element (5). Current sum: 4 + 5 = 9. This is greater than our target sum (7), so we need to move pointer2 to a smaller value.",
+                sum: "4 + 5 = 9 > 7",
+                pairFound: false
+            },
+            {
+                p1: 1, 
+                p2: 1, 
+                explanation: "We keep pointer1 at 4 and move pointer2 to the next element (3). Current sum: 4 + 3 = 7. This is equal to our target sum, so we found another pair!",
+                sum: "4 + 3 = 7 ✓",
+                pairFound: true
+            },
+            {
+                p1: 2, 
+                p2: 1, 
+                explanation: "We move pointer1 to the next element (6) and keep pointer2 at 3. Current sum: 6 + 3 = 9. This is greater than our target sum (7), so we need to move pointer2 to a smaller value.",
+                sum: "6 + 3 = 9 > 7",
+                pairFound: false
+            },
+            {
+                p1: 2, 
+                p2: 2, 
+                explanation: "We keep pointer1 at 6 and move pointer2 to the next element (1). Current sum: 6 + 1 = 7. This is equal to our target sum, so we found another pair!",
+                sum: "6 + 1 = 7 ✓",
+                pairFound: true
+            },
+            {
+                p1: 2, 
+                p2: 2, 
+                explanation: "We've reached the end of BST2, so we can't move pointer2 further. We've found all pairs that sum to 7: (2,5), (4,3), and (6,1).",
+                sum: "Search complete",
+                pairFound: false,
+                complete: true
+            }
+        ];
+        
+        const pointer1El = document.getElementById('pointer1');
+        const pointer2El = document.getElementById('pointer2');
+        const sumEl = document.getElementById('sum');
+        const explanationEl = document.getElementById('explanation-text');
+        const pairsFoundEl = document.getElementById('pairs-found');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepCounterEl = document.getElementById('step-counter');
+        
+        // Function to update the visualization based on the current step
+        function updateVisualization() {
+            // Reset all elements
+            document.querySelectorAll('.element').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            if (currentStep === 0) {
+                // Initial state
+                explanationEl.textContent = "Let's start by positioning our pointers at the beginning of each array.";
+                sumEl.textContent = "Current Sum: ? (Target: 7)";
+                
+                // Position pointers at the beginning
+                positionPointer(pointer1El, 0);
+                positionPointer(pointer2El, 0);
+            } else {
+                const step = steps[currentStep - 1];
+                
+                // Position pointers
+                positionPointer(pointer1El, step.p1);
+                positionPointer(pointer2El, step.p2);
+                
+                // Highlight active elements
+                document.querySelectorAll('#bst1 .element')[step.p1].classList.add('active');
+                document.querySelectorAll('#bst2 .element')[step.p2].classList.add('active');
+                
+                // Update sum and explanation
+                sumEl.textContent = step.sum;
+                explanationEl.textContent = step.explanation;
+                
+                // Add pair to found pairs if applicable
+                if (step.pairFound) {
+                    const pairValue1 = bst1[step.p1];
+                    const pairValue2 = bst2[step.p2];
+                    
+                    const pairEl = document.createElement('div');
+                    pairEl.className = 'pair-found';
+                    pairEl.textContent = `Pair found: (${pairValue1}, ${pairValue2}) = ${pairValue1 + pairValue2}`;
+                    
+                    if (currentStep > prevPairsFound) {
+                        pairsFoundEl.appendChild(pairEl);
+                        prevPairsFound = currentStep;
+                    }
+                }
+            }
+            
+            // Update step counter
+            stepCounterEl.textContent = `Step ${currentStep + 1} of ${steps.length + 1}`;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length;
+        }
+        
+        // Function to position the pointer element
+        function positionPointer(pointerEl, index) {
+            const elements = pointerEl.previousElementSibling.children;
+            if (elements.length > 0) {
+                const elementWidth = elements[0].offsetWidth;
+                const spacing = 10; // Gap between elements
+                pointerEl.style.marginLeft = `${index * (elementWidth + spacing)}px`;
+                pointerEl.style.transform = `translateX(${elementWidth / 2 - 10}px)`;
+            }
+        }
+        
+        // Track pairs found to avoid duplicates
+        let prevPairsFound = 0;
+        
+        // Event listeners for buttons
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                // Remove the last pair found if going back
+                if (currentStep < prevPairsFound) {
+                    const pairs = document.querySelectorAll('.pair-found');
+                    if (pairs.length > 0) {
+                        pairsFoundEl.removeChild(pairs[pairs.length - 1]);
+                        prevPairsFound = currentStep;
+                    }
+                }
+                updateVisualization();
+            }
+        });
+        
+        // Initialize the visualization
+        updateVisualization();
+    </script>
+</body>
+</html>
