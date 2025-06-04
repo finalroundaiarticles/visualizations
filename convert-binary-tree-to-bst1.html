@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Tree to BST Transformation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 90%;
+            max-width: 800px;
+        }
+        .visualization {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin: 20px 0;
+        }
+        .tree-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 45%;
+        }
+        .tree-title {
+            font-weight: bold;
+            color: #000000;
+            margin-bottom: 10px;
+        }
+        canvas {
+            margin-top: 10px;
+        }
+        .explanation {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            color: #000000;
+            text-align: center;
+            width: 100%;
+        }
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+            width: 50%;
+            margin-top: 20px;
+        }
+        .btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn:hover {
+            background-color: #FD9F78;
+        }
+        .btn:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Tree to BST Transformation</h1>
+        
+        <div class="visualization">
+            <div class="tree-container">
+                <div class="tree-title">Original Binary Tree</div>
+                <canvas id="originalTreeCanvas" width="350" height="300"></canvas>
+            </div>
+            <div class="tree-container">
+                <div class="tree-title">BST After Transformation</div>
+                <canvas id="bstCanvas" width="350" height="300"></canvas>
+            </div>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            Welcome to Binary Tree to BST transformation! Click "Next" to begin.
+        </div>
+        
+        <div class="btn-container">
+            <button id="prevBtn" class="btn" disabled>Previous</button>
+            <button id="nextBtn" class="btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Define tree nodes and structure
+        class TreeNode {
+            constructor(value) {
+                this.value = value;
+                this.left = null;
+                this.right = null;
+            }
+        }
+        
+        // Create original binary tree
+        const originalTree = new TreeNode(10);
+        originalTree.left = new TreeNode(2);
+        originalTree.right = new TreeNode(7);
+        originalTree.left.left = new TreeNode(8);
+        originalTree.left.right = new TreeNode(4);
+        
+        // Create BST (final state)
+        const bstTree = new TreeNode(7);
+        bstTree.left = new TreeNode(2);
+        bstTree.right = new TreeNode(10);
+        bstTree.left.left = new TreeNode(4);
+        bstTree.left.right = new TreeNode(8);
+        
+        // Animation steps
+        const steps = [
+            {
+                explanation: "We start with a binary tree where the nodes are not arranged according to BST properties. In a Binary Search Tree (BST), for each node, all values in the left subtree must be less than the node, and all values in the right subtree must be greater than the node."
+            },
+            {
+                explanation: "Step 1: Extract all values from the binary tree. We get: [10, 2, 7, 8, 4]"
+            },
+            {
+                explanation: "Step 2: Sort the extracted values in ascending order: [2, 4, 7, 8, 10]"
+            },
+            {
+                explanation: "Step 3: Perform an inorder traversal of the original tree structure and replace the values with sorted values in order."
+            },
+            {
+                explanation: "The transformation is complete! The tree structure remains the same, but the values are rearranged to satisfy BST properties. Now for each node, all values in the left subtree are less than the node's value, and all values in the right subtree are greater."
+            }
+        ];
+        
+        let currentStep = 0;
+        const totalSteps = steps.length;
+        
+        // Get canvas elements
+        const originalCanvas = document.getElementById('originalTreeCanvas');
+        const bstCanvas = document.getElementById('bstCanvas');
+        const originalCtx = originalCanvas.getContext('2d');
+        const bstCtx = bstCanvas.getContext('2d');
+        
+        // Navigation buttons
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const explanationDiv = document.getElementById('explanation');
+        
+        // Draw tree function
+        function drawTree(ctx, node, x, y, horizontalSpacing, level = 0) {
+            if (!node) return;
+            
+            const radius = 20;
+            
+            // Draw node circle
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#FF4800';
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw node value
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.value, x, y);
+            
+            const verticalSpacing = 60;
+            const nextLevel = level + 1;
+            const nextHorizontalSpacing = horizontalSpacing / 2;
+            
+            // Draw connections to children
+            if (node.left) {
+                const leftX = x - nextHorizontalSpacing;
+                const leftY = y + verticalSpacing;
+                
+                ctx.beginPath();
+                ctx.moveTo(x, y + radius);
+                ctx.lineTo(leftX, leftY - radius);
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                drawTree(ctx, node.left, leftX, leftY, nextHorizontalSpacing, nextLevel);
+            }
+            
+            if (node.right) {
+                const rightX = x + nextHorizontalSpacing;
+                const rightY = y + verticalSpacing;
+                
+                ctx.beginPath();
+                ctx.moveTo(x, y + radius);
+                ctx.lineTo(rightX, rightY - radius);
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                drawTree(ctx, node.right, rightX, rightY, nextHorizontalSpacing, nextLevel);
+            }
+        }
+        
+        // Update visualization based on current step
+        function updateVisualization() {
+            // Clear canvases
+            originalCtx.clearRect(0, 0, originalCanvas.width, originalCanvas.height);
+            bstCtx.clearRect(0, 0, bstCanvas.width, bstCanvas.height);
+            
+            // Update explanation
+            explanationDiv.textContent = steps[currentStep].explanation;
+            
+            // Draw original tree
+            drawTree(originalCtx, originalTree, originalCanvas.width / 2, 40, 80);
+            
+            // Draw BST based on step
+            if (currentStep >= 3) {
+                drawTree(bstCtx, bstTree, bstCanvas.width / 2, 40, 80);
+            }
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+        }
+        
+        // Event listeners for buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+        
+        // Initial visualization
+        updateVisualization();
+    </script>
+</body>
+</html>
