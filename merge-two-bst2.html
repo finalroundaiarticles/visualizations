@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stack-Based Iterative Traversal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .animation-container {
+            position: relative;
+            height: 500px;
+            margin: 20px 0;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            padding: 10px;
+            overflow: hidden;
+        }
+        
+        .explanation {
+            background-color: #FD9F78;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .tree {
+            position: absolute;
+            width: 300px;
+        }
+        
+        #tree1 {
+            left: 50px;
+            top: 80px;
+        }
+        
+        #tree2 {
+            right: 50px;
+            top: 80px;
+        }
+        
+        .node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            color: #000000;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        
+        .node.highlighted {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.2);
+        }
+        
+        .node.visited {
+            background-color: #FFFFFF;
+            border: 2px dashed #FF4800;
+        }
+        
+        .edge {
+            position: absolute;
+            background-color: #FF4800;
+            height: 2px;
+            transform-origin: 0% 0%;
+        }
+        
+        .stack-container {
+            position: absolute;
+            width: 100px;
+            height: 300px;
+            bottom: 20px;
+            border: 2px solid #FF4800;
+            background-color: rgba(253, 159, 120, 0.1);
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            padding: 10px;
+            overflow: hidden;
+        }
+        
+        #stack1 {
+            left: 150px;
+        }
+        
+        #stack2 {
+            right: 150px;
+        }
+        
+        .stack-label {
+            position: absolute;
+            bottom: 330px;
+            font-weight: bold;
+            color: #FF4800;
+        }
+        
+        #stack1-label {
+            left: 170px;
+        }
+        
+        #stack2-label {
+            right: 170px;
+        }
+        
+        .stack-item {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 5px;
+            color: #000000;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .stack-item.highlighted {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.2);
+        }
+        
+        .result-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 2px solid #FF4800;
+            padding: 10px;
+            background-color: rgba(253, 159, 120, 0.1);
+            min-width: 300px;
+            text-align: center;
+        }
+        
+        .result-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #FF4800;
+        }
+        
+        .result-items {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .result-item {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 3px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #FF4800;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Stack-Based Iterative Traversal</h1>
+        
+        <div class="explanation" id="step-explanation">
+            Welcome to Stack-Based Iterative Traversal visualization. We'll traverse two binary trees using stacks and merge the results.
+        </div>
+        
+        <div class="animation-container">
+            <div class="tree" id="tree1"></div>
+            <div class="tree" id="tree2"></div>
+            
+            <div class="stack-container" id="stack1"></div>
+            <div class="stack-label" id="stack1-label">Stack for Tree 1</div>
+            
+            <div class="stack-container" id="stack2"></div>
+            <div class="stack-label" id="stack2-label">Stack for Tree 2</div>
+            
+            <div class="result-container" id="result-container">
+                <div class="result-label">Merged Result:</div>
+                <div class="result-items" id="result-items"></div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
+            <button class="nav-btn" id="next-btn">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="step-indicator">Step 1 of 10</div>
+    </div>
+
+    <script>
+        // Tree nodes data
+        const tree1Data = [
+            { id: 1, value: 5, x: 150, y: 50, parent: null },
+            { id: 2, value: 3, x: 100, y: 120, parent: 1 },
+            { id: 3, value: 7, x: 200, y: 120, parent: 1 },
+            { id: 4, value: 2, x: 50, y: 190, parent: 2 },
+            { id: 5, value: 4, x: 150, y: 190, parent: 2 },
+            { id: 6, value: 6, x: 250, y: 190, parent: 3 }
+        ];
+
+        const tree2Data = [
+            { id: 1, value: 6, x: 150, y: 50, parent: null },
+            { id: 2, value: 2, x: 100, y: 120, parent: 1 },
+            { id: 3, value: 8, x: 200, y: 120, parent: 1 },
+            { id: 4, value: 1, x: 50, y: 190, parent: 2 },
+            { id: 5, value: 4, x: 150, y: 190, parent: 2 },
+            { id: 6, value: 9, x: 250, y: 190, parent: 3 }
+        ];
+
+        // Render trees
+        function renderTree(treeData, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            // First render edges
+            treeData.forEach(node => {
+                if (node.parent) {
+                    const parentNode = treeData.find(n => n.id === node.parent);
+                    const edge = document.createElement('div');
+                    edge.className = 'edge';
+                    
+                    const length = Math.sqrt(Math.pow(node.x - parentNode.x, 2) + Math.pow(node.y - parentNode.y, 2));
+                    const angle = Math.atan2(node.y - parentNode.y, node.x - parentNode.x) * 180 / Math.PI;
+                    
+                    edge.style.width = `${length}px`;
+                    edge.style.left = `${parentNode.x + 20}px`;
+                    edge.style.top = `${parentNode.y + 20}px`;
+                    edge.style.transform = `rotate(${angle}deg)`;
+                    
+                    container.appendChild(edge);
+                }
+            });
+            
+            // Then render nodes
+            treeData.forEach(node => {
+                const nodeEl = document.createElement('div');
+                nodeEl.className = 'node';
+                nodeEl.id = `${containerId}-node-${node.id}`;
+                nodeEl.style.left = `${node.x}px`;
+                nodeEl.style.top = `${node.y}px`;
+                nodeEl.textContent = node.value;
+                container.appendChild(nodeEl);
+            });
+        }
+
+        // Initialize trees
+        renderTree(tree1Data, 'tree1');
+        renderTree(tree2Data, 'tree2');
+
+        // Animation steps
+        const steps = [
+            {
+                explanation: "We start with two binary trees. We'll use a stack-based approach to traverse both trees in-order and merge the results.",
+                tree1Highlight: [],
+                tree2Highlight: [],
+                tree1Visited: [],
+                tree2Visited: [],
+                stack1: [],
+                stack2: [],
+                stack1Highlight: [],
+                stack2Highlight: [],
+                result: []
+            },
+            {
+                explanation: "We push the root nodes of both trees onto their respective stacks. For Tree 1, we push node 5. For Tree 2, we push node 6.",
+                tree1Highlight: [1],
+                tree2Highlight: [1],
+                tree1Visited: [],
+                tree2Visited: [],
+                stack1: [{ id: 1, value: 5 }],
+                stack2: [{ id: 1, value: 6 }],
+                stack1Highlight: [1],
+                stack2Highlight: [1],
+                result: []
+            },
+            {
+                explanation: "We now traverse to the leftmost nodes of both trees. For Tree 1, we push nodes 3 and 2. For Tree 2, we push nodes 2 and 1.",
+                tree1Highlight: [4],
+                tree2Highlight: [4],
+                tree1Visited: [],
+                tree2Visited: [],
+                stack1: [
+                    { id: 1, value: 5 },
+                    { id: 2, value: 3 },
+                    { id: 4, value: 2 }
+                ],
+                stack2: [
+                    { id: 1, value: 6 },
+                    { id: 2, value: 2 },
+                    { id: 4, value: 1 }
+                ],
+                stack1Highlight: [4],
+                stack2Highlight: [4],
+                result: []
+            },
+            {
+                explanation: "We compare the top of both stacks: 2 from Tree 1 and 1 from Tree 2. Since 1 < 2, we pop 1 from Stack 2 and add it to our result.",
+                tree1Highlight: [4],
+                tree2Highlight: [4],
+                tree1Visited: [],
+                tree2Visited: [4],
+                stack1: [
+                    { id: 1, value: 5 },
+                    { id: 2, value: 3 },
+                    { id: 4, value: 2 }
+                ],
+                stack2: [
+                    { id: 1, value: 6 },
+                    { id: 2, value: 2 }
+                ],
+                stack1Highlight: [4],
+                stack2Highlight: [2],
+                result: [1]
+            },
+            {
+                explanation: "Now we compare 2 from Tree 1 and 2 from Tree 2. Since they're equal, we pop both and add them to our result in order.",
+                tree1Highlight: [2],
+                tree2Highlight: [2],
+                tree1Visited: [4],
+                tree2Visited: [4, 2],
+                stack1: [
+                    { id: 1, value: 5 },
+                    { id: 2, value: 3 }
+                ],
+                stack2: [
+                    { id: 1, value: 6 }
+                ],
+                stack1Highlight: [2],
+                stack2Highlight: [1],
+                result: [1, 2, 2]
+            },
+            {
+                explanation: "We pop node 3 from Stack 1, add it to our result, and check if it has a right child. It does, so we push node 4 onto Stack 1.",
+                tree1Highlight: [5],
+                tree2Highlight: [1],
+                tree1Visited: [4, 2],
+                tree2Visited: [4, 2],
+                stack1: [
+                    { id: 1, value: 5 },
+                    { id: 5, value: 4 }
+                ],
+                stack2: [
+                    { id: 1, value: 6 }
+                ],
+                stack1Highlight: [5],
+                stack2Highlight: [1],
+                result: [1, 2, 2, 3]
+            },
+            {
+                explanation: "Now we compare 4 from Tree 1 and 6 from Tree 2. Since 4 < 6, we pop 4 from Stack 1 and add it to our result.",
+                tree1Highlight: [1],
+                tree2Highlight: [1],
+                tree1Visited: [4, 2, 5],
+                tree2Visited: [4, 2],
+                stack1: [
+                    { id: 1, value: 5 }
+                ],
+                stack2: [
+                    { id: 1, value: 6 }
+                ],
+                stack1Highlight: [1],
+                stack2Highlight: [1],
+                result: [1, 2, 2, 3, 4]
+            },
+            {
+                explanation: "We pop node 5 from Stack 1, add it to our result, and check if it has a right child. It does, so we push node 7 onto Stack 1.",
+                tree1Highlight: [3],
+                tree2Highlight: [1],
+                tree1Visited: [4, 2, 5, 1],
+                tree2Visited: [4, 2],
+                stack1: [
+                    { id: 3, value: 7 }
+                ],
+                stack2: [
+                    { id: 1, value: 6 }
+                ],
+                stack1Highlight: [3],
+                stack2Highlight: [1],
+                result: [1, 2, 2, 3, 4, 5]
+            },
+            {
+                explanation: "We compare 7 from Tree 1 and 6 from Tree 2. Since 6 < 7, we pop 6 from Stack 2 and add it to our result. We check if it has a right child, which it does, so we push node 8 onto Stack 2.",
+                tree1Highlight: [3],
+                tree2Highlight: [3],
+                tree1Visited: [4, 2, 5, 1],
+                tree2Visited: [4, 2, 1],
+                stack1: [
+                    { id: 3, value: 7 }
+                ],
+                stack2: [
+                    { id: 3, value: 8 }
+                ],
+                stack1Highlight: [3],
+                stack2Highlight: [3],
+                result: [1, 2, 2, 3, 4, 5, 6]
+            },
+            {
+                explanation: "We compare 7 from Tree 1 and 8 from Tree 2. Since 7 < 8, we pop 7 from Stack 1 and add it to our result. We check if it has a right child, which it does, so we push node 6 onto Stack 1.",
+                tree1Highlight: [6],
+                tree2Highlight: [3],
+                tree1Visited: [4, 2, 5, 1, 3],
+                tree2Visited: [4, 2, 1],
+                stack1: [
+                    { id: 6, value: 6 }
+                ],
+                stack2: [
+                    { id: 3, value: 8 }
+                ],
+                stack1Highlight: [6],
+                stack2Highlight: [3],
+                result: [1, 2, 2, 3, 4, 5, 6, 7]
+            },
+            {
+                explanation: "We continue the process, comparing and popping nodes from the stacks until both stacks are empty. The final merged result is [1, 2, 2, 3, 4, 5, 6, 6, 7, 8, 9].",
+                tree1Highlight: [],
+                tree2Highlight: [],
+                tree1Visited: [4, 2, 5, 1, 3, 6],
+                tree2Visited: [4, 2, 1, 3, 5, 6],
+                stack1: [],
+                stack2: [],
+                stack1Highlight: [],
+                stack2Highlight: [],
+                result: [1, 2, 2, 3, 4, 5, 6, 6, 7, 8, 9]
+            }
+        ];
+
+        let currentStep = 0;
+        const totalSteps = steps.length;
+
+        // Update the stack visualization
+        function updateStacks(step) {
+            const stack1 = document.getElementById('stack1');
+            const stack2 = document.getElementById('stack2');
+            
+            stack1.innerHTML = '';
+            stack2.innerHTML = '';
+            
+            step.stack1.forEach((item, index) => {
+                const stackItem = document.createElement('div');
+                stackItem.className = 'stack-item';
+                if (step.stack1Highlight.includes(item.id)) {
+                    stackItem.classList.add('highlighted');
+                }
+                stackItem.textContent = item.value;
+                stack1.appendChild(stackItem);
+            });
+            
+            step.stack2.forEach((item, index) => {
+                const stackItem = document.createElement('div');
+                stackItem.className = 'stack-item';
+                if (step.stack2Highlight.includes(item.id)) {
+                    stackItem.classList.add('highlighted');
+                }
+                stackItem.textContent = item.value;
+                stack2.appendChild(stackItem);
+            });
+        }
+
+        // Update tree node highlighting
+        function updateTreeHighlighting(step) {
+            // Reset all nodes
+            document.querySelectorAll('.node').forEach(node => {
+                node.classList.remove('highlighted');
+                node.classList.remove('visited');
+            });
+            
+            // Highlight nodes in tree1
+            step.tree1Highlight.forEach(id => {
+                const node = document.getElementById(`tree1-node-${id}`);
+                if (node) node.classList.add('highlighted');
+            });
+            
+            // Highlight nodes in tree2
+            step.tree2Highlight.forEach(id => {
+                const node = document.getElementById(`tree2-node-${id}`);
+                if (node) node.classList.add('highlighted');
+            });
+            
+            // Mark visited nodes in tree1
+            step.tree1Visited.forEach(id => {
+                const node = document.getElementById(`tree1-node-${id}`);
+                if (node) node.classList.add('visited');
+            });
+            
+            // Mark visited nodes in tree2
+            step.tree2Visited.forEach(id => {
+                const node = document.getElementById(`tree2-node-${id}`);
+                if (node) node.classList.add('visited');
+            });
+        }
+
+        // Update result array
+        function updateResult(step) {
+            const resultItems = document.getElementById('result-items');
+            resultItems.innerHTML = '';
+            
+            step.result.forEach(value => {
+                const item = document.createElement('div');
+                item.className = 'result-item';
+                item.textContent = value;
+                resultItems.appendChild(item);
+            });
+        }
+
+        // Update explanation
+        function updateExplanation(step) {
+            document.getElementById('step-explanation').textContent = step.explanation;
+        }
+
+        // Update step indicator
+        function updateStepIndicator() {
+            document.getElementById('step-indicator').textContent = `Step ${currentStep + 1} of ${totalSteps}`;
+        }
+
+        // Show current step
+        function showStep(stepIndex) {
+            const step = steps[stepIndex];
+            updateExplanation(step);
+            updateTreeHighlighting(step);
+            updateStacks(step);
+            updateResult(step);
+            updateStepIndicator();
+            
+            // Update button states
+            document.getElementById('prev-btn').disabled = stepIndex === 0;
+            document.getElementById('next-btn').disabled = stepIndex === totalSteps - 1;
+        }
+
+        // Navigation buttons event listeners
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                showStep(currentStep);
+            }
+        });
+
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        });
+
+        // Initialize with first step
+        showStep(currentStep);
+    </script>
+</body>
+</html>
