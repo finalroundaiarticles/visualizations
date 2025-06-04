@@ -3,444 +3,347 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canonical Representation Process</title>
+    <title>Tree Isomorphism Visualization</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #FFFFFF;
             margin: 0;
             padding: 20px;
-            color: #000000;
+            background-color: white;
+            color: #1c1d20;
         }
-        
-        h1, h2 {
-            color: #FF4800;
-            text-align: center;
-        }
-        
+
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
         }
-        
-        .step-container {
-            display: none;
-            margin-bottom: 20px;
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
         }
-        
-        .active {
-            display: block;
-        }
-        
-        .step-title {
-            font-size: 18px;
-            margin-bottom: 10px;
-            color: #FF4800;
-        }
-        
-        .canvas-container {
-            width: 100%;
-            display: flex;
-            justify-content: center;
+
+        .controls {
+            text-align: center;
             margin: 20px 0;
         }
-        
-        canvas {
-            border: 1px solid #FD9F78;
-            background-color: #FFFFFF;
-        }
-        
-        .navigation {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        
-        .nav-btn {
-            background-color: #FF4800;
-            color: #FFFFFF;
+
+        .btn {
+            background-color: #ff4800;
+            color: white;
             border: none;
             padding: 10px 20px;
             margin: 0 10px;
-            cursor: pointer;
             border-radius: 5px;
-            font-size: 16px;
-            transition: background-color 0.3s;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
         }
-        
-        .nav-btn:hover {
-            background-color: #FD9F78;
+
+        .btn:hover {
+            background-color: #e63f00;
         }
-        
-        .nav-btn:disabled {
-            background-color: #FD9F78;
-            opacity: 0.5;
+
+        .btn:disabled {
+            background-color: #ccc;
             cursor: not-allowed;
         }
-        
+
+        .visualization {
+            display: flex;
+            justify-content: space-around;
+            margin: 40px 0;
+            min-height: 300px;
+        }
+
+        .tree-container {
+            text-align: center;
+            flex: 1;
+            margin: 0 20px;
+        }
+
+        .tree-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #1c1d20;
+        }
+
+        svg {
+            border: 2px solid #1c1d20;
+            border-radius: 8px;
+        }
+
+        .node {
+            fill: #ff4800;
+            stroke: #1c1d20;
+            stroke-width: 2;
+        }
+
+        .node-text {
+            fill: white;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        .edge {
+            stroke: #1c1d20;
+            stroke-width: 2;
+        }
+
         .explanation {
-            background-color: #FFF;
-            border-left: 4px solid #FF4800;
-            padding: 10px 15px;
-            margin: 15px 0;
-            border-radius: 0 5px 5px 0;
+            background-color: #f8f8f8;
+            border: 2px solid #1c1d20;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .step-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ff4800;
+            margin-bottom: 10px;
+        }
+
+        .canonical-form {
+            background-color: #fff;
+            border: 1px solid #ff4800;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .result {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .isomorphic {
+            background-color: #e6ffe6;
+            border: 2px solid #00cc00;
+            color: #006600;
+        }
+
+        .not-isomorphic {
+            background-color: #ffe6e6;
+            border: 2px solid #cc0000;
+            color: #660000;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Canonical Representation Process</h1>
-        <h2>A Step-by-Step Illustration</h2>
-        
-        <div id="step1" class="step-container active">
-            <div class="step-title">Step 1: Original Tree</div>
-            <div class="explanation">
-                This is our starting tree. A canonical representation is a unique string that represents the structure of the tree, regardless of how it's drawn.
+        <div class="header">
+            <h1>Tree Isomorphism Detection Using Canonical Forms</h1>
+            <p>Understanding how the algorithm determines if two trees are isomorphic</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="prevBtn" onclick="previousStep()">Previous</button>
+            <span id="stepIndicator">Step 1 of 4</span>
+            <button class="btn" id="nextBtn" onclick="nextStep()">Next</button>
+        </div>
+
+        <div class="visualization">
+            <div class="tree-container">
+                <div class="tree-title">Tree 1</div>
+                <svg id="tree1" width="250" height="200"></svg>
             </div>
-            <div class="canvas-container">
-                <canvas id="canvas1" width="600" height="300"></canvas>
+            <div class="tree-container">
+                <div class="tree-title">Tree 2</div>
+                <svg id="tree2" width="250" height="200"></svg>
             </div>
         </div>
-        
-        <div id="step2" class="step-container">
-            <div class="step-title">Step 2: Identify Subtrees</div>
-            <div class="explanation">
-                We break down the tree into its subtrees. Each node with its children forms a subtree.
-            </div>
-            <div class="canvas-container">
-                <canvas id="canvas2" width="600" height="300"></canvas>
-            </div>
-        </div>
-        
-        <div id="step3" class="step-container">
-            <div class="step-title">Step 3: Generate Canonical Forms for Subtrees</div>
-            <div class="explanation">
-                For each subtree, we create a canonical string representation. At the leaf nodes, this is simply the node value.
-            </div>
-            <div class="canvas-container">
-                <canvas id="canvas3" width="600" height="400"></canvas>
-            </div>
-        </div>
-        
-        <div id="step4" class="step-container">
-            <div class="step-title">Step 4: Sort Children Subtrees</div>
-            <div class="explanation">
-                For nodes with multiple children, we sort their canonical representations to ensure a consistent ordering.
-            </div>
-            <div class="canvas-container">
-                <canvas id="canvas4" width="600" height="400"></canvas>
-            </div>
-        </div>
-        
-        <div id="step5" class="step-container">
-            <div class="step-title">Step 5: Final Canonical String Representation</div>
-            <div class="explanation">
-                We combine the sorted subtree representations to create the final canonical string for the entire tree.
-            </div>
-            <div class="canvas-container">
-                <canvas id="canvas5" width="600" height="300"></canvas>
-            </div>
-        </div>
-        
-        <div class="navigation">
-            <button id="prevBtn" class="nav-btn" disabled>Previous</button>
-            <button id="nextBtn" class="nav-btn">Next</button>
+
+        <div class="explanation" id="explanation">
+            <!-- Dynamic content will be inserted here -->
         </div>
     </div>
 
     <script>
-        // Navigation
-        const steps = document.querySelectorAll('.step-container');
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
         let currentStep = 0;
-        
-        function updateNavigation() {
-            prevBtn.disabled = currentStep === 0;
-            nextBtn.disabled = currentStep === steps.length - 1;
-            
-            steps.forEach((step, index) => {
-                if (index === currentStep) {
-                    step.classList.add('active');
-                } else {
-                    step.classList.remove('active');
-                }
-            });
+        const totalSteps = 4;
+
+        // Tree data structures
+        const examples = [
+            {
+                tree1: { val: 1, left: { val: 2, left: null, right: null }, right: { val: 3, left: null, right: null } },
+                tree2: { val: 1, left: { val: 3, left: null, right: null }, right: { val: 2, left: null, right: null } },
+                isIsomorphic: true,
+                title: "Example 1: Simple Isomorphic Trees"
+            },
+            {
+                tree1: { val: 1, left: { val: 2, left: { val: 4, left: null, right: null }, right: null }, right: { val: 3, left: null, right: null } },
+                tree2: { val: 1, left: { val: 3, left: null, right: null }, right: { val: 2, left: null, right: { val: 4, left: null, right: null } } },
+                isIsomorphic: true,
+                title: "Example 2: Complex Isomorphic Trees"
+            }
+        ];
+
+        let currentExample = 0;
+
+        function drawNode(svg, x, y, value, radius = 20) {
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', x);
+            circle.setAttribute('cy', y);
+            circle.setAttribute('r', radius);
+            circle.setAttribute('class', 'node');
+            svg.appendChild(circle);
+
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', x);
+            text.setAttribute('y', y);
+            text.setAttribute('class', 'node-text');
+            text.textContent = value;
+            svg.appendChild(text);
         }
-        
-        prevBtn.addEventListener('click', () => {
+
+        function drawEdge(svg, x1, y1, x2, y2) {
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', x1);
+            line.setAttribute('y1', y1);
+            line.setAttribute('x2', x2);
+            line.setAttribute('y2', y2);
+            line.setAttribute('class', 'edge');
+            svg.appendChild(line);
+        }
+
+        function drawTree(svgId, tree, x = 125, y = 40, level = 0, offset = 60) {
+            const svg = document.getElementById(svgId);
+            svg.innerHTML = '';
+
+            if (!tree) return;
+
+            function drawSubtree(node, x, y, level, offset) {
+                if (!node) return;
+
+                drawNode(svg, x, y, node.val);
+
+                if (node.left) {
+                    const leftX = x - offset / (level + 1);
+                    const leftY = y + 60;
+                    drawEdge(svg, x, y + 20, leftX, leftY - 20);
+                    drawSubtree(node.left, leftX, leftY, level + 1, offset);
+                }
+
+                if (node.right) {
+                    const rightX = x + offset / (level + 1);
+                    const rightY = y + 60;
+                    drawEdge(svg, x, y + 20, rightX, rightY - 20);
+                    drawSubtree(node.right, rightX, rightY, level + 1, offset);
+                }
+            }
+
+            drawSubtree(tree, x, y, level, offset);
+        }
+
+        function getCanonicalForm(root) {
+            if (!root) return "";
+            
+            const leftForm = getCanonicalForm(root.left);
+            const rightForm = getCanonicalForm(root.right);
+            
+            const subtrees = [leftForm, rightForm].sort();
+            
+            return `(${root.val},${subtrees[0]},${subtrees[1]})`;
+        }
+
+        function updateVisualization() {
+            const example = examples[currentExample];
+            
+            drawTree('tree1', example.tree1);
+            drawTree('tree2', example.tree2);
+
+            const explanation = document.getElementById('explanation');
+            const canonical1 = getCanonicalForm(example.tree1);
+            const canonical2 = getCanonicalForm(example.tree2);
+
+            let content = '';
+
+            switch (currentStep) {
+                case 0:
+                    content = `
+                        <div class="step-title">Step 1: Start at Root</div>
+                        <p>Start at root node (value 1)</p>
+                        <p>We need to process left and right subtrees</p>
+                    `;
+                    break;
+
+                case 1:
+                    content = `
+                        <div class="step-title">Step 2: Go Left, Then Right</div>
+                        <p>Process left child (value 2): get "(2,,)"</p>
+                        <p>Process right child (value 3): get "(3,,)"</p>
+                        <p>Sort them: ["(2,,)", "(3,,)"]</p>
+                    `;
+                    break;
+
+                case 2:
+                    content = `
+                        <div class="step-title">Step 3: Build Canonical Form</div>
+                        <p>Tree 1: Create "(1,(2,,),(3,,))"</p>
+                        <p>Tree 2: Create "(1,(2,,),(3,,))"</p>
+                        <p>Both trees get same canonical form after sorting</p>
+                    `;
+                    break;
+
+                case 3:
+                    const isomorphic = canonical1 === canonical2;
+                    content = `
+                        <div class="step-title">Step 4: Compare</div>
+                        <p>Tree 1: ${canonical1}</p>
+                        <p>Tree 2: ${canonical2}</p>
+                        <div class="result ${isomorphic ? 'isomorphic' : 'not-isomorphic'}">
+                            ${isomorphic ? 'Same = Isomorphic' : 'Different = Not Isomorphic'}
+                        </div>
+                    `;
+                    break;
+            }
+
+            explanation.innerHTML = content;
+
+            // Update step indicator
+            document.getElementById('stepIndicator').textContent = `Step ${currentStep + 1} of ${totalSteps}`;
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === totalSteps - 1;
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateVisualization();
+            } else if (currentExample < examples.length - 1) {
+                currentExample++;
+                currentStep = 0;
+                updateVisualization();
+            }
+        }
+
+        function previousStep() {
             if (currentStep > 0) {
                 currentStep--;
-                updateNavigation();
+                updateVisualization();
+            } else if (currentExample > 0) {
+                currentExample--;
+                currentStep = totalSteps - 1;
+                updateVisualization();
             }
-        });
-        
-        nextBtn.addEventListener('click', () => {
-            if (currentStep < steps.length - 1) {
-                currentStep++;
-                updateNavigation();
-            }
-        });
-        
-        // Drawing functions
-        function drawTree() {
-            // Step 1: Original Tree
-            const canvas1 = document.getElementById('canvas1');
-            const ctx1 = canvas1.getContext('2d');
-            ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
-            
-            // Draw the tree
-            const rootX = canvas1.width / 2;
-            const rootY = 50;
-            const horizontalGap = 100;
-            const verticalGap = 80;
-            
-            // Draw root node
-            drawNode(ctx1, rootX, rootY, 'A', '#FF4800');
-            
-            // Draw level 1 nodes
-            const level1X = [rootX - horizontalGap, rootX, rootX + horizontalGap];
-            const level1Y = rootY + verticalGap;
-            
-            drawNode(ctx1, level1X[0], level1Y, 'B', '#FF4800');
-            drawNode(ctx1, level1X[1], level1Y, 'C', '#FF4800');
-            drawNode(ctx1, level1X[2], level1Y, 'D', '#FF4800');
-            
-            // Draw edges from root to level 1
-            drawEdge(ctx1, rootX, rootY, level1X[0], level1Y);
-            drawEdge(ctx1, rootX, rootY, level1X[1], level1Y);
-            drawEdge(ctx1, rootX, rootY, level1X[2], level1Y);
-            
-            // Draw level 2 nodes
-            const level2X_1 = [level1X[0] - 50, level1X[0] + 50];
-            const level2X_2 = [level1X[2] - 30];
-            const level2Y = level1Y + verticalGap;
-            
-            drawNode(ctx1, level2X_1[0], level2Y, 'E', '#FF4800');
-            drawNode(ctx1, level2X_1[1], level2Y, 'F', '#FF4800');
-            drawNode(ctx1, level2X_2[0], level2Y, 'G', '#FF4800');
-            
-            // Draw edges from level 1 to level 2
-            drawEdge(ctx1, level1X[0], level1Y, level2X_1[0], level2Y);
-            drawEdge(ctx1, level1X[0], level1Y, level2X_1[1], level2Y);
-            drawEdge(ctx1, level1X[2], level1Y, level2X_2[0], level2Y);
-            
-            // Step 2: Identify Subtrees
-            const canvas2 = document.getElementById('canvas2');
-            const ctx2 = canvas2.getContext('2d');
-            ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
-            
-            // Draw the tree with colored subtrees
-            // Root subtree
-            drawNode(ctx2, rootX, rootY, 'A', '#FF4800');
-            
-            // Level 1 nodes
-            drawNode(ctx2, level1X[0], level1Y, 'B', '#FD9F78');
-            drawNode(ctx2, level1X[1], level1Y, 'C', '#FD9F78');
-            drawNode(ctx2, level1X[2], level1Y, 'D', '#FD9F78');
-            
-            // Edges from root to level 1
-            drawEdge(ctx2, rootX, rootY, level1X[0], level1Y);
-            drawEdge(ctx2, rootX, rootY, level1X[1], level1Y);
-            drawEdge(ctx2, rootX, rootY, level1X[2], level1Y);
-            
-            // Level 2 nodes
-            drawNode(ctx2, level2X_1[0], level2Y, 'E', '#FD9F78');
-            drawNode(ctx2, level2X_1[1], level2Y, 'F', '#FD9F78');
-            drawNode(ctx2, level2X_2[0], level2Y, 'G', '#FD9F78');
-            
-            // Edges from level 1 to level 2
-            drawEdge(ctx2, level1X[0], level1Y, level2X_1[0], level2Y);
-            drawEdge(ctx2, level1X[0], level1Y, level2X_1[1], level2Y);
-            drawEdge(ctx2, level1X[2], level1Y, level2X_2[0], level2Y);
-            
-            // Add labels for subtrees
-            ctx2.font = '14px Arial';
-            ctx2.fillStyle = '#000000';
-            ctx2.fillText('Subtree 1: A with children B, C, D', 50, 250);
-            ctx2.fillText('Subtree 2: B with children E, F', 50, 270);
-            ctx2.fillText('Subtree 3: C (leaf node)', 350, 250);
-            ctx2.fillText('Subtree 4: D with child G', 350, 270);
-            ctx2.fillText('Subtree 5: E (leaf node)', 50, 290);
-            ctx2.fillText('Subtree 6: F (leaf node)', 350, 290);
-            ctx2.fillText('Subtree 7: G (leaf node)', 50, 310);
-            
-            // Step 3: Generate Canonical Forms for Subtrees
-            const canvas3 = document.getElementById('canvas3');
-            const ctx3 = canvas3.getContext('2d');
-            ctx3.clearRect(0, 0, canvas3.width, canvas3.height);
-            
-            // Draw smaller tree
-            const smallRootX = 150;
-            const smallVerticalGap = 60;
-            
-            // Draw the tree structure
-            drawNode(ctx3, smallRootX, rootY, 'A', '#FF4800');
-            drawNode(ctx3, smallRootX - 80, rootY + smallVerticalGap, 'B', '#FD9F78');
-            drawNode(ctx3, smallRootX, rootY + smallVerticalGap, 'C', '#FD9F78');
-            drawNode(ctx3, smallRootX + 80, rootY + smallVerticalGap, 'D', '#FD9F78');
-            
-            drawEdge(ctx3, smallRootX, rootY, smallRootX - 80, rootY + smallVerticalGap);
-            drawEdge(ctx3, smallRootX, rootY, smallRootX, rootY + smallVerticalGap);
-            drawEdge(ctx3, smallRootX, rootY, smallRootX + 80, rootY + smallVerticalGap);
-            
-            drawNode(ctx3, smallRootX - 100, rootY + 2 * smallVerticalGap, 'E', '#FD9F78');
-            drawNode(ctx3, smallRootX - 60, rootY + 2 * smallVerticalGap, 'F', '#FD9F78');
-            drawNode(ctx3, smallRootX + 60, rootY + 2 * smallVerticalGap, 'G', '#FD9F78');
-            
-            drawEdge(ctx3, smallRootX - 80, rootY + smallVerticalGap, smallRootX - 100, rootY + 2 * smallVerticalGap);
-            drawEdge(ctx3, smallRootX - 80, rootY + smallVerticalGap, smallRootX - 60, rootY + 2 * smallVerticalGap);
-            drawEdge(ctx3, smallRootX + 80, rootY + smallVerticalGap, smallRootX + 60, rootY + 2 * smallVerticalGap);
-            
-            // Show canonical forms
-            ctx3.font = '14px Arial';
-            ctx3.fillStyle = '#000000';
-            
-            const formX = 350;
-            ctx3.fillText('Leaf Node Canonical Forms:', formX, 60);
-            ctx3.fillText('E → "E"', formX, 90);
-            ctx3.fillText('F → "F"', formX, 110);
-            ctx3.fillText('C → "C"', formX, 130);
-            ctx3.fillText('G → "G"', formX, 150);
-            
-            ctx3.fillText('Internal Node Canonical Forms:', formX, 190);
-            ctx3.fillText('B → "B(E,F)" (B with children E,F)', formX, 220);
-            ctx3.fillText('D → "D(G)" (D with child G)', formX, 240);
-            ctx3.fillText('A → "A(B(E,F),C,D(G))" (root with all subtrees)', formX, 260);
-            
-            // Draw labels pointing to nodes
-            drawArrow(ctx3, formX - 10, 90, smallRootX - 100, rootY + 2 * smallVerticalGap);
-            drawArrow(ctx3, formX - 10, 110, smallRootX - 60, rootY + 2 * smallVerticalGap);
-            drawArrow(ctx3, formX - 10, 130, smallRootX, rootY + smallVerticalGap);
-            drawArrow(ctx3, formX - 10, 150, smallRootX + 60, rootY + 2 * smallVerticalGap);
-            drawArrow(ctx3, formX - 10, 220, smallRootX - 80, rootY + smallVerticalGap);
-            drawArrow(ctx3, formX - 10, 240, smallRootX + 80, rootY + smallVerticalGap);
-            drawArrow(ctx3, formX - 10, 260, smallRootX, rootY);
-            
-            // Step 4: Sort Children Subtrees
-            const canvas4 = document.getElementById('canvas4');
-            const ctx4 = canvas4.getContext('2d');
-            ctx4.clearRect(0, 0, canvas4.width, canvas4.height);
-            
-            // Smaller tree for illustration
-            drawNode(ctx4, smallRootX, rootY, 'A', '#FF4800');
-            drawNode(ctx4, smallRootX - 80, rootY + smallVerticalGap, 'B', '#FD9F78');
-            drawNode(ctx4, smallRootX, rootY + smallVerticalGap, 'C', '#FD9F78');
-            drawNode(ctx4, smallRootX + 80, rootY + smallVerticalGap, 'D', '#FD9F78');
-            
-            drawEdge(ctx4, smallRootX, rootY, smallRootX - 80, rootY + smallVerticalGap);
-            drawEdge(ctx4, smallRootX, rootY, smallRootX, rootY + smallVerticalGap);
-            drawEdge(ctx4, smallRootX, rootY, smallRootX + 80, rootY + smallVerticalGap);
-            
-            drawNode(ctx4, smallRootX - 100, rootY + 2 * smallVerticalGap, 'E', '#FD9F78');
-            drawNode(ctx4, smallRootX - 60, rootY + 2 * smallVerticalGap, 'F', '#FD9F78');
-            drawNode(ctx4, smallRootX + 60, rootY + 2 * smallVerticalGap, 'G', '#FD9F78');
-            
-            drawEdge(ctx4, smallRootX - 80, rootY + smallVerticalGap, smallRootX - 100, rootY + 2 * smallVerticalGap);
-            drawEdge(ctx4, smallRootX - 80, rootY + smallVerticalGap, smallRootX - 60, rootY + 2 * smallVerticalGap);
-            drawEdge(ctx4, smallRootX + 80, rootY + smallVerticalGap, smallRootX + 60, rootY + 2 * smallVerticalGap);
-            
-            // Sorting explanation
-            ctx4.font = '14px Arial';
-            ctx4.fillStyle = '#000000';
-            
-            ctx4.fillText('Sorting Children at Node B:', formX, 60);
-            ctx4.fillText('Children: E, F', formX, 80);
-            ctx4.fillText('Canonical forms: "E", "F"', formX, 100);
-            ctx4.fillText('After sorting: "E", "F" (already in order)', formX, 120);
-            ctx4.fillText('B\'s canonical form: "B(E,F)"', formX, 140);
-            
-            ctx4.fillText('Sorting Children at Root A:', formX, 180);
-            ctx4.fillText('Children: B, C, D', formX, 200);
-            ctx4.fillText('Canonical forms:', formX, 220);
-            ctx4.fillText('B → "B(E,F)"', formX, 240);
-            ctx4.fillText('C → "C"', formX, 260);
-            ctx4.fillText('D → "D(G)"', formX, 280);
-            ctx4.fillText('After lexicographic sorting: B, C, D (already in order)', formX, 300);
-            ctx4.fillText('A\'s canonical form: "A(B(E,F),C,D(G))"', formX, 320);
-            
-            drawArrow(ctx4, formX - 10, 120, smallRootX - 80, rootY + smallVerticalGap);
-            drawArrow(ctx4, formX - 10, 320, smallRootX, rootY);
-            
-            // Step 5: Final Canonical String Representation
-            const canvas5 = document.getElementById('canvas5');
-            const ctx5 = canvas5.getContext('2d');
-            ctx5.clearRect(0, 0, canvas5.width, canvas5.height);
-            
-            // Draw the original tree
-            drawNode(ctx5, rootX, rootY, 'A', '#FF4800');
-            
-            // Level 1 nodes
-            drawNode(ctx5, level1X[0], level1Y, 'B', '#FF4800');
-            drawNode(ctx5, level1X[1], level1Y, 'C', '#FF4800');
-            drawNode(ctx5, level1X[2], level1Y, 'D', '#FF4800');
-            
-            // Edges from root to level 1
-            drawEdge(ctx5, rootX, rootY, level1X[0], level1Y);
-            drawEdge(ctx5, rootX, rootY, level1X[1], level1Y);
-            drawEdge(ctx5, rootX, rootY, level1X[2], level1Y);
-            
-            // Level 2 nodes
-            drawNode(ctx5, level2X_1[0], level2Y, 'E', '#FF4800');
-            drawNode(ctx5, level2X_1[1], level2Y, 'F', '#FF4800');
-            drawNode(ctx5, level2X_2[0], level2Y, 'G', '#FF4800');
-            
-            // Edges from level 1 to level 2
-            drawEdge(ctx5, level1X[0], level1Y, level2X_1[0], level2Y);
-            drawEdge(ctx5, level1X[0], level1Y, level2X_1[1], level2Y);
-            drawEdge(ctx5, level1X[2], level1Y, level2X_2[0], level2Y);
-            
-            // Final canonical form
-            ctx5.font = 'bold 16px Arial';
-            ctx5.fillStyle = '#FF4800';
-            ctx5.fillText('Final Canonical String Representation:', 150, 240);
-            ctx5.fillText('"A(B(E,F),C,D(G))"', 220, 270);
-            
-            // Explanation
-            ctx5.font = '14px Arial';
-            ctx5.fillStyle = '#000000';
-            ctx5.fillText('This string uniquely represents the tree structure', 160, 300);
-            ctx5.fillText('and allows for consistent comparison between trees.', 160, 320);
         }
-        
-        function drawNode(ctx, x, y, label, color) {
-            ctx.beginPath();
-            ctx.arc(x, y, 20, 0, Math.PI * 2);
-            ctx.fillStyle = color;
-            ctx.fill();
-            ctx.stroke();
-            
-            ctx.font = 'bold 16px Arial';
-            ctx.fillStyle = '#FFFFFF';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(label, x, y);
-        }
-        
-        function drawEdge(ctx, x1, y1, x2, y2) {
-            ctx.beginPath();
-            ctx.moveTo(x1, y1 + 20); // Adjust starting point to be at the bottom of the node
-            ctx.lineTo(x2, y2 - 20); // Adjust ending point to be at the top of the node
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
-        
-        function drawArrow(ctx, fromX, fromY, toX, toY) {
-            ctx.beginPath();
-            ctx.moveTo(fromX, fromY);
-            ctx.lineTo(toX, toY);
-            ctx.strokeStyle = '#FD9F78';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-        }
-        
+
         // Initialize
-        window.onload = function() {
-            drawTree();
-            updateNavigation();
-        };
+        updateVisualization();
     </script>
 </body>
 </html>
