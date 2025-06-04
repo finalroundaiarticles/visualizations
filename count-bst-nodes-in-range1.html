@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BST Range Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            color: #FF4800;
+        }
+        .canvas-container {
+            margin: 20px auto;
+            position: relative;
+            height: 400px;
+        }
+        canvas {
+            border: 1px solid #FD9F78;
+            border-radius: 8px;
+        }
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .range-control {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #FD9F78;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #FFF;
+            border: 1px solid #FD9F78;
+            border-radius: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Search Tree Range Visualization</h1>
+        
+        <div class="range-control">
+            <label for="min-range">Min Range: </label>
+            <input type="number" id="min-range" value="5" min="0" max="100">
+            <label for="max-range">Max Range: </label>
+            <input type="number" id="max-range" value="45" min="0" max="100">
+            <button id="update-range">Update Range</button>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="bstCanvas" width="800" height="400"></canvas>
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn">Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <h3>Binary Search Tree with Range Visualization</h3>
+            <p>This visualization shows a Binary Search Tree (BST) with nodes [10, 5, 50, 1, 40, 100]. The nodes that fall within the range [5, 45] are highlighted in orange.</p>
+            <p>In a BST, for each node:</p>
+            <ul>
+                <li>All nodes in the left subtree have values less than the node's value</li>
+                <li>All nodes in the right subtree have values greater than the node's value</li>
+            </ul>
+            <p>When we query for a range, we're finding all nodes whose values fall between the min and max of the range.</p>
+        </div>
+    </div>
+
+    <script>
+        class TreeNode {
+            constructor(value) {
+                this.value = value;
+                this.left = null;
+                this.right = null;
+                this.x = 0;
+                this.y = 0;
+            }
+        }
+
+        class BST {
+            constructor() {
+                this.root = null;
+            }
+            
+            insert(value) {
+                const newNode = new TreeNode(value);
+                
+                if (!this.root) {
+                    this.root = newNode;
+                    return;
+                }
+                
+                const insertHelper = (node, newNode) => {
+                    if (newNode.value < node.value) {
+                        if (node.left === null) {
+                            node.left = newNode;
+                        } else {
+                            insertHelper(node.left, newNode);
+                        }
+                    } else {
+                        if (node.right === null) {
+                            node.right = newNode;
+                        } else {
+                            insertHelper(node.right, newNode);
+                        }
+                    }
+                };
+                
+                insertHelper(this.root, newNode);
+            }
+            
+            calculatePositions() {
+                const calculateNodePositions = (node, level, x, width) => {
+                    if (!node) return;
+                    
+                    node.x = x;
+                    node.y = level * 80 + 50;
+                    
+                    const nextWidth = width / 2;
+                    calculateNodePositions(node.left, level + 1, x - nextWidth, nextWidth);
+                    calculateNodePositions(node.right, level + 1, x + nextWidth, nextWidth);
+                };
+                
+                calculateNodePositions(this.root, 0, 400, 200);
+            }
+        }
+
+        const bst = new BST();
+        const nodes = [10, 5, 50, 1, 40, 100];
+        nodes.forEach(val => bst.insert(val));
+        bst.calculatePositions();
+
+        // Animation steps
+        let currentStep = 0;
+        const totalSteps = 5; // Initial tree, highlight range, focus on 5, focus on 10, focus on 40
+
+        const canvas = document.getElementById('bstCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let minRange = 5;
+        let maxRange = 45;
+        
+        // Update explanation based on current step
+        function updateExplanation() {
+            const explanationDiv = document.getElementById('explanation');
+            let content = '';
+            
+            switch(currentStep) {
+                case 0:
+                    content = `
+                        <h3>Binary Search Tree - Initial Structure</h3>
+                        <p>We've created a BST with nodes [10, 5, 50, 1, 40, 100].</p>
+                        <p>In a BST, for each node:</p>
+                        <ul>
+                            <li>All nodes in the left subtree have values less than the node's value</li>
+                            <li>All nodes in the right subtree have values greater than the node's value</li>
+                        </ul>
+                    `;
+                    break;
+                case 1:
+                    content = `
+                        <h3>Range Query [${minRange}, ${maxRange}] - Overview</h3>
+                        <p>We're looking for all nodes with values between ${minRange} and ${maxRange} (inclusive).</p>
+                        <p>In our BST, the nodes 5, 10, and 40 fall within this range.</p>
+                        <p>These nodes are highlighted in orange.</p>
+                    `;
+                    break;
+                case 2:
+                    content = `
+                        <h3>Node 5 - Within Range</h3>
+                        <p>The node with value 5 is within our range [${minRange}, ${maxRange}].</p>
+                        <p>Since 5 ≥ ${minRange} and 5 ≤ ${maxRange}, this node is included in our result.</p>
+                    `;
+                    break;
+                case 3:
+                    content = `
+                        <h3>Node 10 - Within Range</h3>
+                        <p>The node with value 10 is within our range [${minRange}, ${maxRange}].</p>
+                        <p>Since 10 ≥ ${minRange} and 10 ≤ ${maxRange}, this node is included in our result.</p>
+                    `;
+                    break;
+                case 4:
+                    content = `
+                        <h3>Node 40 - Within Range</h3>
+                        <p>The node with value 40 is within our range [${minRange}, ${maxRange}].</p>
+                        <p>Since 40 ≥ ${minRange} and 40 ≤ ${maxRange}, this node is included in our result.</p>
+                    `;
+                    break;
+            }
+            
+            explanationDiv.innerHTML = content;
+        }
+
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges first
+            const drawEdges = (node) => {
+                if (!node) return;
+                
+                if (node.left) {
+                    ctx.beginPath();
+                    ctx.moveTo(node.x, node.y);
+                    ctx.lineTo(node.left.x, node.left.y);
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    drawEdges(node.left);
+                }
+                
+                if (node.right) {
+                    ctx.beginPath();
+                    ctx.moveTo(node.x, node.y);
+                    ctx.lineTo(node.right.x, node.right.y);
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    drawEdges(node.right);
+                }
+            };
+            
+            drawEdges(bst.root);
+            
+            // Draw nodes based on current step
+            const drawNodes = (node) => {
+                if (!node) return;
+                
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 25, 0, Math.PI * 2);
+                
+                // Default node style
+                let fillColor = '#FFFFFF';
+                let strokeColor = '#000000';
+                
+                // Step 1+ shows range highlights
+                if (currentStep >= 1 && node.value >= minRange && node.value <= maxRange) {
+                    fillColor = '#FD9F78';
+                }
+                
+                // Individual node focus based on step
+                if ((currentStep === 2 && node.value === 5) || 
+                    (currentStep === 3 && node.value === 10) || 
+                    (currentStep === 4 && node.value === 40)) {
+                    fillColor = '#FF4800';
+                    strokeColor = '#FF4800';
+                }
+                
+                ctx.fillStyle = fillColor;
+                ctx.fill();
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Node value
+                ctx.fillStyle = '#000000';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node.value, node.x, node.y);
+                
+                drawNodes(node.left);
+                drawNodes(node.right);
+            };
+            
+            drawNodes(bst.root);
+        }
+
+        function updateButtons() {
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === totalSteps - 1;
+        }
+
+        function render() {
+            drawTree();
+            updateExplanation();
+            updateButtons();
+        }
+
+        // Event Listeners
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                render();
+            }
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                render();
+            }
+        });
+        
+        document.getElementById('update-range').addEventListener('click', () => {
+            minRange = parseInt(document.getElementById('min-range').value);
+            maxRange = parseInt(document.getElementById('max-range').value);
+            
+            // Ensure min is less than max
+            if (minRange > maxRange) {
+                const temp = minRange;
+                minRange = maxRange;
+                maxRange = temp;
+                document.getElementById('min-range').value = minRange;
+                document.getElementById('max-range').value = maxRange;
+            }
+            
+            // Reset to step 1 to show the range highlight
+            currentStep = 1;
+            render();
+        });
+
+        // Initial render
+        render();
+    </script>
+</body>
+</html>
