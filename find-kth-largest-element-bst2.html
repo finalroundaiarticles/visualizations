@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reverse Inorder Traversal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .animation-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        
+        .node {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        
+        .node.active {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.2);
+        }
+        
+        .node.visited {
+            background-color: #000000;
+            color: #FFFFFF;
+        }
+        
+        .edge {
+            position: absolute;
+            height: 2px;
+            background-color: #000000;
+            transform-origin: 0 0;
+        }
+        
+        .counter {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #FF4800;
+        }
+        
+        .third-largest {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #FF4800;
+            display: none;
+        }
+        
+        .explanation {
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Reverse Inorder Traversal</h1>
+        
+        <div class="explanation" id="explanationText">
+            Reverse Inorder Traversal (Right → Root → Left) visits nodes in descending order in a Binary Search Tree. We'll find the 3rd largest element by counting nodes as we traverse.
+        </div>
+        
+        <div class="animation-container">
+            <div class="counter">Count: 0</div>
+            <div class="third-largest">3rd largest element: <span id="thirdLargest"></span></div>
+            <!-- Nodes and edges will be added here by JavaScript -->
+        </div>
+        
+        <div class="nav-buttons">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        // Define the BST structure
+        const nodes = [
+            { id: 0, value: 15, x: 400, y: 50, parent: null },
+            { id: 1, value: 10, x: 250, y: 120, parent: 0 },
+            { id: 2, value: 20, x: 550, y: 120, parent: 0 },
+            { id: 3, value: 5, x: 175, y: 200, parent: 1 },
+            { id: 4, value: 12, x: 325, y: 200, parent: 1 },
+            { id: 5, value: 17, x: 475, y: 200, parent: 2 },
+            { id: 6, value: 25, x: 625, y: 200, parent: 2 }
+        ];
+        
+        // Steps for the animation
+        const steps = [
+            { type: "init", description: "We start with a Binary Search Tree and will perform a Reverse Inorder Traversal to find the 3rd largest element." },
+            { type: "focus", nodeId: 0, description: "We begin at the root node (15). In reverse inorder, we first go to the right subtree." },
+            { type: "focus", nodeId: 2, description: "We move to the right child (20). Again, we first go to its right subtree." },
+            { type: "focus", nodeId: 6, description: "We reach node 25, which has no right child. This is our first node to visit." },
+            { type: "visit", nodeId: 6, count: 1, description: "Visit node 25. Count = 1" },
+            { type: "focus", nodeId: 2, description: "We go back to node 20. Since we've visited its right subtree, we now visit the node itself." },
+            { type: "visit", nodeId: 2, count: 2, description: "Visit node 20. Count = 2" },
+            { type: "focus", nodeId: 5, description: "Now we visit the left subtree of node 20, which is node 17." },
+            { type: "visit", nodeId: 5, count: 3, description: "Visit node 17. Count = 3. This is our 3rd largest element!" },
+            { type: "thirdLargest", value: 17, description: "We've found the 3rd largest element: 17. The reverse inorder traversal visits nodes in descending order: 25, 20, 17." },
+            { type: "focus", nodeId: 0, description: "For completeness, we'd continue the traversal. We go back to the root (15)." },
+            { type: "visit", nodeId: 0, count: 4, description: "Visit node 15. Count = 4" },
+            { type: "focus", nodeId: 1, description: "Now we go to the left subtree of the root, node 10." },
+            { type: "focus", nodeId: 4, description: "We first visit the right subtree of node 10, which is node 12." },
+            { type: "visit", nodeId: 4, count: 5, description: "Visit node 12. Count = 5" },
+            { type: "focus", nodeId: 1, description: "Go back to node 10." },
+            { type: "visit", nodeId: 1, count: 6, description: "Visit node 10. Count = 6" },
+            { type: "focus", nodeId: 3, description: "Finally, we go to the left subtree of node 10, which is node 5." },
+            { type: "visit", nodeId: 3, count: 7, description: "Visit node 5. Count = 7" },
+            { type: "complete", description: "Reverse inorder traversal complete! We visited all nodes in descending order: 25, 20, 17, 15, 12, 10, 5. The 3rd largest element is 17." }
+        ];
+        
+        // Initialize variables
+        let currentStep = 0;
+        const animationContainer = document.querySelector('.animation-container');
+        const explanationText = document.getElementById('explanationText');
+        const counter = document.querySelector('.counter');
+        const thirdLargest = document.querySelector('.third-largest');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        // Create nodes and edges
+        function createTree() {
+            // Create edges first (so they appear behind nodes)
+            for (const node of nodes) {
+                if (node.parent !== null) {
+                    const parentNode = nodes[node.parent];
+                    const edge = document.createElement('div');
+                    edge.className = 'edge';
+                    
+                    // Calculate edge position and rotation
+                    const dx = node.x - parentNode.x;
+                    const dy = node.y - parentNode.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    edge.style.width = `${length}px`;
+                    edge.style.left = `${parentNode.x + 25}px`;
+                    edge.style.top = `${parentNode.y + 25}px`;
+                    edge.style.transform = `rotate(${angle}deg)`;
+                    
+                    animationContainer.appendChild(edge);
+                }
+            }
+            
+            // Create nodes
+            for (const node of nodes) {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'node';
+                nodeElement.id = `node-${node.id}`;
+                nodeElement.textContent = node.value;
+                nodeElement.style.left = `${node.x}px`;
+                nodeElement.style.top = `${node.y}px`;
+                
+                animationContainer.appendChild(nodeElement);
+            }
+        }
+        
+        // Update the animation based on current step
+        function updateAnimation() {
+            // Reset all nodes
+            document.querySelectorAll('.node').forEach(node => {
+                node.classList.remove('active');
+            });
+            
+            // Apply all steps up to the current one
+            for (let i = 0; i <= currentStep; i++) {
+                const step = steps[i];
+                
+                if (step.type === "visit") {
+                    const nodeElement = document.getElementById(`node-${step.nodeId}`);
+                    if (nodeElement) {
+                        nodeElement.classList.add('visited');
+                    }
+                    counter.textContent = `Count: ${step.count}`;
+                }
+                else if (step.type === "focus") {
+                    const nodeElement = document.getElementById(`node-${step.nodeId}`);
+                    if (nodeElement) {
+                        nodeElement.classList.add('active');
+                    }
+                }
+                else if (step.type === "thirdLargest") {
+                    document.getElementById('thirdLargest').textContent = step.value;
+                    thirdLargest.style.display = 'block';
+                }
+            }
+            
+            // Update explanation
+            explanationText.textContent = steps[currentStep].description;
+            
+            // Update buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateAnimation();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateAnimation();
+            }
+        });
+        
+        // Initialize the animation
+        createTree();
+        updateAnimation();
+    </script>
+</body>
+</html>
