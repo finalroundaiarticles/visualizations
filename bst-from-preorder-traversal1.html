@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BST Construction Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-counter {
+            font-size: 18px;
+            margin: 0 20px;
+            color: #000000;
+            display: flex;
+            align-items: center;
+        }
+        .canvas-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .explanation {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            width: 100%;
+            color: #000000;
+            border-left: 5px solid #FF4800;
+        }
+        .explanation h3 {
+            margin-top: 0;
+            color: #FF4800;
+        }
+        .array-display {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        .array-item {
+            width: 40px;
+            height: 40px;
+            margin: 0 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #000000;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .current {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .processed {
+            background-color: #FD9F78;
+            color: #FFFFFF;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BST Construction from Preorder Traversal</h1>
+        
+        <div class="array-display" id="arrayDisplay"></div>
+        
+        <div class="canvas-container">
+            <canvas id="treeCanvas"></canvas>
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn">Previous</button>
+            <div class="step-counter">Step <span id="currentStep">1</span> of <span id="totalSteps">7</span></div>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <h3>Starting BST Construction</h3>
+            <p>We will construct a Binary Search Tree (BST) from the preorder traversal [8, 5, 1, 7, 10, 12]. The first element (8) will be the root of our tree.</p>
+        </div>
+    </div>
+
+    <script>
+        class TreeNode {
+            constructor(value) {
+                this.value = value;
+                this.left = null;
+                this.right = null;
+                this.x = 0;
+                this.y = 0;
+                this.highlighted = false;
+            }
+        }
+        
+        class BinarySearchTree {
+            constructor() {
+                this.root = null;
+            }
+            
+            insert(value) {
+                const newNode = new TreeNode(value);
+                
+                if (!this.root) {
+                    this.root = newNode;
+                    return;
+                }
+                
+                function insertNode(node, newNode) {
+                    if (newNode.value < node.value) {
+                        if (node.left === null) {
+                            node.left = newNode;
+                        } else {
+                            insertNode(node.left, newNode);
+                        }
+                    } else {
+                        if (node.right === null) {
+                            node.right = newNode;
+                        } else {
+                            insertNode(node.right, newNode);
+                        }
+                    }
+                }
+                
+                insertNode(this.root, newNode);
+            }
+        }
+
+        const preorderArray = [8, 5, 1, 7, 10, 12];
+        let currentStep = 0;
+        const totalSteps = preorderArray.length + 1; // +1 for initial step
+        
+        const bst = new BinarySearchTree();
+        const trees = [new BinarySearchTree()]; // Start with empty tree
+        
+        // Pre-build all the trees for each step
+        for (let i = 0; i < preorderArray.length; i++) {
+            bst.insert(preorderArray[i]);
+            // Create a deep copy of the current BST
+            const newTree = new BinarySearchTree();
+            copyTree(bst.root, newTree);
+            trees.push(newTree);
+        }
+        
+        function copyTree(node, newTree) {
+            if (node) {
+                newTree.insert(node.value);
+                copyTree(node.left, newTree);
+                copyTree(node.right, newTree);
+            }
+        }
+        
+        // Canvas setup
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas dimensions for high DPI displays
+        function setupCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            canvas.style.width = `${rect.width}px`;
+            canvas.style.height = `${rect.height}px`;
+        }
+        
+        window.addEventListener('resize', setupCanvas);
+        setupCanvas();
+        
+        // Drawing functions
+        function drawTree(tree) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (!tree.root) return;
+            
+            // Calculate positions
+            const levelHeight = 70;
+            const nodeRadius = 20;
+            
+            function calculatePositions(node, level, minX, maxX) {
+                if (!node) return;
+                
+                node.x = (minX + maxX) / 2;
+                node.y = level * levelHeight + 50;
+                
+                const nextLevel = level + 1;
+                const gap = Math.max(25, (maxX - minX) / 4);
+                
+                if (node.left) {
+                    calculatePositions(node.left, nextLevel, minX, node.x - gap);
+                }
+                
+                if (node.right) {
+                    calculatePositions(node.right, nextLevel, node.x + gap, maxX);
+                }
+            }
+            
+            calculatePositions(tree.root, 0, 0, canvas.width / window.devicePixelRatio);
+            
+            // Draw connections
+            function drawConnections(node) {
+                if (!node) return;
+                
+                if (node.left) {
+                    ctx.beginPath();
+                    ctx.moveTo(node.x, node.y);
+                    ctx.lineTo(node.left.x, node.left.y);
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    drawConnections(node.left);
+                }
+                
+                if (node.right) {
+                    ctx.beginPath();
+                    ctx.moveTo(node.x, node.y);
+                    ctx.lineTo(node.right.x, node.right.y);
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    drawConnections(node.right);
+                }
+            }
+            
+            drawConnections(tree.root);
+            
+            // Draw nodes
+            function drawNodes(node) {
+                if (!node) return;
+                
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, nodeRadius, 0, Math.PI * 2);
+                
+                // Highlight the newly added node
+                if (currentStep > 0 && node.value === preorderArray[currentStep - 1]) {
+                    ctx.fillStyle = '#FF4800';
+                } else {
+                    ctx.fillStyle = '#FD9F78';
+                }
+                
+                ctx.fill();
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node.value, node.x, node.y);
+                
+                drawNodes(node.left);
+                drawNodes(node.right);
+            }
+            
+            drawNodes(tree.root);
+        }
+        
+        // Update explanation
+        function updateExplanation() {
+            const explanation = document.getElementById('explanation');
+            
+            if (currentStep === 0) {
+                explanation.innerHTML = `
+                    <h3>Starting BST Construction</h3>
+                    <p>We will construct a Binary Search Tree (BST) from the preorder traversal [8, 5, 1, 7, 10, 12]. The first element (8) will be the root of our tree.</p>
+                `;
+            } else {
+                const value = preorderArray[currentStep - 1];
+                let position = '';
+                
+                if (currentStep === 1) {
+                    position = 'as the root';
+                } else {
+                    const prevValue = preorderArray[currentStep - 2];
+                    if (value < prevValue) {
+                        position = `to the left of a parent node`;
+                    } else {
+                        position = `to the right of a parent node`;
+                    }
+                }
+                
+                explanation.innerHTML = `
+                    <h3>Step ${currentStep}: Adding Node ${value}</h3>
+                    <p>We insert ${value} ${position} based on BST property: values less than the parent go to the left, and values greater than the parent go to the right.</p>
+                `;
+                
+                if (currentStep === totalSteps - 1) {
+                    explanation.innerHTML += `
+                        <p>The BST construction is now complete. We have successfully built a tree from the preorder traversal [8, 5, 1, 7, 10, 12].</p>
+                    `;
+                }
+            }
+        }
+        
+        // Update array display
+        function updateArrayDisplay() {
+            const arrayDisplay = document.getElementById('arrayDisplay');
+            arrayDisplay.innerHTML = '';
+            
+            preorderArray.forEach((value, index) => {
+                const div = document.createElement('div');
+                div.className = 'array-item';
+                
+                if (index === currentStep - 1) {
+                    div.classList.add('current');
+                } else if (index < currentStep - 1) {
+                    div.classList.add('processed');
+                }
+                
+                div.textContent = value;
+                arrayDisplay.appendChild(div);
+            });
+        }
+        
+        // Update UI
+        function updateUI() {
+            document.getElementById('currentStep').textContent = currentStep + 1;
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === totalSteps - 1;
+            
+            drawTree(trees[currentStep]);
+            updateExplanation();
+            updateArrayDisplay();
+        }
+        
+        // Event listeners
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateUI();
+            }
+        });
+        
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateUI();
+            }
+        });
+        
+        // Initial render
+        updateUI();
+    </script>
+</body>
+</html>
