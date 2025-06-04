@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Tree Duplicate Subtrees</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: white;
+            font-family: Arial, sans-serif;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .controls {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            background-color: #ff4800;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .btn:hover {
+            background-color: #e63f00;
+        }
+        
+        .btn:disabled {
+            background-color: #1c1d20;
+            cursor: not-allowed;
+        }
+        
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        canvas {
+            border: 2px solid #1c1d20;
+            border-radius: 8px;
+        }
+        
+        .step-info {
+            text-align: center;
+            color: #1c1d20;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box {
+            background-color: #f5f5f5;
+            border: 2px solid #1c1d20;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px auto;
+            max-width: 600px;
+            text-align: center;
+        }
+        
+        .info-box div {
+            color: #1c1d20;
+            font-size: 16px;
+            line-height: 1.4;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+        }
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #1c1d20;
+            font-size: 14px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #1c1d20;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <button class="btn" id="prevBtn" onclick="previousStep()">Previous</button>
+            <button class="btn" id="nextBtn" onclick="nextStep()">Next</button>
+        </div>
+        
+        <div class="step-info" id="stepInfo">Step 1: Initial Tree</div>
+        
+        <div class="canvas-container">
+            <canvas id="treeCanvas" width="800" height="500"></canvas>
+        </div>
+        
+        <div class="info-box">
+            <div id="infoContent">Starting analysis of the binary tree to find duplicate subtrees using serialization technique.</div>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #1c1d20;"></div>
+                <span>Normal Node</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ff4800;"></div>
+                <span>Duplicate Subtree Root</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ffcc99;"></div>
+                <span>Part of Duplicate Subtree</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class TreeNode {
+            constructor(val, left = null, right = null) {
+                this.val = val;
+                this.left = left;
+                this.right = right;
+            }
+        }
+
+        // Create example tree with duplicate subtrees
+        const root = new TreeNode(1);
+        root.left = new TreeNode(2);
+        root.right = new TreeNode(3);
+        root.left.left = new TreeNode(4);
+        root.right.left = new TreeNode(2);
+        root.right.right = new TreeNode(4);
+        root.right.left.left = new TreeNode(4);
+
+        let currentStep = 0;
+        const steps = [
+            {
+                title: "Step 1: Initial Tree",
+                description: "Original binary tree with some duplicate subtrees",
+                info: "Starting analysis of the binary tree to find duplicate subtrees using serialization technique.",
+                highlightedNodes: [],
+                duplicateRoots: []
+            },
+            {
+                title: "Step 2: Analyzing Subtrees",
+                description: "Starting serialization process to identify patterns",
+                info: "Performing post-order traversal to serialize each subtree. Each subtree is represented as 'left,right,value'.",
+                highlightedNodes: [],
+                duplicateRoots: []
+            },
+            {
+                title: "Step 3: Found Duplicate Pattern",
+                description: "Identified subtree with value 4 (leaf node) appears multiple times",
+                info: "Found that the subtree '4' (serialized as 'null,null,4') appears 3 times in the tree. This is our first duplicate!",
+                highlightedNodes: [4],
+                duplicateRoots: [4]
+            },
+            {
+                title: "Step 4: Found Another Duplicate",
+                description: "Identified subtree rooted at 2 with left child 4 appears twice",
+                info: "Found that the subtree rooted at 2 with left child 4 (serialized as 'null,null,4,null,2') appears twice in different locations.",
+                highlightedNodes: [2, 4],
+                duplicateRoots: [2, 4]
+            },
+            {
+                title: "Step 5: Final Result",
+                description: "All duplicate subtrees identified and highlighted",
+                info: "Analysis complete! Found 2 types of duplicate subtrees: single node '4' and subtree '2->4'. Orange nodes are duplicate roots.",
+                highlightedNodes: [2, 4],
+                duplicateRoots: [2, 4]
+            }
+        ];
+
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const step = steps[currentStep];
+            document.getElementById('stepInfo').textContent = step.title;
+            document.getElementById('infoContent').textContent = step.info;
+            
+            drawNode(root, canvas.width / 2, 80, 150, step.highlightedNodes, step.duplicateRoots);
+        }
+
+        function drawNode(node, x, y, horizontalSpacing, highlightedNodes, duplicateRoots) {
+            if (!node) return;
+
+            // Draw connections first
+            if (node.left) {
+                ctx.strokeStyle = '#1c1d20';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x - horizontalSpacing, y + 80);
+                ctx.stroke();
+                drawNode(node.left, x - horizontalSpacing, y + 80, horizontalSpacing * 0.6, highlightedNodes, duplicateRoots);
+            }
+
+            if (node.right) {
+                ctx.strokeStyle = '#1c1d20';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + horizontalSpacing, y + 80);
+                ctx.stroke();
+                drawNode(node.right, x + horizontalSpacing, y + 80, horizontalSpacing * 0.6, highlightedNodes, duplicateRoots);
+            }
+
+            // Draw node
+            ctx.beginPath();
+            ctx.arc(x, y, 25, 0, 2 * Math.PI);
+            
+            if (duplicateRoots.includes(node.val)) {
+                ctx.fillStyle = '#ff4800';
+            } else if (highlightedNodes.includes(node.val)) {
+                ctx.fillStyle = '#ffcc99';
+            } else {
+                ctx.fillStyle = '#1c1d20';
+            }
+            
+            ctx.fill();
+            ctx.strokeStyle = '#1c1d20';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Draw value
+            ctx.fillStyle = duplicateRoots.includes(node.val) || highlightedNodes.includes(node.val) ? '#1c1d20' : 'white';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.val.toString(), x, y);
+        }
+
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                drawTree();
+                updateButtons();
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                drawTree();
+                updateButtons();
+            }
+        }
+
+        function updateButtons() {
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === steps.length - 1;
+        }
+
+        // Initialize
+        drawTree();
+        updateButtons();
+    </script>
+</body>
+</html>
