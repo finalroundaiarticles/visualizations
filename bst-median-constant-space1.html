@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BST Inorder Traversal and Median Finding</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        #canvas-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        #explanation {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .result-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .array-display {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .array-item {
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            border: 1px solid #000000;
+            margin: 5px;
+            border-radius: 5px;
+            background-color: #FFFFFF;
+            transition: all 0.3s;
+        }
+        
+        .array-item.highlight {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.1);
+        }
+        
+        .median-calculation {
+            margin-top: 20px;
+            font-weight: bold;
+            color: #FF4800;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BST Inorder Traversal and Median Finding</h1>
+        
+        <div id="explanation">
+            <p id="current-explanation">Welcome to BST Inorder Traversal and Median Finding visualization. Click "Next" to begin the animation.</p>
+        </div>
+        
+        <div id="canvas-container">
+            <canvas id="treeCanvas" width="800" height="400"></canvas>
+        </div>
+        
+        <div class="array-display" id="array-display"></div>
+        
+        <div class="median-calculation" id="median-calculation"></div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        const arrayDisplay = document.getElementById('array-display');
+        const medianCalculation = document.getElementById('median-calculation');
+        const explanation = document.getElementById('current-explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        // Animation states
+        let currentStep = 0;
+        let maxSteps = 18;
+        
+        // Two BST examples
+        const bst1 = {
+            value: 4,
+            left: {
+                value: 2,
+                left: { value: 1, left: null, right: null },
+                right: { value: 3, left: null, right: null }
+            },
+            right: {
+                value: 6,
+                left: { value: 5, left: null, right: null },
+                right: { value: 7, left: null, right: null }
+            }
+        };
+        
+        const bst2 = {
+            value: 4,
+            left: {
+                value: 2,
+                left: { value: 1, left: null, right: null },
+                right: { value: 3, left: null, right: null }
+            },
+            right: {
+                value: 6,
+                left: { value: 5, left: null, right: null },
+                right: null
+            }
+        };
+        
+        let currentBST = bst1;
+        let inorderArray = [];
+        let currentHighlightedNode = null;
+        let traversalOrder = [];
+        let traversalIndex = -1;
+        
+        // Function to draw a node
+        function drawNode(node, x, y, radius, highlight = false) {
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            
+            if (highlight) {
+                ctx.fillStyle = '#FF4800';
+            } else {
+                ctx.fillStyle = '#FFFFFF';
+            }
+            
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = highlight ? '#FFFFFF' : '#000000';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.value, x, y);
+        }
+        
+        // Function to draw an edge between nodes
+        function drawEdge(fromX, fromY, toX, toY) {
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        // Function to draw the BST
+        function drawBST(node, x, y, horizontalSpacing, level = 0) {
+            if (!node) return;
+            
+            const radius = 20;
+            const verticalSpacing = 60;
+            
+            // Draw the current node
+            const isHighlighted = currentHighlightedNode === node.value;
+            drawNode(node, x, y, radius, isHighlighted);
+            
+            // Draw left child and edge
+            if (node.left) {
+                const leftX = x - horizontalSpacing / (level + 1);
+                const leftY = y + verticalSpacing;
+                drawEdge(x, y + radius, leftX, leftY - radius);
+                drawBST(node.left, leftX, leftY, horizontalSpacing, level + 1);
+            }
+            
+            // Draw right child and edge
+            if (node.right) {
+                const rightX = x + horizontalSpacing / (level + 1);
+                const rightY = y + verticalSpacing;
+                drawEdge(x, y + radius, rightX, rightY - radius);
+                drawBST(node.right, rightX, rightY, horizontalSpacing, level + 1);
+            }
+        }
+        
+        // Function to clear the canvas
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        // Function to perform inorder traversal and build traversal order
+        function buildInorderTraversal(node, order = []) {
+            if (!node) return order;
+            
+            buildInorderTraversal(node.left, order);
+            order.push(node.value);
+            buildInorderTraversal(node.right, order);
+            
+            return order;
+        }
+        
+        // Function to update the array display
+        function updateArrayDisplay(array, highlightIndex = -1) {
+            arrayDisplay.innerHTML = '';
+            
+            array.forEach((value, index) => {
+                const item = document.createElement('div');
+                item.className = 'array-item';
+                if (index === highlightIndex) {
+                    item.classList.add('highlight');
+                }
+                item.textContent = value;
+                arrayDisplay.appendChild(item);
+            });
+        }
+        
+        // Function to find median
+        function findMedian(array) {
+            const n = array.length;
+            if (n % 2 === 1) {
+                // Odd length array
+                return array[Math.floor(n / 2)];
+            } else {
+                // Even length array
+                const middle1 = array[n / 2 - 1];
+                const middle2 = array[n / 2];
+                return (middle1 + middle2) / 2;
+            }
+        }
+        
+        // Function to update the animation based on current step
+        function updateAnimation() {
+            clearCanvas();
+            
+            if (currentStep < 10) {
+                // First BST example (odd count)
+                currentBST = bst1;
+                
+                if (currentStep === 0) {
+                    explanation.textContent = "Let's start with a Binary Search Tree (BST) with 7 nodes: 4, 2, 6, 1, 3, 5, 7.";
+                    drawBST(currentBST, canvas.width / 2, 50, 200);
+                    inorderArray = [];
+                    updateArrayDisplay(inorderArray);
+                    medianCalculation.textContent = "";
+                }
+                else if (currentStep === 1) {
+                    explanation.textContent = "In inorder traversal, we visit the left subtree first, then the node itself, then the right subtree.";
+                    drawBST(currentBST, canvas.width / 2, 50, 200);
+                    traversalOrder = buildInorderTraversal(currentBST);
+                    traversalIndex = -1;
+                    inorderArray = [];
+                    updateArrayDisplay(inorderArray);
+                }
+                else if (currentStep >= 2 && currentStep <= 8) {
+                    traversalIndex = currentStep - 2;
+                    currentHighlightedNode = traversalOrder[traversalIndex];
+                    explanation.textContent = `Visiting node ${currentHighlightedNode} and adding it to our inorder traversal array.`;
+                    
+                    drawBST(currentBST, canvas.width / 2, 50, 200);
+                    inorderArray = traversalOrder.slice(0, traversalIndex + 1);
+                    updateArrayDisplay(inorderArray, traversalIndex);
+                }
+                else if (currentStep === 9) {
+                    explanation.textContent = "Inorder traversal complete! For a BST, this gives us a sorted array: [1, 2, 3, 4, 5, 6, 7]. Now let's find the median.";
+                    currentHighlightedNode = null;
+                    drawBST(currentBST, canvas.width / 2, 50, 200);
+                    inorderArray = traversalOrder;
+                    updateArrayDisplay(inorderArray);
+                    
+                    setTimeout(() => {
+                        const median = findMedian(inorderArray);
+                        const medianIndex = Math.floor(inorderArray.length / 2);
+                        updateArrayDisplay(inorderArray, medianIndex);
+                        medianCalculation.textContent = `Median: Since we have ${inorderArray.length} elements (odd count), the median is the middle element: ${median}`;
+                    }, 1000);
+                }
+            } else {
+                // Second BST example (even count)
+                currentBST = bst2;
+                
+                if (currentStep === 10) {
+                    explanation.textContent = "Now let's look at another BST with 6 nodes: 4, 2, 6, 1, 3, 5.";
+                    drawBST(currentBST, canvas.width / 2, 50, 200);
+                    inorderArray = [];
+                    updateArrayDisplay(inorderArray);
+                    medianCalculation.textContent = "";
+                    currentHighlightedNode = null;
+                }
+                else if (currentStep === 11) {
+                    explanation.textContent = "Again, we'll perform an inorder traversal to get a sorted array.";
+                    drawBST(currentBST, canvas.width / 2, 50, 200);
+                    traversalOrder = buildInorderTraversal(currentBST);
+                    traversalIndex = -1;
+                    inorderArray = [];
+                    updateArrayDisplay(inorderArray);
+                }
+                else if (currentStep >= 12 && currentStep <= 17) {
+                    traversalIndex = currentStep - 12;
+                    currentHighlightedNode = traversalOrder[traversalIndex];
+                    explanation.textContent = `Visiting node ${currentHighlightedNode} and adding it to our inorder traversal array.`;
+                    
+                    drawBST(currentBST, canvas.width / 2, 50, 200);
+                    inorderArray = traversalOrder.slice(0, traversalIndex + 1);
+                    updateArrayDisplay(inorderArray, traversalIndex);
+                }
+                else if (currentStep === 18) {
+                    explanation.textContent = "Inorder traversal complete! For this BST, we get the sorted array: [1, 2, 3, 4, 5, 6]. Now let's find the median.";
+                    currentHighlightedNode = null;
+                    drawBST(currentBST, canvas.width / 2, 50, 200);
+                    inorderArray = traversalOrder;
+                    updateArrayDisplay(inorderArray);
+                    
+                    setTimeout(() => {
+                        const median = findMedian(inorderArray);
+                        const n = inorderArray.length;
+                        const middle1 = n / 2 - 1;
+                        const middle2 = n / 2;
+                        
+                        // Highlight both middle elements for even count
+                        const tempArray = [...inorderArray];
+                        updateArrayDisplay(tempArray);
+                        
+                        setTimeout(() => {
+                            const arrayItems = document.querySelectorAll('.array-item');
+                            arrayItems[middle1].classList.add('highlight');
+                            arrayItems[middle2].classList.add('highlight');
+                            
+                            medianCalculation.innerHTML = `Median: Since we have ${inorderArray.length} elements (even count), 
+                                the median is the average of the two middle elements:<br>
+                                (${inorderArray[middle1]} + ${inorderArray[middle2]}) / 2 = ${median}`;
+                        }, 500);
+                    }, 1000);
+                }
+            }
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === maxSteps;
+        }
+        
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateAnimation();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < maxSteps) {
+                currentStep++;
+                updateAnimation();
+            }
+        });
+        
+        // Initialize the animation
+        updateAnimation();
+    </script>
+</body>
+</html>
