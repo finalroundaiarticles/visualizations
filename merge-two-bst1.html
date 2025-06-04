@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Merging Binary Search Trees</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 20px auto;
+        }
+        .animation-container {
+            width: 100%;
+            height: 450px;
+            position: relative;
+            margin: 20px 0;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .explanation {
+            padding: 20px;
+            background-color: #FD9F78;
+            border-radius: 8px;
+            color: #000000;
+            margin-bottom: 20px;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .node {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            transition: all 1s ease;
+        }
+        .edge {
+            position: absolute;
+            background-color: #000000;
+            height: 2px;
+            transform-origin: 0 0;
+            transition: all 1s ease;
+        }
+        .step-counter {
+            text-align: center;
+            color: #000000;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Merging Binary Search Trees</h1>
+        
+        <div class="explanation" id="explanation">
+            Welcome to the Binary Search Tree Merger animation! We'll visualize how two separate BSTs can be merged into one.
+        </div>
+        
+        <div class="step-counter" id="step-counter">Step 1 of 4</div>
+        
+        <div class="animation-container" id="animation-container">
+            <!-- The trees will be drawn here by JavaScript -->
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prevBtn" disabled>Previous</button>
+            <button class="nav-btn" id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Define the steps of our animation
+        const steps = [
+            {
+                title: "Step 1: Initial Binary Search Trees",
+                explanation: "Here we have two separate Binary Search Trees (BSTs). BST 1 on the left contains nodes with values [3, 1, 5], and BST 2 on the right has nodes with values [4, 2, 6]. A Binary Search Tree is organized so that for each node, all values in its left subtree are less than the node's value, and all values in its right subtree are greater than the node's value."
+            },
+            {
+                title: "Step 2: Collect All Nodes",
+                explanation: "To merge the trees, we first need to collect all nodes from both trees. We can do this by traversing each tree in-order (left subtree, root, right subtree), which gives us the values in sorted order: [1, 3, 5] from BST 1 and [2, 4, 6] from BST 2."
+            },
+            {
+                title: "Step 3: Merge the Sorted Lists",
+                explanation: "Now we merge the two sorted lists to create a single sorted list containing all values from both trees: [1, 2, 3, 4, 5, 6]. This sorted order is crucial for creating a balanced merged BST."
+            },
+            {
+                title: "Step 4: Construct the Merged BST",
+                explanation: "Finally, we construct a new balanced BST from the sorted list. The middle element (3) becomes our root. The elements before it form the left subtree, and the elements after it form the right subtree. We apply this process recursively to create a balanced tree containing all nodes from both original trees."
+            }
+        ];
+
+        // Current step index
+        let currentStep = 0;
+        
+        // DOM elements
+        const animationContainer = document.getElementById('animation-container');
+        const explanationEl = document.getElementById('explanation');
+        const stepCounterEl = document.getElementById('step-counter');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        // Add event listeners to the buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateAnimation();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateAnimation();
+            }
+        });
+        
+        // Function to create a node element
+        function createNode(value, x, y) {
+            const node = document.createElement('div');
+            node.className = 'node';
+            node.textContent = value;
+            node.style.left = `${x}px`;
+            node.style.top = `${y}px`;
+            return node;
+        }
+        
+        // Function to create an edge between two points
+        function createEdge(x1, y1, x2, y2) {
+            const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+            
+            const edge = document.createElement('div');
+            edge.className = 'edge';
+            edge.style.width = `${length}px`;
+            edge.style.left = `${x1}px`;
+            edge.style.top = `${y1}px`;
+            edge.style.transform = `rotate(${angle}deg)`;
+            
+            return edge;
+        }
+        
+        // Function to update the animation based on the current step
+        function updateAnimation() {
+            // Update explanation and step counter
+            explanationEl.textContent = steps[currentStep].explanation;
+            stepCounterEl.textContent = `${steps[currentStep].title} (${currentStep + 1} of ${steps.length})`;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+            
+            // Clear the animation container
+            animationContainer.innerHTML = '';
+            
+            // Draw the appropriate visualization based on the current step
+            switch(currentStep) {
+                case 0:
+                    drawInitialBSTs();
+                    break;
+                case 1:
+                    drawCollectNodes();
+                    break;
+                case 2:
+                    drawMergeSortedLists();
+                    break;
+                case 3:
+                    drawFinalMergedBST();
+                    break;
+            }
+        }
+        
+        // Step 1: Draw the initial BSTs
+        function drawInitialBSTs() {
+            // BST 1
+            const root1X = 200, root1Y = 80;
+            const leftChild1X = 120, leftChild1Y = 160;
+            const rightChild1X = 280, rightChild1Y = 160;
+            
+            // Draw BST 1
+            animationContainer.appendChild(createNode(3, root1X, root1Y));
+            animationContainer.appendChild(createNode(1, leftChild1X, leftChild1Y));
+            animationContainer.appendChild(createNode(5, rightChild1X, rightChild1Y));
+            
+            animationContainer.appendChild(createEdge(root1X + 20, root1Y + 20, leftChild1X + 20, leftChild1Y));
+            animationContainer.appendChild(createEdge(root1X + 20, root1Y + 20, rightChild1X + 20, rightChild1Y));
+            
+            // Add label for BST 1
+            const label1 = document.createElement('div');
+            label1.style.position = 'absolute';
+            label1.style.top = '240px';
+            label1.style.left = '180px';
+            label1.style.color = '#000000';
+            label1.style.fontWeight = 'bold';
+            label1.textContent = 'BST 1';
+            animationContainer.appendChild(label1);
+            
+            // BST 2
+            const root2X = 600, root2Y = 80;
+            const leftChild2X = 520, leftChild2Y = 160;
+            const rightChild2X = 680, rightChild2Y = 160;
+            
+            // Draw BST 2
+            animationContainer.appendChild(createNode(4, root2X, root2Y));
+            animationContainer.appendChild(createNode(2, leftChild2X, leftChild2Y));
+            animationContainer.appendChild(createNode(6, rightChild2X, rightChild2Y));
+            
+            animationContainer.appendChild(createEdge(root2X + 20, root2Y + 20, leftChild2X + 20, leftChild2Y));
+            animationContainer.appendChild(createEdge(root2X + 20, root2Y + 20, rightChild2X + 20, rightChild2Y));
+            
+            // Add label for BST 2
+            const label2 = document.createElement('div');
+            label2.style.position = 'absolute';
+            label2.style.top = '240px';
+            label2.style.left = '580px';
+            label2.style.color = '#000000';
+            label2.style.fontWeight = 'bold';
+            label2.textContent = 'BST 2';
+            animationContainer.appendChild(label2);
+        }
+        
+        // Step 2: Collect all nodes in sorted order
+        function drawCollectNodes() {
+            // First draw the initial BSTs (faded)
+            // BST 1
+            const root1X = 200, root1Y = 80;
+            const leftChild1X = 120, leftChild1Y = 160;
+            const rightChild1X = 280, rightChild1Y = 160;
+            
+            // Draw BST 1 (faded)
+            const node1 = createNode(3, root1X, root1Y);
+            node1.style.opacity = "0.5";
+            const node2 = createNode(1, leftChild1X, leftChild1Y);
+            node2.style.opacity = "0.5";
+            const node3 = createNode(5, rightChild1X, rightChild1Y);
+            node3.style.opacity = "0.5";
+            
+            animationContainer.appendChild(node1);
+            animationContainer.appendChild(node2);
+            animationContainer.appendChild(node3);
+            
+            const edge1 = createEdge(root1X + 20, root1Y + 20, leftChild1X + 20, leftChild1Y);
+            edge1.style.opacity = "0.5";
+            const edge2 = createEdge(root1X + 20, root1Y + 20, rightChild1X + 20, rightChild1Y);
+            edge2.style.opacity = "0.5";
+            
+            animationContainer.appendChild(edge1);
+            animationContainer.appendChild(edge2);
+            
+            // BST 2 (faded)
+            const root2X = 600, root2Y = 80;
+            const leftChild2X = 520, leftChild2Y = 160;
+            const rightChild2X = 680, rightChild2Y = 160;
+            
+            const node4 = createNode(4, root2X, root2Y);
+            node4.style.opacity = "0.5";
+            const node5 = createNode(2, leftChild2X, leftChild2Y);
+            node5.style.opacity = "0.5";
+            const node6 = createNode(6, rightChild2X, rightChild2Y);
+            node6.style.opacity = "0.5";
+            
+            animationContainer.appendChild(node4);
+            animationContainer.appendChild(node5);
+            animationContainer.appendChild(node6);
+            
+            const edge3 = createEdge(root2X + 20, root2Y + 20, leftChild2X + 20, leftChild2Y);
+            edge3.style.opacity = "0.5";
+            const edge4 = createEdge(root2X + 20, root2Y + 20, rightChild2X + 20, rightChild2Y);
+            edge4.style.opacity = "0.5";
+            
+            animationContainer.appendChild(edge3);
+            animationContainer.appendChild(edge4);
+            
+            // Draw the sorted arrays
+            const array1Y = 300;
+            const array2Y = 360;
+            
+            // BST 1 sorted array
+            const array1 = document.createElement('div');
+            array1.style.position = 'absolute';
+            array1.style.top = `${array1Y}px`;
+            array1.style.left = '100px';
+            array1.style.color = '#000000';
+            array1.style.fontWeight = 'bold';
+            array1.textContent = 'BST 1 In-order: ';
+            animationContainer.appendChild(array1);
+            
+            // Array elements
+            animationContainer.appendChild(createNode(1, 250, array1Y - 20));
+            animationContainer.appendChild(createNode(3, 300, array1Y - 20));
+            animationContainer.appendChild(createNode(5, 350, array1Y - 20));
+            
+            // BST 2 sorted array
+            const array2 = document.createElement('div');
+            array2.style.position = 'absolute';
+            array2.style.top = `${array2Y}px`;
+            array2.style.left = '100px';
+            array2.style.color = '#000000';
+            array2.style.fontWeight = 'bold';
+            array2.textContent = 'BST 2 In-order: ';
+            animationContainer.appendChild(array2);
+            
+            // Array elements
+            animationContainer.appendChild(createNode(2, 250, array2Y - 20));
+            animationContainer.appendChild(createNode(4, 300, array2Y - 20));
+            animationContainer.appendChild(createNode(6, 350, array2Y - 20));
+        }
+        
+        // Step 3: Merge the sorted lists
+        function drawMergeSortedLists() {
+            // Draw a merged sorted array
+            const arrayY = 200;
+            
+            // Title
+            const arrayTitle = document.createElement('div');
+            arrayTitle.style.position = 'absolute';
+            arrayTitle.style.top = `${arrayY - 60}px`;
+            arrayTitle.style.left = '300px';
+            arrayTitle.style.color = '#000000';
+            arrayTitle.style.fontWeight = 'bold';
+            arrayTitle.textContent = 'Merged Sorted List:';
+            animationContainer.appendChild(arrayTitle);
+            
+            // Array elements
+            animationContainer.appendChild(createNode(1, 200, arrayY));
+            animationContainer.appendChild(createNode(2, 260, arrayY));
+            animationContainer.appendChild(createNode(3, 320, arrayY));
+            animationContainer.appendChild(createNode(4, 380, arrayY));
+            animationContainer.appendChild(createNode(5, 440, arrayY));
+            animationContainer.appendChild(createNode(6, 500, arrayY));
+            
+            // Add arrows to show merging
+            // From BST 1
+            const arrow1 = document.createElement('div');
+            arrow1.style.position = 'absolute';
+            arrow1.style.top = '100px';
+            arrow1.style.left = '160px';
+            arrow1.style.color = '#FF4800';
+            arrow1.style.fontSize = '40px';
+            arrow1.innerHTML = '&#8595;';
+            animationContainer.appendChild(arrow1);
+            
+            // From BST 2
+            const arrow2 = document.createElement('div');
+            arrow2.style.position = 'absolute';
+            arrow2.style.top = '100px';
+            arrow2.style.left = '560px';
+            arrow2.style.color = '#FF4800';
+            arrow2.style.fontSize = '40px';
+            arrow2.innerHTML = '&#8595;';
+            animationContainer.appendChild(arrow2);
+            
+            // Show source BSTs faded
+            // BST 1 (just a label)
+            const bst1Label = document.createElement('div');
+            bst1Label.style.position = 'absolute';
+            bst1Label.style.top = '60px';
+            bst1Label.style.left = '150px';
+            bst1Label.style.color = '#000000';
+            bst1Label.style.opacity = '0.7';
+            bst1Label.textContent = 'BST 1 [1, 3, 5]';
+            animationContainer.appendChild(bst1Label);
+            
+            // BST 2 (just a label)
+            const bst2Label = document.createElement('div');
+            bst2Label.style.position = 'absolute';
+            bst2Label.style.top = '60px';
+            bst2Label.style.left = '550px';
+            bst2Label.style.color = '#000000';
+            bst2Label.style.opacity = '0.7';
+            bst2Label.textContent = 'BST 2 [2, 4, 6]';
+            animationContainer.appendChild(bst2Label);
+            
+            // Add explanation arrow showing result
+            const resultArrow = document.createElement('div');
+            resultArrow.style.position = 'absolute';
+            resultArrow.style.top = '250px';
+            resultArrow.style.left = '350px';
+            resultArrow.style.color = '#FF4800';
+            resultArrow.style.fontSize = '40px';
+            resultArrow.innerHTML = '&#8595;';
+            animationContainer.appendChild(resultArrow);
+            
+            // Show the result will become a balanced BST
+            const resultLabel = document.createElement('div');
+            resultLabel.style.position = 'absolute';
+            resultLabel.style.top = '300px';
+            resultLabel.style.left = '260px';
+            resultLabel.style.color = '#000000';
+            resultLabel.style.fontWeight = 'bold';
+            resultLabel.textContent = 'Will build balanced BST from merged list';
+            animationContainer.appendChild(resultLabel);
+        }
+        
+        // Step 4: Draw the final merged BST
+        function drawFinalMergedBST() {
+            // Root node (middle of the sorted array)
+            const rootX = 400, rootY = 80;
+            animationContainer.appendChild(createNode(3, rootX, rootY));
+            
+            // Level 1 nodes
+            const leftNode1X = 280, leftNode1Y = 160;
+            const rightNode1X = 520, rightNode1Y = 160;
+            
+            animationContainer.appendChild(createNode(1, leftNode1X, leftNode1Y));
+            animationContainer.appendChild(createNode(5, rightNode1X, rightNode1Y));
+            
+            // Level 2 nodes
+            const rightNodeL1X = 340, rightNodeL1Y = 240;
+            const leftNodeR1X = 460, leftNodeR1Y = 240;
+            
+            animationContainer.appendChild(createNode(2, rightNodeL1X, rightNodeL1Y));
+            animationContainer.appendChild(createNode(4, leftNodeR1X, leftNodeR1Y));
+            
+            const rightNodeR1X = 580, rightNodeR1Y = 240;
+            animationContainer.appendChild(createNode(6, rightNodeR1X, rightNodeR1Y));
+            
+            // Connect edges
+            // From root to level 1
+            animationContainer.appendChild(createEdge(rootX + 20, rootY + 20, leftNode1X + 20, leftNode1Y));
+            animationContainer.appendChild(createEdge(rootX + 20, rootY + 20, rightNode1X + 20, rightNode1Y));
+            
+            // From level 1 to level 2
+            animationContainer.appendChild(createEdge(leftNode1X + 20, leftNode1Y + 20, rightNodeL1X + 20, rightNodeL1Y));
+            animationContainer.appendChild(createEdge(rightNode1X + 20, rightNode1Y + 20, leftNodeR1X + 20, leftNodeR1Y));
+            animationContainer.appendChild(createEdge(rightNode1X + 20, rightNode1Y + 20, rightNodeR1X + 20, rightNodeR1Y));
+            
+            // Add title
+            const title = document.createElement('div');
+            title.style.position = 'absolute';
+            title.style.top = '320px';
+            title.style.left = '320px';
+            title.style.color = '#000000';
+            title.style.fontWeight = 'bold';
+            title.style.fontSize = '18px';
+            title.textContent = 'Final Merged BST';
+            animationContainer.appendChild(title);
+        }
+        
+        // Initialize the animation
+        updateAnimation();
+    </script>
+</body>
+</html>
