@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sweep Line Algorithm Illustration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .timeline-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0 40px;
+            border: 1px solid #ccc;
+            padding: 20px;
+        }
+        .timeline {
+            position: relative;
+            height: 60px;
+            background-color: #f0f0f0;
+            margin-top: 50px;
+            border-radius: 5px;
+        }
+        .time-marker {
+            position: absolute;
+            bottom: -25px;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+        .appointment {
+            position: absolute;
+            height: 40px;
+            background-color: #FD9F78;
+            border-radius: 5px;
+            top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000000;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .active {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .sweep-line {
+            position: absolute;
+            width: 3px;
+            background-color: #000000;
+            height: 60px;
+            top: 0;
+            transition: left 1s;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .info-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border-left: 4px solid #FF4800;
+        }
+        .active-appointments {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .explanation {
+            margin-top: 30px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sweep Line Algorithm Illustration</h1>
+        
+        <div class="explanation">
+            <p>The Sweep Line Algorithm is a technique used to solve problems by simulating a line that sweeps across the plane. In this example, we'll use it to find active appointments at each time point.</p>
+            <p>We have the following appointments: <strong>(9, 10.5), (10, 11), (14, 15), (15.5, 16.5)</strong>, where each pair represents (start time, end time).</p>
+        </div>
+        
+        <div class="timeline-container">
+            <div class="timeline">
+                <div id="sweepLine" class="sweep-line"></div>
+                <!-- Appointments will be added by JavaScript -->
+                
+                <!-- Time markers -->
+                <div class="time-marker" style="left: 0%">9</div>
+                <div class="time-marker" style="left: 12.5%">10</div>
+                <div class="time-marker" style="left: 25%">11</div>
+                <div class="time-marker" style="left: 37.5%">12</div>
+                <div class="time-marker" style="left: 50%">13</div>
+                <div class="time-marker" style="left: 62.5%">14</div>
+                <div class="time-marker" style="left: 75%">15</div>
+                <div class="time-marker" style="left: 87.5%">16</div>
+                <div class="time-marker" style="left: 100%">17</div>
+            </div>
+            
+            <div class="info-panel">
+                <h3>Current Sweep Line Position: <span id="currentTime">9:00</span></h3>
+                <div id="currentEvent">Starting the sweep...</div>
+                <div>Active Appointments: <span id="activeAppointments">None</span></div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Appointment data: [start time, end time]
+        const appointments = [
+            [9, 10.5, "Appt 1"],
+            [10, 11, "Appt 2"],
+            [14, 15, "Appt 3"],
+            [15.5, 16.5, "Appt 4"]
+        ];
+        
+        // Events for the sweep line (start and end points of all appointments)
+        const events = [];
+        appointments.forEach((appt, index) => {
+            events.push({ time: appt[0], type: 'start', apptIndex: index });
+            events.push({ time: appt[1], type: 'end', apptIndex: index });
+        });
+        
+        // Sort events by time
+        events.sort((a, b) => a.time - b.time);
+        
+        // Add a bit of context to events
+        const stepsWithContext = [];
+        let activeAppts = new Set();
+        
+        events.forEach((event, idx) => {
+            const appt = appointments[event.apptIndex];
+            let message = '';
+            
+            if (event.type === 'start') {
+                activeAppts.add(event.apptIndex);
+                message = `${appt[2]} starts (${appt[0]} to ${appt[1]})`;
+            } else {
+                activeAppts.delete(event.apptIndex);
+                message = `${appt[2]} ends (${appt[0]} to ${appt[1]})`;
+            }
+            
+            const activeApptList = Array.from(activeAppts).map(i => appointments[i][2]);
+            
+            stepsWithContext.push({
+                time: event.time,
+                message: message,
+                activeAppts: new Set(activeAppts),
+                activeApptList: activeApptList.length > 0 ? activeApptList.join(", ") : "None"
+            });
+        });
+        
+        // Add initial state
+        stepsWithContext.unshift({
+            time: 9,
+            message: "Starting the sweep...",
+            activeAppts: new Set(),
+            activeApptList: "None"
+        });
+
+        // Initialize variables
+        let currentStep = 0;
+        const timelineContainer = document.querySelector('.timeline');
+        const sweepLine = document.getElementById('sweepLine');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const currentTimeDisplay = document.getElementById('currentTime');
+        const currentEventDisplay = document.getElementById('currentEvent');
+        const activeAppointmentsDisplay = document.getElementById('activeAppointments');
+        
+        // Create appointment elements
+        appointments.forEach((appt, index) => {
+            const startPos = calculatePosition(appt[0]);
+            const endPos = calculatePosition(appt[1]);
+            const width = endPos - startPos;
+            
+            const apptElement = document.createElement('div');
+            apptElement.className = 'appointment';
+            apptElement.id = `appt-${index}`;
+            apptElement.textContent = appt[2];
+            apptElement.style.left = startPos + '%';
+            apptElement.style.width = width + '%';
+            
+            timelineContainer.appendChild(apptElement);
+        });
+        
+        // Initialize first step
+        updateDisplay();
+        
+        // Event listeners for buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateDisplay();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < stepsWithContext.length - 1) {
+                currentStep++;
+                updateDisplay();
+            }
+        });
+        
+        // Helper function to calculate position percentage
+        function calculatePosition(time) {
+            // Map time from range [9, 17] to [0, 100]
+            return ((time - 9) / 8) * 100;
+        }
+        
+        // Update the display based on the current step
+        function updateDisplay() {
+            const step = stepsWithContext[currentStep];
+            
+            // Update sweep line position
+            sweepLine.style.left = calculatePosition(step.time) + '%';
+            
+            // Update text displays
+            currentTimeDisplay.textContent = formatTime(step.time);
+            currentEventDisplay.textContent = step.message;
+            activeAppointmentsDisplay.textContent = step.activeApptList;
+            
+            // Update appointment highlighting
+            appointments.forEach((_, index) => {
+                const apptElement = document.getElementById(`appt-${index}`);
+                if (step.activeAppts.has(index)) {
+                    apptElement.classList.add('active');
+                } else {
+                    apptElement.classList.remove('active');
+                }
+            });
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === stepsWithContext.length - 1;
+        }
+        
+        // Format time as HH:MM
+        function formatTime(time) {
+            const hours = Math.floor(time);
+            const minutes = Math.round((time - hours) * 60);
+            return `${hours}:${minutes.toString().padStart(2, '0')}`;
+        }
+    </script>
+</body>
+</html>
