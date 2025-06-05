@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Max Heap Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .visualization {
+            margin: 30px 0;
+            position: relative;
+            height: 400px;
+        }
+        
+        .tree-node {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FF4800;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #FFFFFF;
+            font-weight: bold;
+            font-size: 18px;
+            transition: all 0.5s ease-in-out;
+        }
+        
+        .node-connector {
+            position: absolute;
+            background-color: #FD9F78;
+            height: 2px;
+            transform-origin: 0% 0%;
+            transition: all 0.5s ease-in-out;
+        }
+        
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+        
+        .array-element {
+            width: 50px;
+            height: 50px;
+            background-color: #FD9F78;
+            margin: 0 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+            color: #000000;
+            font-weight: bold;
+        }
+        
+        .array-index {
+            margin-top: 5px;
+            width: 50px;
+            text-align: center;
+            margin-left: 5px;
+            font-size: 12px;
+        }
+        
+        .explanation {
+            background-color: #FFFFFF;
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .btn:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #FF4800;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Max Heap Visualization</h1>
+        
+        <div class="array-container">
+            <div>
+                <div class="array-element" id="element0"></div>
+                <div class="array-index">Index 0</div>
+            </div>
+            <div>
+                <div class="array-element" id="element1"></div>
+                <div class="array-index">Index 1</div>
+            </div>
+            <div>
+                <div class="array-element" id="element2"></div>
+                <div class="array-index">Index 2</div>
+            </div>
+            <div>
+                <div class="array-element" id="element3"></div>
+                <div class="array-index">Index 3</div>
+            </div>
+            <div>
+                <div class="array-element" id="element4"></div>
+                <div class="array-index">Index 4</div>
+            </div>
+            <div>
+                <div class="array-element" id="element5"></div>
+                <div class="array-index">Index 5</div>
+            </div>
+            <div>
+                <div class="array-element" id="element6"></div>
+                <div class="array-index">Index 6</div>
+            </div>
+        </div>
+        
+        <div class="visualization" id="visualization">
+            <!-- Tree nodes will be inserted here by JavaScript -->
+        </div>
+        
+        <div class="explanation" id="explanation"></div>
+        
+        <div class="controls">
+            <button class="btn" id="prevBtn">Previous</button>
+            <button class="btn" id="nextBtn">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">Step 1 of 4</div>
+    </div>
+
+    <script>
+        const steps = [
+            {
+                title: "Initial Array",
+                array: [64, 34, 25, 12, 22, 11, 90],
+                explanation: "Here's our initial array [64, 34, 25, 12, 22, 11, 90]. We'll visualize it as a binary tree where each element is a node. In a binary heap, for any node at index i, its left child is at index 2i+1 and right child at index 2i+2.",
+                highlightNodes: []
+            },
+            {
+                title: "Max Heap Property",
+                array: [64, 34, 25, 12, 22, 11, 90],
+                explanation: "In a Max Heap, the value of each node must be greater than or equal to the values of its children. Looking at our tree, we can see that 90 is larger than 64, but it's in position 6. This violates the max heap property.",
+                highlightNodes: [0, 6]
+            },
+            {
+                title: "Heapify Process",
+                array: [90, 34, 64, 12, 22, 11, 25],
+                explanation: "To convert this into a proper max heap, we need to 'heapify' it. We start from the bottom and move 90 to the root as it's the largest element. Other elements are rearranged to maintain the heap structure.",
+                highlightNodes: [0, 2]
+            },
+            {
+                title: "Final Max Heap",
+                array: [90, 34, 64, 12, 22, 11, 25],
+                explanation: "Now we have a valid max heap! The largest element (90) is at the root. For every node, its value is greater than or equal to its children. This structure allows for O(1) access to the maximum element and efficient insertion and deletion operations.",
+                highlightNodes: []
+            }
+        ];
+        
+        let currentStep = 0;
+        const visualization = document.getElementById('visualization');
+        const explanation = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        
+        // Initial setup
+        updateUI();
+        
+        // Event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateUI();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateUI();
+            }
+        });
+        
+        function updateUI() {
+            const step = steps[currentStep];
+            
+            // Update array visualization
+            step.array.forEach((value, index) => {
+                const element = document.getElementById(`element${index}`);
+                element.textContent = value;
+                
+                // Highlight specific nodes if needed
+                if (step.highlightNodes.includes(index)) {
+                    element.style.backgroundColor = '#FF4800';
+                    element.style.color = '#FFFFFF';
+                } else {
+                    element.style.backgroundColor = '#FD9F78';
+                    element.style.color = '#000000';
+                }
+            });
+            
+            // Update tree visualization
+            visualization.innerHTML = '';
+            createTreeVisualization(step.array, step.highlightNodes);
+            
+            // Update explanation
+            explanation.innerHTML = `<h3>${step.title}</h3><p>${step.explanation}</p>`;
+            
+            // Update navigation buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+            
+            // Update step indicator
+            stepIndicator.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+        }
+        
+        function createTreeVisualization(array, highlightNodes) {
+            // Create nodes
+            for (let i = 0; i < array.length; i++) {
+                const node = document.createElement('div');
+                node.className = 'tree-node';
+                node.textContent = array[i];
+                
+                // Position nodes in a tree layout
+                const level = Math.floor(Math.log2(i + 1));
+                const position = i - Math.pow(2, level) + 1;
+                const totalPositionsInLevel = Math.pow(2, level);
+                const horizontalSpacing = 900 / (totalPositionsInLevel + 1);
+                
+                const top = level * 100 + 20;
+                const left = (position + 1) * horizontalSpacing;
+                
+                node.style.top = `${top}px`;
+                node.style.left = `${left}px`;
+                
+                if (highlightNodes.includes(i)) {
+                    node.style.backgroundColor = '#000000';
+                }
+                
+                node.id = `node-${i}`;
+                visualization.appendChild(node);
+                
+                // Create connectors (edges) from parent to children
+                if (i > 0) {
+                    const parentIndex = Math.floor((i - 1) / 2);
+                    
+                    // Add connector after both nodes are added to the DOM
+                    setTimeout(() => {
+                        const parent = document.getElementById(`node-${parentIndex}`);
+                        const child = document.getElementById(`node-${i}`);
+                        
+                        if (parent && child) {
+                            const connector = document.createElement('div');
+                            connector.className = 'node-connector';
+                            
+                            // Get the center positions of parent and child
+                            const parentRect = parent.getBoundingClientRect();
+                            const childRect = child.getBoundingClientRect();
+                            const parentVisualizationRect = visualization.getBoundingClientRect();
+                            
+                            const parentCenterX = parentRect.left + parentRect.width / 2 - parentVisualizationRect.left;
+                            const parentCenterY = parentRect.top + parentRect.height / 2 - parentVisualizationRect.top;
+                            const childCenterX = childRect.left + childRect.width / 2 - parentVisualizationRect.left;
+                            const childCenterY = childRect.top + childRect.height / 2 - parentVisualizationRect.top;
+                            
+                            // Calculate length and angle of the connector
+                            const length = Math.sqrt(Math.pow(childCenterX - parentCenterX, 2) + Math.pow(childCenterY - parentCenterY, 2));
+                            const angle = Math.atan2(childCenterY - parentCenterY, childCenterX - parentCenterX) * 180 / Math.PI;
+                            
+                            // Set connector properties
+                            connector.style.width = `${length}px`;
+                            connector.style.left = `${parentCenterX}px`;
+                            connector.style.top = `${parentCenterY}px`;
+                            connector.style.transform = `rotate(${angle}deg)`;
+                            
+                            visualization.appendChild(connector);
+                        }
+                    }, 0);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
