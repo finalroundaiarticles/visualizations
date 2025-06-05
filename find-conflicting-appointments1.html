@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Overlap Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .timeline {
+            position: relative;
+            height: 200px;
+            margin: 50px 0;
+            border-bottom: 2px solid #000000;
+        }
+        .time-marker {
+            position: absolute;
+            bottom: -20px;
+            transform: translateX(-50%);
+            font-size: 12px;
+        }
+        .time-marker::before {
+            content: '';
+            position: absolute;
+            height: 10px;
+            width: 1px;
+            background-color: #000000;
+            bottom: 20px;
+            left: 50%;
+        }
+        .appointment {
+            position: absolute;
+            height: 40px;
+            border-radius: 5px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #FFFFFF;
+            font-weight: bold;
+        }
+        .overlap {
+            position: absolute;
+            height: 40px;
+            background-color: #FD9F78;
+            opacity: 0;
+            border-radius: 5px;
+            transition: opacity 0.5s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #000000;
+            font-weight: bold;
+        }
+        .explanation {
+            margin: 30px 0;
+            padding: 20px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            border-left: 5px solid #FF4800;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Appointment Overlap Visualization</h1>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FF4800;"></div>
+                <span>Appointment A</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #000000;"></div>
+                <span>Appointment B</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FD9F78;"></div>
+                <span>Overlap</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FF4800; opacity: 0.7;"></div>
+                <span>Appointment C</span>
+            </div>
+        </div>
+        
+        <div class="timeline" id="timeline">
+            <!-- Time markers will be added via JavaScript -->
+        </div>
+        
+        <div class="explanation" id="explanation">
+            Welcome to the Appointment Overlap Visualization! Click "Next" to begin.
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const timeline = document.getElementById('timeline');
+        const explanationBox = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        let currentStep = 0;
+        const totalSteps = 5;
+        
+        // Define time range (in hours, 24-hour format)
+        const startHour = 9;  // 9 AM
+        const endHour = 15;   // 3 PM
+        const timelineWidth = timeline.offsetWidth;
+        
+        // Create time markers
+        for (let hour = startHour; hour <= endHour; hour++) {
+            const marker = document.createElement('div');
+            marker.className = 'time-marker';
+            marker.textContent = formatTime(hour);
+            
+            // Position marker proportionally along timeline
+            const position = ((hour - startHour) / (endHour - startHour)) * 100;
+            marker.style.left = `${position}%`;
+            
+            timeline.appendChild(marker);
+        }
+        
+        // Create appointments (initially hidden)
+        // Appointment A: 9:00 AM - 10:30 AM
+        const appointmentA = createAppointment('A', 9, 10.5, 20, '#FF4800');
+        
+        // Appointment B: 10:00 AM - 11:00 AM
+        const appointmentB = createAppointment('B', 10, 11, 70, '#000000');
+        
+        // Appointment C: 2:00 PM - 3:00 PM
+        const appointmentC = createAppointment('C', 14, 15, 120, '#FF4800', 0.7);
+        
+        // Create overlap region (initially hidden)
+        const overlapRegion = document.createElement('div');
+        overlapRegion.className = 'overlap';
+        overlapRegion.textContent = 'Overlap';
+        
+        // Position overlap: 10:00 AM - 10:30 AM
+        const overlapStart = 10;
+        const overlapEnd = 10.5;
+        const overlapLeft = ((overlapStart - startHour) / (endHour - startHour)) * 100;
+        const overlapWidth = ((overlapEnd - overlapStart) / (endHour - startHour)) * 100;
+        
+        overlapRegion.style.left = `${overlapLeft}%`;
+        overlapRegion.style.width = `${overlapWidth}%`;
+        overlapRegion.style.bottom = '45px';  // Position between A and B
+        
+        timeline.appendChild(overlapRegion);
+        
+        // Step content
+        const steps = [
+            "Let's visualize appointment overlaps on a timeline. We have three appointments: A (9:00 AM - 10:30 AM), B (10:00 AM - 11:00 AM), and C (2:00 PM - 3:00 PM).",
+            
+            "First, let's look at Appointment A, which runs from 9:00 AM to 10:30 AM.",
+            
+            "Now, let's add Appointment B, which runs from 10:00 AM to 11:00 AM. Notice how it overlaps with Appointment A!",
+            
+            "Here's the overlap highlighted between Appointments A and B. The overlap occurs from 10:00 AM to 10:30 AM. This means these appointments conflict and cannot be scheduled together.",
+            
+            "Finally, here's Appointment C, which runs from 2:00 PM to 3:00 PM. Notice it doesn't overlap with either A or B, so it can be scheduled alongside either of them."
+        ];
+        
+        // Function to update the step
+        function updateStep() {
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+            
+            // Update explanation
+            explanationBox.textContent = steps[currentStep];
+            
+            // Show/hide elements based on current step
+            appointmentA.style.opacity = currentStep >= 1 ? '1' : '0';
+            appointmentB.style.opacity = currentStep >= 2 ? '1' : '0';
+            overlapRegion.style.opacity = currentStep >= 3 ? '1' : '0';
+            appointmentC.style.opacity = currentStep >= 4 ? '1' : '0';
+        }
+        
+        // Event listeners for buttons
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateStep();
+            }
+        });
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        });
+        
+        // Helper function to create appointment element
+        function createAppointment(name, startHour, endHour, bottomPosition, color, opacity = 1) {
+            const appointment = document.createElement('div');
+            appointment.className = 'appointment';
+            appointment.textContent = `Appointment ${name}`;
+            
+            // Calculate position
+            const left = ((startHour - window.startHour) / (window.endHour - window.startHour)) * 100;
+            const width = ((endHour - startHour) / (window.endHour - window.startHour)) * 100;
+            
+            appointment.style.left = `${left}%`;
+            appointment.style.width = `${width}%`;
+            appointment.style.bottom = `${bottomPosition}px`;
+            appointment.style.backgroundColor = color;
+            appointment.style.opacity = '0';
+            if (opacity !== 1) {
+                appointment.style.opacity = opacity;
+            }
+            
+            timeline.appendChild(appointment);
+            return appointment;
+        }
+        
+        // Helper function to format time
+        function formatTime(hour) {
+            if (hour < 12) {
+                return `${hour}:00 AM`;
+            } else if (hour === 12) {
+                return "12:00 PM";
+            } else {
+                return `${hour - 12}:00 PM`;
+            }
+        }
+        
+        // Initialize the first step
+        updateStep();
+    </script>
+</body>
+</html>
