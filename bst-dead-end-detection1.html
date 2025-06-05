@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BST with Dead End Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .explanation {
+            margin-bottom: 30px;
+            color: #000000;
+            text-align: left;
+            line-height: 1.6;
+            font-size: 18px;
+        }
+        
+        #canvas {
+            margin: 20px auto;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            background-color: #FFFFFF;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BST with Dead End Visualization</h1>
+        
+        <div class="explanation" id="explanation">
+            Welcome to the Binary Search Tree with Dead End visualization. We'll explore how a dead end is identified in a BST.
+        </div>
+        
+        <canvas id="canvas" width="800" height="400"></canvas>
+        
+        <div class="step-indicator" id="step-indicator">Step 1 of 5</div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize variables
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const explanationDiv = document.getElementById('explanation');
+        const stepIndicator = document.getElementById('step-indicator');
+        
+        let currentStep = 1;
+        const totalSteps = 5;
+        
+        // Tree node class
+        class TreeNode {
+            constructor(value) {
+                this.value = value;
+                this.left = null;
+                this.right = null;
+                this.x = 0;
+                this.y = 0;
+                this.highlighted = false;
+                this.deadEnd = false;
+            }
+        }
+        
+        // Create BST
+        function createBST() {
+            const root = new TreeNode(8);
+            root.left = new TreeNode(5);
+            root.right = new TreeNode(11);
+            root.left.left = new TreeNode(2);
+            root.left.right = new TreeNode(7);
+            root.left.left.right = new TreeNode(3);
+            root.left.left.right.right = new TreeNode(4);
+            return root;
+        }
+        
+        // BST for our visualization
+        const bst = createBST();
+        
+        // Calculate positions for the tree visualization
+        function calculatePositions(node, level = 0, position = 0, width = 700) {
+            if (!node) return;
+            
+            const ySpacing = 70;
+            node.y = 80 + level * ySpacing;
+            node.x = position;
+            
+            const nextWidth = width / 2;
+            if (node.left) {
+                calculatePositions(node.left, level + 1, position - nextWidth, nextWidth);
+            }
+            if (node.right) {
+                calculatePositions(node.right, level + 1, position + nextWidth, nextWidth);
+            }
+        }
+        
+        // Draw tree
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Calculate positions starting from the center of the canvas
+            calculatePositions(bst, 0, canvas.width / 2);
+            
+            // Draw edges first
+            drawEdges(bst);
+            
+            // Then draw nodes
+            drawNodes(bst);
+        }
+        
+        // Draw edges between nodes
+        function drawEdges(node) {
+            if (!node) return;
+            
+            if (node.left) {
+                ctx.beginPath();
+                ctx.moveTo(node.x, node.y);
+                ctx.lineTo(node.left.x, node.left.y);
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                drawEdges(node.left);
+            }
+            
+            if (node.right) {
+                ctx.beginPath();
+                ctx.moveTo(node.x, node.y);
+                ctx.lineTo(node.right.x, node.right.y);
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                drawEdges(node.right);
+            }
+        }
+        
+        // Draw nodes
+        function drawNodes(node) {
+            if (!node) return;
+            
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 25, 0, Math.PI * 2);
+            
+            if (node.deadEnd) {
+                ctx.fillStyle = '#FD9F78';
+            } else if (node.highlighted) {
+                ctx.fillStyle = '#FF4800';
+            } else {
+                ctx.fillStyle = '#FFFFFF';
+            }
+            
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.fill();
+            ctx.stroke();
+            
+            // Draw node value
+            ctx.fillStyle = node.highlighted || node.deadEnd ? '#FFFFFF' : '#000000';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText(node.value, node.x, node.y);
+            
+            // Recurse to children
+            drawNodes(node.left);
+            drawNodes(node.right);
+        }
+        
+        // Reset all node highlights
+        function resetHighlights(node) {
+            if (!node) return;
+            node.highlighted = false;
+            node.deadEnd = false;
+            resetHighlights(node.left);
+            resetHighlights(node.right);
+        }
+        
+        // Find node by value
+        function findNode(node, value) {
+            if (!node) return null;
+            if (node.value === value) return node;
+            
+            if (value < node.value) {
+                return findNode(node.left, value);
+            } else {
+                return findNode(node.right, value);
+            }
+        }
+        
+        // Update the explanation text based on the current step
+        function updateExplanation() {
+            switch(currentStep) {
+                case 1:
+                    explanationDiv.innerHTML = 
+                        "A Binary Search Tree (BST) is a tree data structure where each node has at most two children, " +
+                        "with the left child containing values less than the node and the right child containing values greater than the node. " +
+                        "This is our BST with nodes [8, 5, 2, 3, 7, 11, 4].";
+                    break;
+                case 2:
+                    explanationDiv.innerHTML = 
+                        "A 'Dead End' in a BST is a leaf node where we cannot insert any more nodes. " +
+                        "For node 4, we need to check if it's a dead end. " +
+                        "Node 4 is highlighted as we'll analyze it.";
+                    break;
+                case 3:
+                    explanationDiv.innerHTML = 
+                        "For a leaf node to be a dead end, we need to check if both (value-1) and (value+1) exist in the tree. " +
+                        "For node 4, we need to check if both 3 and 5 exist in the tree. " +
+                        "Node 3 is highlighted - it exists in the tree.";
+                    break;
+                case 4:
+                    explanationDiv.innerHTML = 
+                        "Now we check if node 5 exists. Node 5 is highlighted - it also exists in the tree. " +
+                        "Since both 3 and 5 exist, node 4 is a dead end.";
+                    break;
+                case 5:
+                    explanationDiv.innerHTML = 
+                        "Node 4 is a dead end because both 3 and 5 exist in the tree. " +
+                        "This means we can't insert any new nodes as children of node 4, because: " +
+                        "<br>- We can't insert any value less than 4 (like 3) as it already exists" +
+                        "<br>- We can't insert any value greater than 4 (like 5) as it already exists" +
+                        "<br><br>This creates a 'Dead End' in our BST.";
+                    break;
+            }
+            
+            stepIndicator.textContent = `Step ${currentStep} of ${totalSteps}`;
+        }
+        
+        // Update the visualization based on the current step
+        function updateVisualization() {
+            resetHighlights(bst);
+            
+            switch(currentStep) {
+                case 1:
+                    // Just show the tree
+                    break;
+                case 2:
+                    // Highlight node 4
+                    findNode(bst, 4).highlighted = true;
+                    break;
+                case 3:
+                    // Highlight node 4 and 3
+                    findNode(bst, 4).highlighted = true;
+                    findNode(bst, 3).highlighted = true;
+                    break;
+                case 4:
+                    // Highlight node 4, 3, and 5
+                    findNode(bst, 4).highlighted = true;
+                    findNode(bst, 3).highlighted = true;
+                    findNode(bst, 5).highlighted = true;
+                    break;
+                case 5:
+                    // Mark node 4 as dead end
+                    findNode(bst, 4).deadEnd = true;
+                    findNode(bst, 3).highlighted = true;
+                    findNode(bst, 5).highlighted = true;
+                    break;
+            }
+            
+            drawTree();
+            updateExplanation();
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === totalSteps;
+        }
+        
+        // Button event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateVisualization();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+        
+        // Initialize the visualization
+        window.onload = function() {
+            updateVisualization();
+        };
+    </script>
+</body>
+</html>
