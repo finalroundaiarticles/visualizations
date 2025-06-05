@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heap Sort Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .step-container {
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .step-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #FF4800;
+        }
+        
+        .step-description {
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .array-element {
+            width: 60px;
+            height: 60px;
+            margin: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #FD9F78;
+            color: #000000;
+            font-weight: bold;
+            border-radius: 5px;
+            font-size: 18px;
+            transition: all 0.5s ease;
+        }
+        
+        .sorted {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .heap-tree {
+            width: 100%;
+            height: 300px;
+            position: relative;
+            margin-bottom: 30px;
+        }
+        
+        .tree-node {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            font-weight: bold;
+            color: #000000;
+            font-size: 18px;
+            transition: all 0.5s ease;
+        }
+        
+        .tree-connection {
+            position: absolute;
+            background-color: #000000;
+            height: 2px;
+            transform-origin: left center;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Heap Sort in Action</h1>
+        
+        <div id="step1" class="step-container">
+            <div class="step-title">Step 1: Initial Array</div>
+            <div class="step-description">
+                We start with an unsorted array [64, 34, 25, 12, 22, 11, 90]. The first step in heap sort is to build a max heap from this array.
+            </div>
+            <div class="array-container" id="initial-array">
+                <div class="array-element">64</div>
+                <div class="array-element">34</div>
+                <div class="array-element">25</div>
+                <div class="array-element">12</div>
+                <div class="array-element">22</div>
+                <div class="array-element">11</div>
+                <div class="array-element">90</div>
+            </div>
+        </div>
+        
+        <div id="step2" class="step-container">
+            <div class="step-title">Step 2: Building Max Heap</div>
+            <div class="step-description">
+                To build a max heap, we organize the elements in a tree structure where each parent node is greater than or equal to its child nodes. The array representation of a heap tree places the root at index 0, and for any node at index i, its left child is at 2i+1 and right child at 2i+2.
+            </div>
+            <div class="heap-tree" id="max-heap-tree"></div>
+            <div class="array-container" id="max-heap-array">
+                <div class="array-element">90</div>
+                <div class="array-element">34</div>
+                <div class="array-element">64</div>
+                <div class="array-element">12</div>
+                <div class="array-element">22</div>
+                <div class="array-element">11</div>
+                <div class="array-element">25</div>
+            </div>
+        </div>
+        
+        <div id="step3" class="step-container">
+            <div class="step-title">Step 3: First Extraction</div>
+            <div class="step-description">
+                In heap sort, we extract the maximum element (root) and place it at the end of the array. Then we re-heapify the remaining elements. Here, we swap 90 with the last element 25, and remove 90 from the heap.
+            </div>
+            <div class="heap-tree" id="extraction1-tree"></div>
+            <div class="array-container">
+                <div class="array-element">64</div>
+                <div class="array-element">34</div>
+                <div class="array-element">25</div>
+                <div class="array-element">12</div>
+                <div class="array-element">22</div>
+                <div class="array-element">11</div>
+                <div class="array-element sorted">90</div>
+            </div>
+        </div>
+        
+        <div id="step4" class="step-container">
+            <div class="step-title">Step 4: Second Extraction</div>
+            <div class="step-description">
+                After re-heapifying, 64 is now at the root. We swap it with the last element of the current heap (11) and remove it from the heap.
+            </div>
+            <div class="heap-tree" id="extraction2-tree"></div>
+            <div class="array-container">
+                <div class="array-element">34</div>
+                <div class="array-element">22</div>
+                <div class="array-element">25</div>
+                <div class="array-element">12</div>
+                <div class="array-element">11</div>
+                <div class="array-element sorted">64</div>
+                <div class="array-element sorted">90</div>
+            </div>
+        </div>
+        
+        <div id="step5" class="step-container">
+            <div class="step-title">Step 5: Third Extraction</div>
+            <div class="step-description">
+                After re-heapifying, 34 is now at the root. We swap it with the last element of the current heap (11) and remove it from the heap.
+            </div>
+            <div class="heap-tree" id="extraction3-tree"></div>
+            <div class="array-container">
+                <div class="array-element">25</div>
+                <div class="array-element">22</div>
+                <div class="array-element">11</div>
+                <div class="array-element">12</div>
+                <div class="array-element sorted">34</div>
+                <div class="array-element sorted">64</div>
+                <div class="array-element sorted">90</div>
+            </div>
+        </div>
+        
+        <div id="step6" class="step-container">
+            <div class="step-title">Step 6: Final Sorted Array</div>
+            <div class="step-description">
+                We continue this process until all elements are extracted from the heap. The final result is a sorted array in ascending order.
+            </div>
+            <div class="array-container">
+                <div class="array-element sorted">11</div>
+                <div class="array-element sorted">12</div>
+                <div class="array-element sorted">22</div>
+                <div class="array-element sorted">25</div>
+                <div class="array-element sorted">34</div>
+                <div class="array-element sorted">64</div>
+                <div class="array-element sorted">90</div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prev-btn" class="nav-button" disabled>Previous</button>
+            <button id="next-btn" class="nav-button">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="step-indicator">Step 1 of 6</div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const steps = document.querySelectorAll('.step-container');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const stepIndicator = document.getElementById('step-indicator');
+            let currentStep = 0;
+            
+            // Show the initial step
+            steps[currentStep].style.display = 'block';
+            updateStepIndicator();
+            
+            // Create heap trees
+            createHeapTree('max-heap-tree', [90, 34, 64, 12, 22, 11, 25]);
+            createHeapTree('extraction1-tree', [64, 34, 25, 12, 22, 11]);
+            createHeapTree('extraction2-tree', [34, 22, 25, 12, 11]);
+            createHeapTree('extraction3-tree', [25, 22, 11, 12]);
+            
+            prevBtn.addEventListener('click', function() {
+                steps[currentStep].style.display = 'none';
+                currentStep--;
+                steps[currentStep].style.display = 'block';
+                updateNavButtons();
+                updateStepIndicator();
+            });
+            
+            nextBtn.addEventListener('click', function() {
+                steps[currentStep].style.display = 'none';
+                currentStep++;
+                steps[currentStep].style.display = 'block';
+                updateNavButtons();
+                updateStepIndicator();
+            });
+            
+            function updateNavButtons() {
+                prevBtn.disabled = currentStep === 0;
+                nextBtn.disabled = currentStep === steps.length - 1;
+            }
+            
+            function updateStepIndicator() {
+                stepIndicator.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+            }
+            
+            function createHeapTree(containerId, values) {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+                
+                // Clear previous content
+                container.innerHTML = '';
+                
+                // Calculate positions for a binary tree
+                const levels = Math.ceil(Math.log2(values.length + 1));
+                const containerWidth = container.offsetWidth;
+                const containerHeight = container.offsetHeight;
+                const levelHeight = containerHeight / levels;
+                
+                // Create nodes
+                for (let i = 0; i < values.length; i++) {
+                    // Calculate level and position in level
+                    const level = Math.floor(Math.log2(i + 1));
+                    const positionInLevel = i + 1 - Math.pow(2, level);
+                    const totalNodesInLevel = Math.pow(2, level);
+                    
+                    // Calculate x and y coordinates
+                    const x = (containerWidth / (totalNodesInLevel + 1)) * (positionInLevel + 1) - 30;
+                    const y = levelHeight * level + 10;
+                    
+                    // Create node
+                    const node = document.createElement('div');
+                    node.className = 'tree-node';
+                    node.textContent = values[i];
+                    node.style.left = `${x}px`;
+                    node.style.top = `${y}px`;
+                    container.appendChild(node);
+                    
+                    // Draw connection to parent (if not root)
+                    if (i > 0) {
+                        const parentIndex = Math.floor((i - 1) / 2);
+                        const parentLevel = Math.floor(Math.log2(parentIndex + 1));
+                        const parentPositionInLevel = parentIndex + 1 - Math.pow(2, parentLevel);
+                        const parentTotalNodesInLevel = Math.pow(2, parentLevel);
+                        
+                        const parentX = (containerWidth / (parentTotalNodesInLevel + 1)) * (parentPositionInLevel + 1);
+                        const parentY = levelHeight * parentLevel + 40;
+                        
+                        // Calculate length and angle of the line
+                        const dx = x + 30 - parentX;
+                        const dy = y - parentY;
+                        const length = Math.sqrt(dx * dx + dy * dy);
+                        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                        
+                        // Create connection line
+                        const connection = document.createElement('div');
+                        connection.className = 'tree-connection';
+                        connection.style.width = `${length}px`;
+                        connection.style.left = `${parentX}px`;
+                        connection.style.top = `${parentY}px`;
+                        connection.style.transform = `rotate(${angle}deg)`;
+                        
+                        container.appendChild(connection);
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
