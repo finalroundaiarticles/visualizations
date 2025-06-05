@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BST to Doubly Linked List - Brute Force Transformation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+        }
+        
+        p {
+            margin-bottom: 20px;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin-top: 30px;
+        }
+        
+        #animation-container {
+            width: 800px;
+            height: 400px;
+            position: relative;
+            margin: 20px auto;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+        }
+        
+        .node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            font-weight: bold;
+            transition: all 0.8s ease;
+        }
+        
+        .edge {
+            position: absolute;
+            background-color: #FF4800;
+            height: 2px;
+            transform-origin: 0% 50%;
+            transition: all 0.8s ease;
+        }
+        
+        .dllNode {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            font-weight: bold;
+            transition: all 0.8s ease;
+        }
+        
+        .dllEdge {
+            position: absolute;
+            background-color: #FF4800;
+            height: 2px;
+            transform-origin: 0% 50%;
+            transition: all 0.8s ease;
+        }
+        
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            transition: all 0.8s ease;
+        }
+        
+        .arrow-right {
+            border-width: 5px 0 5px 10px;
+            border-color: transparent transparent transparent #FF4800;
+        }
+        
+        .arrow-left {
+            border-width: 5px 10px 5px 0;
+            border-color: transparent #FF4800 transparent transparent;
+        }
+        
+        .step-description {
+            font-size: 18px;
+            margin: 20px 0;
+            color: #000000;
+            min-height: 50px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .array-element {
+            width: 40px;
+            height: 40px;
+            margin: 0 5px;
+            background-color: #FD9F78;
+            color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .current-node {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .highlight {
+            box-shadow: 0 0 10px 5px rgba(255, 72, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <h1>BST to Doubly Linked List - Brute Force Transformation</h1>
+    
+    <div class="container">
+        <div class="step-description" id="step-description">
+            Step 1: Start with a Binary Search Tree
+        </div>
+        
+        <div id="animation-container"></div>
+        
+        <div class="array-container" id="array-container">
+            <div class="array-element" id="array-1">1</div>
+            <div class="array-element" id="array-2">2</div>
+            <div class="array-element" id="array-3">3</div>
+            <div class="array-element" id="array-4">4</div>
+            <div class="array-element" id="array-5">5</div>
+        </div>
+        
+        <div class="controls">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const animationContainer = document.getElementById('animation-container');
+        const stepDescription = document.getElementById('step-description');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        
+        let currentStep = 0;
+        const maxSteps = 8;
+        
+        // Tree nodes and positions
+        const treeNodes = [
+            { id: 4, x: 400, y: 50 },
+            { id: 2, x: 300, y: 150 },
+            { id: 5, x: 500, y: 150 },
+            { id: 1, x: 250, y: 250 },
+            { id: 3, x: 350, y: 250 }
+        ];
+        
+        // Connections between tree nodes
+        const treeEdges = [
+            { from: 4, to: 2 },
+            { from: 4, to: 5 },
+            { from: 2, to: 1 },
+            { from: 2, to: 3 }
+        ];
+        
+        // DLL nodes and positions
+        const dllPositions = [
+            { id: 1, x: 150, y: 300 },
+            { id: 2, x: 250, y: 300 },
+            { id: 3, x: 350, y: 300 },
+            { id: 4, x: 450, y: 300 },
+            { id: 5, x: 550, y: 300 }
+        ];
+        
+        // Create initial BST
+        function createBST() {
+            // Clear container
+            animationContainer.innerHTML = '';
+            
+            // Create nodes
+            treeNodes.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'node';
+                nodeElement.id = `node-${node.id}`;
+                nodeElement.textContent = node.id;
+                nodeElement.style.left = `${node.x}px`;
+                nodeElement.style.top = `${node.y}px`;
+                animationContainer.appendChild(nodeElement);
+            });
+            
+            // Create edges
+            treeEdges.forEach(edge => {
+                const fromNode = treeNodes.find(node => node.id === edge.from);
+                const toNode = treeNodes.find(node => node.id === edge.to);
+                
+                // Calculate edge length and angle
+                const dx = toNode.x - fromNode.x;
+                const dy = toNode.y - fromNode.y;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                // Create edge element
+                const edgeElement = document.createElement('div');
+                edgeElement.className = 'edge';
+                edgeElement.id = `edge-${fromNode.id}-${toNode.id}`;
+                edgeElement.style.width = `${length - 40}px`;
+                edgeElement.style.left = `${fromNode.x + 20}px`;
+                edgeElement.style.top = `${fromNode.y + 20}px`;
+                edgeElement.style.transform = `rotate(${angle}deg)`;
+                
+                animationContainer.appendChild(edgeElement);
+            });
+        }
+        
+        // Create Doubly Linked List visualization
+        function createDLL() {
+            // Create nodes
+            dllPositions.forEach((node, index) => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'dllNode';
+                nodeElement.id = `dll-node-${node.id}`;
+                nodeElement.textContent = node.id;
+                nodeElement.style.left = `${node.x}px`;
+                nodeElement.style.top = `${node.y}px`;
+                nodeElement.style.opacity = '0';
+                animationContainer.appendChild(nodeElement);
+                
+                // Create right edge (except for the last node)
+                if (index < dllPositions.length - 1) {
+                    const nextNode = dllPositions[index + 1];
+                    const distance = nextNode.x - node.x;
+                    
+                    const edgeElement = document.createElement('div');
+                    edgeElement.className = 'dllEdge';
+                    edgeElement.id = `dll-edge-right-${node.id}`;
+                    edgeElement.style.width = `${distance - 50}px`;
+                    edgeElement.style.left = `${node.x + 30}px`;
+                    edgeElement.style.top = `${node.y + 20}px`;
+                    edgeElement.style.opacity = '0';
+                    
+                    const arrowRight = document.createElement('div');
+                    arrowRight.className = 'arrow arrow-right';
+                    arrowRight.id = `arrow-right-${node.id}`;
+                    arrowRight.style.left = `${node.x + distance - 10}px`;
+                    arrowRight.style.top = `${node.y + 18}px`;
+                    arrowRight.style.opacity = '0';
+                    
+                    animationContainer.appendChild(edgeElement);
+                    animationContainer.appendChild(arrowRight);
+                }
+                
+                // Create left edge (except for the first node)
+                if (index > 0) {
+                    const prevNode = dllPositions[index - 1];
+                    const distance = node.x - prevNode.x;
+                    
+                    const edgeElement = document.createElement('div');
+                    edgeElement.className = 'dllEdge';
+                    edgeElement.id = `dll-edge-left-${node.id}`;
+                    edgeElement.style.width = `${distance - 50}px`;
+                    edgeElement.style.left = `${prevNode.x + 30}px`;
+                    edgeElement.style.top = `${node.y + 20}px`;
+                    edgeElement.style.opacity = '0';
+                    
+                    const arrowLeft = document.createElement('div');
+                    arrowLeft.className = 'arrow arrow-left';
+                    arrowLeft.id = `arrow-left-${node.id}`;
+                    arrowLeft.style.left = `${prevNode.x + 40}px`;
+                    arrowLeft.style.top = `${node.y + 18}px`;
+                    arrowLeft.style.opacity = '0';
+                    
+                    animationContainer.appendChild(edgeElement);
+                    animationContainer.appendChild(arrowLeft);
+                }
+            });
+        }
+        
+        function initializeAnimation() {
+            createBST();
+            createDLL();
+        }
+        
+        function updateStep() {
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === maxSteps;
+            
+            // Reset highlighting
+            document.querySelectorAll('.node, .dllNode').forEach(node => {
+                node.classList.remove('current-node', 'highlight');
+            });
+            
+            // Update description and visualization based on current step
+            switch (currentStep) {
+                case 0:
+                    stepDescription.textContent = "Step 1: Start with a Binary Search Tree";
+                    break;
+                    
+                case 1:
+                    stepDescription.textContent = "Step 2: Perform in-order traversal (Visit left subtree first)";
+                    document.getElementById('node-2').classList.add('current-node');
+                    document.getElementById('node-1').classList.add('highlight');
+                    break;
+                    
+                case 2:
+                    stepDescription.textContent = "Step 3: Visit node 1 during in-order traversal";
+                    document.getElementById('node-1').classList.add('current-node');
+                    document.getElementById('array-1').style.opacity = '1';
+                    break;
+                    
+                case 3:
+                    stepDescription.textContent = "Step 4: Visit node 2 during in-order traversal";
+                    document.getElementById('node-2').classList.add('current-node');
+                    document.getElementById('array-2').style.opacity = '1';
+                    break;
+                    
+                case 4:
+                    stepDescription.textContent = "Step 5: Visit node 3 during in-order traversal";
+                    document.getElementById('node-3').classList.add('current-node');
+                    document.getElementById('array-3').style.opacity = '1';
+                    break;
+                    
+                case 5:
+                    stepDescription.textContent = "Step 6: Visit node 4 during in-order traversal";
+                    document.getElementById('node-4').classList.add('current-node');
+                    document.getElementById('array-4').style.opacity = '1';
+                    break;
+                    
+                case 6:
+                    stepDescription.textContent = "Step 7: Visit node 5 during in-order traversal";
+                    document.getElementById('node-5').classList.add('current-node');
+                    document.getElementById('array-5').style.opacity = '1';
+                    break;
+                    
+                case 7:
+                    stepDescription.textContent = "Step 8: Create a doubly linked list using the in-order array [1,2,3,4,5]";
+                    
+                    // Show DLL nodes
+                    dllPositions.forEach(node => {
+                        document.getElementById(`dll-node-${node.id}`).style.opacity = '1';
+                    });
+                    break;
+                    
+                case 8:
+                    stepDescription.textContent = "Final Result: BST is transformed into a Doubly Linked List";
+                    
+                    // Show all DLL connections
+                    for (let i = 1; i <= 5; i++) {
+                        if (i < 5) {
+                            document.getElementById(`dll-edge-right-${i}`).style.opacity = '1';
+                            document.getElementById(`arrow-right-${i}`).style.opacity = '1';
+                        }
+                        if (i > 1) {
+                            document.getElementById(`dll-edge-left-${i}`).style.opacity = '1';
+                            document.getElementById(`arrow-left-${i}`).style.opacity = '1';
+                        }
+                    }
+                    
+                    // Highlight the entire DLL
+                    dllPositions.forEach(node => {
+                        document.getElementById(`dll-node-${node.id}`).classList.add('highlight');
+                    });
+                    break;
+            }
+        }
+        
+        function nextStep() {
+            if (currentStep < maxSteps) {
+                currentStep++;
+                updateStep();
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        }
+        
+        // Initialize event listeners
+        prevBtn.addEventListener('click', prevStep);
+        nextBtn.addEventListener('click', nextStep);
+        
+        // Initialize animation
+        initializeAnimation();
+        updateStep();
+    </script>
+</body>
+</html>
