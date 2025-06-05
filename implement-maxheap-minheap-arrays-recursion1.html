@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heap Array Indexing Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .visualization {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        
+        .tree-container {
+            position: relative;
+            width: 700px;
+            height: 300px;
+            margin-bottom: 40px;
+        }
+        
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+        
+        .array-box {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 5px;
+            font-weight: bold;
+            font-size: 20px;
+            position: relative;
+        }
+        
+        .array-index {
+            position: absolute;
+            bottom: -25px;
+            font-size: 14px;
+        }
+        
+        .node {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            font-weight: bold;
+            font-size: 20px;
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+        
+        .arrow {
+            position: absolute;
+            background-color: #FF4800;
+            height: 3px;
+            transform-origin: 0 0;
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+        
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid #FF4800;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        
+        .relationship {
+            position: absolute;
+            font-size: 14px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 3px 8px;
+            border-radius: 10px;
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+        
+        .array-arrow {
+            position: absolute;
+            background-color: #FF4800;
+            height: 2px;
+            transform-origin: 0 0;
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+        
+        .array-arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid #FF4800;
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Heap Array Indexing Visualization</h1>
+        
+        <div class="visualization">
+            <div class="tree-container" id="treeContainer"></div>
+            
+            <div class="array-container" id="arrayContainer"></div>
+            
+            <div class="explanation" id="explanation">
+                Welcome to Heap Array Indexing Visualization! Click 'Next' to begin learning how binary trees can be stored efficiently in arrays.
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" class="nav-button" disabled>Previous</button>
+            <button id="nextBtn" class="nav-button">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">Step 1 of 7</div>
+    </div>
+
+    <script>
+        const treeContainer = document.getElementById('treeContainer');
+        const arrayContainer = document.getElementById('arrayContainer');
+        const explanation = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        
+        let currentStep = 0;
+        const totalSteps = 7;
+        
+        // Node positions in the tree
+        const nodePositions = [
+            { x: 350, y: 40 },   // Root (1)
+            { x: 175, y: 120 },  // Left child of root (2)
+            { x: 525, y: 120 },  // Right child of root (3)
+            { x: 100, y: 200 },  // Left child of node 2 (4)
+            { x: 250, y: 200 },  // Right child of node 2 (5)
+            { x: 450, y: 200 },  // Left child of node 3 (6)
+            { x: 600, y: 200 }   // Right child of node 3 (7)
+        ];
+        
+        // Create array visualization
+        function createArray() {
+            for (let i = 0; i < 7; i++) {
+                const arrayBox = document.createElement('div');
+                arrayBox.className = 'array-box';
+                arrayBox.id = `array-${i}`;
+                arrayBox.innerHTML = `${i + 1}<div class="array-index">${i}</div>`;
+                arrayContainer.appendChild(arrayBox);
+            }
+        }
+        
+        // Create tree nodes
+        function createTreeNodes() {
+            for (let i = 0; i < 7; i++) {
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.id = `node-${i}`;
+                node.textContent = i + 1;
+                node.style.left = `${nodePositions[i].x - 25}px`;
+                node.style.top = `${nodePositions[i].y - 25}px`;
+                treeContainer.appendChild(node);
+            }
+        }
+        
+        // Create tree edges
+        function createTreeEdges() {
+            // Parent to child edges
+            createEdge(0, 1); // 1 -> 2
+            createEdge(0, 2); // 1 -> 3
+            createEdge(1, 3); // 2 -> 4
+            createEdge(1, 4); // 2 -> 5
+            createEdge(2, 5); // 3 -> 6
+            createEdge(2, 6); // 3 -> 7
+        }
+        
+        function createEdge(parentIndex, childIndex) {
+            const parent = nodePositions[parentIndex];
+            const child = nodePositions[childIndex];
+            
+            const dx = child.x - parent.x;
+            const dy = child.y - parent.y;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            
+            const arrow = document.createElement('div');
+            arrow.className = 'arrow';
+            arrow.id = `arrow-${parentIndex}-${childIndex}`;
+            arrow.style.width = `${length - 50}px`; // Subtract diameter of node
+            arrow.style.left = `${parent.x}px`;
+            arrow.style.top = `${parent.y}px`;
+            arrow.style.transform = `rotate(${angle}deg)`;
+            treeContainer.appendChild(arrow);
+        }
+        
+        // Create relationship labels
+        function createRelationships() {
+            // For left children (2i+1)
+            createRelationship(0, 1, "Left: 2(0)+1=1");
+            createRelationship(1, 3, "Left: 2(1)+1=3");
+            createRelationship(2, 5, "Left: 2(2)+1=5");
+            
+            // For right children (2i+2)
+            createRelationship(0, 2, "Right: 2(0)+2=2");
+            createRelationship(1, 4, "Right: 2(1)+2=4");
+            createRelationship(2, 6, "Right: 2(2)+2=6");
+        }
+        
+        function createRelationship(parentIndex, childIndex, text) {
+            const parent = nodePositions[parentIndex];
+            const child = nodePositions[childIndex];
+            
+            const relationship = document.createElement('div');
+            relationship.className = 'relationship';
+            relationship.id = `rel-${parentIndex}-${childIndex}`;
+            relationship.textContent = text;
+            
+            // Position in the middle between parent and child
+            relationship.style.left = `${(parent.x + child.x) / 2 - 60}px`;
+            relationship.style.top = `${(parent.y + child.y) / 2}px`;
+            
+            treeContainer.appendChild(relationship);
+        }
+        
+        // Create array to tree relationships (arrows)
+        function createArrayTreeArrows() {
+            for (let i = 0; i < 7; i++) {
+                const arrayBox = document.getElementById(`array-${i}`);
+                const node = document.getElementById(`node-${i}`);
+                
+                const arrayRect = arrayBox.getBoundingClientRect();
+                const nodeRect = node.getBoundingClientRect();
+                
+                const startX = arrayRect.left + arrayRect.width / 2 - treeContainer.getBoundingClientRect().left;
+                const startY = arrayRect.top - treeContainer.getBoundingClientRect().top;
+                
+                const endX = nodeRect.left + nodeRect.width / 2 - treeContainer.getBoundingClientRect().left;
+                const endY = nodeRect.top + nodeRect.height / 2 - treeContainer.getBoundingClientRect().top;
+                
+                const dx = endX - startX;
+                const dy = endY - startY - 60; // Adjust for spacing
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                const arrow = document.createElement('div');
+                arrow.className = 'array-arrow';
+                arrow.id = `array-arrow-${i}`;
+                arrow.style.width = `${length}px`;
+                arrow.style.left = `${startX}px`;
+                arrow.style.top = `${startY + 60}px`; // Adjust for array positioning
+                arrow.style.transform = `rotate(${angle}deg)`;
+                
+                treeContainer.appendChild(arrow);
+            }
+        }
+        
+        // Animation steps
+        const steps = [
+            // Step 1: Introduction
+            function() {
+                explanation.textContent = "A binary heap can be efficiently represented as an array. Let's visualize how the tree nodes map to array indices.";
+            },
+            
+            // Step 2: Show the tree
+            function() {
+                document.querySelectorAll('.node').forEach((node, index) => {
+                    node.style.opacity = 1;
+                });
+                explanation.textContent = "Here's a complete binary tree with 7 nodes. Each node is labeled with its value.";
+            },
+            
+            // Step 3: Show the connections
+            function() {
+                document.querySelectorAll('.arrow').forEach(arrow => {
+                    arrow.style.opacity = 1;
+                });
+                explanation.textContent = "In a binary tree, each node has at most two children: a left child and a right child.";
+            },
+            
+            // Step 4: Show the array
+            function() {
+                document.querySelectorAll('.array-box').forEach((box, index) => {
+                    box.style.backgroundColor = '#FD9F78';
+                });
+                explanation.textContent = "The array representation stores the tree nodes in level-order traversal. The first element (index 0) stores the root node.";
+            },
+            
+            // Step 5: Connect array to tree
+            function() {
+                document.querySelectorAll('.array-arrow').forEach(arrow => {
+                    arrow.style.opacity = 1;
+                });
+                explanation.textContent = "Each position in the array corresponds to a node in the tree. The array provides a compact way to store the tree structure without explicit pointers.";
+            },
+            
+            // Step 6: Show left child relationship
+            function() {
+                document.querySelectorAll('.relationship').forEach((rel, index) => {
+                    if (index % 2 === 0) { // Left children
+                        rel.style.opacity = 1;
+                    }
+                });
+                explanation.textContent = "For any node at index i, its left child is located at index 2i+1. This formula gives us a direct way to find a node's left child.";
+            },
+            
+            // Step 7: Show right child relationship
+            function() {
+                document.querySelectorAll('.relationship').forEach((rel, index) => {
+                    rel.style.opacity = 1;
+                });
+                explanation.textContent = "Similarly, for any node at index i, its right child is located at index 2i+2. These formulas (2i+1 and 2i+2) allow us to navigate the tree using just an array!";
+            }
+        ];
+        
+        function updateStep() {
+            // Update the step indicator
+            stepIndicator.textContent = `Step ${currentStep + 1} of ${totalSteps}`;
+            
+            // Enable/disable navigation buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+            
+            // Run the current step's function
+            steps[currentStep]();
+        }
+        
+        function nextStep() {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateStep();
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        }
+        
+        // Initialize the visualization
+        function initialize() {
+            createArray();
+            createTreeNodes();
+            createTreeEdges();
+            createRelationships();
+            createArrayTreeArrows();
+            updateStep();
+        }
+        
+        // Event listeners
+        nextBtn.addEventListener('click', nextStep);
+        prevBtn.addEventListener('click', prevStep);
+        
+        // Start the visualization
+        initialize();
+    </script>
+</body>
+</html>
