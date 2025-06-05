@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search Tree Evolution</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .visualization {
+            width: 100%;
+            height: 450px;
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        #arrayContainer {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .array-element {
+            width: 40px;
+            height: 40px;
+            margin: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+            background-color: #FD9F78;
+            color: #000000;
+            font-weight: bold;
+        }
+        .current-element {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        #canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .explanation {
+            padding: 15px;
+            border-radius: 10px;
+            background-color: #FD9F78;
+            color: #000000;
+            margin-bottom: 20px;
+            width: 90%;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 300px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+        }
+        button:hover:not(:disabled) {
+            background-color: #000000;
+        }
+        .step-indicator {
+            color: #000000;
+            font-weight: bold;
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Search Tree Evolution</h1>
+        <div id="arrayContainer"></div>
+        <div class="visualization">
+            <canvas id="canvas"></canvas>
+        </div>
+        <div class="explanation" id="explanation">
+            Welcome to Binary Search Tree Evolution! This visualization shows how a Binary Search Tree (BST) evolves when processing elements from right to left, and finding the least greater element at each step.
+        </div>
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <span class="step-indicator" id="stepIndicator">Step 0/12</span>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const arrayContainer = document.getElementById('arrayContainer');
+        const explanation = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+
+        // Set canvas size
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Original array (from right to left)
+        const originalArray = [93, 91, 3, 43, 92, 63, 32, 31, 18, 71, 58, 8];
+        // Processed array (from left to right as per the input)
+        const processedArray = [8, 58, 71, 18, 31, 32, 63, 92, 43, 3, 91, 93];
+        
+        let currentStep = 0;
+        let bst = null;
+        let successorResults = [];
+        let treeStates = [];
+        
+        // Node class for BST
+        class Node {
+            constructor(value) {
+                this.value = value;
+                this.left = null;
+                this.right = null;
+            }
+        }
+
+        // Function to insert a node in BST
+        function insertNode(root, value) {
+            if (root === null) {
+                return new Node(value);
+            }
+            
+            if (value < root.value) {
+                root.left = insertNode(root.left, value);
+            } else if (value > root.value) {
+                root.right = insertNode(root.right, value);
+            }
+            
+            return root;
+        }
+
+        // Function to find the successor (least greater element)
+        function findSuccessor(root, value) {
+            let successor = null;
+            let current = root;
+            
+            while (current !== null) {
+                if (current.value > value) {
+                    successor = current.value;
+                    current = current.left;
+                } else {
+                    current = current.right;
+                }
+            }
+            
+            return successor;
+        }
+
+        // Initialize array display
+        function initializeArrayDisplay() {
+            arrayContainer.innerHTML = '';
+            processedArray.forEach((value, index) => {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.textContent = value;
+                element.id = 'element-' + index;
+                arrayContainer.appendChild(element);
+            });
+        }
+
+        // Precompute all tree states and successor results
+        function precomputeStates() {
+            let currentTree = null;
+            treeStates.push(null); // Initial empty tree
+            successorResults.push(null); // No successor for the first element
+            
+            for (let i = 0; i < originalArray.length; i++) {
+                const value = originalArray[i];
+                const successor = findSuccessor(currentTree, value);
+                successorResults.push(successor);
+                
+                currentTree = insertNode(currentTree, value);
+                treeStates.push(JSON.parse(JSON.stringify(currentTree, (key, value) => {
+                    if (key === 'left' || key === 'right') {
+                        return value !== null ? value : null;
+                    }
+                    return value;
+                })));
+            }
+        }
+
+        // Convert flat tree representation back to node structure
+        function reconstructTree(flatTree) {
+            if (!flatTree) return null;
+            
+            const root = new Node(flatTree.value);
+            if (flatTree.left) root.left = reconstructTree(flatTree.left);
+            if (flatTree.right) root.right = reconstructTree(flatTree.right);
+            
+            return root;
+        }
+
+        // Draw tree on canvas
+        function drawTree(root, x, y, horizontalSpacing, highlightValue = null, searchValue = null, pathNodes = []) {
+            if (!root) return;
+            
+            const nodeRadius = 20;
+            
+            // Draw connections to children first (so they appear behind nodes)
+            if (root.left) {
+                const leftX = x - horizontalSpacing;
+                const leftY = y + 60;
+                
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(leftX, leftY);
+                ctx.strokeStyle = pathNodes.includes(root) && pathNodes.includes(root.left) ? '#FF4800' : '#000000';
+                ctx.lineWidth = pathNodes.includes(root) && pathNodes.includes(root.left) ? 3 : 2;
+                ctx.stroke();
+                
+                drawTree(root.left, leftX, leftY, horizontalSpacing / 1.5, highlightValue, searchValue, pathNodes);
+            }
+            
+            if (root.right) {
+                const rightX = x + horizontalSpacing;
+                const rightY = y + 60;
+                
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(rightX, rightY);
+                ctx.strokeStyle = pathNodes.includes(root) && pathNodes.includes(root.right) ? '#FF4800' : '#000000';
+                ctx.lineWidth = pathNodes.includes(root) && pathNodes.includes(root.right) ? 3 : 2;
+                ctx.stroke();
+                
+                drawTree(root.right, rightX, rightY, horizontalSpacing / 1.5, highlightValue, searchValue, pathNodes);
+            }
+            
+            // Draw the node
+            ctx.beginPath();
+            ctx.arc(x, y, nodeRadius, 0, Math.PI * 2);
+            
+            if (root.value === highlightValue) {
+                ctx.fillStyle = '#FF4800';
+            } else if (root.value === searchValue) {
+                ctx.fillStyle = '#FD9F78';
+            } else if (pathNodes.includes(root)) {
+                ctx.fillStyle = '#FD9F78';
+            } else {
+                ctx.fillStyle = '#FFFFFF';
+            }
+            
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw the text
+            ctx.fillStyle = root.value === highlightValue ? '#FFFFFF' : '#000000';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(root.value, x, y);
+        }
+
+        // Function to find path to a successor
+        function findPathToSuccessor(root, value, successor, path = []) {
+            if (!root) return null;
+            
+            if (successor === null) return [];
+            
+            let current = root;
+            let result = [];
+            
+            while (current !== null) {
+                result.push(current);
+                
+                if (current.value === successor) {
+                    return result;
+                }
+                
+                if (current.value > value) {
+                    current = current.left;
+                } else {
+                    current = current.right;
+                }
+            }
+            
+            return [];
+        }
+
+        // Update the visualization for the current step
+        function updateVisualization() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Reset array elements
+            document.querySelectorAll('.array-element').forEach(element => {
+                element.classList.remove('current-element');
+            });
+            
+            // Update step indicator
+            stepIndicator.textContent = `Step ${currentStep}/12`;
+            
+            if (currentStep === 0) {
+                explanation.innerHTML = 'We start with an empty Binary Search Tree (BST). Let\'s process the array from right to left.';
+                return;
+            }
+            
+            const elementIndex = currentStep - 1;
+            const currentElement = originalArray[elementIndex];
+            document.getElementById('element-' + (processedArray.length - elementIndex - 1)).classList.add('current-element');
+            
+            const reconstructedTree = reconstructTree(treeStates[currentStep - 1]);
+            const successor = successorResults[currentStep];
+            const pathNodes = findPathToSuccessor(reconstructedTree, currentElement, successor);
+            
+            drawTree(
+                reconstructedTree, 
+                canvas.width / 2, 
+                50, 
+                canvas.width / 4, 
+                null, 
+                currentElement,
+                pathNodes
+            );
+            
+            if (successor !== null) {
+                explanation.innerHTML = `Processing element <strong>${currentElement}</strong>: 
+                                        We search for the successor (least greater element) in the current BST.
+                                        The successor is <strong>${successor}</strong>.
+                                        Now we insert <strong>${currentElement}</strong> into the BST.`;
+            } else {
+                explanation.innerHTML = `Processing element <strong>${currentElement}</strong>: 
+                                        We search for the successor (least greater element) in the current BST.
+                                        There is no successor found.
+                                        Now we insert <strong>${currentElement}</strong> into the BST.`;
+            }
+            
+            // Draw the tree after insertion
+            if (currentStep < treeStates.length) {
+                const nextTree = reconstructTree(treeStates[currentStep]);
+                setTimeout(() => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    drawTree(
+                        nextTree, 
+                        canvas.width / 2, 
+                        50, 
+                        canvas.width / 4, 
+                        currentElement
+                    );
+                }, 1500);
+            }
+        }
+
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+                nextBtn.disabled = false;
+                prevBtn.disabled = currentStep === 0;
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < originalArray.length) {
+                currentStep++;
+                updateVisualization();
+                prevBtn.disabled = false;
+                nextBtn.disabled = currentStep === originalArray.length;
+            }
+        });
+
+        // Initialize the visualization
+        initializeArrayDisplay();
+        precomputeStates();
+        updateVisualization();
+    </script>
+</body>
+</html>
