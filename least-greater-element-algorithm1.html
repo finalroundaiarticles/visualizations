@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Array Transformation Visualization</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .explanation {
+            color: #000000;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .visualization {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+            position: relative;
+            width: 100%;
+        }
+        .array {
+            display: flex;
+            gap: 10px;
+        }
+        .element {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            font-weight: bold;
+            background-color: #FFFFFF;
+            transition: all 0.5s ease;
+        }
+        .element.highlight {
+            background-color: #FD9F78;
+            transform: scale(1.1);
+        }
+        .arrow {
+            position: absolute;
+            width: 2px;
+            background-color: #FF4800;
+            transform-origin: top;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .arrow-head {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 10px solid #FF4800;
+            bottom: -5px;
+            left: -5px;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        .button:hover {
+            background-color: #FD9F78;
+        }
+        .button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .steps-info {
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Array Transformation Visualization</h1>
+        
+        <div class="explanation">
+            <p>This visualization shows how an array transforms from its original state to a new state based on a specific rule. For each element in the original array, we find the next greater element to its right. If there is no greater element, we replace it with -1.</p>
+        </div>
+        
+        <div class="visualization">
+            <div class="array-container">
+                <div class="array original-array" id="originalArray"></div>
+            </div>
+            
+            <div class="array-container">
+                <div class="array transformed-array" id="transformedArray"></div>
+            </div>
+        </div>
+        
+        <div class="steps-info" id="stepsInfo">Step 0: Initial arrays</div>
+        
+        <div class="controls">
+            <button class="button" id="prevBtn" disabled>Previous</button>
+            <button class="button" id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const originalArray = [8, 58, 71, 18, 31, 32, 63, 92, 43, 3, 91, 93];
+            const transformedArray = [18, 63, 91, 31, 32, 43, 91, 93, 91, 91, 93, -1];
+            
+            const originalArrayEl = document.getElementById('originalArray');
+            const transformedArrayEl = document.getElementById('transformedArray');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const stepsInfo = document.getElementById('stepsInfo');
+            
+            let currentStep = 0;
+            const totalSteps = originalArray.length + 1; // +1 for initial state
+            
+            // Initialize arrays
+            function initArrays() {
+                originalArrayEl.innerHTML = '';
+                transformedArrayEl.innerHTML = '';
+                
+                originalArray.forEach((value, index) => {
+                    const element = document.createElement('div');
+                    element.className = 'element';
+                    element.id = `original-${index}`;
+                    element.textContent = value;
+                    originalArrayEl.appendChild(element);
+                });
+                
+                transformedArray.forEach((value, index) => {
+                    const element = document.createElement('div');
+                    element.className = 'element';
+                    element.id = `transformed-${index}`;
+                    element.textContent = value;
+                    element.style.opacity = '0.3'; // Start with low opacity
+                    transformedArrayEl.appendChild(element);
+                });
+            }
+            
+            // Create arrows between corresponding elements
+            function createArrows() {
+                const arrayContainer = document.querySelector('.array-container');
+                
+                originalArray.forEach((_, index) => {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'arrow';
+                    arrow.id = `arrow-${index}`;
+                    
+                    const arrowHead = document.createElement('div');
+                    arrowHead.className = 'arrow-head';
+                    arrow.appendChild(arrowHead);
+                    
+                    document.querySelector('.visualization').appendChild(arrow);
+                });
+            }
+            
+            // Update the visualization based on current step
+            function updateVisualization() {
+                // Reset all highlights and arrows
+                document.querySelectorAll('.element').forEach(el => {
+                    el.classList.remove('highlight');
+                });
+                
+                document.querySelectorAll('.arrow').forEach(arrow => {
+                    arrow.style.opacity = '0';
+                });
+                
+                if (currentStep === 0) {
+                    // Initial state - all transformed elements are dim
+                    document.querySelectorAll('.transformed-array .element').forEach(el => {
+                        el.style.opacity = '0.3';
+                    });
+                    stepsInfo.textContent = 'Step 0: Initial arrays';
+                } else {
+                    const index = currentStep - 1;
+                    
+                    // Highlight current elements
+                    const originalEl = document.getElementById(`original-${index}`);
+                    const transformedEl = document.getElementById(`transformed-${index}`);
+                    
+                    originalEl.classList.add('highlight');
+                    transformedEl.classList.add('highlight');
+                    transformedEl.style.opacity = '1';
+                    
+                    // Show arrow
+                    const arrow = document.getElementById(`arrow-${index}`);
+                    arrow.style.opacity = '1';
+                    
+                    // Position arrow
+                    const originalRect = originalEl.getBoundingClientRect();
+                    const transformedRect = transformedEl.getBoundingClientRect();
+                    
+                    const startX = originalRect.left + originalRect.width / 2;
+                    const startY = originalRect.bottom;
+                    const endX = transformedRect.left + transformedRect.width / 2;
+                    const endY = transformedRect.top;
+                    
+                    const distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+                    const angle = Math.atan2(endY - startY, endX - startX);
+                    
+                    arrow.style.height = `${distance}px`;
+                    arrow.style.top = `${startY}px`;
+                    arrow.style.left = `${startX}px`;
+                    arrow.style.transform = `rotate(${angle + Math.PI/2}rad)`;
+                    
+                    stepsInfo.textContent = `Step ${currentStep}: ${originalArray[index]} transforms to ${transformedArray[index]}`;
+                }
+                
+                // Update button states
+                prevBtn.disabled = currentStep === 0;
+                nextBtn.disabled = currentStep === totalSteps - 1;
+            }
+            
+            // Event listeners
+            prevBtn.addEventListener('click', function() {
+                if (currentStep > 0) {
+                    currentStep--;
+                    updateVisualization();
+                }
+            });
+            
+            nextBtn.addEventListener('click', function() {
+                if (currentStep < totalSteps - 1) {
+                    currentStep++;
+                    updateVisualization();
+                }
+            });
+            
+            // Initialize
+            initArrays();
+            createArrows();
+            updateVisualization();
+            
+            // Position arrows after DOM has fully loaded
+            window.addEventListener('load', function() {
+                // Force layout recalculation
+                setTimeout(function() {
+                    const arrows = document.querySelectorAll('.arrow');
+                    arrows.forEach(arrow => {
+                        arrow.style.opacity = '0';
+                    });
+                }, 100);
+            });
+        });
+    </script>
+</body>
+</html>
