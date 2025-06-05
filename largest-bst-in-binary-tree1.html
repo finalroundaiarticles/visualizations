@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Tree with BST Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+        }
+        
+        #canvas-container {
+            margin: 20px auto;
+            position: relative;
+            height: 400px;
+        }
+        
+        canvas {
+            border: 1px solid #FD9F78;
+            border-radius: 8px;
+            background-color: #FFFFFF;
+        }
+        
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .explanation {
+            background-color: #FFFFFF;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .highlight {
+            color: #FF4800;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Tree with BST Visualization</h1>
+        
+        <div id="canvas-container">
+            <canvas id="treeCanvas" width="800" height="400"></canvas>
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <p>Welcome to the Binary Tree visualization! This example shows a binary tree with values (10, 5, 15, 1, 8, 7).</p>
+            <p>We'll identify the largest Binary Search Tree (BST) subtree within this tree.</p>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const explanationBox = document.getElementById('explanation');
+        
+        // Tree Node class
+        class TreeNode {
+            constructor(val) {
+                this.val = val;
+                this.left = null;
+                this.right = null;
+                this.x = 0;
+                this.y = 0;
+            }
+        }
+        
+        // Create the binary tree
+        const root = new TreeNode(10);
+        root.left = new TreeNode(5);
+        root.right = new TreeNode(15);
+        root.left.left = new TreeNode(1);
+        root.left.right = new TreeNode(8);
+        root.left.right.left = new TreeNode(7);
+        
+        // Set initial positions
+        root.x = canvas.width / 2;
+        root.y = 50;
+        
+        if (root.left) {
+            root.left.x = root.x - 150;
+            root.left.y = root.y + 80;
+        }
+        
+        if (root.right) {
+            root.right.x = root.x + 150;
+            root.right.y = root.y + 80;
+        }
+        
+        if (root.left && root.left.left) {
+            root.left.left.x = root.left.x - 80;
+            root.left.left.y = root.left.y + 80;
+        }
+        
+        if (root.left && root.left.right) {
+            root.left.right.x = root.left.x + 80;
+            root.left.right.y = root.left.y + 80;
+        }
+        
+        if (root.left && root.left.right && root.left.right.left) {
+            root.left.right.left.x = root.left.right.x - 40;
+            root.left.right.left.y = root.left.right.y + 80;
+        }
+        
+        // Animation steps
+        let currentStep = 0;
+        const steps = [
+            {
+                name: "Initial Tree",
+                description: "<p>This is our initial binary tree with values (10, 5, 15, 1, 8, 7).</p><p>A <span class='highlight'>Binary Search Tree (BST)</span> is a binary tree where for each node, all values in the left subtree are less than the node's value, and all values in the right subtree are greater than the node's value.</p>",
+                bstNodes: []
+            },
+            {
+                name: "Check Node 10",
+                description: "<p>Let's start by checking if the entire tree with root 10 is a BST.</p><p>For a tree to be a valid BST, all nodes in the left subtree should be less than the root, and all nodes in the right subtree should be greater than the root.</p>",
+                highlightNode: "10",
+                bstNodes: []
+            },
+            {
+                name: "Check Left Subtree of 10",
+                description: "<p>The left subtree of 10 has nodes with values 5, 1, 8, and 7.</p><p>For this to be a valid BST, all these values should be less than 10.</p>",
+                highlightNodes: ["5", "1", "8", "7"],
+                bstNodes: []
+            },
+            {
+                name: "Issue with Left Subtree",
+                description: "<p>Let's check the node 5. Its left child is 1 (correct: 1 < 5) and its right child is 8 (correct: 8 > 5).</p><p>Now, let's check node 8. Its left child is 7 (correct: 7 < 8).</p><p>So far, the subtree with root 5 follows BST properties.</p>",
+                highlightNodes: ["5", "1", "8", "7"],
+                bstNodes: ["5", "1", "8", "7"]
+            },
+            {
+                name: "Check Right Subtree of 10",
+                description: "<p>The right subtree of 10 has only node 15.</p><p>For this to be a valid BST, its value should be greater than 10, which is true.</p>",
+                highlightNode: "15",
+                bstNodes: ["5", "1", "8", "7"]
+            },
+            {
+                name: "Full Tree Evaluation",
+                description: "<p>However, the entire tree is not a BST because:</p><p>• Node 7 is in the left subtree of 10, so it should be less than 10 (which is true).</p><p>• But node 7 is also in the right subtree of 5, so it should be greater than 5 (which is true).</p><p>• And since node 7 is in the left subtree of 8, it should be less than 8 (which is true).</p><p>The issue is that 7 is in the right subtree of 5, but not the left of 8. In a BST, it would need to be correctly positioned.</p>",
+                highlightNode: "7",
+                bstNodes: []
+            },
+            {
+                name: "Largest BST Subtree",
+                description: "<p>After checking all subtrees, we find that the largest BST subtree is rooted at node 5, containing nodes 5, 1, and 8.</p><p>Note: Node 7 is excluded because it makes the subtree invalid as a BST. For this subtree to be a valid BST, node 7 would need to be placed differently.</p>",
+                bstNodes: ["5", "1", "8"]
+            }
+        ];
+        
+        // Draw a node
+        function drawNode(node, isBST = false, isHighlighted = false) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 25, 0, Math.PI * 2);
+            
+            if (isHighlighted) {
+                ctx.fillStyle = '#FF4800';  // Highlight color
+            } else if (isBST) {
+                ctx.fillStyle = '#FD9F78';  // BST color
+            } else {
+                ctx.fillStyle = '#FFFFFF';  // Regular node color
+            }
+            
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#000000';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.val, node.x, node.y);
+        }
+        
+        // Draw a line between nodes
+        function drawLine(from, to) {
+            ctx.beginPath();
+            ctx.moveTo(from.x, from.y);
+            ctx.lineTo(to.x, to.y);
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        // Draw the entire tree
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const currentStepData = steps[currentStep];
+            
+            // Draw edges first
+            if (root.left) {
+                drawLine(root, root.left);
+            }
+            if (root.right) {
+                drawLine(root, root.right);
+            }
+            if (root.left && root.left.left) {
+                drawLine(root.left, root.left.left);
+            }
+            if (root.left && root.left.right) {
+                drawLine(root.left, root.left.right);
+            }
+            if (root.left && root.left.right && root.left.right.left) {
+                drawLine(root.left.right, root.left.right.left);
+            }
+            
+            // Helper function to check if a node should be highlighted or marked as BST
+            function isNodeHighlighted(node) {
+                if (currentStepData.highlightNode && currentStepData.highlightNode === node.val.toString()) {
+                    return true;
+                }
+                if (currentStepData.highlightNodes && currentStepData.highlightNodes.includes(node.val.toString())) {
+                    return true;
+                }
+                return false;
+            }
+            
+            function isNodeBST(node) {
+                return currentStepData.bstNodes && currentStepData.bstNodes.includes(node.val.toString());
+            }
+            
+            // Draw nodes
+            drawNode(root, isNodeBST(root), isNodeHighlighted(root));
+            
+            if (root.left) {
+                drawNode(root.left, isNodeBST(root.left), isNodeHighlighted(root.left));
+            }
+            
+            if (root.right) {
+                drawNode(root.right, isNodeBST(root.right), isNodeHighlighted(root.right));
+            }
+            
+            if (root.left && root.left.left) {
+                drawNode(root.left.left, isNodeBST(root.left.left), isNodeHighlighted(root.left.left));
+            }
+            
+            if (root.left && root.left.right) {
+                drawNode(root.left.right, isNodeBST(root.left.right), isNodeHighlighted(root.left.right));
+            }
+            
+            if (root.left && root.left.right && root.left.right.left) {
+                drawNode(root.left.right.left, isNodeBST(root.left.right.left), isNodeHighlighted(root.left.right.left));
+            }
+            
+            // Add step title and legend
+            ctx.fillStyle = '#FF4800';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(currentStepData.name, 20, 30);
+            
+            // Legend
+            ctx.font = '14px Arial';
+            ctx.fillStyle = '#000000';
+            ctx.fillText('Legend:', canvas.width - 180, 20);
+            
+            // Regular node
+            ctx.beginPath();
+            ctx.arc(canvas.width - 160, 40, 10, 0, Math.PI * 2);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'left';
+            ctx.fillText('Regular Node', canvas.width - 140, 40);
+            
+            // BST node
+            ctx.beginPath();
+            ctx.arc(canvas.width - 160, 70, 10, 0, Math.PI * 2);
+            ctx.fillStyle = '#FD9F78';
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+            ctx.fillStyle = '#000000';
+            ctx.fillText('BST Node', canvas.width - 140, 70);
+            
+            // Highlighted node
+            ctx.beginPath();
+            ctx.arc(canvas.width - 160, 100, 10, 0, Math.PI * 2);
+            ctx.fillStyle = '#FF4800';
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+            ctx.fillStyle = '#000000';
+            ctx.fillText('Highlighted Node', canvas.width - 140, 100);
+            
+            // Update explanation
+            explanationBox.innerHTML = currentStepData.description;
+        }
+        
+        // Initialize the visualization
+        drawTree();
+        
+        // Navigation event handlers
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                drawTree();
+                prevBtn.disabled = false;
+                
+                if (currentStep === steps.length - 1) {
+                    nextBtn.disabled = true;
+                }
+            }
+        });
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                drawTree();
+                nextBtn.disabled = false;
+                
+                if (currentStep === 0) {
+                    prevBtn.disabled = true;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
