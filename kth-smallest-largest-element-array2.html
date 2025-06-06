@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heap-Based Solution Process</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .description {
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .visualization {
+            position: relative;
+            height: 400px;
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .step {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .step.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .step-title {
+            color: #FF4800;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .heap-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            flex: 1;
+        }
+
+        .heap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 45%;
+        }
+
+        .heap-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #FF4800;
+        }
+
+        .tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .tree-level {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .node {
+            width: 40px;
+            height: 40px;
+            background-color: #FD9F78;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 10px;
+            font-weight: bold;
+            color: #FFFFFF;
+            position: relative;
+        }
+
+        .node.highlighted {
+            background-color: #FF4800;
+            transform: scale(1.1);
+            transition: all 0.3s ease;
+        }
+
+        .edge {
+            position: absolute;
+            background-color: #000000;
+            height: 2px;
+            transform-origin: 0 0;
+            z-index: -1;
+        }
+
+        .array {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .array-item {
+            width: 40px;
+            height: 40px;
+            background-color: #FD9F78;
+            margin: 0 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #FFFFFF;
+            font-weight: bold;
+        }
+
+        .array-item.current {
+            background-color: #FF4800;
+            transform: scale(1.1);
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+
+        .nav-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-left: 4px solid #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Heap-Based Solution Process</h1>
+        
+        <div class="description">
+            <p>This visualization demonstrates how min-heap and max-heap data structures are used to find the k smallest and k largest elements in an array. We'll process the elements [7, 10, 4, 3, 20, 15] step by step and show the evolution of both heaps.</p>
+            <p>For demonstration, we'll use k=3 to find the 3 largest and 3 smallest elements.</p>
+        </div>
+        
+        <div class="visualization">
+            <!-- Step 1: Introduction -->
+            <div class="step active" id="step1">
+                <h2 class="step-title">Step 1: Introduction to Heaps</h2>
+                <div class="explanation">
+                    <p>We'll use two types of heaps to solve this problem:</p>
+                    <p><strong>Min-Heap:</strong> To find k largest elements, we'll keep k smallest elements seen so far.</p>
+                    <p><strong>Max-Heap:</strong> To find k smallest elements, we'll keep k largest elements seen so far.</p>
+                </div>
+                <div class="array">
+                    <div class="array-item">7</div>
+                    <div class="array-item">10</div>
+                    <div class="array-item">4</div>
+                    <div class="array-item">3</div>
+                    <div class="array-item">20</div>
+                    <div class="array-item">15</div>
+                </div>
+            </div>
+
+            <!-- Step 2: Processing first element -->
+            <div class="step" id="step2">
+                <h2 class="step-title">Step 2: Processing First Element (7)</h2>
+                <div class="array">
+                    <div class="array-item current">7</div>
+                    <div class="array-item">10</div>
+                    <div class="array-item">4</div>
+                    <div class="array-item">3</div>
+                    <div class="array-item">20</div>
+                    <div class="array-item">15</div>
+                </div>
+                <div class="heap-container">
+                    <div class="heap">
+                        <div class="heap-title">Min-Heap (for k largest)</div>
+                        <div class="tree">
+                            <div class="tree-level">
+                                <div class="node highlighted">7</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="heap">
+                        <div class="heap-title">Max-Heap (for k smallest)</div>
+                        <div class="tree">
+                            <div class="tree-level">
+                                <div class="node highlighted">7</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="explanation">
+                    <p>Since this is the first element, we add 7 to both heaps. The min-heap will help us find the k largest elements, and the max-heap will help us find the k smallest elements.</p>
+                </div>
+            </div>
+
+            <!-- Step 3: Processing second element -->
+            <div class="step" id="step3">
+                <h2 class="step-title">Step 3: Processing Second Element (10)</h2>
+                <div class="array">
+                    <div class="array-item">7</div>
+                    <div class="array-item current">10</div>
+                    <div class="array-item">4</div>
+                    <div class="array-item">3</div>
+                    <div class="array-item">20</div>
+                    <div class="array-item">15</div>
+                </div>
+                <div class="heap-container">
+                    <div class="heap">
+                        <div class="heap-title">Min-Heap (for k largest)</div>
+                        <div class="tree">
+                            <div class="tree-level">
+                                <div class="node">7</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node highlighted">10</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="heap">
+                        <div class="heap-title">Max-Heap (for k smallest)</div>
+                        <div class="tree">
+                            <div class="tree-level">
+                                <div class="node highlighted">10</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node">7</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="explanation">
+                    <p>We add 10 to both heaps. In the min-heap, 7 remains the root as it's smaller. In the max-heap, 10 becomes the root as it's larger than 7.</p>
+                </div>
+            </div>
+
+            <!-- Step 4: Processing third element -->
+            <div class="step" id="step4">
+                <h2 class="step-title">Step 4: Processing Third Element (4)</h2>
+                <div class="array">
+                    <div class="array-item">7</div>
+                    <div class="array-item">10</div>
+                    <div class="array-item current">4</div>
+                    <div class="array-item">3</div>
+                    <div class="array-item">20</div>
+                    <div class="array-item">15</div>
+                </div>
+                <div class="heap-container">
+                    <div class="heap">
+                        <div class="heap-title">Min-Heap (for k largest)</div>
+                        <div class="tree">
+                            <div class="tree-level">
+                                <div class="node highlighted">4</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node">10</div>
+                                <div class="node">7</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="heap">
+                        <div class="heap-title">Max-Heap (for k smallest)</div>
+                        <div class="tree">
+                            <div class="tree-level">
+                                <div class="node">10</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node">7</div>
+                                <div class="node highlighted">4</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="explanation">
+                    <p>We add 4 to both heaps. In the min-heap, 4 becomes the root as it's the smallest. In the max-heap, 4 is added as a child of 10 since it's smaller than 10.</p>
+                </div>
+            </div>
+
+            <!-- Step 5: Processing fourth element -->
+            <div class="step" id="step5">
+                <h2 class="step-title">Step 5: Processing Fourth Element (3)</h2>
+                <div class="array">
+                    <div class="array-item">7</div>
+                    <div class="array-item">10</div>
+                    <div class="array-item">4</div>
+                    <div class="array-item current">3</div>
+                    <div class="array-item">20</div>
+                    <div class="array-item">15</div>
+                </div>
+                <div class="heap-container">
+                    <div class="heap">
+                        <div class="heap-title">Min-Heap (for k largest)</div>
+                        <div class="tree">
+                            <div class="tree-level">
+                                <div class="node highlighted">3</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node">4</div>
+                                <div class="node">7</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node">10</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="heap">
+                        <div class="heap-title">Max-Heap (for k smallest)</div>
+                        <div class="tree">
+                            <div class="tree-level">
+                                <div class="node">10</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node">7</div>
+                                <div class="node">4</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node highlighted">3</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="explanation">
+                    <p>We add 3 to both heaps. In the min-heap, 3 becomes the root as it's the smallest. In the max-heap, 3 is added but we now have 4 elements, so we need to start limiting to k=3 elements. Since 10 is the largest and we want the smallest elements, we'll remove 10 in the next step.</p>
+                </div>
+            </div>
+
+            <!-- Step 6: Limiting max-heap to k elements -->
+            <div class="step" id="step6">
+                <h2 class="step-title">Step 6: Limiting Max-Heap to k Elements</h2>
+                <div class="array">
+                    <div class="array-item">7</div>
+                    <div class="array-item">10</div>
+                    <div class="array-item">4</div>
+                    <div class="array-item current">3</div>
+                    <div class="array-item">20</div>
+                    <div class="array-item">15</div>
+                </div>
+                <div class="heap-container">
+                    <div class="heap">
+                        <div class="heap-title">Min-Heap (for k largest)</div>
+                        <div class="tree">
+                            <div class="tree-level">
+                                <div class="node">3</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node">4</div>
+                                <div class="node">7</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node">10</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="heap">
+                        <div class="heap-title">Max-Heap (for k smallest)</div>
+                        <div class="tree">
+                            <div class="tree-level">
+                                <div class="node">7</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node">3</div>
+                                <div class="node">4</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="explanation">
+                    <p>Since we want to keep only k=3 smallest elements in the max-heap, we remove the largest element (10). Now the max-heap contains [7, 3, 4] with 7 as the root.</p>
+                </div>
+            </div>
+
+            <!-- Step 7: Processing fifth element -->
+            <div class="step" id="step7">
+                <h2 class="step-title">Step 7: Processing Fifth Element (20)</h2>
+                <div class="array">
+                    <div class="array-item">7</div>
+                    <div class="array-item">10</div>
+                    <div class="array-item">4</div>
+                    <div class="array-item">3</div>
+                    <div class="array-item current">20</div>
+                    <div class="array-item">15</div>
+                </div>
+                <div class="heap-container">
+                    <div class="heap">
+                        <div class="heap-title">Min-Heap (for k largest)</div>
+                        <div class="tree">
+                            <div class="tree-level">
+                                <div class="node">3</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node">4</div>
+                                <div class="node">7</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node">10</div>
+                                <div class="node highlighted">20</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="heap">
+                        <div class="heap-title">Max-Heap (for k smallest)</div>
+                        <div class="tree">
+                            <div class="tree-level">
+                                <div class="node">7</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node">3</div>
+                                <div class="node">4</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="explanation">
+                    <p>We add 20 to the min-heap. Since 20 > 3 (the min-heap root), 20 becomes part of the heap. For the max-heap, since 20 > 7 (the max-heap root) and we already have k=3 elements, we don't add 20 to the max-heap.</p>
+                    <p>Note: We now have 5 elements in the min-heap, but we'll limit it to k=3 in subsequent steps.</p>
+                </div>
+            </div>
+
+            <!-- Step 8: Limiting min-heap to k elements -->
+            <div class="step" id="step8">
+                <h2 class="step-title">Step 8: Limiting Min-Heap to k Elements</h2>
+                <div class="array">
+                    <div class="array-item">7</div>
+                    <div class="array-item">10</div>
+                    <div class="array-item">4</div>
+                    <div class="array-item">3</div>
+                    <div class="array-item current">20</div>
+                    <div class="array-item">15</div>
+                </div>
+                <div class="heap-container">
+                    <div class="heap">
+                        <div class="heap-title">Min-Heap (for k largest)</div>
+                        <div class="tree">
+                            <div class="tree-level">
+                                <div class="node">4</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node">10</div>
+                                <div class="node">7</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node">20</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="heap">
+                        <div class="heap-title">Max-Heap (for k smallest)</div>
+                        <div class="tree">
+                            <div class="tree-level">
+                                <div class="node">7</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node">3</div>
+                                <div class="node">4</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="explanation">
+                    <p>Since we want to keep only k=3 largest elements using the min-heap, we remove the two smallest elements (3 and then 4). After removing 3, the heap is rebalanced, and 4 becomes the root.</p>
+                </div>
+            </div>
+
+            <!-- Step 9: Processing sixth element -->
+            <div class="step" id="step9">
+                <h2 class="step-title">Step 9: Processing Sixth Element (15)</h2>
+                <div class="array">
+                    <div class="array-item">7</div>
+                    <div class="array-item">10</div>
+                    <div class="array-item">4</div>
+                    <div class="array-item">3</div>
+                    <div class="array-item">20</div>
+                    <div class="array-item current">15</div>
+                </div>
+                <div class="heap-container">
+                    <div class="heap">
+                        <div class="heap-title">Min-Heap (for k largest)</div>
+                        <div class="tree">
+                            <div class="tree-level">
+                                <div class="node">7</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node">10</div>
+                                <div class="node highlighted">15</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node">20</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="heap">
+                        <div class="heap-title">Max-Heap (for k smallest)</div>
+                        <div class="tree">
+                            <div class="tree-level">
+                                <div class="node">7</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node">3</div>
+                                <div class="node">4</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="explanation">
+                    <p>We add 15 to the min-heap and remove the smallest element (which was 4) to maintain k=3 elements. After rebalancing, 7 becomes the root. For the max-heap, since 15 > 7 (the max-heap root) and we already have k=3 elements, we don't add 15 to the max-heap.</p>
+                </div>
+            </div>
+
+            <!-- Step 10: Final Result -->
+            <div class="step" id="step10">
+                <h2 class="step-title">Final Result</h2>
+                <div class="array">
+                    <div class="array-item">7</div>
+                    <div class="array-item">10</div>
+                    <div class="array-item">4</div>
+                    <div class="array-item">3</div>
+                    <div class="array-item">20</div>
+                    <div class="array-item">15</div>
+                </div>
+                <div class="heap-container">
+                    <div class="heap">
+                        <div class="heap-title">Min-Heap (for k largest)</div>
+                        <div class="tree">
+                            <div class="tree-level">
+                                <div class="node">7</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node">10</div>
+                                <div class="node">15</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node">20</div>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <p>k largest elements: [10, 15, 20]</p>
+                        </div>
+                    </div>
+                    <div class="heap">
+                        <div class="heap-title">Max-Heap (for k smallest)</div>
+                        <div class="tree">
+                            <div class="tree-level">
+                                <div class="node">7</div>
+                            </div>
+                            <div class="tree-level">
+                                <div class="node">3</div>
+                                <div class="node">4</div>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <p>k smallest elements: [3, 4, 7]</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="explanation">
+                    <p>We've processed all elements in the array [7, 10, 4, 3, 20, 15].</p>
+                    <p>The min-heap contains the k=3 largest elements [10, 15, 20], with the smallest of these (7) at the root.</p>
+                    <p>The max-heap contains the k=3 smallest elements [3, 4, 7], with the largest of these (7) at the root.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
+            <button class="nav-btn" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const steps = document.querySelectorAll('.step');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        let currentStep = 0;
+
+        function showStep(stepIndex) {
+            // Hide all steps
+            steps.forEach(step => step.classList.remove('active'));
+            
+            // Show the current step
+            steps[stepIndex].classList.add('active');
+            
+            // Update button states
+            prevBtn.disabled = stepIndex === 0;
+            nextBtn.disabled = stepIndex === steps.length - 1;
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                showStep(currentStep);
+            }
+        });
+
+        // Draw edges between nodes (optional, for a more complete visualization)
+        function drawEdges() {
+            // This function would need to be implemented to draw lines between parent and child nodes
+            // It's complex to do this dynamically with pure JS and would make the code much longer
+            // For simplicity, I've omitted this, but in a real implementation, you would calculate
+            // the positions of nodes and draw SVG or canvas lines between them
+        }
+
+        // Initialize the visualization
+        showStep(currentStep);
+    </script>
+</body>
+</html>
