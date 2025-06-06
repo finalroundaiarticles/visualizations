@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combination Generation with Tree Diagram</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        
+        .tree-container {
+            position: relative;
+            height: 500px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .list-container {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+        }
+        
+        .list-box {
+            background-color: #FD9F78;
+            border-radius: 10px;
+            padding: 10px;
+            min-width: 100px;
+            color: #000000;
+            font-weight: bold;
+        }
+        
+        .node {
+            position: absolute;
+            background-color: #FFFFFF;
+            border: 2px solid #FF4800;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            font-weight: bold;
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+        
+        .edge {
+            position: absolute;
+            background-color: #FF4800;
+            height: 2px;
+            transform-origin: left center;
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+        
+        .combination-display {
+            margin: 30px 0;
+            font-size: 18px;
+        }
+        
+        .combination-box {
+            display: inline-block;
+            background-color: #FD9F78;
+            border-radius: 10px;
+            padding: 10px 20px;
+            margin: 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .highlight {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 72, 0, 0.5);
+        }
+        
+        .navigation {
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .explanation {
+            background-color: #FD9F78;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        
+        .step-counter {
+            font-weight: bold;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Combination Generation with Tree Diagram</h1>
+        
+        <div class="list-container">
+            <div class="list-box">List 1:<br>[4, 10]</div>
+            <div class="list-box">List 2:<br>[0, 9]</div>
+            <div class="list-box">List 3:<br>[5, 18]</div>
+        </div>
+        
+        <div class="tree-container" id="tree"></div>
+        
+        <div class="combination-display">
+            <p>Combination: <span id="current-combination"></span></p>
+            <p>Range: <span id="current-range"></span></p>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <p class="step-counter">Step 1:</p>
+            <p>We start with three lists: [4, 10], [0, 9], and [5, 18]. Our goal is to generate all possible combinations by taking one element from each list.</p>
+        </div>
+        
+        <div class="navigation">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Lists for combinations
+        const lists = [
+            [4, 10],
+            [0, 9],
+            [5, 18]
+        ];
+        
+        // Generate all combinations
+        const combinations = [];
+        for (let i = 0; i < lists[0].length; i++) {
+            for (let j = 0; j < lists[1].length; j++) {
+                for (let k = 0; k < lists[2].length; k++) {
+                    combinations.push([lists[0][i], lists[1][j], lists[2][k]]);
+                }
+            }
+        }
+        
+        // Calculate range for each combination
+        const ranges = combinations.map(combo => {
+            const min = Math.min(...combo);
+            const max = Math.max(...combo);
+            return max - min;
+        });
+        
+        // Find combination with smallest range
+        const minRangeIndex = ranges.indexOf(Math.min(...ranges));
+        
+        // Setup animation sequence
+        const animationSteps = [
+            {
+                explanation: "We start with three lists: [4, 10], [0, 9], and [5, 18]. Our goal is to generate all possible combinations by taking one element from each list.",
+                nodes: [],
+                edges: [],
+                combination: null,
+                range: null
+            },
+            {
+                explanation: "Starting from the root, we'll create our first branch using the first element from List 1, which is 4.",
+                nodes: [{id: 'root', x: 500, y: 50, value: 'Root'}],
+                edges: [],
+                combination: null,
+                range: null
+            },
+            {
+                explanation: "From value 4 in List 1, we branch to value 0 from List 2.",
+                nodes: [
+                    {id: 'root', x: 500, y: 50, value: 'Root'},
+                    {id: 'L1-4', x: 250, y: 150, value: '4'}
+                ],
+                edges: [{from: 'root', to: 'L1-4'}],
+                combination: null,
+                range: null
+            },
+            {
+                explanation: "We continue our first path by connecting value 0 from List 2.",
+                nodes: [
+                    {id: 'root', x: 500, y: 50, value: 'Root'},
+                    {id: 'L1-4', x: 250, y: 150, value: '4'},
+                    {id: 'L2-0', x: 150, y: 250, value: '0'}
+                ],
+                edges: [
+                    {from: 'root', to: 'L1-4'},
+                    {from: 'L1-4', to: 'L2-0'}
+                ],
+                combination: null,
+                range: null
+            },
+            {
+                explanation: "We complete our first combination path by connecting value 5 from List 3. This gives us the combination [4, 0, 5].",
+                nodes: [
+                    {id: 'root', x: 500, y: 50, value: 'Root'},
+                    {id: 'L1-4', x: 250, y: 150, value: '4'},
+                    {id: 'L2-0', x: 150, y: 250, value: '0'},
+                    {id: 'L3-5', x: 100, y: 350, value: '5'}
+                ],
+                edges: [
+                    {from: 'root', to: 'L1-4'},
+                    {from: 'L1-4', to: 'L2-0'},
+                    {from: 'L2-0', to: 'L3-5'}
+                ],
+                combination: [4, 0, 5],
+                range: 5
+            },
+            {
+                explanation: "For our second combination, we keep the same path through List 1 and List 2, but choose the second value from List 3, which is 18. This gives us [4, 0, 18].",
+                nodes: [
+                    {id: 'root', x: 500, y: 50, value: 'Root'},
+                    {id: 'L1-4', x: 250, y: 150, value: '4'},
+                    {id: 'L2-0', x: 150, y: 250, value: '0'},
+                    {id: 'L3-5', x: 100, y: 350, value: '5'},
+                    {id: 'L3-18', x: 200, y: 350, value: '18'}
+                ],
+                edges: [
+                    {from: 'root', to: 'L1-4'},
+                    {from: 'L1-4', to: 'L2-0'},
+                    {from: 'L2-0', to: 'L3-5'},
+                    {from: 'L2-0', to: 'L3-18'}
+                ],
+                combination: [4, 0, 18],
+                range: 18
+            },
+            {
+                explanation: "For our third combination, we keep the same value from List 1, but choose the second value from List 2, which is 9. Then we choose the first value from List 3, giving us [4, 9, 5].",
+                nodes: [
+                    {id: 'root', x: 500, y: 50, value: 'Root'},
+                    {id: 'L1-4', x: 250, y: 150, value: '4'},
+                    {id: 'L2-0', x: 150, y: 250, value: '0'},
+                    {id: 'L2-9', x: 350, y: 250, value: '9'},
+                    {id: 'L3-5', x: 100, y: 350, value: '5'},
+                    {id: 'L3-18', x: 200, y: 350, value: '18'},
+                    {id: 'L3-5-2', x: 300, y: 350, value: '5'}
+                ],
+                edges: [
+                    {from: 'root', to: 'L1-4'},
+                    {from: 'L1-4', to: 'L2-0'},
+                    {from: 'L1-4', to: 'L2-9'},
+                    {from: 'L2-0', to: 'L3-5'},
+                    {from: 'L2-0', to: 'L3-18'},
+                    {from: 'L2-9', to: 'L3-5-2'}
+                ],
+                combination: [4, 9, 5],
+                range: 5
+            },
+            {
+                explanation: "Continuing with our combinations, we generate [4, 9, 18] by taking the second value from List 3.",
+                nodes: [
+                    {id: 'root', x: 500, y: 50, value: 'Root'},
+                    {id: 'L1-4', x: 250, y: 150, value: '4'},
+                    {id: 'L2-0', x: 150, y: 250, value: '0'},
+                    {id: 'L2-9', x: 350, y: 250, value: '9'},
+                    {id: 'L3-5', x: 100, y: 350, value: '5'},
+                    {id: 'L3-18', x: 200, y: 350, value: '18'},
+                    {id: 'L3-5-2', x: 300, y: 350, value: '5'},
+                    {id: 'L3-18-2', x: 400, y: 350, value: '18'}
+                ],
+                edges: [
+                    {from: 'root', to: 'L1-4'},
+                    {from: 'L1-4', to: 'L2-0'},
+                    {from: 'L1-4', to: 'L2-9'},
+                    {from: 'L2-0', to: 'L3-5'},
+                    {from: 'L2-0', to: 'L3-18'},
+                    {from: 'L2-9', to: 'L3-5-2'},
+                    {from: 'L2-9', to: 'L3-18-2'}
+                ],
+                combination: [4, 9, 18],
+                range: 14
+            },
+            {
+                explanation: "Now we go back to the root and choose the second value from List 1, which is 10, to start our next set of combinations.",
+                nodes: [
+                    {id: 'root', x: 500, y: 50, value: 'Root'},
+                    {id: 'L1-4', x: 250, y: 150, value: '4'},
+                    {id: 'L1-10', x: 750, y: 150, value: '10'},
+                    {id: 'L2-0', x: 150, y: 250, value: '0'},
+                    {id: 'L2-9', x: 350, y: 250, value: '9'},
+                    {id: 'L3-5', x: 100, y: 350, value: '5'},
+                    {id: 'L3-18', x: 200, y: 350, value: '18'},
+                    {id: 'L3-5-2', x: 300, y: 350, value: '5'},
+                    {id: 'L3-18-2', x: 400, y: 350, value: '18'}
+                ],
+                edges: [
+                    {from: 'root', to: 'L1-4'},
+                    {from: 'root', to: 'L1-10'},
+                    {from: 'L1-4', to: 'L2-0'},
+                    {from: 'L1-4', to: 'L2-9'},
+                    {from: 'L2-0', to: 'L3-5'},
+                    {from: 'L2-0', to: 'L3-18'},
+                    {from: 'L2-9', to: 'L3-5-2'},
+                    {from: 'L2-9', to: 'L3-18-2'}
+                ],
+                combination: null,
+                range: null
+            },
+            {
+                explanation: "We continue building combinations with 10 from List 1 and 0 from List 2, giving us [10, 0, 5].",
+                nodes: [
+                    {id: 'root', x: 500, y: 50, value: 'Root'},
+                    {id: 'L1-4', x: 250, y: 150, value: '4'},
+                    {id: 'L1-10', x: 750, y: 150, value: '10'},
+                    {id: 'L2-0', x: 150, y: 250, value: '0'},
+                    {id: 'L2-9', x: 350, y: 250, value: '9'},
+                    {id: 'L2-0-2', x: 650, y: 250, value: '0'},
+                    {id: 'L3-5', x: 100, y: 350, value: '5'},
+                    {id: 'L3-18', x: 200, y: 350, value: '18'},
+                    {id: 'L3-5-2', x: 300, y: 350, value: '5'},
+                    {id: 'L3-18-2', x: 400, y: 350, value: '18'},
+                    {id: 'L3-5-3', x: 600, y: 350, value: '5'}
+                ],
+                edges: [
+                    {from: 'root', to: 'L1-4'},
+                    {from: 'root', to: 'L1-10'},
+                    {from: 'L1-4', to: 'L2-0'},
+                    {from: 'L1-4', to: 'L2-9'},
+                    {from: 'L1-10', to: 'L2-0-2'},
+                    {from: 'L2-0', to: 'L3-5'},
+                    {from: 'L2-0', to: 'L3-18'},
+                    {from: 'L2-9', to: 'L3-5-2'},
+                    {from: 'L2-9', to: 'L3-18-2'},
+                    {from: 'L2-0-2', to: 'L3-5-3'}
+                ],
+                combination: [10, 0, 5],
+                range: 10
+            },
+            {
+                explanation: "All combinations have been generated. The one with the smallest range is [4, 0, 5] with a range of 5. This is because the difference between the maximum (5) and minimum (0) values is 5.",
+                nodes: [
+                    {id: 'root', x: 500, y: 50, value: 'Root'},
+                    {id: 'L1-4', x: 250, y: 150, value: '4'},
+                    {id: 'L1-10', x: 750, y: 150, value: '10'},
+                    {id: 'L2-0', x: 150, y: 250, value: '0'},
+                    {id: 'L2-9', x: 350, y: 250, value: '9'},
+                    {id: 'L2-0-2', x: 650, y: 250, value: '0'},
+                    {id: 'L2-9-2', x: 850, y: 250, value: '9'},
+                    {id: 'L3-5', x: 100, y: 350, value: '5'},
+                    {id: 'L3-18', x: 200, y: 350, value: '18'},
+                    {id: 'L3-5-2', x: 300, y: 350, value: '5'},
+                    {id: 'L3-18-2', x: 400, y: 350, value: '18'},
+                    {id: 'L3-5-3', x: 600, y: 350, value: '5'},
+                    {id: 'L3-18-3', x: 700, y: 350, value: '18'},
+                    {id: 'L3-5-4', x: 800, y: 350, value: '5'},
+                    {id: 'L3-18-4', x: 900, y: 350, value: '18'}
+                ],
+                edges: [
+                    {from: 'root', to: 'L1-4'},
+                    {from: 'root', to: 'L1-10'},
+                    {from: 'L1-4', to: 'L2-0'},
+                    {from: 'L1-4', to: 'L2-9'},
+                    {from: 'L1-10', to: 'L2-0-2'},
+                    {from: 'L1-10', to: 'L2-9-2'},
+                    {from: 'L2-0', to: 'L3-5'},
+                    {from: 'L2-0', to: 'L3-18'},
+                    {from: 'L2-9', to: 'L3-5-2'},
+                    {from: 'L2-9', to: 'L3-18-2'},
+                    {from: 'L2-0-2', to: 'L3-5-3'},
+                    {from: 'L2-0-2', to: 'L3-18-3'},
+                    {from: 'L2-9-2', to: 'L3-5-4'},
+                    {from: 'L2-9-2', to: 'L3-18-4'}
+                ],
+                combination: [4, 0, 5],
+                range: 5,
+                highlight: true
+            }
+        ];
+        
+        let currentStep = 0;
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const treeContainer = document.getElementById('tree');
+        const currentCombination = document.getElementById('current-combination');
+        const currentRange = document.getElementById('current-range');
+        const explanation = document.getElementById('explanation');
+        
+        // Function to draw nodes and edges
+        function renderStep(step) {
+            // Clear previous elements
+            treeContainer.innerHTML = '';
+            
+            // Draw edges first so they appear behind nodes
+            step.edges.forEach(edge => {
+                const fromNode = step.nodes.find(n => n.id === edge.from);
+                const toNode = step.nodes.find(n => n.id === edge.to);
+                
+                if (fromNode && toNode) {
+                    const edgeElem = document.createElement('div');
+                    edgeElem.className = 'edge';
+                    
+                    const dx = toNode.x - fromNode.x;
+                    const dy = toNode.y - fromNode.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    edgeElem.style.width = `${length}px`;
+                    edgeElem.style.left = `${fromNode.x + 20}px`;
+                    edgeElem.style.top = `${fromNode.y + 20}px`;
+                    edgeElem.style.transform = `rotate(${angle}deg)`;
+                    edgeElem.style.opacity = '1';
+                    
+                    treeContainer.appendChild(edgeElem);
+                }
+            });
+            
+            // Draw nodes
+            step.nodes.forEach(node => {
+                const nodeElem = document.createElement('div');
+                nodeElem.className = 'node';
+                nodeElem.style.left = `${node.x}px`;
+                nodeElem.style.top = `${node.y}px`;
+                nodeElem.textContent = node.value;
+                nodeElem.style.opacity = '1';
+                
+                treeContainer.appendChild(nodeElem);
+            });
+            
+            // Update combination display
+            if (step.combination) {
+                currentCombination.textContent = `[${step.combination.join(', ')}]`;
+                currentRange.textContent = step.range;
+                
+                // Create combination boxes for display
+                const combinationDisplay = document.createElement('div');
+                
+                for (let i = 0; i < combinations.length; i++) {
+                    const combo = combinations[i];
+                    const comboBox = document.createElement('div');
+                    comboBox.className = 'combination-box';
+                    
+                    if (step.highlight && i === minRangeIndex && JSON.stringify(combo) === JSON.stringify(step.combination)) {
+                        comboBox.classList.add('highlight');
+                    }
+                    
+                    comboBox.textContent = `[${combo.join(', ')}] → Range: ${ranges[i]}`;
+                    combinationDisplay.appendChild(comboBox);
+                    
+                    // Only show a few combinations for clarity
+                    if (i >= 7) break;
+                }
+                
+                // Remove previous combination display if exists
+                const oldDisplay = document.querySelector('.combination-boxes');
+                if (oldDisplay) oldDisplay.remove();
+                
+                combinationDisplay.className = 'combination-boxes';
+                document.querySelector('.combination-display').appendChild(combinationDisplay);
+            } else {
+                currentCombination.textContent = 'Not yet formed';
+                currentRange.textContent = 'N/A';
+                
+                // Remove previous combination display if exists
+                const oldDisplay = document.querySelector('.combination-boxes');
+                if (oldDisplay) oldDisplay.remove();
+            }
+            
+            // Update explanation
+            explanation.innerHTML = `<p class="step-counter">Step ${currentStep + 1}:</p><p>${step.explanation}</p>`;
+        }
+        
+        // Event listeners for navigation
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                renderStep(animationSteps[currentStep]);
+                nextBtn.disabled = false;
+                prevBtn.disabled = currentStep === 0;
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < animationSteps.length - 1) {
+                currentStep++;
+                renderStep(animationSteps[currentStep]);
+                prevBtn.disabled = false;
+                nextBtn.disabled = currentStep === animationSteps.length - 1;
+            }
+        });
+        
+        // Initial render
+        renderStep(animationSteps[currentStep]);
+    </script>
+</body>
+</html>
