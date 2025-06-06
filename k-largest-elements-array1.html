@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Min-Heap Visualization for K=3</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background-color: #FFFFFF;
+            color: #000000;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #FF4800;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        .description {
+            margin-bottom: 30px;
+            text-align: center;
+            line-height: 1.6;
+        }
+        .visualization-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .heap-container {
+            width: 600px;
+            height: 300px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .array-element {
+            width: 40px;
+            height: 40px;
+            margin: 0 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .current {
+            background-color: #FD9F78;
+        }
+        .heap-node {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        .heap-edge {
+            position: absolute;
+            background-color: #FD9F78;
+            height: 3px;
+            transform-origin: 0 0;
+            transition: all 0.5s ease;
+        }
+        .explanation {
+            text-align: center;
+            margin-bottom: 20px;
+            min-height: 60px;
+            padding: 10px;
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+            width: 100%;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Min-Heap Visualization for K=3</h1>
+        <div class="description">
+            <p>This visualization shows how a min-heap evolves while processing the array [3, 2, 1, 5, 6, 4] with K=3.</p>
+            <p>The goal is to find the K largest elements in the array using a min-heap.</p>
+        </div>
+        
+        <div class="visualization-container">
+            <div class="array-container" id="array-container"></div>
+            <div class="heap-container" id="heap-container"></div>
+            <div class="explanation" id="explanation"></div>
+            <div class="step-indicator" id="step-indicator">Step 0 of 6</div>
+        </div>
+        
+        <div class="controls">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Array to process
+        const array = [3, 2, 1, 5, 6, 4];
+        const k = 3;
+        
+        // Steps for visualization
+        const steps = [
+            {
+                heap: [],
+                currentIndex: -1,
+                explanation: "Starting with an empty min-heap. We will process each element from the array and maintain a heap of size K=3."
+            },
+            {
+                heap: [3],
+                currentIndex: 0,
+                explanation: "Inserted 3 into the heap. Since the heap size (1) is less than K (3), we simply add the element."
+            },
+            {
+                heap: [2, 3],
+                currentIndex: 1,
+                explanation: "Inserted 2 into the heap. The min-heap property is maintained with 2 as the root (smallest element). Heap size (2) is still less than K (3)."
+            },
+            {
+                heap: [1, 3, 2],
+                currentIndex: 2,
+                explanation: "Inserted 1 into the heap. The min-heap property is maintained with 1 as the root. The heap now has K (3) elements."
+            },
+            {
+                heap: [3, 5, 2],
+                currentIndex: 3,
+                explanation: "For element 5: Since 5 > 1 (the minimum in our heap), we remove 1 and insert 5. After heapifying, 2 moves up to become the new root."
+            },
+            {
+                heap: [3, 5, 6],
+                currentIndex: 4,
+                explanation: "For element 6: Since 6 > 2 (the minimum in our heap), we remove 2 and insert 6. After heapifying, 3 becomes the new root."
+            },
+            {
+                heap: [3, 5, 6],
+                currentIndex: 5,
+                explanation: "For element 4: Since 4 > 3 (the minimum in our heap), we remove 3 and insert 4. After heapifying, 3 remains the root. The final heap contains the 3 largest elements: [3, 5, 6]."
+            }
+        ];
+
+        // DOM elements
+        const arrayContainer = document.getElementById('array-container');
+        const heapContainer = document.getElementById('heap-container');
+        const explanation = document.getElementById('explanation');
+        const stepIndicator = document.getElementById('step-indicator');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        // Current step
+        let currentStep = 0;
+
+        // Initialize array display
+        function initializeArray() {
+            arrayContainer.innerHTML = '';
+            for (let i = 0; i < array.length; i++) {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.textContent = array[i];
+                element.id = `array-element-${i}`;
+                arrayContainer.appendChild(element);
+            }
+        }
+
+        // Calculate positions for heap nodes
+        function calculateNodePositions(heap) {
+            const positions = [];
+            const levelWidth = [1, 2, 4]; // Max nodes per level for a 3-element heap
+            
+            for (let i = 0; i < heap.length; i++) {
+                const level = Math.floor(Math.log2(i + 1));
+                const position = i - (Math.pow(2, level) - 1);
+                const levelNodes = Math.min(Math.pow(2, level), heap.length - (Math.pow(2, level) - 1));
+                
+                const x = (position + 0.5) * (600 / (levelNodes + 1));
+                const y = level * 100 + 30;
+                
+                positions.push({ x, y });
+            }
+            
+            return positions;
+        }
+
+        // Draw heap
+        function drawHeap(heap, positions) {
+            heapContainer.innerHTML = '';
+            
+            // Draw edges first
+            for (let i = 0; i < heap.length; i++) {
+                const parentIndex = Math.floor((i - 1) / 2);
+                
+                if (i > 0) {
+                    const edge = document.createElement('div');
+                    edge.className = 'heap-edge';
+                    
+                    const startX = positions[parentIndex].x + 25;
+                    const startY = positions[parentIndex].y + 25;
+                    const endX = positions[i].x + 25;
+                    const endY = positions[i].y + 25;
+                    
+                    const length = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+                    const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
+                    
+                    edge.style.width = `${length}px`;
+                    edge.style.left = `${startX}px`;
+                    edge.style.top = `${startY}px`;
+                    edge.style.transform = `rotate(${angle}deg)`;
+                    
+                    heapContainer.appendChild(edge);
+                }
+            }
+            
+            // Draw nodes
+            for (let i = 0; i < heap.length; i++) {
+                const node = document.createElement('div');
+                node.className = 'heap-node';
+                node.textContent = heap[i];
+                node.style.left = `${positions[i].x}px`;
+                node.style.top = `${positions[i].y}px`;
+                heapContainer.appendChild(node);
+            }
+        }
+
+        // Update array highlighting
+        function updateArrayHighlight(index) {
+            // Reset all elements
+            document.querySelectorAll('.array-element').forEach(el => {
+                el.classList.remove('current');
+            });
+            
+            // Highlight current element
+            if (index >= 0 && index < array.length) {
+                document.getElementById(`array-element-${index}`).classList.add('current');
+            }
+        }
+
+        // Render current step
+        function renderStep(step) {
+            // Update explanation
+            explanation.textContent = step.explanation;
+            
+            // Update array highlight
+            updateArrayHighlight(step.currentIndex);
+            
+            // Calculate positions and draw heap
+            const positions = calculateNodePositions(step.heap);
+            drawHeap(step.heap, positions);
+            
+            // Update step indicator
+            stepIndicator.textContent = `Step ${currentStep} of ${steps.length - 1}`;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+
+        // Event listeners for buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                renderStep(steps[currentStep]);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                renderStep(steps[currentStep]);
+            }
+        });
+
+        // Initialize visualization
+        function initialize() {
+            initializeArray();
+            renderStep(steps[currentStep]);
+        }
+
+        // Start visualization
+        initialize();
+    </script>
+</body>
+</html>
