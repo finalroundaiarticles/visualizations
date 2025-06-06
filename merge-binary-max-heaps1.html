@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Max Heap Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .tree-container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 40px;
+        }
+        
+        .tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 45%;
+        }
+        
+        .tree-title {
+            color: #FF4800;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .node {
+            width: 40px;
+            height: 40px;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #000000;
+            font-weight: bold;
+            position: relative;
+            margin: 10px;
+            transition: all 0.5s ease;
+        }
+        
+        .level {
+            display: flex;
+            justify-content: center;
+        }
+        
+        .edge {
+            position: absolute;
+            border-left: 2px solid #FF4800;
+            z-index: -1;
+        }
+        
+        .merged-tree {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid #FF4800;
+            background-color: rgba(253, 159, 120, 0.1);
+            color: #000000;
+            font-size: 16px;
+            line-height: 1.5;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Binary Max Heap Visualization</h1>
+    
+    <div class="container">
+        <div id="explanation" class="explanation">
+            Welcome to Binary Max Heap Visualization! We'll transform two heaps into a single merged max heap.
+        </div>
+        
+        <div id="step1" class="step">
+            <div class="tree-container">
+                <div class="tree">
+                    <div class="tree-title">Heap 1: [10, 5, 6, 2]</div>
+                    <div class="level level-1">
+                        <div class="node">10</div>
+                    </div>
+                    <div class="level level-2">
+                        <div class="node" style="margin-right: 40px;">5</div>
+                        <div class="node" style="margin-left: 40px;">6</div>
+                    </div>
+                    <div class="level level-3">
+                        <div class="node" style="margin-right: 90px;">2</div>
+                    </div>
+                </div>
+                
+                <div class="tree">
+                    <div class="tree-title">Heap 2: [12, 7, 9]</div>
+                    <div class="level level-1">
+                        <div class="node">12</div>
+                    </div>
+                    <div class="level level-2">
+                        <div class="node" style="margin-right: 40px;">7</div>
+                        <div class="node" style="margin-left: 40px;">9</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="step2" class="step" style="display: none;">
+            <div class="merged-tree">
+                <div class="tree-title">Merged Heap: [12, 7, 10, 2, 5, 9, 6]</div>
+                <div class="level level-1">
+                    <div class="node">12</div>
+                </div>
+                <div class="level level-2">
+                    <div class="node" style="margin-right: 40px;">7</div>
+                    <div class="node" style="margin-left: 40px;">10</div>
+                </div>
+                <div class="level level-3">
+                    <div class="node" style="margin-right: 90px;">2</div>
+                    <div class="node" style="margin-right: 20px;">5</div>
+                    <div class="node" style="margin-left: 20px;">9</div>
+                    <div class="node" style="margin-left: 90px;">6</div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="step3" class="step" style="display: none;">
+            <div class="merged-tree">
+                <div class="tree-title">Array Representation: [12, 7, 10, 2, 5, 9, 6]</div>
+                <div style="display: flex; margin-top: 20px;">
+                    <div class="node" style="margin: 5px;">12</div>
+                    <div class="node" style="margin: 5px;">7</div>
+                    <div class="node" style="margin: 5px;">10</div>
+                    <div class="node" style="margin: 5px;">2</div>
+                    <div class="node" style="margin: 5px;">5</div>
+                    <div class="node" style="margin: 5px;">9</div>
+                    <div class="node" style="margin: 5px;">6</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        const steps = document.querySelectorAll('.step');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const explanation = document.getElementById('explanation');
+        
+        let currentStep = 0;
+        
+        const explanations = [
+            "Here we have two Binary Max Heaps. In a max heap, each parent node has a value greater than or equal to its children. Heap 1 has elements [10, 5, 6, 2] and Heap 2 has elements [12, 7, 9].",
+            
+            "To merge these heaps, we combine all elements and rearrange them to maintain the max heap property. The new merged heap has [12, 7, 10, 2, 5, 9, 6]. Notice that 12 is at the root because it's the largest element, and each parent is greater than its children.",
+            
+            "Binary heaps are typically represented as arrays. Even though it's a tree structure, we can store it efficiently as [12, 7, 10, 2, 5, 9, 6]. For any node at index i, its left child is at 2i+1 and right child at 2i+2."
+        ];
+        
+        function updateView() {
+            // Hide all steps
+            steps.forEach(step => step.style.display = 'none');
+            
+            // Show current step
+            steps[currentStep].style.display = 'block';
+            
+            // Update explanation
+            explanation.textContent = explanations[currentStep];
+            
+            // Update buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateView();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateView();
+            }
+        });
+        
+        // Draw edges between nodes
+        function drawEdges() {
+            const trees = document.querySelectorAll('.tree, .merged-tree');
+            
+            trees.forEach(tree => {
+                const levels = tree.querySelectorAll('.level');
+                
+                for (let i = 0; i < levels.length - 1; i++) {
+                    const parentNodes = levels[i].querySelectorAll('.node');
+                    const childNodes = levels[i + 1].querySelectorAll('.node');
+                    
+                    let childIndex = 0;
+                    
+                    parentNodes.forEach(parent => {
+                        const parentRect = parent.getBoundingClientRect();
+                        
+                        // Each parent can have up to 2 children
+                        for (let j = 0; j < 2 && childIndex < childNodes.length; j++, childIndex++) {
+                            const child = childNodes[childIndex];
+                            const childRect = child.getBoundingClientRect();
+                            
+                            const edge = document.createElement('div');
+                            edge.className = 'edge';
+                            
+                            // Calculate length and angle
+                            const deltaX = childRect.left - parentRect.left + (childRect.width / 2) - (parentRect.width / 2);
+                            const deltaY = childRect.top - parentRect.top;
+                            const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                            const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+                            
+                            // Position and rotate the edge
+                            edge.style.width = '2px';
+                            edge.style.height = `${length}px`;
+                            edge.style.transformOrigin = 'top left';
+                            edge.style.transform = `rotate(${angle}deg)`;
+                            edge.style.left = `${parentRect.left + parentRect.width / 2 - tree.getBoundingClientRect().left}px`;
+                            edge.style.top = `${parentRect.top + parentRect.height / 2 - tree.getBoundingClientRect().top}px`;
+                            
+                            tree.appendChild(edge);
+                        }
+                    });
+                }
+            });
+        }
+        
+        // Draw edges after the page loads
+        window.addEventListener('load', () => {
+            setTimeout(drawEdges, 100); // Small delay to ensure DOM is ready
+        });
+        
+        // Initialize the view
+        updateView();
+    </script>
+</body>
+</html>
