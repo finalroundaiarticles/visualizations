@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brute Force Merging Process</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        #animation-container {
+            width: 100%;
+            height: 400px;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .explanation {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #000000;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 300px;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .array {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        .element {
+            width: 40px;
+            height: 40px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 5px;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        .array-label {
+            font-weight: bold;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            color: #000000;
+        }
+        .bracket {
+            font-size: 24px;
+            margin: 0 5px;
+            color: #000000;
+        }
+        .step-counter {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Brute Force Merging Process</h1>
+        
+        <div id="animation-container">
+            <div class="step-counter" id="step-counter">Step 1/4</div>
+            <!-- Animation content will be added here -->
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <!-- Explanation text will be added here -->
+        </div>
+        
+        <div class="nav-buttons">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Animation state and data
+        const state = {
+            currentStep: 1,
+            totalSteps: 4
+        };
+
+        // Data for each step
+        const steps = [
+            {
+                title: "Initial Arrays",
+                explanation: "We start with three separate sorted arrays: [1, 4, 5], [1, 3, 4], and [2, 6]. Our goal is to merge them into a single sorted array.",
+                render: () => {
+                    const container = document.getElementById('animation-container');
+                    container.innerHTML = `<div class="step-counter">Step 1/4</div>`;
+                    
+                    // Array 1
+                    const array1Div = document.createElement('div');
+                    array1Div.className = 'array';
+                    array1Div.style.position = 'absolute';
+                    array1Div.style.top = '80px';
+                    array1Div.style.left = '50%';
+                    array1Div.style.transform = 'translateX(-50%)';
+                    
+                    array1Div.innerHTML = `
+                        <div class="array-label">Array 1:</div>
+                        <div class="bracket">[</div>
+                        <div class="element">1</div>
+                        <div class="element">4</div>
+                        <div class="element">5</div>
+                        <div class="bracket">]</div>
+                    `;
+                    container.appendChild(array1Div);
+                    
+                    // Array 2
+                    const array2Div = document.createElement('div');
+                    array2Div.className = 'array';
+                    array2Div.style.position = 'absolute';
+                    array2Div.style.top = '160px';
+                    array2Div.style.left = '50%';
+                    array2Div.style.transform = 'translateX(-50%)';
+                    
+                    array2Div.innerHTML = `
+                        <div class="array-label">Array 2:</div>
+                        <div class="bracket">[</div>
+                        <div class="element">1</div>
+                        <div class="element">3</div>
+                        <div class="element">4</div>
+                        <div class="bracket">]</div>
+                    `;
+                    container.appendChild(array2Div);
+                    
+                    // Array 3
+                    const array3Div = document.createElement('div');
+                    array3Div.className = 'array';
+                    array3Div.style.position = 'absolute';
+                    array3Div.style.top = '240px';
+                    array3Div.style.left = '50%';
+                    array3Div.style.transform = 'translateX(-50%)';
+                    
+                    array3Div.innerHTML = `
+                        <div class="array-label">Array 3:</div>
+                        <div class="bracket">[</div>
+                        <div class="element">2</div>
+                        <div class="element">6</div>
+                        <div class="bracket">]</div>
+                    `;
+                    container.appendChild(array3Div);
+                }
+            },
+            {
+                title: "Collecting All Elements",
+                explanation: "In the brute force approach, we first collect all elements from all arrays into a single unsorted array: [1, 4, 5, 1, 3, 4, 2, 6]",
+                render: () => {
+                    const container = document.getElementById('animation-container');
+                    container.innerHTML = `<div class="step-counter">Step 2/4</div>`;
+                    
+                    // Original arrays (smaller and faded)
+                    const originalsDiv = document.createElement('div');
+                    originalsDiv.style.position = 'absolute';
+                    originalsDiv.style.top = '50px';
+                    originalsDiv.style.left = '50%';
+                    originalsDiv.style.transform = 'translateX(-50%)';
+                    originalsDiv.style.opacity = '0.5';
+                    originalsDiv.style.display = 'flex';
+                    originalsDiv.style.flexDirection = 'column';
+                    originalsDiv.style.alignItems = 'center';
+                    
+                    originalsDiv.innerHTML = `
+                        <div class="array" style="margin: 5px 0;">
+                            <div class="bracket">[</div>
+                            <div class="element" style="width: 30px; height: 30px;">1</div>
+                            <div class="element" style="width: 30px; height: 30px;">4</div>
+                            <div class="element" style="width: 30px; height: 30px;">5</div>
+                            <div class="bracket">]</div>
+                        </div>
+                        <div class="array" style="margin: 5px 0;">
+                            <div class="bracket">[</div>
+                            <div class="element" style="width: 30px; height: 30px;">1</div>
+                            <div class="element" style="width: 30px; height: 30px;">3</div>
+                            <div class="element" style="width: 30px; height: 30px;">4</div>
+                            <div class="bracket">]</div>
+                        </div>
+                        <div class="array" style="margin: 5px 0;">
+                            <div class="bracket">[</div>
+                            <div class="element" style="width: 30px; height: 30px;">2</div>
+                            <div class="element" style="width: 30px; height: 30px;">6</div>
+                            <div class="bracket">]</div>
+                        </div>
+                    `;
+                    container.appendChild(originalsDiv);
+                    
+                    // Arrow pointing down
+                    const arrowDiv = document.createElement('div');
+                    arrowDiv.style.position = 'absolute';
+                    arrowDiv.style.top = '180px';
+                    arrowDiv.style.left = '50%';
+                    arrowDiv.style.transform = 'translateX(-50%)';
+                    arrowDiv.style.fontSize = '40px';
+                    arrowDiv.style.color = '#FF4800';
+                    arrowDiv.innerHTML = '↓';
+                    container.appendChild(arrowDiv);
+                    
+                    // Combined array
+                    const combinedDiv = document.createElement('div');
+                    combinedDiv.className = 'array';
+                    combinedDiv.style.position = 'absolute';
+                    combinedDiv.style.top = '250px';
+                    combinedDiv.style.left = '50%';
+                    combinedDiv.style.transform = 'translateX(-50%)';
+                    
+                    combinedDiv.innerHTML = `
+                        <div class="array-label">Combined:</div>
+                        <div class="bracket">[</div>
+                        <div class="element">1</div>
+                        <div class="element">4</div>
+                        <div class="element">5</div>
+                        <div class="element">1</div>
+                        <div class="element">3</div>
+                        <div class="element">4</div>
+                        <div class="element">2</div>
+                        <div class="element">6</div>
+                        <div class="bracket">]</div>
+                    `;
+                    container.appendChild(combinedDiv);
+                }
+            },
+            {
+                title: "Sorting the Combined Array",
+                explanation: "Next, we sort all the elements using a standard sorting algorithm. The elements are rearranged to form a sorted sequence.",
+                render: () => {
+                    const container = document.getElementById('animation-container');
+                    container.innerHTML = `<div class="step-counter">Step 3/4</div>`;
+                    
+                    // Unsorted array at top
+                    const unsortedDiv = document.createElement('div');
+                    unsortedDiv.className = 'array';
+                    unsortedDiv.style.position = 'absolute';
+                    unsortedDiv.style.top = '80px';
+                    unsortedDiv.style.left = '50%';
+                    unsortedDiv.style.transform = 'translateX(-50%)';
+                    unsortedDiv.style.opacity = '0.5';
+                    
+                    unsortedDiv.innerHTML = `
+                        <div class="array-label">Unsorted:</div>
+                        <div class="bracket">[</div>
+                        <div class="element" style="width: 30px; height: 30px;">1</div>
+                        <div class="element" style="width: 30px; height: 30px;">4</div>
+                        <div class="element" style="width: 30px; height: 30px;">5</div>
+                        <div class="element" style="width: 30px; height: 30px;">1</div>
+                        <div class="element" style="width: 30px; height: 30px;">3</div>
+                        <div class="element" style="width: 30px; height: 30px;">4</div>
+                        <div class="element" style="width: 30px; height: 30px;">2</div>
+                        <div class="element" style="width: 30px; height: 30px;">6</div>
+                        <div class="bracket">]</div>
+                    `;
+                    container.appendChild(unsortedDiv);
+                    
+                    // Arrow pointing down
+                    const arrowDiv = document.createElement('div');
+                    arrowDiv.style.position = 'absolute';
+                    arrowDiv.style.top = '150px';
+                    arrowDiv.style.left = '50%';
+                    arrowDiv.style.transform = 'translateX(-50%)';
+                    arrowDiv.style.fontSize = '40px';
+                    arrowDiv.style.color = '#FF4800';
+                    arrowDiv.innerHTML = '↓';
+                    container.appendChild(arrowDiv);
+                    
+                    // Animation for sorting
+                    const sortingDiv = document.createElement('div');
+                    sortingDiv.style.position = 'absolute';
+                    sortingDiv.style.top = '200px';
+                    sortingDiv.style.left = '50%';
+                    sortingDiv.style.transform = 'translateX(-50%)';
+                    sortingDiv.style.display = 'flex';
+                    sortingDiv.style.flexDirection = 'column';
+                    sortingDiv.style.alignItems = 'center';
+                    
+                    // Sorting process animation
+                    const steps = [
+                        [1, 4, 5, 1, 3, 4, 2, 6], // Initial
+                        [1, 1, 5, 4, 3, 4, 2, 6], // Step 1
+                        [1, 1, 3, 5, 4, 4, 2, 6], // Step 2
+                        [1, 1, 3, 4, 5, 4, 2, 6], // Step 3
+                        [1, 1, 3, 4, 4, 5, 2, 6], // Step 4
+                        [1, 1, 2, 3, 4, 4, 5, 6]  // Final
+                    ];
+                    
+                    for (let i = 0; i < steps.length; i++) {
+                        const stepDiv = document.createElement('div');
+                        stepDiv.className = 'array';
+                        stepDiv.style.margin = '10px 0';
+                        
+                        if (i === 0) {
+                            stepDiv.style.opacity = '0.7';
+                        } else if (i === steps.length - 1) {
+                            stepDiv.style.backgroundColor = 'rgba(253, 159, 120, 0.2)';
+                            stepDiv.style.padding = '5px';
+                            stepDiv.style.borderRadius = '5px';
+                        }
+                        
+                        let stepHTML = `<div class="bracket">[</div>`;
+                        for (let j = 0; j < steps[i].length; j++) {
+                            const highlighted = (i > 0 && steps[i][j] !== steps[i-1][j]);
+                            stepHTML += `<div class="element" style="width: 30px; height: 30px; ${highlighted ? 'background-color: #FD9F78;' : ''}">${steps[i][j]}</div>`;
+                        }
+                        stepHTML += `<div class="bracket">]</div>`;
+                        
+                        stepDiv.innerHTML = stepHTML;
+                        sortingDiv.appendChild(stepDiv);
+                    }
+                    
+                    container.appendChild(sortingDiv);
+                }
+            },
+            {
+                title: "Final Sorted Array",
+                explanation: "The final result is a single sorted array containing all elements from the original arrays: [1, 1, 2, 3, 4, 4, 5, 6]. This is the brute force approach - simply combining all elements and then sorting them together.",
+                render: () => {
+                    const container = document.getElementById('animation-container');
+                    container.innerHTML = `<div class="step-counter">Step 4/4</div>`;
+                    
+                    // Original arrays
+                    const originalsDiv = document.createElement('div');
+                    originalsDiv.style.position = 'absolute';
+                    originalsDiv.style.top = '50px';
+                    originalsDiv.style.left = '50%';
+                    originalsDiv.style.transform = 'translateX(-50%)';
+                    originalsDiv.style.display = 'flex';
+                    originalsDiv.style.flexDirection = 'column';
+                    originalsDiv.style.alignItems = 'center';
+                    originalsDiv.style.opacity = '0.5';
+                    
+                    originalsDiv.innerHTML = `
+                        <div style="font-weight: bold; margin-bottom: 10px;">Original Arrays:</div>
+                        <div style="display: flex; margin-bottom: 10px;">
+                            <div class="bracket">[</div>
+                            <div class="element" style="width: 30px; height: 30px;">1</div>
+                            <div class="element" style="width: 30px; height: 30px;">4</div>
+                            <div class="element" style="width: 30px; height: 30px;">5</div>
+                            <div class="bracket">]</div>
+                            
+                            <div style="margin: 0 10px;"></div>
+                            
+                            <div class="bracket">[</div>
+                            <div class="element" style="width: 30px; height: 30px;">1</div>
+                            <div class="element" style="width: 30px; height: 30px;">3</div>
+                            <div class="element" style="width: 30px; height: 30px;">4</div>
+                            <div class="bracket">]</div>
+                            
+                            <div style="margin: 0 10px;"></div>
+                            
+                            <div class="bracket">[</div>
+                            <div class="element" style="width: 30px; height: 30px;">2</div>
+                            <div class="element" style="width: 30px; height: 30px;">6</div>
+                            <div class="bracket">]</div>
+                        </div>
+                    `;
+                    container.appendChild(originalsDiv);
+                    
+                    // Arrow pointing down
+                    const arrowDiv = document.createElement('div');
+                    arrowDiv.style.position = 'absolute';
+                    arrowDiv.style.top = '150px';
+                    arrowDiv.style.left = '50%';
+                    arrowDiv.style.transform = 'translateX(-50%)';
+                    arrowDiv.style.fontSize = '40px';
+                    arrowDiv.style.color = '#FF4800';
+                    arrowDiv.innerHTML = '↓';
+                    container.appendChild(arrowDiv);
+                    
+                    // Final result
+                    const finalDiv = document.createElement('div');
+                    finalDiv.style.position = 'absolute';
+                    finalDiv.style.top = '230px';
+                    finalDiv.style.left = '50%';
+                    finalDiv.style.transform = 'translateX(-50%)';
+                    finalDiv.style.textAlign = 'center';
+                    
+                    finalDiv.innerHTML = `
+                        <div style="font-weight: bold; color: #FF4800; margin-bottom: 20px; font-size: 18px;">Final Sorted Array</div>
+                        <div class="array" style="justify-content: center;">
+                            <div class="bracket">[</div>
+                            <div class="element" style="background-color: #FF4800;">1</div>
+                            <div class="element" style="background-color: #FF4800;">1</div>
+                            <div class="element" style="background-color: #FF4800;">2</div>
+                            <div class="element" style="background-color: #FF4800;">3</div>
+                            <div class="element" style="background-color: #FF4800;">4</div>
+                            <div class="element" style="background-color: #FF4800;">4</div>
+                            <div class="element" style="background-color: #FF4800;">5</div>
+                            <div class="element" style="background-color: #FF4800;">6</div>
+                            <div class="bracket">]</div>
+                        </div>
+                    `;
+                    container.appendChild(finalDiv);
+                }
+            }
+        ];
+
+        // Initialize
+        function init() {
+            updateStep();
+            
+            // Add event listeners to navigation buttons
+            document.getElementById('prev-btn').addEventListener('click', prevStep);
+            document.getElementById('next-btn').addEventListener('click', nextStep);
+        }
+
+        // Navigate to previous step
+        function prevStep() {
+            if (state.currentStep > 1) {
+                state.currentStep--;
+                updateStep();
+            }
+        }
+
+        // Navigate to next step
+        function nextStep() {
+            if (state.currentStep < state.totalSteps) {
+                state.currentStep++;
+                updateStep();
+            }
+        }
+
+        // Update current step
+        function updateStep() {
+            const step = steps[state.currentStep - 1];
+            
+            // Update explanation text
+            document.getElementById('explanation').textContent = step.explanation;
+            
+            // Update counter
+            document.getElementById('step-counter').textContent = `Step ${state.currentStep}/${state.totalSteps}`;
+            
+            // Render current step visualization
+            step.render();
+            
+            // Update button states
+            document.getElementById('prev-btn').disabled = (state.currentStep === 1);
+            document.getElementById('next-btn').disabled = (state.currentStep === state.totalSteps);
+        }
+
+        // Start the animation
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
