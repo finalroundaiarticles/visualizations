@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Representation of Subarray Sums</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+        
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .slide {
+            display: none;
+        }
+        
+        .active {
+            display: block;
+        }
+        
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .array-element {
+            width: 50px;
+            height: 50px;
+            margin: 0 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #FF4800;
+            font-weight: bold;
+        }
+        
+        .subarray {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .subarray-highlight {
+            background-color: #FD9F78;
+        }
+        
+        .sum-container {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        
+        .sum-box {
+            width: 60px;
+            height: 40px;
+            background-color: #FD9F78;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 20px;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+        
+        .sorted-sum {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        
+        .highlighted-sum {
+            background-color: #FF4800;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-left: 5px solid #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Visual Representation of Subarray Sums</h1>
+        
+        <div class="slides-container">
+            <!-- Slide 1: Introduction -->
+            <div class="slide active" id="slide1">
+                <h2>What is a Subarray?</h2>
+                <div class="explanation">
+                    <p>A subarray is a contiguous sequence of elements within an array. For example, in array [10, -10, 20, -40], some subarrays are [10], [10, -10], [-10, 20], etc.</p>
+                    <p>In this visualization, we'll explore all possible subarrays of the array [10, -10, 20, -40] and calculate their sums.</p>
+                </div>
+                
+                <h3>Original Array:</h3>
+                <div class="array-container">
+                    <div class="array-element">10</div>
+                    <div class="array-element">-10</div>
+                    <div class="array-element">20</div>
+                    <div class="array-element">-40</div>
+                </div>
+            </div>
+            
+            <!-- Slide 2: All Subarrays -->
+            <div class="slide" id="slide2">
+                <h2>All Possible Subarrays</h2>
+                <div class="explanation">
+                    <p>For an array of length n, there are n(n+1)/2 possible subarrays. Our array has 4 elements, so there are 4(4+1)/2 = 10 possible subarrays.</p>
+                </div>
+                
+                <div id="subarrays-container">
+                    <!-- Will be filled by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Slide 3: Subarrays with Sums -->
+            <div class="slide" id="slide3">
+                <h2>Subarrays with Their Sums</h2>
+                <div class="explanation">
+                    <p>Let's calculate the sum of each subarray.</p>
+                </div>
+                
+                <div id="subarrays-sums-container">
+                    <!-- Will be filled by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Slide 4: Sorted Sums -->
+            <div class="slide" id="slide4">
+                <h2>Sums Sorted in Descending Order</h2>
+                <div class="explanation">
+                    <p>Now, let's sort all the subarray sums in descending order and highlight the 6th largest sum.</p>
+                </div>
+                
+                <div id="sorted-sums-container">
+                    <!-- Will be filled by JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prev-button" disabled>Previous</button>
+            <button class="nav-button" id="next-button">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        // Original array
+        const originalArray = [10, -10, 20, -40];
+        
+        // Generate all subarrays
+        function generateSubarrays(arr) {
+            const subarrays = [];
+            
+            for (let start = 0; start < arr.length; start++) {
+                for (let end = start; end < arr.length; end++) {
+                    const subarray = arr.slice(start, end + 1);
+                    subarrays.push(subarray);
+                }
+            }
+            
+            return subarrays;
+        }
+        
+        // Calculate sum of a subarray
+        function calculateSum(arr) {
+            return arr.reduce((sum, num) => sum + num, 0);
+        }
+        
+        // Initialize slides navigation
+        let currentSlide = 1;
+        const totalSlides = 4;
+        
+        function updateSlide() {
+            // Hide all slides
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            // Show current slide
+            document.getElementById(`slide${currentSlide}`).classList.add('active');
+            
+            // Update buttons
+            document.getElementById('prev-button').disabled = currentSlide === 1;
+            document.getElementById('next-button').disabled = currentSlide === totalSlides;
+        }
+        
+        // Next button click
+        document.getElementById('next-button').addEventListener('click', () => {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                updateSlide();
+            }
+        });
+        
+        // Previous button click
+        document.getElementById('prev-button').addEventListener('click', () => {
+            if (currentSlide > 1) {
+                currentSlide--;
+                updateSlide();
+            }
+        });
+        
+        // Generate all subarrays and their sums
+        const subarrays = generateSubarrays(originalArray);
+        const subarraySums = subarrays.map(subarray => ({
+            subarray: subarray,
+            sum: calculateSum(subarray)
+        }));
+        
+        // Sort sums in descending order
+        const sortedSums = [...subarraySums].sort((a, b) => b.sum - a.sum);
+        
+        // Populate subarrays container
+        const subarraysContainer = document.getElementById('subarrays-container');
+        subarrays.forEach((subarray, index) => {
+            const subarrayDiv = document.createElement('div');
+            subarrayDiv.className = 'subarray';
+            
+            const arrayContainer = document.createElement('div');
+            arrayContainer.className = 'array-container';
+            
+            // Original array with highlighted subarray
+            originalArray.forEach((num, i) => {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                
+                // Check if this element is part of the current subarray
+                const start = Math.floor(index / originalArray.length);
+                const end = index % originalArray.length + start;
+                
+                if (i >= start && i <= end) {
+                    element.classList.add('subarray-highlight');
+                }
+                
+                element.textContent = num;
+                arrayContainer.appendChild(element);
+            });
+            
+            subarrayDiv.appendChild(arrayContainer);
+            
+            // Subarray representation
+            const subarrayLabel = document.createElement('p');
+            subarrayLabel.textContent = `Subarray ${index + 1}: [${subarray.join(', ')}]`;
+            subarrayDiv.appendChild(subarrayLabel);
+            
+            subarraysContainer.appendChild(subarrayDiv);
+        });
+        
+        // Populate subarrays with sums container
+        const subarraysSumsContainer = document.getElementById('subarrays-sums-container');
+        subarraySums.forEach((item, index) => {
+            const subarrayDiv = document.createElement('div');
+            subarrayDiv.className = 'subarray';
+            
+            const subarrayLabel = document.createElement('div');
+            subarrayLabel.className = 'sum-container';
+            subarrayLabel.innerHTML = `Subarray ${index + 1}: [${item.subarray.join(', ')}]`;
+            
+            const sumBox = document.createElement('div');
+            sumBox.className = 'sum-box';
+            sumBox.textContent = `Sum: ${item.sum}`;
+            
+            subarrayLabel.appendChild(sumBox);
+            subarrayDiv.appendChild(subarrayLabel);
+            
+            subarraysSumsContainer.appendChild(subarrayDiv);
+        });
+        
+        // Populate sorted sums container
+        const sortedSumsContainer = document.getElementById('sorted-sums-container');
+        sortedSums.forEach((item, index) => {
+            const sumDiv = document.createElement('div');
+            sumDiv.className = 'sorted-sum';
+            
+            // Highlight the 6th largest sum
+            if (index === 5) { // 0-based index, so 5 is the 6th position
+                sumDiv.classList.add('highlighted-sum');
+            }
+            
+            sumDiv.innerHTML = `${index + 1}. [${item.subarray.join(', ')}] = ${item.sum}`;
+            
+            if (index === 5) {
+                sumDiv.innerHTML += ' (6th largest sum)';
+            }
+            
+            sortedSumsContainer.appendChild(sumDiv);
+        });
+    </script>
+</body>
+</html>
