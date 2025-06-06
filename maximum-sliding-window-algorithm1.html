@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sliding Window Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            text-align: center;
+        }
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 50px;
+        }
+        .array-element {
+            width: 50px;
+            height: 50px;
+            margin: 0 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            border: 2px solid #000000;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        .array-element.highlighted {
+            background-color: #FD9F78;
+            transform: translateY(-10px);
+        }
+        .max-value {
+            margin-top: 30px;
+            font-size: 24px;
+            color: #FF4800;
+            font-weight: bold;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: left;
+            color: #000000;
+            max-width: 600px;
+        }
+        .navigation {
+            display: flex;
+            margin-top: 30px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            margin-top: 20px;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sliding Window Visualization</h1>
+        
+        <div class="array-container" id="arrayContainer"></div>
+        
+        <div class="max-value" id="maxValue"></div>
+        
+        <div class="explanation" id="explanation"></div>
+        
+        <div class="navigation">
+            <button id="prevBtn">Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator"></div>
+    </div>
+
+    <script>
+        const array = [1, 2, 3, 1, 4, 5, 2, 3, 6];
+        const windowSize = 3;
+        let currentStep = 0;
+        const maxSteps = array.length - windowSize + 1;
+
+        function initializeArray() {
+            const arrayContainer = document.getElementById('arrayContainer');
+            arrayContainer.innerHTML = '';
+            
+            for (let i = 0; i < array.length; i++) {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.id = `element-${i}`;
+                element.textContent = array[i];
+                arrayContainer.appendChild(element);
+            }
+        }
+
+        function updateDisplay() {
+            // Reset all elements
+            for (let i = 0; i < array.length; i++) {
+                const element = document.getElementById(`element-${i}`);
+                element.className = 'array-element';
+            }
+            
+            // Highlight current window
+            const currentWindow = array.slice(currentStep, currentStep + windowSize);
+            const maxVal = Math.max(...currentWindow);
+            
+            for (let i = 0; i < windowSize; i++) {
+                const element = document.getElementById(`element-${currentStep + i}`);
+                element.className = 'array-element highlighted';
+            }
+            
+            // Show max value
+            document.getElementById('maxValue').textContent = `Maximum value: ${maxVal}`;
+            
+            // Update explanation
+            const explanation = document.getElementById('explanation');
+            explanation.innerHTML = `
+                <p>This shows a sliding window of size ${windowSize} over an array.</p>
+                <p>Current window: [${currentWindow.join(', ')}]</p>
+                <p>The maximum value in this window is ${maxVal}</p>
+                <p>As the window slides, we can efficiently find the maximum value in each window.</p>
+            `;
+            
+            // Update step indicator
+            document.getElementById('stepIndicator').textContent = `Window ${currentStep + 1} of ${maxSteps}`;
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === maxSteps - 1;
+        }
+
+        function nextStep() {
+            if (currentStep < maxSteps - 1) {
+                currentStep++;
+                updateDisplay();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateDisplay();
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeArray();
+            updateDisplay();
+            
+            document.getElementById('prevBtn').addEventListener('click', prevStep);
+            document.getElementById('nextBtn').addEventListener('click', nextStep);
+        });
+    </script>
+</body>
+</html>
