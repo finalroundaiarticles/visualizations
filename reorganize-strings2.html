@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Placement Strategy</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #000000;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            width: 800px;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+        }
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .slide.active {
+            opacity: 1;
+        }
+        .frequency-table {
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .frequency-table th, .frequency-table td {
+            border: 2px solid #FF4800;
+            padding: 15px 30px;
+            text-align: center;
+            font-size: 20px;
+        }
+        .frequency-table th {
+            background-color: #FD9F78;
+        }
+        .character {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            text-align: center;
+            margin: 5px;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 50%;
+        }
+        .char-a {
+            background-color: #FD9F78;
+            color: #000000;
+        }
+        .char-b {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .placement-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        .slot {
+            width: 60px;
+            height: 60px;
+            border: 2px dashed #000000;
+            margin: 0 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+        }
+        .arrow {
+            width: 100px;
+            height: 40px;
+            position: relative;
+            margin: 20px 0;
+        }
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 15px solid transparent;
+            border-bottom: 15px solid transparent;
+            border-left: 20px solid #FF4800;
+        }
+        .arrow::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 80px;
+            height: 5px;
+            background-color: #FF4800;
+        }
+        .explanation {
+            margin: 20px 0;
+            text-align: center;
+            font-size: 18px;
+            max-width: 600px;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .original-string {
+            font-size: 24px;
+            margin: 20px 0;
+            color: #FF4800;
+        }
+        .highlight {
+            color: #FF4800;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Character Placement Strategy</h1>
+    <p class="original-string">Original String: <span class="highlight">"aab"</span></p>
+    
+    <div class="container">
+        <div class="slide active" id="slide1">
+            <h2>Step 1: Calculate Character Frequency</h2>
+            <table class="frequency-table">
+                <tr>
+                    <th>Character</th>
+                    <th>Frequency</th>
+                </tr>
+                <tr>
+                    <td class="char-a">a</td>
+                    <td>2</td>
+                </tr>
+                <tr>
+                    <td class="char-b">b</td>
+                    <td>1</td>
+                </tr>
+            </table>
+            <div class="explanation">
+                We start by counting how many times each character appears in the string "aab".
+                Character 'a' appears twice and character 'b' appears once.
+            </div>
+        </div>
+        
+        <div class="slide" id="slide2">
+            <h2>Step 2: Sort by Frequency</h2>
+            <table class="frequency-table">
+                <tr>
+                    <th>Character</th>
+                    <th>Frequency</th>
+                </tr>
+                <tr>
+                    <td class="char-a">a</td>
+                    <td>2</td>
+                </tr>
+                <tr>
+                    <td class="char-b">b</td>
+                    <td>1</td>
+                </tr>
+            </table>
+            <div class="arrow"></div>
+            <div class="explanation">
+                We arrange the characters in decreasing order of frequency.
+                Since 'a' has a higher frequency (2) than 'b' (1), we'll place 'a' first.
+            </div>
+        </div>
+        
+        <div class="slide" id="slide3">
+            <h2>Step 3: Place Most Frequent Character First</h2>
+            <div class="placement-container">
+                <div class="slot">
+                    <span class="character char-a">a</span>
+                </div>
+                <div class="slot"></div>
+                <div class="slot"></div>
+            </div>
+            <div class="explanation">
+                We start by placing the most frequent character ('a') in the first position.
+                We still have one more 'a' and one 'b' to place.
+            </div>
+        </div>
+        
+        <div class="slide" id="slide4">
+            <h2>Step 4: Place Next Character</h2>
+            <div class="placement-container">
+                <div class="slot">
+                    <span class="character char-a">a</span>
+                </div>
+                <div class="slot">
+                    <span class="character char-b">b</span>
+                </div>
+                <div class="slot"></div>
+            </div>
+            <div class="explanation">
+                To avoid placing the same character adjacent to each other, we place the next available character ('b') in the second position.
+            </div>
+        </div>
+        
+        <div class="slide" id="slide5">
+            <h2>Step 5: Complete the Arrangement</h2>
+            <div class="placement-container">
+                <div class="slot">
+                    <span class="character char-a">a</span>
+                </div>
+                <div class="slot">
+                    <span class="character char-b">b</span>
+                </div>
+                <div class="slot">
+                    <span class="character char-a">a</span>
+                </div>
+            </div>
+            <div class="explanation">
+                Finally, we place the remaining 'a' in the third position. 
+                This gives us the string "aba" where no two identical characters are adjacent.
+            </div>
+        </div>
+        
+        <div class="slide" id="slide6">
+            <h2>Final Result</h2>
+            <div class="original-string">Original: <span class="highlight">"aab"</span></div>
+            <div class="arrow"></div>
+            <div class="original-string">Rearranged: <span class="highlight">"aba"</span></div>
+            <div class="explanation">
+                We have successfully rearranged the original string "aab" to "aba" using the character placement strategy.
+                Notice that in the final string, no two identical characters are adjacent to each other.
+            </div>
+        </div>
+    </div>
+    
+    <div class="nav-buttons">
+        <button id="prevBtn" class="nav-btn" disabled>Previous</button>
+        <button id="nextBtn" class="nav-btn">Next</button>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        let currentSlide = 0;
+        
+        function showSlide(index) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[index].classList.add('active');
+            
+            // Update button states
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === slides.length - 1;
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        });
+        
+        // Initial setup
+        showSlide(currentSlide);
+    </script>
+</body>
+</html>
