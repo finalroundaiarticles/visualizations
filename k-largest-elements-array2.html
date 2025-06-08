@@ -3,223 +3,441 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sorting Process Visualization</title>
+    <title>K Largest Elements Heap Visualization</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #FFFFFF;
-            color: #000000;
+            font-family: Arial, sans-serif;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
         }
-        
-        h1 {
-            color: #FF4800;
-            text-align: center;
-        }
-        
+
         .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        
+
+        .controls {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-family: Arial, sans-serif;
+            background-color: #ff4800;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #e63d00;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background-color: #1c1d20;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .step-info {
+            background-color: #1c1d20;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 30px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .visualization-area {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .input-section, .heap-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1c1d20;
+            margin-bottom: 20px;
+        }
+
         .array-container {
             display: flex;
-            justify-content: center;
-            margin: 30px 0;
-            height: 200px;
-            align-items: flex-end;
+            gap: 10px;
+            margin-bottom: 20px;
         }
-        
+
         .array-element {
             width: 50px;
-            margin: 0 5px;
-            background-color: #FD9F78;
-            color: #000000;
+            height: 50px;
+            border: 3px solid #1c1d20;
+            border-radius: 8px;
             display: flex;
-            justify-content: center;
             align-items: center;
-            font-weight: bold;
-            transition: height 0.5s ease, background-color 0.5s ease;
-        }
-        
-        .selected {
-            background-color: #FF4800;
-            color: #FFFFFF;
-        }
-        
-        .description {
-            text-align: center;
-            margin: 20px 0;
-            font-size: 18px;
-            min-height: 60px;
-        }
-        
-        .controls {
-            display: flex;
             justify-content: center;
-            margin-top: 30px;
-        }
-        
-        button {
-            padding: 10px 20px;
-            margin: 0 10px;
-            background-color: #FF4800;
-            color: #FFFFFF;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-        
-        button:hover {
-            background-color: #FD9F78;
-        }
-        
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        
-        .step-counter {
-            text-align: center;
-            margin-top: 20px;
+            font-size: 18px;
             font-weight: bold;
+            background-color: white;
+            transition: all 0.3s ease;
+        }
+
+        .array-element.current {
+            background-color: #ff4800;
+            color: white;
+            border-color: #ff4800;
+            transform: scale(1.1);
+        }
+
+        .array-element.processed {
+            background-color: #1c1d20;
+            color: white;
+            border-color: #1c1d20;
+        }
+
+        .heap-container {
+            position: relative;
+            width: 400px;
+            height: 300px;
+        }
+
+        .heap-node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid #1c1d20;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+
+        .heap-node.highlight {
+            background-color: #ff4800;
+            color: white;
+            border-color: #ff4800;
+            transform: scale(1.1);
+        }
+
+        .heap-edge {
+            position: absolute;
+            height: 3px;
+            background-color: #1c1d20;
+            transform-origin: left center;
+        }
+
+        .k-value {
+            font-size: 20px;
+            color: #ff4800;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .result-section {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .result-title {
+            font-size: 18px;
+            color: #1c1d20;
+            margin-bottom: 15px;
+        }
+
+        .result-array {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .result-element {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #ff4800;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            background-color: #ff4800;
+            color: white;
+        }
+
+        .progress-bar {
+            width: 100%;
+            max-width: 600px;
+            height: 8px;
+            background-color: #1c1d20;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #ff4800;
+            transition: width 0.3s ease;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Sorting Process Visualization</h1>
-        <div class="description" id="description">
-            Original array: [3, 2, 1, 5, 6, 4]
-        </div>
-        <div class="array-container" id="array-container"></div>
-        <div class="step-counter" id="step-counter">Step 1 of 8</div>
         <div class="controls">
-            <button id="prevBtn" disabled>Previous</button>
-            <button id="nextBtn">Next</button>
+            <button id="prevBtn" onclick="previousStep()">Previous</button>
+            <button id="nextBtn" onclick="nextStep()">Next</button>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="step-info" id="stepInfo">
+            Click Next to start the algorithm visualization
+        </div>
+
+        <div class="visualization-area">
+            <div class="input-section">
+                <div class="section-title">Input Array</div>
+                <div class="k-value">k = 2</div>
+                <div class="array-container" id="inputArray"></div>
+            </div>
+
+            <div class="heap-section">
+                <div class="section-title">Min-Heap (k largest)</div>
+                <div class="heap-container" id="heapContainer"></div>
+            </div>
+        </div>
+
+        <div class="result-section" id="resultSection" style="display: none;">
+            <div class="result-title">K Largest Elements:</div>
+            <div class="result-array" id="resultArray"></div>
         </div>
     </div>
 
     <script>
-        // Original array
-        const originalArray = [3, 2, 1, 5, 6, 4];
-        // K value for selecting top elements
+        const inputArray = [3, 2, 1, 5, 6, 4];
         const k = 2;
-        
-        // Create array elements
-        const arrayContainer = document.getElementById('array-container');
-        const description = document.getElementById('description');
-        const stepCounter = document.getElementById('step-counter');
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        
-        let currentStep = 1;
-        const totalSteps = 8;
-        
-        function updateStepCounter() {
-            stepCounter.textContent = `Step ${currentStep} of ${totalSteps}`;
-            prevBtn.disabled = currentStep === 1;
-            nextBtn.disabled = currentStep === totalSteps;
-        }
-        
-        function createArrayElements(array, selected = []) {
-            arrayContainer.innerHTML = '';
-            
-            array.forEach((value, index) => {
-                const element = document.createElement('div');
-                element.className = 'array-element';
-                if (selected.includes(index)) {
-                    element.classList.add('selected');
+        let currentStep = 0;
+        let steps = [];
+
+        // Initialize steps
+        function initializeSteps() {
+            steps = [
+                {
+                    description: "Starting with empty heap. We'll process each element and maintain k=2 largest elements.",
+                    currentIndex: -1,
+                    heap: [],
+                    action: "start"
                 }
+            ];
+
+            let heap = [];
+            for (let i = 0; i < inputArray.length; i++) {
+                const num = inputArray[i];
                 
-                element.style.height = `${value * 30}px`;
-                element.textContent = value;
-                arrayContainer.appendChild(element);
+                if (heap.length < k) {
+                    heap.push(num);
+                    heap.sort((a, b) => a - b); // Min-heap simulation
+                    steps.push({
+                        description: `Adding ${num} to heap (heap size < k)`,
+                        currentIndex: i,
+                        heap: [...heap],
+                        action: "add"
+                    });
+                } else if (num > heap[0]) {
+                    const removed = heap[0];
+                    heap[0] = num;
+                    heap.sort((a, b) => a - b);
+                    steps.push({
+                        description: `${num} > ${removed} (smallest in heap). Replacing ${removed} with ${num}`,
+                        currentIndex: i,
+                        heap: [...heap],
+                        action: "replace"
+                    });
+                } else {
+                    steps.push({
+                        description: `${num} ≤ ${heap[0]} (smallest in heap). No change needed.`,
+                        currentIndex: i,
+                        heap: [...heap],
+                        action: "skip"
+                    });
+                }
+            }
+
+            steps.push({
+                description: `Algorithm complete! The k=${k} largest elements are: [${heap.join(', ')}]`,
+                currentIndex: inputArray.length,
+                heap: [...heap],
+                action: "complete"
             });
         }
-        
-        function showStep(step) {
-            let currentArray = [...originalArray];
-            let selected = [];
+
+        function renderStep() {
+            const step = steps[currentStep];
             
-            switch(step) {
-                case 1:
-                    // Original array
-                    description.textContent = "Original array: [3, 2, 1, 5, 6, 4]";
-                    createArrayElements(currentArray);
-                    break;
-                case 2:
-                    // First comparison (3 and 2)
-                    description.textContent = "Comparing first two elements (3 and 2)";
-                    selected = [0, 1];
-                    createArrayElements(currentArray, selected);
-                    break;
-                case 3:
-                    // Swap first two elements
-                    currentArray = [3, 2, 1, 5, 6, 4];
-                    description.textContent = "Sorting in descending order. No swap needed since 3 > 2";
-                    selected = [0, 1];
-                    createArrayElements(currentArray, selected);
-                    break;
-                case 4:
-                    // Mid sorting
-                    currentArray = [6, 5, 4, 3, 2, 1];
-                    description.textContent = "After multiple comparisons and swaps, the array is sorted in descending order";
-                    createArrayElements(currentArray);
-                    break;
-                case 5:
-                    // Sorted array
-                    currentArray = [6, 5, 4, 3, 2, 1];
-                    description.textContent = "Sorted array in descending order: [6, 5, 4, 3, 2, 1]";
-                    createArrayElements(currentArray);
-                    break;
-                case 6:
-                    // Highlighting first K elements
-                    currentArray = [6, 5, 4, 3, 2, 1];
-                    description.textContent = `Selecting the first K=${k} elements`;
-                    selected = [0, 1];
-                    createArrayElements(currentArray, selected);
-                    break;
-                case 7:
-                    // Final result with K elements
-                    currentArray = [6, 5, 4, 3, 2, 1];
-                    description.textContent = `The first K=${k} elements are highlighted`;
-                    selected = [0, 1];
-                    createArrayElements(currentArray, selected);
-                    break;
-                case 8:
-                    // Final result with only K elements
-                    currentArray = [6, 5];
-                    description.textContent = `Final result - the top ${k} elements: [6, 5]`;
-                    selected = [0, 1];
-                    createArrayElements(currentArray, selected);
-                    break;
+            // Update step info
+            document.getElementById('stepInfo').textContent = step.description;
+            
+            // Update progress
+            const progress = (currentStep / (steps.length - 1)) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            
+            // Render input array
+            renderInputArray(step.currentIndex);
+            
+            // Render heap
+            renderHeap(step.heap);
+            
+            // Show result if complete
+            if (step.action === 'complete') {
+                document.getElementById('resultSection').style.display = 'block';
+                renderResult(step.heap);
+            } else {
+                document.getElementById('resultSection').style.display = 'none';
+            }
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === steps.length - 1;
+        }
+
+        function renderInputArray(currentIndex) {
+            const container = document.getElementById('inputArray');
+            container.innerHTML = '';
+            
+            inputArray.forEach((num, index) => {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.textContent = num;
+                
+                if (index === currentIndex) {
+                    element.classList.add('current');
+                } else if (index < currentIndex) {
+                    element.classList.add('processed');
+                }
+                
+                container.appendChild(element);
+            });
+        }
+
+        function renderHeap(heap) {
+            const container = document.getElementById('heapContainer');
+            container.innerHTML = '';
+            
+            if (heap.length === 0) return;
+            
+            // Position nodes for binary tree visualization
+            const positions = [
+                { x: 200, y: 50 },  // Root
+                { x: 120, y: 150 }, // Left child
+                { x: 280, y: 150 }  // Right child
+            ];
+            
+            heap.forEach((value, index) => {
+                if (index < positions.length) {
+                    const node = document.createElement('div');
+                    node.className = 'heap-node';
+                    node.textContent = value;
+                    node.style.left = (positions[index].x - 30) + 'px';
+                    node.style.top = positions[index].y + 'px';
+                    
+                    // Highlight the root (minimum element)
+                    if (index === 0) {
+                        node.classList.add('highlight');
+                    }
+                    
+                    container.appendChild(node);
+                    
+                    // Add edges
+                    if (index > 0) {
+                        const parentIndex = Math.floor((index - 1) / 2);
+                        const edge = document.createElement('div');
+                        edge.className = 'heap-edge';
+                        
+                        const parentPos = positions[parentIndex];
+                        const childPos = positions[index];
+                        
+                        const length = Math.sqrt(
+                            Math.pow(childPos.x - parentPos.x, 2) + 
+                            Math.pow(childPos.y - parentPos.y, 2)
+                        );
+                        
+                        const angle = Math.atan2(
+                            childPos.y - parentPos.y,
+                            childPos.x - parentPos.x
+                        ) * 180 / Math.PI;
+                        
+                        edge.style.width = length + 'px';
+                        edge.style.left = parentPos.x + 'px';
+                        edge.style.top = (parentPos.y + 30) + 'px';
+                        edge.style.transform = `rotate(${angle}deg)`;
+                        
+                        container.appendChild(edge);
+                    }
+                }
+            });
+        }
+
+        function renderResult(heap) {
+            const container = document.getElementById('resultArray');
+            container.innerHTML = '';
+            
+            heap.forEach(value => {
+                const element = document.createElement('div');
+                element.className = 'result-element';
+                element.textContent = value;
+                container.appendChild(element);
+            });
+        }
+
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                renderStep();
             }
         }
-        
-        nextBtn.addEventListener('click', () => {
-            if (currentStep < totalSteps) {
-                currentStep++;
-                showStep(currentStep);
-                updateStepCounter();
-            }
-        });
-        
-        prevBtn.addEventListener('click', () => {
-            if (currentStep > 1) {
+
+        function previousStep() {
+            if (currentStep > 0) {
                 currentStep--;
-                showStep(currentStep);
-                updateStepCounter();
+                renderStep();
             }
-        });
-        
+        }
+
         // Initialize
-        showStep(1);
-        updateStepCounter();
+        initializeSteps();
+        renderStep();
     </script>
 </body>
 </html>
