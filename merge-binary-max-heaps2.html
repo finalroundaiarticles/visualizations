@@ -3,467 +3,396 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Heapify Down Process Visualization</title>
+    <title>Heap Merge Visualization</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #FFFFFF;
             margin: 0;
             padding: 20px;
-            color: #000000;
+            font-family: Arial, sans-serif;
+            background-color: white;
+            overflow-x: auto;
         }
+
         .container {
-            max-width: 800px;
+            width: 100%;
+            max-width: 1200px;
             margin: 0 auto;
         }
-        h1 {
-            color: #FF4800;
+
+        .controls {
             text-align: center;
+            margin-bottom: 30px;
         }
-        .explanation {
-            background-color: #FD9F78;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            color: #000000;
+
+        .btn {
+            background-color: #ff4800;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 0 10px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            border-radius: 4px;
         }
+
+        .btn:hover {
+            background-color: #e63f00;
+        }
+
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
         .visualization {
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 20px 0;
-            position: relative;
-            height: 400px;
+            gap: 40px;
         }
+
         .heap-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 60px;
+            flex-wrap: wrap;
+        }
+
+        .heap {
             display: flex;
             flex-direction: column;
             align-items: center;
-            position: relative;
-            width: 100%;
         }
-        .node {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: #FD9F78;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+
+        .heap-title {
+            color: #1c1d20;
+            font-size: 18px;
             font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .heap-tree {
+            position: relative;
+        }
+
+        .node {
             position: absolute;
-            transition: all 0.8s ease;
-            border: 2px solid #FF4800;
-            color: #000000;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #1c1d20;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            border: 2px solid #1c1d20;
         }
-        .node.highlighted {
-            background-color: #FF4800;
-            color: #FFFFFF;
-            transform: scale(1.2);
+
+        .node.highlight {
+            background-color: #ff4800;
+            border-color: #ff4800;
         }
-        .node.swapping {
-            background-color: #FF4800;
-            color: #FFFFFF;
-        }
+
         .edge {
             position: absolute;
-            background-color: #FF4800;
+            background-color: #1c1d20;
             height: 2px;
-            transform-origin: 0 0;
-            z-index: -1;
+            transform-origin: left center;
         }
-        .nav-buttons {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        .nav-button {
-            background-color: #FF4800;
-            color: #FFFFFF;
-            border: none;
-            padding: 10px 20px;
-            margin: 0 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .nav-button:disabled {
-            background-color: #FD9F78;
-            cursor: not-allowed;
-        }
-        .step-counter {
+
+        .step-info {
             text-align: center;
-            margin-top: 10px;
-            font-weight: bold;
-        }
-        .message {
-            text-align: center;
-            margin-top: 20px;
+            color: #1c1d20;
+            font-size: 16px;
             min-height: 50px;
-            padding: 10px;
-            border-radius: 5px;
-            background-color: #FD9F78;
-            color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .array-display {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .array-item {
+            width: 40px;
+            height: 40px;
+            background-color: #1c1d20;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+
+        .array-item.highlight {
+            background-color: #ff4800;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Heapify Down Process - Max Heap</h1>
-        
-        <div class="explanation">
-            <p>The <strong>heapify_down</strong> process is used to maintain the max heap property after removing the root element. In a max heap, the parent node must be greater than or equal to its children. When the root is removed, we typically replace it with the last element and then perform heapify_down to restore the heap property.</p>
-            <p>This visualization shows how elements in the array [10, 5, 6, 2, 12, 7, 9] are rearranged to maintain the max heap property using the heapify_down process.</p>
+        <div class="controls">
+            <button class="btn" id="prevBtn">Previous</button>
+            <button class="btn" id="nextBtn">Next</button>
         </div>
-        
+
         <div class="visualization">
-            <div class="heap-container" id="heap-container"></div>
-        </div>
-        
-        <div class="message" id="message">
-            Click "Next" to start the heapify down process.
-        </div>
-        
-        <div class="step-counter" id="step-counter">Step 0 / 0</div>
-        
-        <div class="nav-buttons">
-            <button class="nav-button" id="prev-button" disabled>Previous</button>
-            <button class="nav-button" id="next-button">Next</button>
+            <div class="step-info" id="stepInfo">Initial state: Two separate heaps</div>
+            
+            <div class="heap-container" id="heapContainer">
+                <div class="heap">
+                    <div class="heap-title">Heap 1</div>
+                    <div class="heap-tree" id="heap1Tree"></div>
+                </div>
+                <div class="heap">
+                    <div class="heap-title">Heap 2</div>
+                    <div class="heap-tree" id="heap2Tree"></div>
+                </div>
+            </div>
+
+            <div id="mergedSection" style="display: none;">
+                <div class="heap-title">Merged Array</div>
+                <div class="array-display" id="mergedArray"></div>
+                
+                <div class="heap-title" style="margin-top: 30px;">Final Max Heap</div>
+                <div class="heap-tree" id="finalHeapTree"></div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Initial heap array
-        const initialHeap = [10, 5, 6, 2, 12, 7, 9];
-        
-        // Store the steps of the heapify down process
-        const steps = [];
-        let currentStep = -1;
-        
-        // Create a copy of the array to work with
-        function heapifyDownAnimation(heap) {
-            const workingHeap = [...heap];
-            
-            // Initial state
-            steps.push({
-                heap: [...workingHeap],
-                message: "Starting with the array [10, 5, 6, 2, 12, 7, 9] as a binary heap.",
-                highlighted: [],
-                swapping: []
-            });
-            
-            // Start heapify down process
-            steps.push({
-                heap: [...workingHeap],
-                message: "We begin at the root (index 0) with value 10 and check if it's smaller than any of its children.",
-                highlighted: [0],
-                swapping: []
-            });
-            
-            // Check left and right children
-            steps.push({
-                heap: [...workingHeap],
-                message: "The left child is at index 1 with value 5, and the right child is at index 2 with value 6.",
-                highlighted: [0, 1, 2],
-                swapping: []
-            });
-            
-            // Compare with largest child
-            steps.push({
-                heap: [...workingHeap],
-                message: "The right child (6) is larger than the left child (5), so we compare the root (10) with the right child (6).",
-                highlighted: [0, 2],
-                swapping: []
-            });
-            
-            steps.push({
-                heap: [...workingHeap],
-                message: "Since 10 > 6, the max-heap property is satisfied for this node. Let's check other children.",
-                highlighted: [0],
-                swapping: []
-            });
-            
-            // Check node at index 1 (value 5)
-            steps.push({
-                heap: [...workingHeap],
-                message: "Now, check node at index 1 (value 5) with its children.",
-                highlighted: [1],
-                swapping: []
-            });
-            
-            // Check children of node at index 1
-            steps.push({
-                heap: [...workingHeap],
-                message: "The left child of node 5 is at index 3 with value 2, and the right child is at index 4 with value 12.",
-                highlighted: [1, 3, 4],
-                swapping: []
-            });
-            
-            // Compare with largest child
-            steps.push({
-                heap: [...workingHeap],
-                message: "The right child (12) is larger than the left child (2), and also larger than the parent (5).",
-                highlighted: [1, 4],
-                swapping: []
-            });
-            
-            // Swap needed
-            steps.push({
-                heap: [...workingHeap],
-                message: "Since 12 > 5, we need to swap to maintain the max-heap property.",
-                highlighted: [],
-                swapping: [1, 4]
-            });
-            
-            // Perform the swap
-            [workingHeap[1], workingHeap[4]] = [workingHeap[4], workingHeap[1]];
-            
-            steps.push({
-                heap: [...workingHeap],
-                message: "After swapping, 12 is now at index 1 and 5 is at index 4. The heap is now [10, 12, 6, 2, 5, 7, 9].",
-                highlighted: [1, 4],
-                swapping: []
-            });
-            
-            // Check if further heapify needed
-            steps.push({
-                heap: [...workingHeap],
-                message: "Now we need to check if the max-heap property is violated for the node that moved down (value 5 at index 4).",
-                highlighted: [4],
-                swapping: []
-            });
-            
-            // Check children of node at index 4
-            steps.push({
-                heap: [...workingHeap],
-                message: "The children of node at index 4 would be at indices 9 and 10, which are out of bounds for our array. So no further action needed.",
-                highlighted: [4],
-                swapping: []
-            });
-            
-            // Check node at index 2 (value 6)
-            steps.push({
-                heap: [...workingHeap],
-                message: "Let's check node at index 2 (value 6) with its children.",
-                highlighted: [2],
-                swapping: []
-            });
-            
-            // Check children of node at index 2
-            steps.push({
-                heap: [...workingHeap],
-                message: "The left child of node 6 is at index 5 with value 7, and the right child is at index 6 with value 9.",
-                highlighted: [2, 5, 6],
-                swapping: []
-            });
-            
-            // Compare with largest child
-            steps.push({
-                heap: [...workingHeap],
-                message: "The right child (9) is larger than the left child (7), and also larger than the parent (6).",
-                highlighted: [2, 6],
-                swapping: []
-            });
-            
-            // Swap needed
-            steps.push({
-                heap: [...workingHeap],
-                message: "Since 9 > 6, we need to swap to maintain the max-heap property.",
-                highlighted: [],
-                swapping: [2, 6]
-            });
-            
-            // Perform the swap
-            [workingHeap[2], workingHeap[6]] = [workingHeap[6], workingHeap[2]];
-            
-            steps.push({
-                heap: [...workingHeap],
-                message: "After swapping, 9 is now at index 2 and 6 is at index 6. The heap is now [10, 12, 9, 2, 5, 7, 6].",
-                highlighted: [2, 6],
-                swapping: []
-            });
-            
-            // Final check on the root
-            steps.push({
-                heap: [...workingHeap],
-                message: "Now let's check the root (10) again after all these changes.",
-                highlighted: [0],
-                swapping: []
-            });
-            
-            // Check children of root
-            steps.push({
-                heap: [...workingHeap],
-                message: "The left child of the root is now 12, and the right child is 9.",
-                highlighted: [0, 1, 2],
-                swapping: []
-            });
-            
-            // Compare with largest child
-            steps.push({
-                heap: [...workingHeap],
-                message: "The left child (12) is larger than the right child (9), and also larger than the root (10).",
-                highlighted: [0, 1],
-                swapping: []
-            });
-            
-            // Swap needed
-            steps.push({
-                heap: [...workingHeap],
-                message: "Since 12 > 10, we need to swap to maintain the max-heap property.",
-                highlighted: [],
-                swapping: [0, 1]
-            });
-            
-            // Perform the swap
-            [workingHeap[0], workingHeap[1]] = [workingHeap[1], workingHeap[0]];
-            
-            steps.push({
-                heap: [...workingHeap],
-                message: "After swapping, 12 is now at the root (index 0) and 10 is at index 1. The heap is now [12, 10, 9, 2, 5, 7, 6].",
-                highlighted: [0, 1],
-                swapping: []
-            });
-            
-            // Final heap state
-            steps.push({
-                heap: [...workingHeap],
-                message: "The heapify down process is complete. The final max heap is [12, 10, 9, 2, 5, 7, 6].",
-                highlighted: [],
-                swapping: []
-            });
-            
-            return steps;
-        }
-        
-        // Calculate positions for each node in the heap
-        function calculateNodePositions(heap) {
-            const positions = [];
-            const levelWidth = 120;
-            const levelHeight = 80;
-            
-            for (let i = 0; i < heap.length; i++) {
-                const level = Math.floor(Math.log2(i + 1));
-                const position = i + 1 - Math.pow(2, level);
-                const totalNodesInLevel = Math.pow(2, level);
-                const horizontalSpacing = levelWidth * Math.pow(2, level);
+        class HeapMergeVisualizer {
+            constructor() {
+                this.heap1 = [50, 30, 40, 10, 20];
+                this.heap2 = [60, 35, 25];
+                this.steps = [];
+                this.currentStep = 0;
+                this.generateSteps();
+                this.render();
+                this.setupControls();
+            }
+
+            generateSteps() {
+                const merged = [...this.heap1, ...this.heap2];
                 
-                const x = position * horizontalSpacing / totalNodesInLevel + horizontalSpacing / (totalNodesInLevel * 2) - 25;
-                const y = level * levelHeight + 50;
+                this.steps = [
+                    {
+                        type: 'initial',
+                        description: 'Initial state: Two separate heaps',
+                        heap1: [...this.heap1],
+                        heap2: [...this.heap2]
+                    },
+                    {
+                        type: 'merge',
+                        description: 'Combine both heaps into one array',
+                        merged: [...merged],
+                        highlight: []
+                    }
+                ];
+
+                // Generate heapify steps
+                const n = merged.length;
+                for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {
+                    this.generateHeapifySteps(merged, n, i);
+                }
+
+                this.steps.push({
+                    type: 'complete',
+                    description: 'Heap merge complete! Final max heap created',
+                    merged: [...merged],
+                    highlight: []
+                });
+            }
+
+            generateHeapifySteps(arr, n, rootIndex) {
+                const step = {
+                    type: 'heapify',
+                    description: `Heapifying at index ${rootIndex}`,
+                    merged: [...arr],
+                    highlight: [rootIndex],
+                    comparing: []
+                };
+
+                let largest = rootIndex;
+                const left = 2 * rootIndex + 1;
+                const right = 2 * rootIndex + 2;
+
+                if (left < n) step.comparing.push(left);
+                if (right < n) step.comparing.push(right);
+
+                if (left < n && arr[left] > arr[largest]) {
+                    largest = left;
+                }
+
+                if (right < n && arr[right] > arr[largest]) {
+                    largest = right;
+                }
+
+                if (largest !== rootIndex) {
+                    step.description += ` - Swapping ${arr[rootIndex]} with ${arr[largest]}`;
+                    [arr[rootIndex], arr[largest]] = [arr[largest], arr[rootIndex]];
+                    step.swapped = [rootIndex, largest];
+                }
+
+                this.steps.push(step);
+
+                if (largest !== rootIndex) {
+                    this.generateHeapifySteps(arr, n, largest);
+                }
+            }
+
+            drawHeapTree(container, heap, highlights = []) {
+                container.innerHTML = '';
+                if (heap.length === 0) return;
+
+                const treeWidth = 300;
+                const treeHeight = 200;
+                const levels = Math.ceil(Math.log2(heap.length + 1));
+
+                container.style.width = treeWidth + 'px';
+                container.style.height = treeHeight + 'px';
+
+                // Draw edges first
+                for (let i = 0; i < heap.length; i++) {
+                    const level = Math.floor(Math.log2(i + 1));
+                    const posInLevel = i - (Math.pow(2, level) - 1);
+                    const levelWidth = Math.pow(2, level);
+                    
+                    const x = (treeWidth / (levelWidth + 1)) * (posInLevel + 1);
+                    const y = (level + 1) * (treeHeight / (levels + 1));
+
+                    // Draw edges to children
+                    const leftChild = 2 * i + 1;
+                    const rightChild = 2 * i + 2;
+
+                    if (leftChild < heap.length) {
+                        this.drawEdge(container, x, y, leftChild, heap.length, treeWidth, treeHeight, levels);
+                    }
+                    if (rightChild < heap.length) {
+                        this.drawEdge(container, x, y, rightChild, heap.length, treeWidth, treeHeight, levels);
+                    }
+                }
+
+                // Draw nodes
+                for (let i = 0; i < heap.length; i++) {
+                    const level = Math.floor(Math.log2(i + 1));
+                    const posInLevel = i - (Math.pow(2, level) - 1);
+                    const levelWidth = Math.pow(2, level);
+                    
+                    const x = (treeWidth / (levelWidth + 1)) * (posInLevel + 1) - 20;
+                    const y = (level + 1) * (treeHeight / (levels + 1)) - 20;
+
+                    const node = document.createElement('div');
+                    node.className = 'node';
+                    if (highlights.includes(i)) {
+                        node.classList.add('highlight');
+                    }
+                    node.textContent = heap[i];
+                    node.style.left = x + 'px';
+                    node.style.top = y + 'px';
+                    container.appendChild(node);
+                }
+            }
+
+            drawEdge(container, parentX, parentY, childIndex, heapLength, treeWidth, treeHeight, levels) {
+                const childLevel = Math.floor(Math.log2(childIndex + 1));
+                const childPosInLevel = childIndex - (Math.pow(2, childLevel) - 1);
+                const childLevelWidth = Math.pow(2, childLevel);
                 
-                positions.push({ x, y });
+                const childX = (treeWidth / (childLevelWidth + 1)) * (childPosInLevel + 1);
+                const childY = (childLevel + 1) * (treeHeight / (levels + 1));
+
+                const dx = childX - parentX;
+                const dy = childY - parentY;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx);
+
+                const edge = document.createElement('div');
+                edge.className = 'edge';
+                edge.style.left = parentX + 'px';
+                edge.style.top = parentY + 'px';
+                edge.style.width = length + 'px';
+                edge.style.transform = `rotate(${angle}rad)`;
+                container.appendChild(edge);
             }
-            
-            return positions;
-        }
-        
-        // Draw the heap
-        function drawHeap(step) {
-            const heap = step.heap;
-            const highlighted = step.highlighted || [];
-            const swapping = step.swapping || [];
-            const positions = calculateNodePositions(heap);
-            
-            const heapContainer = document.getElementById('heap-container');
-            heapContainer.innerHTML = '';
-            
-            // Draw edges first
-            for (let i = 0; i < heap.length; i++) {
-                const parentIndex = Math.floor((i - 1) / 2);
-                if (i > 0) {
-                    const edge = document.createElement('div');
-                    edge.className = 'edge';
+
+            drawArray(container, array, highlights = []) {
+                container.innerHTML = '';
+                array.forEach((value, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'array-item';
+                    if (highlights.includes(index)) {
+                        item.classList.add('highlight');
+                    }
+                    item.textContent = value;
+                    container.appendChild(item);
+                });
+            }
+
+            render() {
+                const step = this.steps[this.currentStep];
+                const stepInfo = document.getElementById('stepInfo');
+                const heapContainer = document.getElementById('heapContainer');
+                const mergedSection = document.getElementById('mergedSection');
+
+                stepInfo.textContent = step.description;
+
+                if (step.type === 'initial') {
+                    heapContainer.style.display = 'flex';
+                    mergedSection.style.display = 'none';
                     
-                    const startX = positions[parentIndex].x + 25;
-                    const startY = positions[parentIndex].y + 25;
-                    const endX = positions[i].x + 25;
-                    const endY = positions[i].y + 25;
+                    this.drawHeapTree(document.getElementById('heap1Tree'), step.heap1);
+                    this.drawHeapTree(document.getElementById('heap2Tree'), step.heap2);
+                } else {
+                    heapContainer.style.display = 'none';
+                    mergedSection.style.display = 'block';
                     
-                    const length = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
-                    const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
+                    const highlights = step.highlight || [];
+                    const comparing = step.comparing || [];
+                    const allHighlights = [...highlights, ...comparing];
                     
-                    edge.style.width = `${length}px`;
-                    edge.style.left = `${startX}px`;
-                    edge.style.top = `${startY}px`;
-                    edge.style.transform = `rotate(${angle}deg)`;
-                    
-                    heapContainer.appendChild(edge);
+                    this.drawArray(document.getElementById('mergedArray'), step.merged, allHighlights);
+                    this.drawHeapTree(document.getElementById('finalHeapTree'), step.merged, allHighlights);
                 }
+
+                // Update button states
+                document.getElementById('prevBtn').disabled = this.currentStep === 0;
+                document.getElementById('nextBtn').disabled = this.currentStep === this.steps.length - 1;
             }
-            
-            // Draw nodes
-            for (let i = 0; i < heap.length; i++) {
-                const node = document.createElement('div');
-                node.className = 'node';
-                if (highlighted.includes(i)) {
-                    node.classList.add('highlighted');
-                }
-                if (swapping.includes(i)) {
-                    node.classList.add('swapping');
-                }
-                node.textContent = heap[i];
-                node.style.left = `${positions[i].x}px`;
-                node.style.top = `${positions[i].y}px`;
-                heapContainer.appendChild(node);
-            }
-        }
-        
-        // Update message
-        function updateMessage(message) {
-            document.getElementById('message').textContent = message;
-        }
-        
-        // Update step counter
-        function updateStepCounter() {
-            document.getElementById('step-counter').textContent = `Step ${currentStep + 1} / ${steps.length}`;
-        }
-        
-        // Initialize the visualization
-        function initVisualization() {
-            // Generate the steps
-            const animationSteps = heapifyDownAnimation(initialHeap);
-            steps.push(...animationSteps);
-            
-            // Set up event listeners
-            document.getElementById('next-button').addEventListener('click', nextStep);
-            document.getElementById('prev-button').addEventListener('click', prevStep);
-            
-            // Initialize with the first step
-            nextStep();
-        }
-        
-        // Next step handler
-        function nextStep() {
-            if (currentStep < steps.length - 1) {
-                currentStep++;
-                drawHeap(steps[currentStep]);
-                updateMessage(steps[currentStep].message);
-                updateStepCounter();
-                document.getElementById('prev-button').disabled = false;
-                
-                if (currentStep === steps.length - 1) {
-                    document.getElementById('next-button').disabled = true;
-                }
+
+            setupControls() {
+                const prevBtn = document.getElementById('prevBtn');
+                const nextBtn = document.getElementById('nextBtn');
+
+                prevBtn.addEventListener('click', () => {
+                    if (this.currentStep > 0) {
+                        this.currentStep--;
+                        this.render();
+                    }
+                });
+
+                nextBtn.addEventListener('click', () => {
+                    if (this.currentStep < this.steps.length - 1) {
+                        this.currentStep++;
+                        this.render();
+                    }
+                });
             }
         }
-        
-        // Previous step handler
-        function prevStep() {
-            if (currentStep > 0) {
-                currentStep--;
-                drawHeap(steps[currentStep]);
-                updateMessage(steps[currentStep].message);
-                updateStepCounter();
-                document.getElementById('next-button').disabled = false;
-                
-                if (currentStep === 0) {
-                    document.getElementById('prev-button').disabled = true;
-                }
-            }
-        }
-        
-        // Start the visualization when the page loads
-        window.onload = initVisualization;
+
+        // Initialize the visualizer when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new HeapMergeVisualizer();
+        });
     </script>
 </body>
 </html>
