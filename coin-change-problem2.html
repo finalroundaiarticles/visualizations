@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recursion Tree for Coin Change</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .explanation {
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            overflow: auto;
+        }
+        canvas {
+            border: 1px solid #FD9F78;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .legend {
+            margin-top: 20px;
+            border: 1px solid #FD9F78;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border-radius: 3px;
+        }
+        .step-info {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Recursion Tree for Coin Change Problem</h1>
+        
+        <div class="explanation">
+            <p>The Coin Change problem asks: Given a set of coin denominations and a target amount, what is the minimum number of coins needed to make up that amount?</p>
+            <p>In this visualization, we'll explore how recursion works for the coin change problem with coins [1, 3, 4] and target amount 6.</p>
+        </div>
+
+        <div class="step-info" id="step-info">
+            Step 1: Starting with the initial call coin_change([1, 3, 4], 6)
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="treeCanvas" width="850" height="500"></canvas>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="legend">
+            <h3>Legend:</h3>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FF4800;"></div>
+                <div>Current node being processed</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FD9F78;"></div>
+                <div>Previously processed node</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #000000;"></div>
+                <div>Node with value 0 (base case - solution found)</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FFFFFF; border: 1px solid #000000;"></div>
+                <div>Node not yet processed</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepInfo = document.getElementById('step-info');
+        
+        // Define tree structure
+        const tree = {
+            value: 6,
+            children: [
+                {
+                    value: 5, // 6-1
+                    coin: 1,
+                    children: [
+                        {
+                            value: 4, // 5-1
+                            coin: 1,
+                            children: [
+                                {
+                                    value: 3, // 4-1
+                                    coin: 1,
+                                    children: [
+                                        {
+                                            value: 2, // 3-1
+                                            coin: 1,
+                                            children: [
+                                                {
+                                                    value: 1, // 2-1
+                                                    coin: 1,
+                                                    children: [
+                                                        {
+                                                            value: 0, // 1-1
+                                                            coin: 1,
+                                                            children: []
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            value: 0, // 3-3
+                                            coin: 3,
+                                            children: []
+                                        }
+                                    ]
+                                },
+                                {
+                                    value: 1, // 4-3
+                                    coin: 3,
+                                    children: [
+                                        {
+                                            value: 0, // 1-1
+                                            coin: 1,
+                                            children: []
+                                        }
+                                    ]
+                                },
+                                {
+                                    value: 0, // 4-4
+                                    coin: 4,
+                                    children: []
+                                }
+                            ]
+                        },
+                        {
+                            value: 2, // 5-3
+                            coin: 3,
+                            children: [
+                                {
+                                    value: 1, // 2-1
+                                    coin: 1,
+                                    children: [
+                                        {
+                                            value: 0, // 1-1
+                                            coin: 1,
+                                            children: []
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            value: 1, // 5-4
+                            coin: 4,
+                            children: [
+                                {
+                                    value: 0, // 1-1
+                                    coin: 1,
+                                    children: []
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    value: 3, // 6-3
+                    coin: 3,
+                    children: [
+                        {
+                            value: 2, // 3-1
+                            coin: 1,
+                            children: [
+                                {
+                                    value: 1, // 2-1
+                                    coin: 1,
+                                    children: [
+                                        {
+                                            value: 0, // 1-1
+                                            coin: 1,
+                                            children: []
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            value: 0, // 3-3
+                            coin: 3,
+                            children: []
+                        }
+                    ]
+                },
+                {
+                    value: 2, // 6-4
+                    coin: 4,
+                    children: [
+                        {
+                            value: 1, // 2-1
+                            coin: 1,
+                            children: [
+                                {
+                                    value: 0, // 1-1
+                                    coin: 1,
+                                    children: []
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // Flatten the tree for animation
+        let flatNodes = [];
+        let nodePositions = new Map();
+        
+        function flattenTree(node, level = 0, pos = 0, parent = null, childIdx = 0) {
+            const nodeInfo = {
+                node,
+                level,
+                parent,
+                childIdx
+            };
+            flatNodes.push(nodeInfo);
+            
+            let childPos = pos - (node.children.length - 1) / 2;
+            for (let i = 0; i < node.children.length; i++) {
+                flattenTree(node.children[i], level + 1, childPos, nodeInfo, i);
+                childPos += 1;
+            }
+        }
+        
+        flattenTree(tree);
+        
+        // Calculate node positions
+        function calculateNodePositions() {
+            nodePositions.clear();
+            
+            // First pass: Calculate x-coordinates by level
+            let levelNodes = {};
+            flatNodes.forEach(nodeInfo => {
+                if (!levelNodes[nodeInfo.level]) {
+                    levelNodes[nodeInfo.level] = [];
+                }
+                levelNodes[nodeInfo.level].push(nodeInfo);
+            });
+            
+            // Sort nodes at each level
+            const rootX = canvas.width / 2;
+            nodePositions.set(flatNodes[0], { x: rootX, y: 50 });
+            
+            for (let level = 1; level < Object.keys(levelNodes).length; level++) {
+                const nodes = levelNodes[level];
+                const levelWidth = canvas.width * 0.9;
+                const spacing = levelWidth / (nodes.length + 1);
+                
+                // Group nodes by parent
+                let parentGroups = {};
+                nodes.forEach(nodeInfo => {
+                    const parentId = nodeInfo.parent ? flatNodes.indexOf(nodeInfo.parent) : 'root';
+                    if (!parentGroups[parentId]) {
+                        parentGroups[parentId] = [];
+                    }
+                    parentGroups[parentId].push(nodeInfo);
+                });
+                
+                // Position nodes under their parents
+                Object.values(parentGroups).forEach(group => {
+                    const parent = group[0].parent;
+                    const parentPos = nodePositions.get(parent);
+                    
+                    const groupWidth = (group.length - 1) * spacing * 0.7;
+                    let startX = parentPos.x - groupWidth / 2;
+                    
+                    group.forEach((nodeInfo, idx) => {
+                        const x = startX + idx * spacing * 0.7;
+                        nodePositions.set(nodeInfo, { 
+                            x, 
+                            y: 50 + level * 80 
+                        });
+                    });
+                });
+            }
+        }
+        
+        calculateNodePositions();
+        
+        // Animation state
+        let currentStep = 0;
+        const totalSteps = flatNodes.length;
+        let visitedNodes = [];
+        
+        function drawNode(nodeInfo, status) {
+            const { x, y } = nodePositions.get(nodeInfo);
+            const node = nodeInfo.node;
+            
+            // Draw node
+            ctx.beginPath();
+            ctx.arc(x, y, 20, 0, Math.PI * 2);
+            
+            if (status === 'current') {
+                ctx.fillStyle = '#FF4800';
+            } else if (status === 'visited') {
+                ctx.fillStyle = '#FD9F78';
+            } else if (node.value === 0) {
+                ctx.fillStyle = '#000000';
+            } else {
+                ctx.fillStyle = '#FFFFFF';
+            }
+            
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+            
+            // Draw node value
+            ctx.fillStyle = node.value === 0 && status !== 'current' ? '#FFFFFF' : '#000000';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.value, x, y);
+            
+            // Draw coin choice if available
+            if (node.coin) {
+                ctx.font = '12px Arial';
+                ctx.fillStyle = '#000000';
+                ctx.fillText(`-${node.coin}`, x, y - 30);
+            }
+        }
+        
+        function drawEdge(from, to) {
+            const fromPos = nodePositions.get(from);
+            const toPos = nodePositions.get(to);
+            
+            ctx.beginPath();
+            ctx.moveTo(fromPos.x, fromPos.y + 20); // Bottom of parent node
+            ctx.lineTo(toPos.x, toPos.y - 20);    // Top of child node
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+        
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges first
+            for (let i = 1; i < flatNodes.length; i++) {
+                const nodeInfo = flatNodes[i];
+                drawEdge(nodeInfo.parent, nodeInfo);
+            }
+            
+            // Draw nodes
+            for (let i = 0; i < flatNodes.length; i++) {
+                const nodeInfo = flatNodes[i];
+                
+                if (i === currentStep) {
+                    drawNode(nodeInfo, 'current');
+                } else if (visitedNodes.includes(i)) {
+                    drawNode(nodeInfo, 'visited');
+                } else {
+                    drawNode(nodeInfo, 'unvisited');
+                }
+            }
+        }
+        
+        function updateStepInfo() {
+            const node = flatNodes[currentStep].node;
+            let stepText = '';
+            
+            if (node.value === 0) {
+                stepText = `Base case reached: Amount 0 can be made with 0 additional coins. Found a solution!`;
+            } else if (node.coin) {
+                stepText = `Using a coin of value ${node.coin}, we reduce the problem from coin_change([1,3,4], ${node.value + node.coin}) to coin_change([1,3,4], ${node.value})`;
+            } else {
+                stepText = `Exploring coin_change([1,3,4], ${node.value}): We need to try each coin denomination`;
+            }
+            
+            stepInfo.textContent = `Step ${currentStep + 1}/${totalSteps}: ${stepText}`;
+        }
+        
+        function update() {
+            drawTree();
+            updateStepInfo();
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+        }
+        
+        // Navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                visitedNodes = visitedNodes.filter(idx => idx !== currentStep);
+                currentStep--;
+                update();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                visitedNodes.push(currentStep);
+                currentStep++;
+                update();
+            }
+        });
+        
+        // Initial render
+        update();
+    </script>
+</body>
+</html>
