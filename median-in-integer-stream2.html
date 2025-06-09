@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Median Calculation Process</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .animation-container {
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 300px;
+        }
+        .array-box {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .array-item {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 50px;
+            height: 50px;
+            margin: 0 5px;
+            border: 2px solid #000000;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        .median {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #FF4800;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+        }
+        .step-info {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        .step-description {
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Median Calculation Process</h1>
+        
+        <div class="step-info" id="step-info">Step 1 of 4: Insert 1</div>
+        
+        <div class="animation-container">
+            <div class="label">Original Array:</div>
+            <div class="array-box" id="original-array"></div>
+            
+            <div class="label">Sorted Array:</div>
+            <div class="array-box" id="sorted-array"></div>
+            
+            <div class="step-description" id="step-description"></div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prev-btn" disabled>Previous</button>
+            <button class="nav-button" id="next-btn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        // Define the steps for animation
+        const steps = [
+            {
+                original: [1],
+                sorted: [1],
+                medianIndices: [0],
+                description: "With just one element [1], the median is 1."
+            },
+            {
+                original: [1, 2],
+                sorted: [1, 2],
+                medianIndices: [0, 1],
+                description: "With two elements [1, 2], the median is the average of both: (1 + 2) / 2 = 1.5"
+            },
+            {
+                original: [1, 2, 3],
+                sorted: [1, 2, 3],
+                medianIndices: [1],
+                description: "With three elements [1, 2, 3], the median is the middle element: 2"
+            },
+            {
+                original: [1, 2, 3, 4],
+                sorted: [1, 2, 3, 4],
+                medianIndices: [1, 2],
+                description: "With four elements [1, 2, 3, 4], the median is the average of the two middle elements: (2 + 3) / 2 = 2.5"
+            }
+        ];
+        
+        let currentStep = 0;
+        
+        // DOM elements
+        const originalArrayEl = document.getElementById('original-array');
+        const sortedArrayEl = document.getElementById('sorted-array');
+        const stepDescriptionEl = document.getElementById('step-description');
+        const stepInfoEl = document.getElementById('step-info');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        
+        // Function to render arrays
+        function renderArrays() {
+            const step = steps[currentStep];
+            
+            // Clear previous arrays
+            originalArrayEl.innerHTML = '';
+            sortedArrayEl.innerHTML = '';
+            
+            // Render original array
+            step.original.forEach((num, index) => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'array-item';
+                itemEl.textContent = num;
+                originalArrayEl.appendChild(itemEl);
+            });
+            
+            // Render sorted array
+            step.sorted.forEach((num, index) => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'array-item';
+                if (step.medianIndices.includes(index)) {
+                    itemEl.classList.add('median');
+                }
+                itemEl.textContent = num;
+                sortedArrayEl.appendChild(itemEl);
+            });
+            
+            // Update description
+            stepDescriptionEl.textContent = step.description;
+            
+            // Update step info
+            stepInfoEl.textContent = `Step ${currentStep + 1} of ${steps.length}: Insert ${step.original[step.original.length - 1]}`;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        // Button event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                renderArrays();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                renderArrays();
+            }
+        });
+        
+        // Initialize
+        renderArrays();
+    </script>
+</body>
+</html>
