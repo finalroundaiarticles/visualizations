@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permutation Checking Process</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 800px;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .slide.active {
+            opacity: 1;
+        }
+        
+        .permutation {
+            font-size: 28px;
+            margin: 10px;
+            padding: 15px 30px;
+            border-radius: 10px;
+            background-color: #FD9F78;
+            color: #000000;
+            display: inline-block;
+            margin-bottom: 30px;
+        }
+        
+        .characters {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .character {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin: 0 10px;
+            border-radius: 5px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .adjacent {
+            background-color: #FF4800;
+            padding: 0 15px;
+            height: 2px;
+            margin-top: 30px;
+        }
+        
+        .validation {
+            margin-top: 30px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .valid {
+            color: green;
+        }
+        
+        .invalid {
+            color: red;
+        }
+        
+        .highlight {
+            background-color: red;
+            color: white;
+        }
+        
+        .navigation {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            text-align: center;
+            max-width: 600px;
+            color: #000000;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Permutation Checking Process for 'aab'</h1>
+    
+    <div class="container" id="slideContainer">
+        <div class="slide active" id="slide1">
+            <div class="permutation">Original String: 'aab'</div>
+            <div class="characters">
+                <div class="character">a</div>
+                <div class="character">a</div>
+                <div class="character">b</div>
+            </div>
+            <div class="explanation">
+                <p>We'll check all 6 possible permutations of the string 'aab' and validate if they have adjacent identical characters.</p>
+                <p>A permutation is <span style="color:green">valid</span> if no identical characters are adjacent to each other.</p>
+                <p>A permutation is <span style="color:red">invalid</span> if any identical characters are adjacent.</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide2">
+            <div class="permutation">Permutation 1: 'aab'</div>
+            <div class="characters">
+                <div class="character highlight">a</div>
+                <div class="character highlight">a</div>
+                <div class="character">b</div>
+            </div>
+            <div class="validation invalid">Invalid: Adjacent 'a' characters</div>
+            <div class="explanation">
+                <p>In this permutation, we have two 'a' characters next to each other (positions 1 and 2).</p>
+                <p>Since identical characters are adjacent, this permutation is invalid.</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide3">
+            <div class="permutation">Permutation 2: 'aba'</div>
+            <div class="characters">
+                <div class="character">a</div>
+                <div class="character">b</div>
+                <div class="character">a</div>
+            </div>
+            <div class="validation valid">Valid: No adjacent identical characters</div>
+            <div class="explanation">
+                <p>In this permutation, the 'a' characters are separated by 'b'.</p>
+                <p>Since no identical characters are adjacent, this permutation is valid.</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide4">
+            <div class="permutation">Permutation 3: 'baa'</div>
+            <div class="characters">
+                <div class="character">b</div>
+                <div class="character highlight">a</div>
+                <div class="character highlight">a</div>
+            </div>
+            <div class="validation invalid">Invalid: Adjacent 'a' characters</div>
+            <div class="explanation">
+                <p>In this permutation, we have two 'a' characters next to each other (positions 2 and 3).</p>
+                <p>Since identical characters are adjacent, this permutation is invalid.</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide5">
+            <div class="permutation">Permutation 4: 'aba'</div>
+            <div class="characters">
+                <div class="character">a</div>
+                <div class="character">b</div>
+                <div class="character">a</div>
+            </div>
+            <div class="validation valid">Valid: No adjacent identical characters</div>
+            <div class="explanation">
+                <p>This is a duplicate of Permutation 2 (since we have repeated characters in our original string).</p>
+                <p>Since no identical characters are adjacent, this permutation is valid.</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide6">
+            <div class="permutation">Permutation 5: 'baa'</div>
+            <div class="characters">
+                <div class="character">b</div>
+                <div class="character highlight">a</div>
+                <div class="character highlight">a</div>
+            </div>
+            <div class="validation invalid">Invalid: Adjacent 'a' characters</div>
+            <div class="explanation">
+                <p>This is a duplicate of Permutation 3 (since we have repeated characters in our original string).</p>
+                <p>Since identical characters are adjacent, this permutation is invalid.</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide7">
+            <div class="permutation">Permutation 6: 'aab'</div>
+            <div class="characters">
+                <div class="character highlight">a</div>
+                <div class="character highlight">a</div>
+                <div class="character">b</div>
+            </div>
+            <div class="validation invalid">Invalid: Adjacent 'a' characters</div>
+            <div class="explanation">
+                <p>This is a duplicate of Permutation 1 (since we have repeated characters in our original string).</p>
+                <p>Since identical characters are adjacent, this permutation is invalid.</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide8">
+            <div class="permutation">Summary</div>
+            <div style="text-align: center; margin-top: 30px;">
+                <p style="font-size: 20px; margin-bottom: 15px;">Valid Permutations:</p>
+                <div class="permutation" style="background-color: #d4f7d4; color: green;">aba</div>
+                
+                <p style="font-size: 20px; margin: 20px 0 15px 0;">Invalid Permutations:</p>
+                <div class="permutation" style="background-color: #ffd6d6; color: red; margin-bottom: 10px;">aab</div>
+                <div class="permutation" style="background-color: #ffd6d6; color: red; margin-bottom: 10px;">baa</div>
+            </div>
+            <div class="explanation">
+                <p>Out of all possible permutations of 'aab', only 'aba' is valid because it doesn't have any adjacent identical characters.</p>
+                <p>Both 'aab' and 'baa' are invalid because they have adjacent 'a' characters.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="navigation">
+        <button class="nav-btn" id="prevBtn">Previous</button>
+        <button class="nav-btn" id="nextBtn">Next</button>
+    </div>
+    
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 8;
+        
+        function showSlide(slideNumber) {
+            // Hide all slides
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            // Show the current slide
+            document.getElementById('slide' + slideNumber).classList.add('active');
+        }
+        
+        document.getElementById('nextBtn').addEventListener('click', function() {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        });
+        
+        document.getElementById('prevBtn').addEventListener('click', function() {
+            if (currentSlide > 1) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        });
+    </script>
+</body>
+</html>
