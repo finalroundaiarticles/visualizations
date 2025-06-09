@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partition Combinations</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            position: relative;
+            height: 600px;
+        }
+        .slide {
+            display: none;
+            width: 100%;
+            height: 100%;
+        }
+        .active {
+            display: block;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .tree-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #slide1-content {
+            text-align: center;
+        }
+        .digit-set {
+            font-size: 24px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .description {
+            font-size: 18px;
+            margin: 20px 0;
+            line-height: 1.5;
+        }
+        .highlight {
+            color: #FF4800;
+            font-weight: bold;
+        }
+        .partition {
+            margin: 15px 0;
+            font-size: 18px;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+        .partition.show {
+            opacity: 1;
+        }
+        .tree-node {
+            fill: #FFFFFF;
+            stroke: #000000;
+            stroke-width: 2;
+        }
+        .tree-link {
+            stroke: #000000;
+            stroke-width: 2;
+        }
+        .node-text {
+            font-size: 14px;
+            text-anchor: middle;
+            font-weight: bold;
+        }
+        .optimal {
+            fill: #FF4800;
+        }
+        .suboptimal {
+            fill: #FD9F78;
+        }
+        .partition-sum {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .optimal-sum {
+            color: #FF4800;
+        }
+        .diff-box {
+            border: 2px solid #000000;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin: 15px auto;
+            width: fit-content;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Partition Combinations</h1>
+    
+    <div class="container">
+        <div class="slide active" id="slide1">
+            <div id="slide1-content">
+                <div class="description">We have a set of digits:</div>
+                <div class="digit-set">[6, 8, 4, 5, 2, 3]</div>
+                <div class="description">
+                    Our goal is to partition these digits into two groups so that the difference between their sums is minimized.
+                    <br>Let's explore several possible partitions and find the optimal solution.
+                </div>
+                <div class="partition" id="p1">Partition 1: [6, 8, 4] and [5, 2, 3] → Sums: 18 and 10 → Difference: 8</div>
+                <div class="partition" id="p2">Partition 2: [6, 5, 2] and [8, 4, 3] → Sums: 13 and 15 → Difference: 2</div>
+                <div class="partition" id="p3">Partition 3: [6, 3, 5] and [8, 4, 2] → Sums: 14 and 14 → Difference: 0</div>
+                <div class="partition" id="p4">Partition 4: [6, 8, 2] and [4, 5, 3] → Sums: 16 and 12 → Difference: 4</div>
+                <div class="partition" id="p5">Partition 5: [6, 4, 3] and [8, 5, 2] → Sums: 13 and 15 → Difference: 2</div>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide2">
+            <div class="tree-container">
+                <svg id="tree-diagram" width="850" height="500"></svg>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide3">
+            <div id="slide3-content">
+                <div class="description">
+                    <h2>Optimal Solution Analysis</h2>
+                    <p>After examining different partitions, we found that the optimal solution is:</p>
+                    <div class="digit-set">
+                        Group 1: [6, 3, 5] = <span class="highlight">14</span><br>
+                        Group 2: [8, 4, 2] = <span class="highlight">14</span>
+                    </div>
+                    <div class="diff-box">Difference: <span class="highlight">0</span> (Perfect balance!)</div>
+                    
+                    <p>This partition is optimal because:</p>
+                    <ul>
+                        <li>The sums of both groups are exactly equal (14)</li>
+                        <li>Therefore, the difference between them is 0, which is the minimum possible</li>
+                        <li>This creates a perfectly balanced partition</li>
+                    </ul>
+                    
+                    <p>Other partitions like [6, 5, 2] and [8, 4, 3] were close with a difference of 2, but not perfect.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="navigation">
+        <button id="prev-btn" class="nav-btn" disabled>Previous</button>
+        <button id="next-btn" class="nav-btn">Next</button>
+    </div>
+
+    <script>
+        // Slide navigation functionality
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        let currentSlide = 0;
+        
+        function showSlide(index) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[index].classList.add('active');
+            
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === slides.length - 1;
+            
+            if (index === 0) {
+                animatePartitions();
+            } else if (index === 1) {
+                drawTree();
+            }
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        });
+        
+        // Animation for the partitions
+        function animatePartitions() {
+            const partitions = document.querySelectorAll('.partition');
+            partitions.forEach((partition, index) => {
+                partition.classList.remove('show');
+                setTimeout(() => {
+                    partition.classList.add('show');
+                }, 800 * (index + 1));
+            });
+        }
+        
+        // Draw the tree diagram
+        function drawTree() {
+            const svg = document.getElementById('tree-diagram');
+            svg.innerHTML = '';
+            
+            // Create root node
+            createNode(svg, 425, 50, "[6,8,4,5,2,3]", "Original Set");
+            
+            // Level 1 - First split
+            createNode(svg, 225, 140, "[6,8,4]", "First Group");
+            createNode(svg, 625, 140, "[5,2,3]", "Second Group");
+            createLink(svg, 425, 75, 225, 115);
+            createLink(svg, 425, 75, 625, 115);
+            
+            // Partition 1
+            createNode(svg, 100, 230, "Sum = 18", "");
+            createNode(svg, 350, 230, "Sum = 10", "");
+            createLink(svg, 225, 165, 100, 205);
+            createLink(svg, 225, 165, 350, 205);
+            createText(svg, 225, 280, "Difference = 8", "");
+            
+            // Level 2 - Second split
+            createNode(svg, 225, 350, "[6,5,2]", "First Group");
+            createNode(svg, 625, 350, "[8,4,3]", "Second Group");
+            createLink(svg, 425, 75, 225, 325, true, "#FD9F78");
+            createLink(svg, 425, 75, 625, 325, true, "#FD9F78");
+            
+            // Partition 2
+            createNode(svg, 100, 440, "Sum = 13", "");
+            createNode(svg, 350, 440, "Sum = 15", "");
+            createLink(svg, 225, 375, 100, 415);
+            createLink(svg, 225, 375, 350, 415);
+            createText(svg, 225, 490, "Difference = 2", "");
+            
+            // Optimal partition
+            createNode(svg, 525, 440, "Sum = 14", "", true);
+            createNode(svg, 725, 440, "Sum = 14", "", true);
+            createLink(svg, 625, 375, 525, 415);
+            createLink(svg, 625, 375, 725, 415);
+            createText(svg, 625, 490, "Difference = 0", "optimal-sum");
+            
+            // Add label for optimal solution
+            const optimalLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            optimalLabel.setAttribute("x", 625);
+            optimalLabel.setAttribute("y", 310);
+            optimalLabel.setAttribute("class", "node-text optimal-sum");
+            optimalLabel.setAttribute("font-size", "18");
+            optimalLabel.textContent = "Optimal Solution";
+            svg.appendChild(optimalLabel);
+
+            // Add label for Group 1 and Group 2 of optimal solution
+            createText(svg, 525, 420, "[6,3,5]", "optimal-sum");
+            createText(svg, 725, 420, "[8,4,2]", "optimal-sum");
+        }
+        
+        function createNode(svg, x, y, text, subtext, isOptimal = false) {
+            const nodeGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute("cx", x);
+            circle.setAttribute("cy", y);
+            circle.setAttribute("r", 25);
+            circle.setAttribute("class", "tree-node " + (isOptimal ? "optimal" : ""));
+            nodeGroup.appendChild(circle);
+            
+            const textElement = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            textElement.setAttribute("x", x);
+            textElement.setAttribute("y", y + 5);
+            textElement.setAttribute("class", "node-text");
+            textElement.textContent = text;
+            nodeGroup.appendChild(textElement);
+            
+            if (subtext) {
+                const subtextElement = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                subtextElement.setAttribute("x", x);
+                subtextElement.setAttribute("y", y + 45);
+                subtextElement.setAttribute("class", "node-text");
+                subtextElement.setAttribute("font-size", "12");
+                subtextElement.textContent = subtext;
+                nodeGroup.appendChild(subtextElement);
+            }
+            
+            svg.appendChild(nodeGroup);
+        }
+        
+        function createLink(svg, x1, y1, x2, y2, isDashed = false, color = "#000000") {
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", x1);
+            line.setAttribute("y1", y1);
+            line.setAttribute("x2", x2);
+            line.setAttribute("y2", y2);
+            line.setAttribute("class", "tree-link");
+            line.setAttribute("stroke", color);
+            
+            if (isDashed) {
+                line.setAttribute("stroke-dasharray", "5,5");
+            }
+            
+            svg.appendChild(line);
+        }
+        
+        function createText(svg, x, y, text, classAdd) {
+            const textElement = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            textElement.setAttribute("x", x);
+            textElement.setAttribute("y", y);
+            textElement.setAttribute("class", "partition-sum " + classAdd);
+            textElement.setAttribute("text-anchor", "middle");
+            textElement.textContent = text;
+            svg.appendChild(textElement);
+        }
+        
+        // Initialize
+        window.onload = function() {
+            showSlide(0);
+            animatePartitions();
+        };
+    </script>
+</body>
+</html>
