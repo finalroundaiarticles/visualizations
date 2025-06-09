@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rope Connection Strategies</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1000px;
+        }
+        
+        .strategies-container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        
+        .strategy {
+            width: 45%;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .strategy-title {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .canvas-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+        }
+        
+        canvas {
+            border: 1px solid #FD9F78;
+            background-color: #FFFFFF;
+        }
+        
+        .cost {
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        
+        .cost span {
+            color: #FF4800;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #FD9F78;
+            border-radius: 10px;
+            background-color: #FFFFFF;
+            text-align: center;
+            line-height: 1.6;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            margin: 0 15px;
+            font-weight: bold;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <h1>Rope Connection Strategies Visualization</h1>
+    
+    <div class="container">
+        <div class="strategies-container">
+            <div class="strategy">
+                <div class="strategy-title">First Approach</div>
+                <div class="canvas-container">
+                    <canvas id="firstStrategyCanvas" width="450" height="400"></canvas>
+                </div>
+                <div class="cost">Total Cost: <span id="firstCost">0</span></div>
+            </div>
+            
+            <div class="strategy">
+                <div class="strategy-title">Optimal Approach</div>
+                <div class="canvas-container">
+                    <canvas id="optimalStrategyCanvas" width="450" height="400"></canvas>
+                </div>
+                <div class="cost">Total Cost: <span id="optimalCost">0</span></div>
+            </div>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            Start with four ropes of lengths [4, 3, 2, 6]. We need to connect them all together.
+            Let's compare two different strategies.
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" class="nav-btn" disabled>Previous</button>
+            <div class="step-indicator" id="stepIndicator">Step 1 of 4</div>
+            <button id="nextBtn" class="nav-btn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        // Canvas setup
+        const firstCanvas = document.getElementById('firstStrategyCanvas');
+        const optimalCanvas = document.getElementById('optimalStrategyCanvas');
+        const firstCtx = firstCanvas.getContext('2d');
+        const optimalCtx = optimalCanvas.getContext('2d');
+        
+        // Navigation elements
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        const explanation = document.getElementById('explanation');
+        const firstCostElem = document.getElementById('firstCost');
+        const optimalCostElem = document.getElementById('optimalCost');
+        
+        // Animation state
+        let currentStep = 1;
+        const totalSteps = 4;
+        let firstTotalCost = 0;
+        let optimalTotalCost = 0;
+        
+        // Initial rope arrays
+        const initialRopes = [4, 3, 2, 6];
+        
+        // First strategy steps: [4, 3, 2, 6] -> [7, 2, 6] -> [9, 6] -> [15]
+        const firstStrategy = [
+            { ropes: [4, 3, 2, 6], connect: [0, 1], newRope: 7, cost: 7 },
+            { ropes: [7, 2, 6], connect: [0, 1], newRope: 9, cost: 9 },
+            { ropes: [9, 6], connect: [0, 1], newRope: 15, cost: 15 }
+        ];
+        
+        // Optimal strategy steps: [4, 3, 2, 6] -> [4, 5, 6] -> [9, 6] -> [15]
+        const optimalStrategy = [
+            { ropes: [4, 3, 2, 6], connect: [1, 2], newRope: 5, cost: 5 },
+            { ropes: [4, 5, 6], connect: [0, 1], newRope: 9, cost: 9 },
+            { ropes: [9, 6], connect: [0, 1], newRope: 15, cost: 15 }
+        ];
+        
+        // Draw a rope
+        function drawRope(ctx, x, y, width, length, color, text) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, width, length);
+            
+            ctx.fillStyle = '#000000';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(text, x + width/2, y + length/2 + 5);
+        }
+        
+        // Draw connecting lines
+        function drawConnection(ctx, x1, y1, x2, y2, x3, y3) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineTo(x3, y3);
+            ctx.strokeStyle = '#FF4800';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        // Draw the initial state
+        function drawInitialState() {
+            clearCanvas();
+            
+            // Draw the initial ropes for both strategies
+            const ropeWidth = 40;
+            const spacing = 30;
+            const startY = 50;
+            
+            let startX = 30;
+            for (let i = 0; i < initialRopes.length; i++) {
+                const length = initialRopes[i] * 20;
+                
+                // First strategy
+                drawRope(firstCtx, startX + i * (ropeWidth + spacing), startY, ropeWidth, length, '#FD9F78', initialRopes[i]);
+                
+                // Optimal strategy
+                drawRope(optimalCtx, startX + i * (ropeWidth + spacing), startY, ropeWidth, length, '#FD9F78', initialRopes[i]);
+            }
+            
+            // Reset costs
+            firstTotalCost = 0;
+            optimalTotalCost = 0;
+            firstCostElem.textContent = firstTotalCost;
+            optimalCostElem.textContent = optimalTotalCost;
+            
+            explanation.innerHTML = 'Start with four ropes of lengths [4, 3, 2, 6]. We need to connect them all together.<br>Let\'s compare two different strategies.';
+        }
+        
+        // Update function for each step
+        function updateStep(step) {
+            clearCanvas();
+            
+            if (step === 1) {
+                drawInitialState();
+            } else {
+                const firstStep = firstStrategy[step - 2];
+                const optimalStep = optimalStrategy[step - 2];
+                
+                // Update costs
+                firstTotalCost += firstStep.cost;
+                optimalTotalCost += optimalStep.cost;
+                firstCostElem.textContent = firstTotalCost;
+                optimalCostElem.textContent = optimalTotalCost;
+                
+                // Draw ropes for first strategy
+                drawStrategyStep(firstCtx, firstStep, 30);
+                
+                // Draw ropes for optimal strategy
+                drawStrategyStep(optimalCtx, optimalStep, 30);
+                
+                // Update explanation
+                updateExplanation(step);
+            }
+            
+            // Update step indicator
+            stepIndicator.textContent = `Step ${step} of ${totalSteps}`;
+            
+            // Enable/disable navigation buttons
+            prevBtn.disabled = step === 1;
+            nextBtn.disabled = step === totalSteps;
+        }
+        
+        function drawStrategyStep(ctx, step, startX) {
+            const ropeWidth = 40;
+            const spacing = 30;
+            const startY = 50;
+            
+            // Draw the current ropes
+            for (let i = 0; i < step.ropes.length; i++) {
+                const length = step.ropes[i] * 20;
+                drawRope(ctx, startX + i * (ropeWidth + spacing), startY, ropeWidth, length, '#FD9F78', step.ropes[i]);
+            }
+            
+            // Draw the connection
+            const x1 = startX + step.connect[0] * (ropeWidth + spacing) + ropeWidth/2;
+            const y1 = startY + step.ropes[step.connect[0]] * 20;
+            const x2 = startX + step.connect[1] * (ropeWidth + spacing) + ropeWidth/2;
+            const y2 = startY + step.ropes[step.connect[1]] * 20;
+            
+            // Draw result
+            const resultY = startY + 150;
+            const resultX = (x1 + x2) / 2 - ropeWidth/2;
+            const resultLength = step.newRope * 20;
+            
+            drawConnection(ctx, x1, y1, (x1 + x2) / 2, y1 + 50, x2, y2);
+            drawRope(ctx, resultX, resultY, ropeWidth, resultLength, '#FF4800', step.newRope);
+            
+            // Draw cost
+            ctx.fillStyle = '#000000';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Cost: ${step.cost}`, resultX + ropeWidth/2, resultY + resultLength + 30);
+            
+            // Draw the remaining ropes if any
+            const remainingRopes = [...step.ropes];
+            remainingRopes.splice(step.connect[1], 1);
+            remainingRopes.splice(step.connect[0], 1);
+            remainingRopes.push(step.newRope);
+            
+            if (remainingRopes.length > 0) {
+                const newY = resultY + resultLength + 50;
+                for (let i = 0; i < remainingRopes.length; i++) {
+                    const length = remainingRopes[i] * 20;
+                    const newX = (ctx.canvas.width - (remainingRopes.length * ropeWidth + (remainingRopes.length - 1) * spacing)) / 2 + i * (ropeWidth + spacing);
+                    drawRope(ctx, newX, newY, ropeWidth, length, i === remainingRopes.length - 1 ? '#FF4800' : '#FD9F78', remainingRopes[i]);
+                }
+            }
+        }
+        
+        function updateExplanation(step) {
+            switch(step) {
+                case 2:
+                    explanation.innerHTML = '<b>First Step:</b><br>First approach: Connect ropes 4 and 3 to get a rope of length 7. Cost = 4+3 = 7.<br>Optimal approach: Connect ropes 3 and 2 to get a rope of length 5. Cost = 3+2 = 5.<br>Notice the optimal approach chooses the two shortest ropes.';
+                    break;
+                case 3:
+                    explanation.innerHTML = '<b>Second Step:</b><br>First approach: Connect rope 7 with rope 2 to get a rope of length 9. Cost = 7+2 = 9.<br>Optimal approach: Connect rope 4 with rope 5 to get a rope of length 9. Cost = 4+5 = 9.<br>The total costs are now 16 for the first approach and 14 for the optimal approach.';
+                    break;
+                case 4:
+                    explanation.innerHTML = '<b>Final Step:</b><br>Both approaches: Connect rope 9 with rope 6 to get the final rope of length 15. Cost = 9+6 = 15.<br>The total cost for the first approach is 7+9+15 = 31.<br>The total cost for the optimal approach is 5+9+15 = 29.<br>The optimal approach saves 2 units of cost by starting with the shortest ropes first.';
+                    break;
+            }
+        }
+        
+        function clearCanvas() {
+            firstCtx.clearRect(0, 0, firstCanvas.width, firstCanvas.height);
+            optimalCtx.clearRect(0, 0, optimalCanvas.width, optimalCanvas.height);
+        }
+        
+        // Event listeners for navigation
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStep(currentStep);
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateStep(currentStep);
+            }
+        });
+        
+        // Initialize the visualization
+        drawInitialState();
+    </script>
+</body>
+</html>
