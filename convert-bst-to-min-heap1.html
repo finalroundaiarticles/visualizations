@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BST to Min Heap Transformation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 30px;
+        }
+        .tree-container {
+            width: 45%;
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        .title {
+            text-align: center;
+            color: #FF4800;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        svg {
+            width: 100%;
+            height: 400px;
+        }
+        .node {
+            cursor: pointer;
+        }
+        .node circle {
+            fill: #FD9F78;
+            stroke: #FF4800;
+            stroke-width: 2px;
+        }
+        .node text {
+            font-size: 12px;
+            fill: #000000;
+            text-anchor: middle;
+            font-weight: bold;
+        }
+        .link {
+            fill: none;
+            stroke: #000000;
+            stroke-width: 2px;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .explanation {
+            margin-top: 20px;
+            padding: 20px;
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            background-color: #FFFFFF;
+            max-width: 1200px;
+            width: 100%;
+        }
+        .explanation h3 {
+            color: #FF4800;
+            margin-top: 0;
+        }
+        .explanation p {
+            color: #000000;
+            line-height: 1.6;
+        }
+        .array-display {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <h1>BST to Min Heap Transformation</h1>
+    
+    <div class="container">
+        <div class="tree-container">
+            <div class="title">Binary Search Tree (BST)</div>
+            <svg id="bst-svg"></svg>
+            <div class="array-display" id="bst-array">[4, 2, 6, 1, 3, 5, 7]</div>
+        </div>
+        
+        <div class="tree-container">
+            <div class="title">Min Heap</div>
+            <svg id="heap-svg"></svg>
+            <div class="array-display" id="heap-array">[1, 2, 5, 4, 3, 6, 7]</div>
+        </div>
+    </div>
+    
+    <div class="explanation" id="explanation">
+        <h3>Step 1: Understanding the Structures</h3>
+        <p>On the left, we have a Binary Search Tree (BST) where for each node, all values in the left subtree are smaller, and all values in the right subtree are greater. On the right, we have a Min Heap where the smallest element is at the root, and each parent is smaller than its children.</p>
+    </div>
+    
+    <div class="navigation">
+        <button id="prevBtn" class="nav-btn" disabled>Previous</button>
+        <button id="nextBtn" class="nav-btn">Next</button>
+    </div>
+    
+    <script>
+        // Define tree nodes
+        const bstData = {
+            value: 4,
+            children: [
+                {
+                    value: 2,
+                    children: [
+                        { value: 1, children: [] },
+                        { value: 3, children: [] }
+                    ]
+                },
+                {
+                    value: 6,
+                    children: [
+                        { value: 5, children: [] },
+                        { value: 7, children: [] }
+                    ]
+                }
+            ]
+        };
+        
+        const heapData = {
+            value: 1,
+            children: [
+                {
+                    value: 2,
+                    children: [
+                        { value: 4, children: [] },
+                        { value: 3, children: [] }
+                    ]
+                },
+                {
+                    value: 5,
+                    children: [
+                        { value: 6, children: [] },
+                        { value: 7, children: [] }
+                    ]
+                }
+            ]
+        };
+        
+        // Animation steps
+        const steps = [
+            {
+                title: "Step 1: Understanding the Structures",
+                description: "On the left, we have a Binary Search Tree (BST) where for each node, all values in the left subtree are smaller, and all values in the right subtree are greater. On the right, we have a Min Heap where the smallest element is at the root, and each parent is smaller than its children."
+            },
+            {
+                title: "Step 2: Inorder Traversal of BST",
+                description: "The first step in transforming a BST to a Min Heap is to perform an inorder traversal of the BST to get a sorted array. For our BST, the inorder traversal gives: [1, 2, 3, 4, 5, 6, 7]."
+            },
+            {
+                title: "Step 3: Level Order Arrangement",
+                description: "Next, we arrange these sorted elements in level order to form a Min Heap. The smallest element (1) becomes the root, followed by the next two smallest elements (2, 5) at the second level, and so on."
+            },
+            {
+                title: "Step 4: Complete Transformation",
+                description: "The final Min Heap structure has 1 as the root, with 2 and 5 as its children. Node 2 has children 4 and 3, while node 5 has children 6 and 7. This structure ensures that each parent is smaller than its children."
+            },
+            {
+                title: "Step 5: Array Representation",
+                description: "In array representation, BST inorder traversal [1, 2, 3, 4, 5, 6, 7] is transformed to Min Heap level order traversal [1, 2, 5, 4, 3, 6, 7]. This completes our transformation from BST to Min Heap."
+            }
+        ];
+        
+        let currentStep = 0;
+        
+        // Function to draw a tree
+        function drawTree(data, svgId) {
+            const svg = document.getElementById(svgId);
+            svg.innerHTML = '';
+            
+            const width = svg.clientWidth;
+            const height = svg.clientHeight;
+            const radius = 20;
+            
+            function drawNode(node, x, y, level, maxWidth) {
+                // Draw the node circle
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute("cx", x);
+                circle.setAttribute("cy", y);
+                circle.setAttribute("r", radius);
+                circle.setAttribute("class", "node-circle");
+                svg.appendChild(circle);
+                
+                // Draw the node value
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", x);
+                text.setAttribute("y", y + 5);
+                text.setAttribute("class", "node-text");
+                text.textContent = node.value;
+                svg.appendChild(text);
+                
+                // Draw children if any
+                if (node.children && node.children.length > 0) {
+                    const nextLevel = level + 1;
+                    const spacing = maxWidth / Math.pow(2, nextLevel);
+                    
+                    for (let i = 0; i < node.children.length; i++) {
+                        const child = node.children[i];
+                        const childX = x + (i === 0 ? -spacing : spacing);
+                        const childY = y + 70;
+                        
+                        // Draw line to child
+                        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        line.setAttribute("x1", x);
+                        line.setAttribute("y1", y + radius);
+                        line.setAttribute("x2", childX);
+                        line.setAttribute("y2", childY - radius);
+                        line.setAttribute("class", "link");
+                        svg.appendChild(line);
+                        
+                        drawNode(child, childX, childY, nextLevel, maxWidth);
+                    }
+                }
+            }
+            
+            drawNode(data, width / 2, 50, 0, width * 0.8);
+        }
+        
+        // Function to update explanation
+        function updateExplanation() {
+            const explanationDiv = document.getElementById('explanation');
+            explanationDiv.innerHTML = `
+                <h3>${steps[currentStep].title}</h3>
+                <p>${steps[currentStep].description}</p>
+            `;
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === steps.length - 1;
+        }
+        
+        // Initialize
+        drawTree(bstData, 'bst-svg');
+        drawTree(heapData, 'heap-svg');
+        updateExplanation();
+        
+        // Navigation event listeners
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateExplanation();
+            }
+        });
+        
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateExplanation();
+            }
+        });
+    </script>
+</body>
+</html>
