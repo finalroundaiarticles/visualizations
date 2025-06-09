@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digit Distribution Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+            text-align: center;
+        }
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+        .slide {
+            display: none;
+            animation-duration: 1s;
+        }
+        .active {
+            display: block;
+        }
+        .digit {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            text-align: center;
+            background-color: #FD9F78;
+            color: #000000;
+            font-size: 24px;
+            margin: 10px;
+            border-radius: 50%;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        .digit.selected {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.1);
+        }
+        .number-container {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-around;
+        }
+        .number-box {
+            width: 200px;
+            padding: 15px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            margin: 10px;
+        }
+        .number-title {
+            font-weight: bold;
+            color: #FF4800;
+            margin-bottom: 10px;
+        }
+        .number-content {
+            min-height: 50px;
+            font-size: 24px;
+        }
+        .arrow {
+            font-size: 30px;
+            color: #FF4800;
+            margin: 20px 0;
+        }
+        .result {
+            margin-top: 30px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #000000;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+        .result.show {
+            opacity: 1;
+        }
+        .highlight {
+            color: #FF4800;
+        }
+        .nav-buttons {
+            margin-top: 30px;
+        }
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 10px;
+            text-align: left;
+            font-size: 18px;
+            line-height: 1.5;
+            color: #000000;
+        }
+        .fade-in {
+            animation: fadeIn 1s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Digit Distribution Visualization</h1>
+    
+    <div class="container">
+        <div class="slide active" id="slide1">
+            <div class="explanation">
+                <p>We start with a set of sorted digits: [2, 3, 4, 5, 6, 8]. Our goal is to distribute these digits into two numbers in a way that minimizes their sum.</p>
+            </div>
+            <div class="digits-container">
+                <div class="digit">2</div>
+                <div class="digit">3</div>
+                <div class="digit">4</div>
+                <div class="digit">5</div>
+                <div class="digit">6</div>
+                <div class="digit">8</div>
+            </div>
+            <div class="number-container">
+                <div class="number-box">
+                    <div class="number-title">Number 1</div>
+                    <div class="number-content" id="num1"></div>
+                </div>
+                <div class="number-box">
+                    <div class="number-title">Number 2</div>
+                    <div class="number-content" id="num2"></div>
+                </div>
+            </div>
+            <div class="result" id="result1">We need to distribute these digits to form two numbers</div>
+        </div>
+
+        <div class="slide" id="slide2">
+            <div class="explanation">
+                <p>To minimize the sum, we want to place the smaller digits in the higher positions (hundreds, tens) because they have more weight in the final value.</p>
+            </div>
+            <div class="digits-container">
+                <div class="digit selected">2</div>
+                <div class="digit">3</div>
+                <div class="digit">4</div>
+                <div class="digit">5</div>
+                <div class="digit">6</div>
+                <div class="digit">8</div>
+            </div>
+            <div class="number-container">
+                <div class="number-box">
+                    <div class="number-title">Number 1</div>
+                    <div class="number-content" id="num1-step2">2</div>
+                </div>
+                <div class="number-box">
+                    <div class="number-title">Number 2</div>
+                    <div class="number-content" id="num2-step2"></div>
+                </div>
+            </div>
+            <div class="result show" id="result2">We place the smallest digit (2) in the hundreds place of Number 1</div>
+        </div>
+
+        <div class="slide" id="slide3">
+            <div class="explanation">
+                <p>Now we need to assign the next smallest digit (3) to one of our numbers. Let's put it in Number 2's hundreds place.</p>
+            </div>
+            <div class="digits-container">
+                <div class="digit selected">2</div>
+                <div class="digit selected">3</div>
+                <div class="digit">4</div>
+                <div class="digit">5</div>
+                <div class="digit">6</div>
+                <div class="digit">8</div>
+            </div>
+            <div class="number-container">
+                <div class="number-box">
+                    <div class="number-title">Number 1</div>
+                    <div class="number-content" id="num1-step3">2</div>
+                </div>
+                <div class="number-box">
+                    <div class="number-title">Number 2</div>
+                    <div class="number-content" id="num2-step3">3</div>
+                </div>
+            </div>
+            <div class="result show" id="result3">We place the next smallest digit (3) in the hundreds place of Number 2</div>
+        </div>
+
+        <div class="slide" id="slide4">
+            <div class="explanation">
+                <p>For the tens place, we continue with the next smallest digits: 4 for Number 1 and 5 for Number 2.</p>
+            </div>
+            <div class="digits-container">
+                <div class="digit selected">2</div>
+                <div class="digit selected">3</div>
+                <div class="digit selected">4</div>
+                <div class="digit selected">5</div>
+                <div class="digit">6</div>
+                <div class="digit">8</div>
+            </div>
+            <div class="number-container">
+                <div class="number-box">
+                    <div class="number-title">Number 1</div>
+                    <div class="number-content" id="num1-step4">24</div>
+                </div>
+                <div class="number-box">
+                    <div class="number-title">Number 2</div>
+                    <div class="number-content" id="num2-step4">35</div>
+                </div>
+            </div>
+            <div class="result show" id="result4">We place 4 in Number 1's tens place and 5 in Number 2's tens place</div>
+        </div>
+
+        <div class="slide" id="slide5">
+            <div class="explanation">
+                <p>Finally, we place the remaining digits in the ones place: 6 for Number 1 and 8 for Number 2.</p>
+            </div>
+            <div class="digits-container">
+                <div class="digit selected">2</div>
+                <div class="digit selected">3</div>
+                <div class="digit selected">4</div>
+                <div class="digit selected">5</div>
+                <div class="digit selected">6</div>
+                <div class="digit selected">8</div>
+            </div>
+            <div class="number-container">
+                <div class="number-box">
+                    <div class="number-title">Number 1</div>
+                    <div class="number-content" id="num1-step5">246</div>
+                </div>
+                <div class="number-box">
+                    <div class="number-title">Number 2</div>
+                    <div class="number-content" id="num2-step5">358</div>
+                </div>
+            </div>
+            <div class="result show" id="result5">We place 6 in Number 1's ones place and 8 in Number 2's ones place</div>
+        </div>
+
+        <div class="slide" id="slide6">
+            <div class="explanation">
+                <p>Now we add the two numbers to get our final sum.</p>
+            </div>
+            <div class="number-container">
+                <div class="number-box">
+                    <div class="number-title">Number 1</div>
+                    <div class="number-content">246</div>
+                </div>
+                <div class="arrow">+</div>
+                <div class="number-box">
+                    <div class="number-title">Number 2</div>
+                    <div class="number-content">358</div>
+                </div>
+            </div>
+            <div class="result show" id="result6">
+                <span class="highlight">246</span> + <span class="highlight">358</span> = <span class="highlight">604</span>
+            </div>
+            <div class="explanation">
+                <p>By distributing the digits [2,3,4,5,6,8] into two numbers (246 and 358), we get a sum of 604.</p>
+            </div>
+        </div>
+
+        <div class="nav-buttons">
+            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
+            <button class="nav-btn" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        let currentSlide = 0;
+
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = n;
+            slides[currentSlide].classList.remove('fade-in');
+            void slides[currentSlide].offsetWidth; // Trigger reflow
+            slides[currentSlide].classList.add('active', 'fade-in');
+            
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === slides.length - 1;
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentSlide > 0) {
+                showSlide(currentSlide - 1);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < slides.length - 1) {
+                showSlide(currentSlide + 1);
+            }
+        });
+
+        // Animate the digits distribution as we progress through slides
+        function animateDigitDistribution() {
+            // Initial setup
+            const num1Element = document.getElementById('num1');
+            const num2Element = document.getElementById('num2');
+            
+            // Step 2 elements
+            const num1Step2 = document.getElementById('num1-step2');
+            const num2Step2 = document.getElementById('num2-step2');
+            
+            // Step 3 elements
+            const num1Step3 = document.getElementById('num1-step3');
+            const num2Step3 = document.getElementById('num2-step3');
+            
+            // Step 4 elements
+            const num1Step4 = document.getElementById('num1-step4');
+            const num2Step4 = document.getElementById('num2-step4');
+            
+            // Step 5 elements
+            const num1Step5 = document.getElementById('num1-step5');
+            const num2Step5 = document.getElementById('num2-step5');
+        }
+
+        // Initialize
+        animateDigitDistribution();
+    </script>
+</body>
+</html>
