@@ -3,438 +3,409 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BST to Min Heap Conversion Process</title>
+    <title>BST to Min-Heap Conversion</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #FFFFFF;
             margin: 0;
             padding: 20px;
+            background-color: white;
             display: flex;
             flex-direction: column;
             align-items: center;
+            min-height: 100vh;
         }
-        
-        h1, h2 {
-            color: #000000;
-            text-align: center;
-        }
-        
+
         .container {
             width: 100%;
-            max-width: 900px;
-            margin: 20px auto;
-        }
-        
-        .step-container {
-            width: 100%;
-            min-height: 400px;
-            border: 2px solid #FF4800;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-            position: relative;
-        }
-        
-        .step-title {
-            color: #FF4800;
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
-        
-        .step-content {
+            max-width: 1200px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
         }
-        
-        .tree-container {
-            width: 100%;
-            height: 300px;
-            position: relative;
+
+        .controls {
             margin-bottom: 20px;
-        }
-        
-        .node {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: #FF4800;
-            color: #FFFFFF;
             display: flex;
+            gap: 20px;
             align-items: center;
-            justify-content: center;
-            position: absolute;
-            font-weight: bold;
-            transition: all 0.5s ease;
         }
-        
-        .link {
-            position: absolute;
-            background-color: #FD9F78;
-            transform-origin: 0 0;
-            transition: all 0.5s ease;
-        }
-        
-        .array-container {
-            display: flex;
-            justify-content: center;
-            margin: 20px 0;
-        }
-        
-        .array-element {
-            width: 40px;
-            height: 40px;
-            margin: 0 5px;
-            background-color: #FD9F78;
-            color: #FFFFFF;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 5px;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-        
-        .navigation {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            max-width: 300px;
-            margin-top: 20px;
-        }
-        
-        .nav-button {
-            padding: 10px 20px;
-            background-color: #FF4800;
-            color: #FFFFFF;
+
+        button {
+            background-color: #ff4800;
+            color: white;
             border: none;
-            border-radius: 5px;
+            padding: 12px 24px;
+            border-radius: 6px;
             cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
             font-weight: bold;
-            transition: background-color 0.3s ease;
         }
-        
-        .nav-button:hover {
-            background-color: #FD9F78;
+
+        button:hover {
+            background-color: #e03f00;
         }
-        
-        .nav-button:disabled {
+
+        button:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
         }
-        
-        .step-indicator {
+
+        .step-info {
+            color: #1c1d20;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0 20px;
+        }
+
+        .tree-container {
             display: flex;
-            justify-content: center;
+            justify-content: space-around;
+            width: 100%;
+            gap: 40px;
+        }
+
+        .tree-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .tree-title {
+            color: #1c1d20;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .tree-canvas {
+            border: 2px solid #1c1d20;
+            background-color: white;
+        }
+
+        .node {
+            fill: #ff4800;
+            stroke: #1c1d20;
+            stroke-width: 2;
+        }
+
+        .node-text {
+            fill: white;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        .edge {
+            stroke: #1c1d20;
+            stroke-width: 2;
+        }
+
+        .description-container {
             margin-top: 20px;
-        }
-        
-        .step-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background-color: #FD9F78;
-            margin: 0 5px;
-            cursor: pointer;
-        }
-        
-        .step-dot.active {
-            background-color: #FF4800;
-            transform: scale(1.2);
-        }
-        
-        .explanation {
-            margin-top: 20px;
-            color: #000000;
+            padding: 20px;
+            background-color: #f8f8f8;
+            border: 2px solid #1c1d20;
+            border-radius: 8px;
+            max-width: 800px;
             text-align: center;
+        }
+
+        .description-text {
+            color: #1c1d20;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
             line-height: 1.5;
+            margin: 0;
+        }
+
+        .array-container {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .array-title {
+            color: #1c1d20;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .array-display {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .array-item {
+            background-color: #ff4800;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            border: 2px solid #1c1d20;
         }
     </style>
 </head>
 <body>
-    <h1>BST to Min Heap Conversion Process</h1>
-    
     <div class="container">
-        <div class="step-container">
-            <h2 class="step-title" id="step-title">Step 1: Original BST Structure</h2>
-            <div class="step-content">
-                <div class="tree-container" id="tree-container"></div>
-                <div class="array-container" id="array-container"></div>
-                <p class="explanation" id="explanation">This is the original Binary Search Tree (BST) structure. In a BST, for any node, all values in the left subtree are less than the node's value, and all values in the right subtree are greater.</p>
+        <div class="controls">
+            <button id="prevBtn">Previous</button>
+            <div class="step-info" id="stepInfo">Step 1: Original BST</div>
+            <button id="nextBtn">Next</button>
+        </div>
+
+        <div class="tree-container">
+            <div class="tree-section">
+                <div class="tree-title">Binary Search Tree</div>
+                <svg class="tree-canvas" id="bstCanvas" width="400" height="300"></svg>
+            </div>
+            <div class="tree-section">
+                <div class="tree-title">Min-Heap</div>
+                <svg class="tree-canvas" id="heapCanvas" width="400" height="300"></svg>
             </div>
         </div>
-        
-        <div class="navigation">
-            <button class="nav-button" id="prev-btn" disabled>Previous</button>
-            <button class="nav-button" id="next-btn">Next</button>
+
+        <div class="description-container">
+            <p class="description-text" id="stepDescription">We start with a Binary Search Tree where left child < parent < right child. This BST contains values: 1, 2, 3, 4, 5, 6, 7.</p>
         </div>
-        
-        <div class="step-indicator" id="step-indicator"></div>
+
+        <div class="array-container">
+            <div class="array-title" id="arrayTitle">Inorder Traversal (Sorted Values)</div>
+            <div class="array-display" id="arrayDisplay"></div>
+        </div>
     </div>
 
     <script>
-        // Define steps
-        const steps = [
-            {
-                title: "Step 1: Original BST Structure",
-                explanation: "This is the original Binary Search Tree (BST) structure. In a BST, for any node, all values in the left subtree are less than the node's value, and all values in the right subtree are greater."
-            },
-            {
-                title: "Step 2: Inorder Traversal",
-                explanation: "We perform an inorder traversal (left-child, root, right-child) to extract all values from the BST in sorted order. This gives us [1, 2, 3, 4, 5, 6, 7]."
-            },
-            {
-                title: "Step 3: Min Heap Creation",
-                explanation: "Using the sorted array from Step 2, we fill a new tree in preorder (root, left-child, right-child) fashion to create a Min Heap. In a Min Heap, the parent node is always smaller than or equal to its children."
+        // Tree data structure
+        class TreeNode {
+            constructor(val, left = null, right = null) {
+                this.val = val;
+                this.left = left;
+                this.right = right;
             }
-        ];
-        
-        // Tree structure definitions
-        const bstStructure = {
-            value: 4,
-            left: {
-                value: 2,
-                left: {
-                    value: 1,
-                    left: null,
-                    right: null
-                },
-                right: {
-                    value: 3,
-                    left: null,
-                    right: null
-                }
-            },
-            right: {
-                value: 6,
-                left: {
-                    value: 5,
-                    left: null,
-                    right: null
-                },
-                right: {
-                    value: 7,
-                    left: null,
-                    right: null
-                }
-            }
-        };
-        
-        const minHeapStructure = {
-            value: 1,
-            left: {
-                value: 2,
-                left: {
-                    value: 4,
-                    left: null,
-                    right: null
-                },
-                right: {
-                    value: 5,
-                    left: null,
-                    right: null
-                }
-            },
-            right: {
-                value: 3,
-                left: {
-                    value: 6,
-                    left: null,
-                    right: null
-                },
-                right: {
-                    value: 7,
-                    left: null,
-                    right: null
-                }
-            }
-        };
-        
-        const sortedArray = [1, 2, 3, 4, 5, 6, 7];
-        
-        // DOM elements
-        const stepTitle = document.getElementById('step-title');
-        const treeContainer = document.getElementById('tree-container');
-        const arrayContainer = document.getElementById('array-container');
-        const explanation = document.getElementById('explanation');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const stepIndicator = document.getElementById('step-indicator');
-        
-        // Current step
-        let currentStep = 0;
-        
-        // Initialize step indicator
-        function initStepIndicator() {
-            steps.forEach((_, index) => {
-                const dot = document.createElement('div');
-                dot.className = 'step-dot';
-                if (index === 0) dot.className += ' active';
-                dot.addEventListener('click', () => goToStep(index));
-                stepIndicator.appendChild(dot);
-            });
         }
-        
-        // Update step indicator
-        function updateStepIndicator() {
-            const dots = document.querySelectorAll('.step-dot');
-            dots.forEach((dot, index) => {
-                if (index === currentStep) {
-                    dot.className = 'step-dot active';
-                } else {
-                    dot.className = 'step-dot';
+
+        // Create sample BST: 4, 2, 6, 1, 3, 5, 7
+        const originalBST = new TreeNode(4,
+            new TreeNode(2,
+                new TreeNode(1),
+                new TreeNode(3)
+            ),
+            new TreeNode(6,
+                new TreeNode(5),
+                new TreeNode(7)
+            )
+        );
+
+        // Get inorder traversal (sorted values)
+        function inorderTraversal(root) {
+            const result = [];
+            function traverse(node) {
+                if (node) {
+                    traverse(node.left);
+                    result.push(node.val);
+                    traverse(node.right);
                 }
-            });
+            }
+            traverse(root);
+            return result;
         }
-        
-        // Create tree visualization
-        function createTree(treeData, container) {
-            container.innerHTML = '';
+
+        // Create min-heap structure with sorted values
+        function createMinHeap(values) {
+            if (values.length === 0) return null;
             
-            function traverseTree(node, x, y, level, maxWidth) {
+            const root = new TreeNode(values[0]);
+            const queue = [root];
+            let i = 1;
+            
+            while (i < values.length && queue.length > 0) {
+                const node = queue.shift();
+                
+                if (i < values.length) {
+                    node.left = new TreeNode(values[i++]);
+                    queue.push(node.left);
+                }
+                
+                if (i < values.length) {
+                    node.right = new TreeNode(values[i++]);
+                    queue.push(node.right);
+                }
+            }
+            
+            return root;
+        }
+
+        const sortedValues = inorderTraversal(originalBST);
+        const minHeap = createMinHeap(sortedValues);
+
+        // Drawing functions
+        function drawTree(svg, root, title) {
+            svg.innerHTML = '';
+            if (!root) return;
+
+            const positions = [];
+            calculatePositions(root, 200, 50, 80, positions);
+            
+            // Draw edges first
+            drawEdges(svg, root, positions);
+            
+            // Draw nodes
+            drawNodes(svg, positions);
+        }
+
+        function calculatePositions(node, x, y, xOffset, positions, level = 0) {
+            if (!node) return;
+            
+            positions.push({ node, x, y });
+            
+            const nextXOffset = xOffset * 0.6;
+            if (node.left) {
+                calculatePositions(node.left, x - xOffset, y + 60, nextXOffset, positions, level + 1);
+            }
+            if (node.right) {
+                calculatePositions(node.right, x + xOffset, y + 60, nextXOffset, positions, level + 1);
+            }
+        }
+
+        function drawEdges(svg, root, positions) {
+            const posMap = new Map();
+            positions.forEach(p => posMap.set(p.node, p));
+            
+            function drawEdgesRecursive(node) {
                 if (!node) return;
                 
-                // Create node element
-                const nodeElement = document.createElement('div');
-                nodeElement.className = 'node';
-                nodeElement.textContent = node.value;
-                nodeElement.style.left = `${x}px`;
-                nodeElement.style.top = `${y}px`;
-                container.appendChild(nodeElement);
+                const nodePos = posMap.get(node);
                 
-                const horizontalSpacing = maxWidth / Math.pow(2, level);
-                
-                // Create links to children
                 if (node.left) {
-                    const childX = x - horizontalSpacing;
-                    const childY = y + 70;
-                    
-                    // Create link
-                    const link = document.createElement('div');
-                    link.className = 'link';
-                    
-                    // Calculate link properties
-                    const length = Math.sqrt(Math.pow(childX - x, 2) + Math.pow(childY - y, 2));
-                    const angle = Math.atan2(childY - y, childX - x);
-                    
-                    link.style.width = `${length}px`;
-                    link.style.height = '2px';
-                    link.style.left = `${x + 20}px`;
-                    link.style.top = `${y + 20}px`;
-                    link.style.transform = `rotate(${angle}rad)`;
-                    
-                    container.appendChild(link);
-                    
-                    traverseTree(node.left, childX, childY, level + 1, maxWidth);
+                    const leftPos = posMap.get(node.left);
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', nodePos.x);
+                    line.setAttribute('y1', nodePos.y);
+                    line.setAttribute('x2', leftPos.x);
+                    line.setAttribute('y2', leftPos.y);
+                    line.setAttribute('class', 'edge');
+                    svg.appendChild(line);
+                    drawEdgesRecursive(node.left);
                 }
                 
                 if (node.right) {
-                    const childX = x + horizontalSpacing;
-                    const childY = y + 70;
-                    
-                    // Create link
-                    const link = document.createElement('div');
-                    link.className = 'link';
-                    
-                    // Calculate link properties
-                    const length = Math.sqrt(Math.pow(childX - x, 2) + Math.pow(childY - y, 2));
-                    const angle = Math.atan2(childY - y, childX - x);
-                    
-                    link.style.width = `${length}px`;
-                    link.style.height = '2px';
-                    link.style.left = `${x + 20}px`;
-                    link.style.top = `${y + 20}px`;
-                    link.style.transform = `rotate(${angle}rad)`;
-                    
-                    container.appendChild(link);
-                    
-                    traverseTree(node.right, childX, childY, level + 1, maxWidth);
+                    const rightPos = posMap.get(node.right);
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', nodePos.x);
+                    line.setAttribute('y1', nodePos.y);
+                    line.setAttribute('x2', rightPos.x);
+                    line.setAttribute('y2', rightPos.y);
+                    line.setAttribute('class', 'edge');
+                    svg.appendChild(line);
+                    drawEdgesRecursive(node.right);
                 }
             }
             
-            const startX = container.offsetWidth / 2;
-            const startY = 30;
-            traverseTree(treeData, startX, startY, 1, startX * 1.5);
+            drawEdgesRecursive(root);
         }
-        
-        // Create array visualization
-        function createArray(array, container) {
-            container.innerHTML = '';
-            
-            array.forEach((value, index) => {
-                const element = document.createElement('div');
-                element.className = 'array-element';
-                element.textContent = value;
-                container.appendChild(element);
+
+        function drawNodes(svg, positions) {
+            positions.forEach(pos => {
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', pos.x);
+                circle.setAttribute('cy', pos.y);
+                circle.setAttribute('r', 20);
+                circle.setAttribute('class', 'node');
+                svg.appendChild(circle);
                 
-                // Animate appearance with delay
-                setTimeout(() => {
-                    element.style.opacity = 1;
-                }, index * 300);
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', pos.x);
+                text.setAttribute('y', pos.y);
+                text.setAttribute('class', 'node-text');
+                text.textContent = pos.node.val;
+                svg.appendChild(text);
             });
         }
-        
-        // Render current step
-        function renderStep() {
-            stepTitle.textContent = steps[currentStep].title;
-            explanation.textContent = steps[currentStep].explanation;
+
+        function updateArrayDisplay(values, title) {
+            const arrayDisplay = document.getElementById('arrayDisplay');
+            const arrayTitle = document.getElementById('arrayTitle');
             
-            // Clear containers
-            treeContainer.innerHTML = '';
-            arrayContainer.innerHTML = '';
+            arrayTitle.textContent = title;
+            arrayDisplay.innerHTML = '';
             
-            // Render step content
-            switch(currentStep) {
-                case 0:
-                    createTree(bstStructure, treeContainer);
-                    break;
-                case 1:
-                    createTree(bstStructure, treeContainer);
-                    createArray(sortedArray, arrayContainer);
-                    break;
-                case 2:
-                    createTree(minHeapStructure, treeContainer);
-                    createArray(sortedArray, arrayContainer);
-                    break;
+            values.forEach(val => {
+                const item = document.createElement('div');
+                item.className = 'array-item';
+                item.textContent = val;
+                arrayDisplay.appendChild(item);
+            });
+        }
+
+        // Step management
+        let currentStep = 0;
+        const totalSteps = 3;
+
+        const steps = [
+            {
+                title: "Step 1: Original BST",
+                description: "We start with a Binary Search Tree where left child < parent < right child. This BST contains values: 1, 2, 3, 4, 5, 6, 7.",
+                action: () => {
+                    drawTree(document.getElementById('bstCanvas'), originalBST, 'BST');
+                    document.getElementById('heapCanvas').innerHTML = '';
+                    updateArrayDisplay([], 'Original BST Structure');
+                }
+            },
+            {
+                title: "Step 2: Extract Sorted Values",
+                description: "Using Morris Inorder Traversal with O(1) space complexity, we extract all values in sorted order. The inorder traversal of a BST always gives sorted sequence.",
+                action: () => {
+                    drawTree(document.getElementById('bstCanvas'), originalBST, 'BST');
+                    document.getElementById('heapCanvas').innerHTML = '';
+                    updateArrayDisplay(sortedValues, 'Inorder Traversal (Sorted Values)');
+                }
+            },
+            {
+                title: "Step 3: Build Min-Heap",
+                description: "We fill the same tree structure using preorder traversal with our sorted values. Since we fill level by level with sorted values, the result is a valid min-heap where parent ≤ children.",
+                action: () => {
+                    drawTree(document.getElementById('bstCanvas'), originalBST, 'BST');
+                    drawTree(document.getElementById('heapCanvas'), minHeap, 'Min-Heap');
+                    updateArrayDisplay(sortedValues, 'Values Filled in Preorder');
+                }
             }
+        ];
+
+        function updateStep() {
+            document.getElementById('stepInfo').textContent = steps[currentStep].title;
+            steps[currentStep].action();
             
-            // Update navigation buttons
-            prevBtn.disabled = currentStep === 0;
-            nextBtn.disabled = currentStep === steps.length - 1;
-            
-            // Update step indicator
-            updateStepIndicator();
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === totalSteps - 1;
         }
-        
-        // Navigation functions
-        function goToStep(stepIndex) {
-            currentStep = stepIndex;
-            renderStep();
-        }
-        
-        function goToNextStep() {
-            if (currentStep < steps.length - 1) {
-                currentStep++;
-                renderStep();
-            }
-        }
-        
-        function goToPrevStep() {
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
             if (currentStep > 0) {
                 currentStep--;
-                renderStep();
+                updateStep();
             }
-        }
-        
-        // Add event listeners
-        prevBtn.addEventListener('click', goToPrevStep);
-        nextBtn.addEventListener('click', goToNextStep);
-        
-        // Initialize the visualization
-        initStepIndicator();
-        renderStep();
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateStep();
+            }
+        });
+
+        // Initialize
+        updateStep();
     </script>
 </body>
 </html>
