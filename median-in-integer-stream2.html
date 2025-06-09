@@ -3,205 +3,277 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Median Calculation Process</title>
+    <title>Median Finder Visualization</title>
     <style>
         body {
+            background-color: white;
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #FFFFFF;
-            color: #000000;
+            overflow-x: hidden;
         }
+        
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
-        }
-        h1 {
-            color: #FF4800;
             text-align: center;
+        }
+        
+        .controls {
             margin-bottom: 30px;
         }
-        .animation-container {
-            border: 2px solid #FD9F78;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            min-height: 300px;
-        }
-        .array-box {
-            display: flex;
-            justify-content: center;
-            margin: 20px 0;
-        }
-        .array-item {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 50px;
-            height: 50px;
-            margin: 0 5px;
-            border: 2px solid #000000;
-            border-radius: 5px;
-            font-weight: bold;
-            font-size: 20px;
-        }
-        .median {
-            background-color: #FF4800;
-            color: #FFFFFF;
-        }
-        .label {
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #FF4800;
-        }
-        .navigation {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-        .nav-button {
-            background-color: #FF4800;
-            color: #FFFFFF;
+        
+        .btn {
+            background-color: #ff4800;
+            color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border-radius: 6px;
             cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
             font-weight: bold;
         }
-        .nav-button:disabled {
-            background-color: #FD9F78;
+        
+        .btn:hover {
+            background-color: #e63f00;
+        }
+        
+        .btn:disabled {
+            background-color: #cccccc;
             cursor: not-allowed;
         }
-        .step-info {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 18px;
+        
+        .visualization {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 40px;
+            margin: 40px 0;
         }
-        .step-description {
-            background-color: #FD9F78;
-            color: #000000;
-            padding: 10px;
-            border-radius: 5px;
+        
+        .heap-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .heap-title {
+            color: #1c1d20;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .heap {
+            min-height: 300px;
+            width: 200px;
+            border: 3px solid #1c1d20;
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .heap-node {
+            background-color: #ff4800;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .current-number {
+            background-color: #1c1d20;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .median-display {
+            background-color: #1c1d20;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 24px;
+            font-weight: bold;
             margin-top: 20px;
+        }
+        
+        .step-info {
+            color: #1c1d20;
+            font-size: 16px;
+            margin: 20px 0;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .stream-display {
+            color: #1c1d20;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .processed {
+            color: #ff4800;
+        }
+        
+        .current {
+            background-color: #ff4800;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Median Calculation Process</h1>
+        <div class="stream-display" id="streamDisplay">Stream: 1 2 3 4</div>
         
-        <div class="step-info" id="step-info">Step 1 of 4: Insert 1</div>
-        
-        <div class="animation-container">
-            <div class="label">Original Array:</div>
-            <div class="array-box" id="original-array"></div>
-            
-            <div class="label">Sorted Array:</div>
-            <div class="array-box" id="sorted-array"></div>
-            
-            <div class="step-description" id="step-description"></div>
+        <div class="controls">
+            <button class="btn" id="prevBtn" onclick="previousStep()">Previous</button>
+            <button class="btn" id="nextBtn" onclick="nextStep()">Next</button>
         </div>
         
-        <div class="navigation">
-            <button class="nav-button" id="prev-btn" disabled>Previous</button>
-            <button class="nav-button" id="next-btn">Next</button>
+        <div class="current-number" id="currentNumber">Click Next to start</div>
+        
+        <div class="visualization">
+            <div class="heap-container">
+                <div class="heap-title">Max Heap (Smaller Half)</div>
+                <div class="heap" id="maxHeap"></div>
+            </div>
+            
+            <div class="heap-container">
+                <div class="heap-title">Min Heap (Larger Half)</div>
+                <div class="heap" id="minHeap"></div>
+            </div>
         </div>
+        
+        <div class="step-info" id="stepInfo">Ready to process stream: 1, 2, 3, 4</div>
+        
+        <div class="median-display" id="medianDisplay">Median: -</div>
     </div>
-    
+
     <script>
-        // Define the steps for animation
+        const stream = [1, 2, 3, 4];
+        let currentStep = -1;
+        let maxHeap = [];
+        let minHeap = [];
+        
         const steps = [
             {
-                original: [1],
-                sorted: [1],
-                medianIndices: [0],
-                description: "With just one element [1], the median is 1."
+                number: 1,
+                maxHeap: [1],
+                minHeap: [],
+                median: 1.0,
+                info: "Add 1 to max heap. Only one element, so median = 1"
             },
             {
-                original: [1, 2],
-                sorted: [1, 2],
-                medianIndices: [0, 1],
-                description: "With two elements [1, 2], the median is the average of both: (1 + 2) / 2 = 1.5"
+                number: 2,
+                maxHeap: [1],
+                minHeap: [2],
+                median: 1.5,
+                info: "Add 2 to max heap, move largest (2) to min heap. Equal sizes, median = (1+2)/2 = 1.5"
             },
             {
-                original: [1, 2, 3],
-                sorted: [1, 2, 3],
-                medianIndices: [1],
-                description: "With three elements [1, 2, 3], the median is the middle element: 2"
+                number: 3,
+                maxHeap: [2, 1],
+                minHeap: [3],
+                median: 2.0,
+                info: "Add 3 to max heap, move largest (3) to min heap. Move smallest from min heap (3) back to max heap. Max heap has more elements, median = 2"
             },
             {
-                original: [1, 2, 3, 4],
-                sorted: [1, 2, 3, 4],
-                medianIndices: [1, 2],
-                description: "With four elements [1, 2, 3, 4], the median is the average of the two middle elements: (2 + 3) / 2 = 2.5"
+                number: 4,
+                maxHeap: [2, 1],
+                minHeap: [3, 4],
+                median: 2.5,
+                info: "Add 4 to max heap, move largest (4) to min heap. Equal sizes, median = (2+3)/2 = 2.5"
             }
         ];
         
-        let currentStep = 0;
-        
-        // DOM elements
-        const originalArrayEl = document.getElementById('original-array');
-        const sortedArrayEl = document.getElementById('sorted-array');
-        const stepDescriptionEl = document.getElementById('step-description');
-        const stepInfoEl = document.getElementById('step-info');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
-        
-        // Function to render arrays
-        function renderArrays() {
-            const step = steps[currentStep];
+        function updateDisplay() {
+            const streamEl = document.getElementById('streamDisplay');
+            let streamHtml = 'Stream: ';
             
-            // Clear previous arrays
-            originalArrayEl.innerHTML = '';
-            sortedArrayEl.innerHTML = '';
-            
-            // Render original array
-            step.original.forEach((num, index) => {
-                const itemEl = document.createElement('div');
-                itemEl.className = 'array-item';
-                itemEl.textContent = num;
-                originalArrayEl.appendChild(itemEl);
-            });
-            
-            // Render sorted array
-            step.sorted.forEach((num, index) => {
-                const itemEl = document.createElement('div');
-                itemEl.className = 'array-item';
-                if (step.medianIndices.includes(index)) {
-                    itemEl.classList.add('median');
+            for (let i = 0; i < stream.length; i++) {
+                if (i <= currentStep) {
+                    streamHtml += `<span class="processed">${stream[i]}</span>`;
+                } else if (i === currentStep + 1) {
+                    streamHtml += `<span class="current">${stream[i]}</span>`;
+                } else {
+                    streamHtml += stream[i];
                 }
-                itemEl.textContent = num;
-                sortedArrayEl.appendChild(itemEl);
-            });
+                if (i < stream.length - 1) streamHtml += ' ';
+            }
             
-            // Update description
-            stepDescriptionEl.textContent = step.description;
+            streamEl.innerHTML = streamHtml;
             
-            // Update step info
-            stepInfoEl.textContent = `Step ${currentStep + 1} of ${steps.length}: Insert ${step.original[step.original.length - 1]}`;
+            if (currentStep >= 0 && currentStep < steps.length) {
+                const step = steps[currentStep];
+                
+                document.getElementById('currentNumber').textContent = `Processing: ${step.number}`;
+                
+                const maxHeapEl = document.getElementById('maxHeap');
+                maxHeapEl.innerHTML = '';
+                step.maxHeap.forEach(num => {
+                    const node = document.createElement('div');
+                    node.className = 'heap-node';
+                    node.textContent = num;
+                    maxHeapEl.appendChild(node);
+                });
+                
+                const minHeapEl = document.getElementById('minHeap');
+                minHeapEl.innerHTML = '';
+                step.minHeap.forEach(num => {
+                    const node = document.createElement('div');
+                    node.className = 'heap-node';
+                    node.textContent = num;
+                    minHeapEl.appendChild(node);
+                });
+                
+                document.getElementById('stepInfo').textContent = step.info;
+                document.getElementById('medianDisplay').textContent = `Median: ${step.median}`;
+            } else {
+                document.getElementById('currentNumber').textContent = 'Click Next to start';
+                document.getElementById('maxHeap').innerHTML = '';
+                document.getElementById('minHeap').innerHTML = '';
+                document.getElementById('stepInfo').textContent = 'Ready to process stream: 1, 2, 3, 4';
+                document.getElementById('medianDisplay').textContent = 'Median: -';
+            }
             
-            // Update button states
-            prevBtn.disabled = currentStep === 0;
-            nextBtn.disabled = currentStep === steps.length - 1;
+            document.getElementById('prevBtn').disabled = currentStep < 0;
+            document.getElementById('nextBtn').disabled = currentStep >= steps.length - 1;
         }
         
-        // Button event listeners
-        prevBtn.addEventListener('click', () => {
-            if (currentStep > 0) {
-                currentStep--;
-                renderArrays();
-            }
-        });
-        
-        nextBtn.addEventListener('click', () => {
+        function nextStep() {
             if (currentStep < steps.length - 1) {
                 currentStep++;
-                renderArrays();
+                updateDisplay();
             }
-        });
+        }
         
-        // Initialize
-        renderArrays();
+        function previousStep() {
+            if (currentStep >= 0) {
+                currentStep--;
+                updateDisplay();
+            }
+        }
+        
+        updateDisplay();
     </script>
 </body>
 </html>
