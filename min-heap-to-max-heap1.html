@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Min Heap vs Max Heap Comparison</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .heap-container {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .heap-visualization {
+            width: 45%;
+            min-width: 300px;
+            margin: 10px;
+        }
+        
+        .heap-title {
+            text-align: center;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #FF4800;
+        }
+        
+        .explanation {
+            background-color: #FD9F78;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #000000;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .node {
+            fill: #FD9F78;
+            stroke: #FF4800;
+            stroke-width: 2;
+        }
+        
+        .node text {
+            fill: #000000;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+        
+        .link {
+            stroke: #FF4800;
+            stroke-width: 2;
+        }
+        
+        .highlight {
+            fill: #FF4800;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Min Heap vs Max Heap Comparison</h1>
+        
+        <div class="heap-container">
+            <div class="heap-visualization">
+                <div class="heap-title">Min Heap</div>
+                <svg id="minHeapSvg" width="100%" height="300"></svg>
+            </div>
+            
+            <div class="heap-visualization">
+                <div class="heap-title">Max Heap</div>
+                <svg id="maxHeapSvg" width="100%" height="300"></svg>
+            </div>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            This animation shows a comparison between Min Heap and Max Heap using the same set of values.
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">Step 1 of 5</div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Heap data
+        const minHeap = [1, 3, 6, 5, 9, 8];
+        const maxHeap = [9, 5, 8, 1, 3, 6];
+        
+        // Explanation for each step
+        const explanations = [
+            "A Heap is a specialized tree-based data structure that satisfies the heap property. We're comparing Min Heap and Max Heap using the same values [1, 3, 6, 5, 9, 8].",
+            "In a <strong>Min Heap</strong>, the parent node always has a value smaller than or equal to its children. The smallest element is at the root. In a <strong>Max Heap</strong>, the parent node always has a value greater than or equal to its children, with the largest element at the root.",
+            "Looking at the structures: In Min Heap, the smallest value (1) is at the root, while in Max Heap, the largest value (9) is at the root. Both heaps maintain their respective heap properties throughout the tree.",
+            "When you convert from a Min Heap to a Max Heap (or vice versa), the shape of the tree remains the same, but the values are rearranged to satisfy the respective heap property.",
+            "Heaps are commonly used for priority queues, sorting algorithms (heap sort), and finding the kth smallest/largest element. Min Heaps are great when you need quick access to minimum values, while Max Heaps excel when you need maximum values."
+        ];
+        
+        // Current step
+        let currentStep = 0;
+        
+        // SVG dimensions and layout
+        const width = 300;
+        const height = 300;
+        const nodeRadius = 20;
+        
+        // Calculate positions for a binary tree
+        function calculateNodePositions(heap) {
+            const positions = [];
+            const levels = Math.floor(Math.log2(heap.length)) + 1;
+            const levelHeight = height / (levels + 0.5);
+            
+            for (let i = 0; i < heap.length; i++) {
+                const level = Math.floor(Math.log2(i + 1));
+                const nodesInLevel = Math.pow(2, level);
+                const levelWidth = width / nodesInLevel;
+                const position = (i + 1) - Math.pow(2, level) + 0.5;
+                
+                positions.push({
+                    x: position * levelWidth,
+                    y: (level + 0.5) * levelHeight,
+                    value: heap[i]
+                });
+            }
+            
+            return positions;
+        }
+        
+        // Draw heap visualization
+        function drawHeap(svgId, heap, highlight = []) {
+            const svg = document.getElementById(svgId);
+            svg.innerHTML = '';
+            
+            const positions = calculateNodePositions(heap);
+            
+            // Draw edges first (so they appear behind nodes)
+            for (let i = 0; i < positions.length; i++) {
+                // If this node has children, draw edges to them
+                const leftChildIndex = 2 * i + 1;
+                const rightChildIndex = 2 * i + 2;
+                
+                if (leftChildIndex < positions.length) {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', positions[i].x);
+                    line.setAttribute('y1', positions[i].y);
+                    line.setAttribute('x2', positions[leftChildIndex].x);
+                    line.setAttribute('y2', positions[leftChildIndex].y);
+                    line.setAttribute('class', 'link');
+                    svg.appendChild(line);
+                }
+                
+                if (rightChildIndex < positions.length) {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', positions[i].x);
+                    line.setAttribute('y1', positions[i].y);
+                    line.setAttribute('x2', positions[rightChildIndex].x);
+                    line.setAttribute('y2', positions[rightChildIndex].y);
+                    line.setAttribute('class', 'link');
+                    svg.appendChild(line);
+                }
+            }
+            
+            // Draw nodes
+            for (let i = 0; i < positions.length; i++) {
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', positions[i].x);
+                circle.setAttribute('cy', positions[i].y);
+                circle.setAttribute('r', nodeRadius);
+                circle.setAttribute('class', highlight.includes(i) ? 'node highlight' : 'node');
+                g.appendChild(circle);
+                
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', positions[i].x);
+                text.setAttribute('y', positions[i].y);
+                text.textContent = positions[i].value;
+                text.setAttribute('class', 'node-text');
+                g.appendChild(text);
+                
+                svg.appendChild(g);
+            }
+        }
+        
+        // Update the visualization
+        function updateVisualization() {
+            // Highlight different nodes based on current step
+            let minHighlight = [];
+            let maxHighlight = [];
+            
+            if (currentStep === 1) {
+                minHighlight = [0]; // Root of min heap
+                maxHighlight = [0]; // Root of max heap
+            } else if (currentStep === 2) {
+                minHighlight = [0, 1, 2]; // Root and children in min heap
+                maxHighlight = [0, 1, 2]; // Root and children in max heap
+            } else if (currentStep === 3) {
+                minHighlight = [0, 1, 2, 3, 4, 5]; // All nodes
+                maxHighlight = [0, 1, 2, 3, 4, 5]; // All nodes
+            }
+            
+            drawHeap('minHeapSvg', minHeap, minHighlight);
+            drawHeap('maxHeapSvg', maxHeap, maxHighlight);
+            
+            // Update explanation
+            document.getElementById('explanation').innerHTML = explanations[currentStep];
+            
+            // Update step indicator
+            document.getElementById('stepIndicator').textContent = `Step ${currentStep + 1} of ${explanations.length}`;
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === explanations.length - 1;
+        }
+        
+        // Button event listeners
+        document.getElementById('prevBtn').addEventListener('click', function() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        });
+        
+        document.getElementById('nextBtn').addEventListener('click', function() {
+            if (currentStep < explanations.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+        
+        // Initial visualization
+        updateVisualization();
+    </script>
+</body>
+</html>
