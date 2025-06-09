@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heap Balancing Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        
+        .description {
+            max-width: 800px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .container {
+            display: flex;
+            justify-content: space-around;
+            width: 90%;
+            max-width: 1000px;
+            margin-bottom: 30px;
+        }
+        
+        .heap-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 45%;
+        }
+        
+        .heap-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #FF4800;
+        }
+        
+        .heap {
+            position: relative;
+            width: 300px;
+            height: 250px;
+        }
+        
+        .node {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            border: 2px solid #FF4800;
+            transition: all 0.5s ease;
+        }
+        
+        .edge {
+            position: absolute;
+            background-color: #FF4800;
+            height: 2px;
+            transform-origin: 0 0;
+            transition: all 0.5s ease;
+        }
+        
+        .operations {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            width: 90%;
+            max-width: 800px;
+            margin-bottom: 20px;
+        }
+        
+        .insertion-info {
+            font-weight: bold;
+            color: #FF4800;
+            margin-bottom: 10px;
+        }
+        
+        .explanation {
+            margin-bottom: 10px;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            margin: 0 15px;
+            font-weight: bold;
+        }
+        
+        .balance-arrow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #FF4800;
+            font-size: 24px;
+            font-weight: bold;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Heap Balancing Visualization</h1>
+    
+    <div class="description">
+        <p>This animation demonstrates how max-heap and min-heap are balanced when adding a sequence of numbers [5, 3, 8, 1, 2].</p>
+        <p>The max-heap keeps the largest elements with the maximum at the root, while the min-heap keeps the smallest elements with the minimum at the root.</p>
+        <p>For balance, we ensure that the size difference between the heaps is at most 1.</p>
+    </div>
+    
+    <div class="operations">
+        <div class="insertion-info" id="insertion-info">Step 0: Initial state - Both heaps are empty</div>
+        <div class="explanation" id="explanation">We will start inserting numbers from the sequence [5, 3, 8, 1, 2] one by one.</div>
+    </div>
+    
+    <div class="container">
+        <div class="heap-container">
+            <div class="heap-title">Max Heap</div>
+            <div class="heap" id="max-heap"></div>
+        </div>
+        
+        <div class="balance-arrow" id="balance-arrow">→</div>
+        
+        <div class="heap-container">
+            <div class="heap-title">Min Heap</div>
+            <div class="heap" id="min-heap"></div>
+        </div>
+    </div>
+    
+    <div class="navigation">
+        <button class="nav-button" id="prev-btn" disabled>Previous</button>
+        <span class="step-indicator" id="step-indicator">Step 0/5</span>
+        <button class="nav-button" id="next-btn">Next</button>
+    </div>
+    
+    <script>
+        // Configuration
+        const sequence = [5, 3, 8, 1, 2];
+        let currentStep = 0;
+        const totalSteps = sequence.length;
+        
+        // Initialize heap state
+        let maxHeap = [];
+        let minHeap = [];
+        
+        // Store snapshots for animation
+        const snapshots = [
+            { 
+                maxHeap: [], 
+                minHeap: [], 
+                insertionInfo: "Step 0: Initial state - Both heaps are empty",
+                explanation: "We will start inserting numbers from the sequence [5, 3, 8, 1, 2] one by one."
+            }
+        ];
+        
+        // Generate all snapshots
+        function generateSnapshots() {
+            for (let i = 0; i < sequence.length; i++) {
+                const num = sequence[i];
+                
+                // Logic to insert a number and balance heaps
+                if (maxHeap.length === 0) {
+                    // First element goes to max heap
+                    maxHeap.push(num);
+                    snapshots.push({
+                        maxHeap: [...maxHeap],
+                        minHeap: [...minHeap],
+                        insertionInfo: `Step ${i+1}: Insert ${num}`,
+                        explanation: `The first element ${num} is inserted into the max heap. Since both heaps were empty, we arbitrarily choose to start with the max heap.`
+                    });
+                } else if (num > maxHeap[0]) {
+                    // If number is greater than max heap root, it goes to min heap
+                    minHeap.push(num);
+                    bubbleUpMinHeap();
+                    snapshots.push({
+                        maxHeap: [...maxHeap],
+                        minHeap: [...minHeap],
+                        insertionInfo: `Step ${i+1}: Insert ${num}`,
+                        explanation: `${num} is greater than the max heap root (${maxHeap[0]}), so it is inserted into the min heap.`,
+                        balanceAction: false
+                    });
+                } else {
+                    // Otherwise, it goes to max heap
+                    maxHeap.push(num);
+                    bubbleUpMaxHeap();
+                    snapshots.push({
+                        maxHeap: [...maxHeap],
+                        minHeap: [...minHeap],
+                        insertionInfo: `Step ${i+1}: Insert ${num}`,
+                        explanation: `${num} is less than or equal to the max heap root (${maxHeap[0]}), so it is inserted into the max heap.`,
+                        balanceAction: false
+                    });
+                }
+                
+                // Check and fix balance
+                if (maxHeap.length > minHeap.length + 1) {
+                    // Move max heap root to min heap
+                    const maxRoot = maxHeap.shift();
+                    minHeap.push(maxRoot);
+                    bubbleUpMinHeap();
+                    heapifyMaxHeap(0);
+                    
+                    snapshots[snapshots.length - 1].maxHeap = [...maxHeap];
+                    snapshots[snapshots.length - 1].minHeap = [...minHeap];
+                    snapshots[snapshots.length - 1].explanation += ` After insertion, max heap has ${maxHeap.length + 1} elements and min heap has ${minHeap.length - 1} elements. To balance, we move the max element ${maxRoot} from max heap to min heap.`;
+                    snapshots[snapshots.length - 1].balanceAction = 'max-to-min';
+                    snapshots[snapshots.length - 1].balanceValue = maxRoot;
+                } else if (minHeap.length > maxHeap.length) {
+                    // Move min heap root to max heap
+                    const minRoot = minHeap.shift();
+                    maxHeap.push(minRoot);
+                    bubbleUpMaxHeap();
+                    heapifyMinHeap(0);
+                    
+                    snapshots[snapshots.length - 1].maxHeap = [...maxHeap];
+                    snapshots[snapshots.length - 1].minHeap = [...minHeap];
+                    snapshots[snapshots.length - 1].explanation += ` After insertion, min heap has ${minHeap.length + 1} elements and max heap has ${maxHeap.length - 1} elements. To balance, we move the min element ${minRoot} from min heap to max heap.`;
+                    snapshots[snapshots.length - 1].balanceAction = 'min-to-max';
+                    snapshots[snapshots.length - 1].balanceValue = minRoot;
+                }
+            }
+        }
+        
+        // Heap operations for max heap
+        function bubbleUpMaxHeap() {
+            let index = maxHeap.length - 1;
+            while (index > 0) {
+                const parentIndex = Math.floor((index - 1) / 2);
+                if (maxHeap[parentIndex] >= maxHeap[index]) break;
+                
+                // Swap with parent
+                [maxHeap[parentIndex], maxHeap[index]] = [maxHeap[index], maxHeap[parentIndex]];
+                index = parentIndex;
+            }
+        }
+        
+        function heapifyMaxHeap(index) {
+            const left = 2 * index + 1;
+            const right = 2 * index + 2;
+            let largest = index;
+            
+            if (left < maxHeap.length && maxHeap[left] > maxHeap[largest]) {
+                largest = left;
+            }
+            
+            if (right < maxHeap.length && maxHeap[right] > maxHeap[largest]) {
+                largest = right;
+            }
+            
+            if (largest !== index) {
+                [maxHeap[index], maxHeap[largest]] = [maxHeap[largest], maxHeap[index]];
+                heapifyMaxHeap(largest);
+            }
+        }
+        
+        // Heap operations for min heap
+        function bubbleUpMinHeap() {
+            let index = minHeap.length - 1;
+            while (index > 0) {
+                const parentIndex = Math.floor((index - 1) / 2);
+                if (minHeap[parentIndex] <= minHeap[index]) break;
+                
+                // Swap with parent
+                [minHeap[parentIndex], minHeap[index]] = [minHeap[index], minHeap[parentIndex]];
+                index = parentIndex;
+            }
+        }
+        
+        function heapifyMinHeap(index) {
+            const left = 2 * index + 1;
+            const right = 2 * index + 2;
+            let smallest = index;
+            
+            if (left < minHeap.length && minHeap[left] < minHeap[smallest]) {
+                smallest = left;
+            }
+            
+            if (right < minHeap.length && minHeap[right] < minHeap[smallest]) {
+                smallest = right;
+            }
+            
+            if (smallest !== index) {
+                [minHeap[index], minHeap[smallest]] = [minHeap[smallest], minHeap[index]];
+                heapifyMinHeap(smallest);
+            }
+        }
+        
+        // Generate node positions based on heap index
+        function getNodePosition(index, isMaxHeap) {
+            const level = Math.floor(Math.log2(index + 1));
+            const nodesInLevel = Math.pow(2, level);
+            const position = index - (Math.pow(2, level) - 1);
+            
+            const horizontalSpacing = 300 / (nodesInLevel + 1);
+            const x = (position + 1) * horizontalSpacing;
+            const y = level * 60 + 30;
+            
+            return { x, y };
+        }
+        
+        // Create edge between parent and child nodes
+        function createEdge(parentIndex, childIndex, container, isMaxHeap) {
+            const parent = getNodePosition(parentIndex, isMaxHeap);
+            const child = getNodePosition(childIndex, isMaxHeap);
+            
+            const dx = child.x - parent.x;
+            const dy = child.y - parent.y;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+            
+            const edge = document.createElement('div');
+            edge.className = 'edge';
+            edge.style.width = `${length}px`;
+            edge.style.left = `${parent.x + 20}px`;
+            edge.style.top = `${parent.y + 20}px`;
+            edge.style.transform = `rotate(${angle}deg)`;
+            
+            container.appendChild(edge);
+        }
+        
+        // Render the heap
+        function renderHeap(heap, containerId, isMaxHeap) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            // Create nodes and edges
+            for (let i = 0; i < heap.length; i++) {
+                const { x, y } = getNodePosition(i, isMaxHeap);
+                
+                // Create node
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.textContent = heap[i];
+                node.style.left = `${x}px`;
+                node.style.top = `${y}px`;
+                container.appendChild(node);
+                
+                // Create edge to parent (if not root)
+                if (i > 0) {
+                    const parentIndex = Math.floor((i - 1) / 2);
+                    createEdge(parentIndex, i, container, isMaxHeap);
+                }
+            }
+        }
+        
+        // Update the display based on current step
+        function updateDisplay() {
+            const snapshot = snapshots[currentStep];
+            
+            // Update insertion info and explanation
+            document.getElementById('insertion-info').textContent = snapshot.insertionInfo;
+            document.getElementById('explanation').textContent = snapshot.explanation;
+            
+            // Update step indicator
+            document.getElementById('step-indicator').textContent = `Step ${currentStep}/${totalSteps}`;
+            
+            // Render heaps
+            renderHeap(snapshot.maxHeap, 'max-heap', true);
+            renderHeap(snapshot.minHeap, 'min-heap', false);
+            
+            // Show/hide balance arrow
+            const balanceArrow = document.getElementById('balance-arrow');
+            if (snapshot.balanceAction === 'max-to-min') {
+                balanceArrow.style.display = 'block';
+                balanceArrow.textContent = `${snapshot.balanceValue} →`;
+            } else if (snapshot.balanceAction === 'min-to-max') {
+                balanceArrow.style.display = 'block';
+                balanceArrow.textContent = `← ${snapshot.balanceValue}`;
+            } else {
+                balanceArrow.style.display = 'none';
+            }
+            
+            // Update button states
+            document.getElementById('prev-btn').disabled = currentStep === 0;
+            document.getElementById('next-btn').disabled = currentStep === totalSteps;
+        }
+        
+        // Initialize
+        function init() {
+            generateSnapshots();
+            updateDisplay();
+            
+            // Add event listeners
+            document.getElementById('prev-btn').addEventListener('click', () => {
+                if (currentStep > 0) {
+                    currentStep--;
+                    updateDisplay();
+                }
+            });
+            
+            document.getElementById('next-btn').addEventListener('click', () => {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    updateDisplay();
+                }
+            });
+        }
+        
+        // Start the visualization
+        init();
+    </script>
+</body>
+</html>
