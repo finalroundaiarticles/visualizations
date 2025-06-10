@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Programming Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin-bottom: 30px;
+        }
+        
+        .dp-table {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        
+        .dp-cell {
+            width: 80px;
+            height: 80px;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 5px;
+            position: relative;
+            background-color: #FFFFFF;
+            transition: all 0.3s ease;
+        }
+        
+        .dp-cell.active {
+            background-color: #FD9F78;
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .dp-cell .index {
+            position: absolute;
+            top: -25px;
+            font-size: 16px;
+            color: #000000;
+        }
+        
+        .calculation {
+            height: 150px;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            color: #000000;
+            position: relative;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+            color: #000000;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .nav-button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .arrow {
+            position: absolute;
+            height: 2px;
+            background-color: #FF4800;
+            transform-origin: left center;
+            display: none;
+        }
+        
+        .arrow:after {
+            content: '';
+            position: absolute;
+            right: -10px;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid #FF4800;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        
+        .step-counter {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dynamic Programming Table Animation</h1>
+    
+    <div class="container">
+        <div class="dp-table" id="dp-table">
+            <div class="dp-cell" id="cell-0">
+                <div class="index">dp[0]</div>
+                1
+            </div>
+            <div class="dp-cell" id="cell-1">
+                <div class="index">dp[1]</div>
+                1
+            </div>
+            <div class="dp-cell" id="cell-2">
+                <div class="index">dp[2]</div>
+                2
+            </div>
+            <div class="dp-cell" id="cell-3">
+                <div class="index">dp[3]</div>
+                4
+            </div>
+            <div class="dp-cell" id="cell-4">
+                <div class="index">dp[4]</div>
+                10
+            </div>
+        </div>
+        
+        <div class="calculation" id="calculation">
+            <div id="calc-text">Recurrence Relation: dp[i] = dp[i-1] + (i-1)*dp[i-2]</div>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            Start the animation to see how each value in the DP table is calculated.
+        </div>
+    </div>
+    
+    <div class="navigation">
+        <button class="nav-button" id="prev-btn" disabled>Previous</button>
+        <button class="nav-button" id="next-btn">Next</button>
+    </div>
+    
+    <div class="step-counter" id="step-counter">Step 0 of 4</div>
+    
+    <script>
+        const steps = [
+            {
+                active: [],
+                calcText: "Recurrence Relation: dp[i] = dp[i-1] + (i-1)*dp[i-2]",
+                explanation: "We have a Dynamic Programming problem with base cases dp[0] = 1 and dp[1] = 1. Let's see how the values for dp[2], dp[3], and dp[4] are calculated using the recurrence relation."
+            },
+            {
+                active: [0, 1, 2],
+                calcText: "dp[2] = dp[1] + (2-1)*dp[0]<br>dp[2] = 1 + 1*1 = 2",
+                explanation: "For dp[2], we use the recurrence relation:<br>dp[2] = dp[1] + (2-1)*dp[0]<br>dp[2] = 1 + 1*1 = 2"
+            },
+            {
+                active: [1, 2, 3],
+                calcText: "dp[3] = dp[2] + (3-1)*dp[1]<br>dp[3] = 2 + 2*1 = 4",
+                explanation: "For dp[3], we use the recurrence relation:<br>dp[3] = dp[2] + (3-1)*dp[1]<br>dp[3] = 2 + 2*1 = 4"
+            },
+            {
+                active: [2, 3, 4],
+                calcText: "dp[4] = dp[3] + (4-1)*dp[2]<br>dp[4] = 4 + 3*2 = 10",
+                explanation: "For dp[4], we use the recurrence relation:<br>dp[4] = dp[3] + (4-1)*dp[2]<br>dp[4] = 4 + 3*2 = 10"
+            },
+            {
+                active: [0, 1, 2, 3, 4],
+                calcText: "Final DP Table Values:<br>dp[0]=1, dp[1]=1, dp[2]=2, dp[3]=4, dp[4]=10",
+                explanation: "The final values in our DP table are:<br>dp[0]=1, dp[1]=1, dp[2]=2, dp[3]=4, dp[4]=10<br><br>This recurrence relation can be used to compute arrangements for various combinatorial problems."
+            }
+        ];
+        
+        let currentStep = 0;
+        const cells = document.querySelectorAll('.dp-cell');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const calcDiv = document.getElementById('calc-text');
+        const explanationDiv = document.getElementById('explanation');
+        const stepCounter = document.getElementById('step-counter');
+        
+        function updateStep() {
+            // Update step counter
+            stepCounter.textContent = `Step ${currentStep} of ${steps.length - 1}`;
+            
+            // Update nav buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+            
+            // Reset all cells
+            cells.forEach(cell => {
+                cell.classList.remove('active');
+            });
+            
+            // Activate cells for current step
+            steps[currentStep].active.forEach(index => {
+                document.getElementById(`cell-${index}`).classList.add('active');
+            });
+            
+            // Update calculation text
+            calcDiv.innerHTML = steps[currentStep].calcText;
+            
+            // Update explanation
+            explanationDiv.innerHTML = steps[currentStep].explanation;
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateStep();
+            }
+        });
+        
+        // Initialize
+        updateStep();
+    </script>
+</body>
+</html>
