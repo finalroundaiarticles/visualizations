@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Operations Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .visualization-container {
+            background-color: #FFFFFF;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            height: 300px;
+            position: relative;
+        }
+        
+        .word-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+            margin: 30px 0;
+        }
+        
+        .letter {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            text-align: center;
+            font-size: 24px;
+            margin: 0 5px;
+            border-radius: 5px;
+            background-color: #FD9F78;
+            color: #000000;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+        
+        .highlight {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: translateY(-10px);
+        }
+        
+        .operation {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #FF4800;
+            margin: 20px 0;
+            height: 30px;
+        }
+        
+        .arrow {
+            text-align: center;
+            font-size: 24px;
+            color: #FF4800;
+            margin: 10px 0;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin-top: 15px;
+            color: #000000;
+            font-weight: bold;
+        }
+        
+        .explanation {
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #FD9F78;
+            color: #000000;
+            border-radius: 5px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Edit Operations Visualization</h1>
+        <div class="explanation">
+            This visualization shows how to transform the word "kitten" to "sitting" using three basic edit operations: Insert, Delete, and Replace.
+        </div>
+        
+        <div class="visualization-container">
+            <div class="word-container" id="source-word">
+                <!-- Source word will be populated here -->
+            </div>
+            
+            <div class="operation" id="operation-text"></div>
+            
+            <div class="arrow">↓</div>
+            
+            <div class="word-container" id="target-word">
+                <!-- Target word will be populated here -->
+            </div>
+        </div>
+        
+        <div class="step-indicator" id="step-indicator">Step 0 of 3</div>
+        
+        <div class="nav-buttons">
+            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
+            <button class="nav-btn" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Define the transformation steps
+        const steps = [
+            {
+                sourceWord: "kitten",
+                targetWord: "sitten",
+                operation: "Replace 'k' with 's'",
+                highlightSource: 0,
+                highlightTarget: 0
+            },
+            {
+                sourceWord: "sitten",
+                targetWord: "sittin",
+                operation: "Replace 'e' with 'i'",
+                highlightSource: 4,
+                highlightTarget: 4
+            },
+            {
+                sourceWord: "sittin",
+                targetWord: "sitting",
+                operation: "Insert 'g' at the end",
+                highlightSource: -1,
+                highlightTarget: 6
+            }
+        ];
+        
+        let currentStep = -1;
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const sourceWordContainer = document.getElementById('source-word');
+        const targetWordContainer = document.getElementById('target-word');
+        const operationText = document.getElementById('operation-text');
+        const stepIndicator = document.getElementById('step-indicator');
+        
+        // Initialize the visualization
+        function initVisualization() {
+            showStep(0);
+        }
+        
+        // Display a specific step
+        function showStep(stepIndex) {
+            if (stepIndex < 0 || stepIndex >= steps.length) {
+                return;
+            }
+            
+            currentStep = stepIndex;
+            const step = steps[currentStep];
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+            
+            // Update step indicator
+            stepIndicator.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+            
+            // Clear word containers
+            sourceWordContainer.innerHTML = '';
+            targetWordContainer.innerHTML = '';
+            
+            // Populate source word
+            for (let i = 0; i < step.sourceWord.length; i++) {
+                const letterDiv = document.createElement('div');
+                letterDiv.className = 'letter';
+                if (i === step.highlightSource) {
+                    letterDiv.classList.add('highlight');
+                }
+                letterDiv.textContent = step.sourceWord[i];
+                sourceWordContainer.appendChild(letterDiv);
+            }
+            
+            // Populate target word
+            for (let i = 0; i < step.targetWord.length; i++) {
+                const letterDiv = document.createElement('div');
+                letterDiv.className = 'letter';
+                if (i === step.highlightTarget) {
+                    letterDiv.classList.add('highlight');
+                }
+                letterDiv.textContent = step.targetWord[i];
+                targetWordContainer.appendChild(letterDiv);
+            }
+            
+            // Set operation text
+            operationText.textContent = step.operation;
+            
+            // For the initial state
+            if (currentStep === -1) {
+                operationText.textContent = '';
+            }
+        }
+        
+        // Event listeners for buttons
+        prevBtn.addEventListener('click', () => {
+            showStep(currentStep - 1);
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep === -1) {
+                showStep(0);
+            } else {
+                showStep(currentStep + 1);
+            }
+        });
+        
+        // Initialize with step -1 (showing just "kitten")
+        currentStep = -1;
+        sourceWordContainer.innerHTML = '';
+        const sourceWord = "kitten";
+        for (let i = 0; i < sourceWord.length; i++) {
+            const letterDiv = document.createElement('div');
+            letterDiv.className = 'letter';
+            letterDiv.textContent = sourceWord[i];
+            sourceWordContainer.appendChild(letterDiv);
+        }
+        
+        targetWordContainer.innerHTML = '';
+        stepIndicator.textContent = 'Initial State';
+        operationText.textContent = 'Starting with "kitten"';
+    </script>
+</body>
+</html>
