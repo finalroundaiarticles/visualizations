@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factorial vs. Optimized Calculation Comparison</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            display: flex;
+            justify-content: space-around;
+            max-width: 1000px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+        
+        .method-box {
+            width: 45%;
+            border: 3px solid #FF4800;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px;
+            position: relative;
+        }
+        
+        .method-title {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .step {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #FFFFFF;
+            border: 2px dashed #FD9F78;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        
+        .step.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .highlight {
+            font-weight: bold;
+            color: #FF4800;
+        }
+        
+        .number-box {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            background-color: #FD9F78;
+            color: #000000;
+            border-radius: 5px;
+            margin: 0 3px;
+            font-weight: bold;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .explanation {
+            text-align: center;
+            margin: 20px auto;
+            max-width: 800px;
+            padding: 15px;
+            background-color: #FFF;
+            border-radius: 8px;
+            border: 2px solid #FF4800;
+        }
+        
+        .final-result {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 15px;
+            color: #FF4800;
+        }
+        
+        .arrow {
+            font-size: 24px;
+            color: #FF4800;
+            margin: 10px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Factorial vs. Optimized Calculation Comparison</h1>
+    
+    <div class="explanation">
+        <p>Comparing two methods to calculate P(5,2) - Permutation of 5 items taken 2 at a time</p>
+    </div>
+    
+    <div class="container">
+        <div class="method-box">
+            <div class="method-title">Factorial Method</div>
+            <div id="factorial-steps">
+                <div class="step" data-step="1">
+                    <p>The formula for permutation P(n,r) is:</p>
+                    <p class="highlight">P(n,r) = n! / (n-r)!</p>
+                </div>
+                
+                <div class="step" data-step="2">
+                    <p>Substituting n=5, r=2:</p>
+                    <p class="highlight">P(5,2) = 5! / (5-2)!</p>
+                    <p class="highlight">P(5,2) = 5! / 3!</p>
+                </div>
+                
+                <div class="step" data-step="3">
+                    <p>Calculate 5!:</p>
+                    <p>5! = 5 × 4 × 3 × 2 × 1</p>
+                    <p class="highlight">5! = 120</p>
+                </div>
+                
+                <div class="step" data-step="4">
+                    <p>Calculate 3!:</p>
+                    <p>3! = 3 × 2 × 1</p>
+                    <p class="highlight">3! = 6</p>
+                </div>
+                
+                <div class="step" data-step="5">
+                    <p>Divide 5! by 3!:</p>
+                    <p class="highlight">P(5,2) = 120 / 6</p>
+                    <div class="arrow">↓</div>
+                    <div class="final-result">P(5,2) = 20</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="method-box">
+            <div class="method-title">Optimized Method</div>
+            <div id="optimized-steps">
+                <div class="step" data-step="1">
+                    <p>For P(n,r), we can use an optimized formula:</p>
+                    <p class="highlight">P(n,r) = n × (n-1) × (n-2) × ... × (n-r+1)</p>
+                </div>
+                
+                <div class="step" data-step="2">
+                    <p>Substituting n=5, r=2:</p>
+                    <p class="highlight">P(5,2) = 5 × (5-1) × (5-2) × ... × (5-2+1)</p>
+                    <p class="highlight">P(5,2) = 5 × 4</p>
+                </div>
+                
+                <div class="step" data-step="3">
+                    <p>We only need to multiply the first r terms:</p>
+                    <p>P(5,2) = <span class="number-box">5</span> × <span class="number-box">4</span></p>
+                </div>
+                
+                <div class="step" data-step="4">
+                    <p>Calculate directly:</p>
+                    <p class="highlight">P(5,2) = 5 × 4 = 20</p>
+                </div>
+                
+                <div class="step" data-step="5">
+                    <p>The optimized calculation is simpler and faster:</p>
+                    <div class="arrow">↓</div>
+                    <div class="final-result">P(5,2) = 20</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="navigation">
+        <button id="prev-btn" class="nav-button" disabled>Previous</button>
+        <button id="next-btn" class="nav-button">Next</button>
+    </div>
+    
+    <script>
+        const factorialSteps = document.querySelectorAll('#factorial-steps .step');
+        const optimizedSteps = document.querySelectorAll('#optimized-steps .step');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        
+        let currentStep = 0;
+        const totalSteps = factorialSteps.length;
+        
+        // Show the first step initially
+        showStep(currentStep);
+        
+        function showStep(stepIndex) {
+            // Hide all steps
+            factorialSteps.forEach(step => step.classList.remove('active'));
+            optimizedSteps.forEach(step => step.classList.remove('active'));
+            
+            // Show steps up to current index
+            for(let i = 0; i <= stepIndex; i++) {
+                if(i < factorialSteps.length) {
+                    factorialSteps[i].classList.add('active');
+                }
+                if(i < optimizedSteps.length) {
+                    optimizedSteps[i].classList.add('active');
+                }
+            }
+            
+            // Update button states
+            prevBtn.disabled = stepIndex === 0;
+            nextBtn.disabled = stepIndex === totalSteps - 1;
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if(currentStep > 0) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if(currentStep < totalSteps - 1) {
+                currentStep++;
+                showStep(currentStep);
+            }
+        });
+    </script>
+</body>
+</html>
