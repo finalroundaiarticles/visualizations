@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factorial Calculation Visualization - C(5,2)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .visualization {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 40px 0;
+            min-height: 400px;
+        }
+        
+        .calculation {
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .bars-container {
+            display: flex;
+            align-items: flex-end;
+            height: 300px;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .bar-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .bar {
+            width: 50px;
+            background-color: #FD9F78;
+            transition: height 1s ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 10px;
+            color: white;
+            font-weight: bold;
+            overflow: hidden;
+        }
+        
+        .bar-label {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            font-size: 32px;
+            font-weight: bold;
+            color: #FF4800;
+            margin-top: 20px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            border-left: 5px solid #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Factorial Calculation Visualization: C(5,2)</h1>
+        
+        <div class="explanation" id="explanation">
+            <p>The combination formula C(n,r) is calculated as: n! / (r! × (n-r)!)</p>
+            <p>For C(5,2) we need to calculate: 5! / (2! × (5-2)!)</p>
+        </div>
+        
+        <div class="visualization">
+            <div class="calculation" id="calculation">C(5,2) = 5! / (2! × 3!)</div>
+            
+            <div class="bars-container" id="barsContainer">
+                <!-- Bars will be added dynamically -->
+            </div>
+            
+            <div class="result" id="result">C(5,2) = 10</div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const steps = [
+            {
+                title: "Initial Formula",
+                calculation: "C(5,2) = 5! / (2! × 3!)",
+                bars: [],
+                explanation: "The combination formula C(n,r) is calculated as: n! / (r! × (n-r)!)<br>For C(5,2) we need to calculate: 5! / (2! × (5-2)!)"
+            },
+            {
+                title: "Calculate 5!",
+                calculation: "5! = 5 × 4 × 3 × 2 × 1",
+                bars: [
+                    { label: "1", height: 20, value: 1 },
+                    { label: "2", height: 40, value: 2 },
+                    { label: "3", height: 60, value: 3 },
+                    { label: "4", height: 80, value: 4 },
+                    { label: "5", height: 100, value: 5 }
+                ],
+                explanation: "First, we calculate 5! (5 factorial):<br>5! = 5 × 4 × 3 × 2 × 1 = 120<br>Watch how the value grows with each multiplication."
+            },
+            {
+                title: "Result of 5!",
+                calculation: "5! = 120",
+                bars: [
+                    { label: "5!", height: 240, value: 120 }
+                ],
+                explanation: "5! = 5 × 4 × 3 × 2 × 1 = 120<br>Notice how rapidly factorial values grow, even for a small number like 5."
+            },
+            {
+                title: "Calculate 2!",
+                calculation: "2! = 2 × 1",
+                bars: [
+                    { label: "1", height: 20, value: 1 },
+                    { label: "2", height: 40, value: 2 }
+                ],
+                explanation: "Now we calculate 2! (2 factorial):<br>2! = 2 × 1 = 2"
+            },
+            {
+                title: "Result of 2!",
+                calculation: "2! = 2",
+                bars: [
+                    { label: "2!", height: 40, value: 2 }
+                ],
+                explanation: "2! = 2 × 1 = 2"
+            },
+            {
+                title: "Calculate 3!",
+                calculation: "3! = 3 × 2 × 1",
+                bars: [
+                    { label: "1", height: 20, value: 1 },
+                    { label: "2", height: 40, value: 2 },
+                    { label: "3", height: 60, value: 3 }
+                ],
+                explanation: "Next, we calculate 3! (3 factorial):<br>3! = 3 × 2 × 1 = 6"
+            },
+            {
+                title: "Result of 3!",
+                calculation: "3! = 6",
+                bars: [
+                    { label: "3!", height: 120, value: 6 }
+                ],
+                explanation: "3! = 3 × 2 × 1 = 6"
+            },
+            {
+                title: "Compare Values",
+                calculation: "5! = 120, 2! = 2, 3! = 6",
+                bars: [
+                    { label: "2!", height: 40, value: 2 },
+                    { label: "3!", height: 120, value: 6 },
+                    { label: "5!", height: 240, value: 120 }
+                ],
+                explanation: "Now we have all the factorial values we need:<br>5! = 120<br>2! = 2<br>3! = 6<br>We can see how much larger 5! is compared to the others."
+            },
+            {
+                title: "Final Calculation",
+                calculation: "C(5,2) = 5! / (2! × 3!) = 120 / (2 × 6) = 120 / 12 = 10",
+                bars: [
+                    { label: "2! × 3!", height: 120, value: 12 },
+                    { label: "5!", height: 240, value: 120 },
+                    { label: "C(5,2)", height: 200, value: 10 }
+                ],
+                explanation: "Final calculation: C(5,2) = 5! / (2! × 3!)<br>= 120 / (2 × 6)<br>= 120 / 12<br>= 10<br><br>This means there are 10 different ways to choose 2 items from a set of 5 items."
+            }
+        ];
+        
+        let currentStep = 0;
+        const prevBtn = document.getElementById("prevBtn");
+        const nextBtn = document.getElementById("nextBtn");
+        const calculation = document.getElementById("calculation");
+        const barsContainer = document.getElementById("barsContainer");
+        const result = document.getElementById("result");
+        const explanation = document.getElementById("explanation");
+        
+        function updateView() {
+            const step = steps[currentStep];
+            
+            calculation.textContent = step.calculation;
+            explanation.innerHTML = step.explanation;
+            
+            // Update bars
+            barsContainer.innerHTML = "";
+            step.bars.forEach(bar => {
+                const barGroup = document.createElement("div");
+                barGroup.className = "bar-group";
+                
+                const barElement = document.createElement("div");
+                barElement.className = "bar";
+                barElement.style.height = "0px";
+                barElement.textContent = bar.value;
+                
+                const barLabel = document.createElement("div");
+                barLabel.className = "bar-label";
+                barLabel.textContent = bar.label;
+                
+                barGroup.appendChild(barElement);
+                barGroup.appendChild(barLabel);
+                barsContainer.appendChild(barGroup);
+                
+                // Trigger animation after a small delay
+                setTimeout(() => {
+                    barElement.style.height = bar.height + "px";
+                }, 50);
+            });
+            
+            // Show result on the last step
+            if (currentStep === steps.length - 1) {
+                result.style.opacity = "1";
+            } else {
+                result.style.opacity = "0";
+            }
+            
+            // Update buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        prevBtn.addEventListener("click", () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateView();
+            }
+        });
+        
+        nextBtn.addEventListener("click", () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateView();
+            }
+        });
+        
+        // Initialize the view
+        updateView();
+    </script>
+</body>
+</html>
