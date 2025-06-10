@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Distance Transformation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .animation-container {
+            width: 100%;
+            height: 300px;
+            position: relative;
+            margin: 30px 0;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .letter {
+            display: inline-block;
+            font-size: 40px;
+            font-weight: bold;
+            margin: 0 10px;
+            padding: 10px;
+            border-radius: 8px;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+        
+        .word-container {
+            text-align: center;
+            position: absolute;
+            width: 100%;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+        }
+        
+        .original-word, .target-word {
+            margin: 20px 0;
+        }
+        
+        .operation-info {
+            text-align: center;
+            font-size: 24px;
+            margin: 20px 0;
+            height: 40px;
+            color: #000000;
+            font-weight: bold;
+        }
+        
+        .step-counter {
+            text-align: center;
+            font-size: 18px;
+            color: #FF4800;
+            margin-bottom: 20px;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .highlight {
+            background-color: #FD9F78;
+            color: #FFFFFF;
+            animation: pulse 1s infinite;
+        }
+        
+        .delete {
+            animation: fadeOut 1s forwards;
+            opacity: 0;
+        }
+        
+        .insert {
+            animation: fadeIn 1s forwards;
+            opacity: 1;
+        }
+        
+        .replace {
+            animation: replace 1s forwards;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes replace {
+            0% { transform: translateY(0); opacity: 1; }
+            40% { transform: translateY(-30px); opacity: 0; }
+            60% { transform: translateY(30px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        
+        .explanation {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: rgba(253, 159, 120, 0.1);
+            border-radius: 8px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Edit Distance Transformation</h1>
+        <p>Transforming "kitten" to "sitting" step by step</p>
+        
+        <div class="step-counter" id="stepCounter">Step 0 of 3</div>
+        
+        <div class="animation-container">
+            <div class="word-container" id="wordContainer">
+                <!-- Words will be generated here via JavaScript -->
+            </div>
+            <div class="operation-info" id="operationInfo">Starting words</div>
+        </div>
+        
+        <div class="explanation">
+            <p>The <strong>Edit Distance</strong> between two strings is the minimum number of operations required to transform one string into another. The operations are:</p>
+            <ul>
+                <li><strong>Replace</strong>: Change one character to another</li>
+                <li><strong>Insert</strong>: Add a new character</li>
+                <li><strong>Delete</strong>: Remove a character</li>
+            </ul>
+            <p>This animation shows how to transform "kitten" to "sitting" with the minimum number of edits.</p>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prevBtn" disabled>Previous</button>
+            <button class="nav-btn" id="nextBtn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        const steps = [
+            { 
+                operation: "Starting words",
+                source: "kitten",
+                target: "sitting",
+                change: null,
+                description: "Starting with 'kitten', transforming to 'sitting'"
+            },
+            { 
+                operation: "Replace 'k' with 's'",
+                source: "sitten",
+                target: "sitting",
+                change: { index: 0, type: "replace", from: "k", to: "s" },
+                description: "First operation: Replace 'k' with 's' at the beginning"
+            },
+            { 
+                operation: "Replace 'e' with 'i'",
+                source: "sittin",
+                target: "sitting",
+                change: { index: 4, type: "replace", from: "e", to: "i" },
+                description: "Second operation: Replace 'e' with 'i' at position 5"
+            },
+            { 
+                operation: "Insert 'g' at the end",
+                source: "sitting",
+                target: "sitting",
+                change: { index: 6, type: "insert", char: "g" },
+                description: "Final operation: Insert 'g' at the end"
+            }
+        ];
+        
+        let currentStep = 0;
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const wordContainer = document.getElementById('wordContainer');
+        const operationInfo = document.getElementById('operationInfo');
+        const stepCounter = document.getElementById('stepCounter');
+        
+        function renderWords() {
+            const step = steps[currentStep];
+            wordContainer.innerHTML = '';
+            
+            // Create first word container
+            const firstWordDiv = document.createElement('div');
+            firstWordDiv.className = 'original-word';
+            
+            // Create second word container
+            const secondWordDiv = document.createElement('div');
+            secondWordDiv.className = 'target-word';
+            
+            // Add letters to first word
+            for (let i = 0; i < step.source.length; i++) {
+                const letterSpan = document.createElement('span');
+                letterSpan.className = 'letter';
+                letterSpan.textContent = step.source[i];
+                
+                // Add highlight class for the changed letter
+                if (step.change && step.change.index === i) {
+                    if (step.change.type === 'replace' || step.change.type === 'delete') {
+                        letterSpan.classList.add('highlight');
+                    }
+                }
+                
+                firstWordDiv.appendChild(letterSpan);
+            }
+            
+            // Add the "target" word (sitting)
+            for (let i = 0; i < step.target.length; i++) {
+                const letterSpan = document.createElement('span');
+                letterSpan.className = 'letter';
+                letterSpan.textContent = step.target[i];
+                secondWordDiv.appendChild(letterSpan);
+            }
+            
+            // Add both words to the container
+            wordContainer.appendChild(firstWordDiv);
+            wordContainer.appendChild(secondWordDiv);
+            
+            // Set operation info text
+            operationInfo.textContent = step.operation;
+            
+            // Update step counter
+            stepCounter.textContent = `Step ${currentStep} of ${steps.length - 1}`;
+            
+            // Enable/disable navigation buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                renderWords();
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                renderWords();
+            }
+        }
+        
+        prevBtn.addEventListener('click', prevStep);
+        nextBtn.addEventListener('click', nextStep);
+        
+        // Initialize the animation
+        renderWords();
+    </script>
+</body>
+</html>
