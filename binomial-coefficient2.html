@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimized Binomial Coefficient Calculation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        .explanation {
+            margin-bottom: 20px;
+            text-align: left;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #FFF;
+        }
+        .animation-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            margin-bottom: 20px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .formula {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .nav-btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .step-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            margin: 0 5px;
+            cursor: pointer;
+        }
+        .step-dot.active {
+            background-color: #FF4800;
+        }
+        .element {
+            position: absolute;
+            transition: all 0.5s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+        .operation {
+            position: absolute;
+            transition: all 0.5s ease-in-out;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .description {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 18px;
+            background-color: rgba(253, 159, 120, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 0 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Optimized Binomial Coefficient Calculation</h1>
+        
+        <div class="explanation">
+            <p>The binomial coefficient C(n,k) represents the number of ways to choose k items from n items without considering the order.</p>
+            <p>Traditional method uses factorials: C(n,k) = n! / (k! × (n-k)!)</p>
+            <p>Optimized method directly calculates C(n,k) by multiplying and dividing appropriately.</p>
+        </div>
+        
+        <div class="formula">
+            C(5,2) = <span id="result-value">?</span>
+        </div>
+        
+        <div class="animation-container" id="animation-container">
+            <div class="description" id="description">Let's calculate C(5,2) using the optimized approach</div>
+        </div>
+        
+        <div class="step-indicator" id="step-indicator">
+            <!-- Step dots will be added dynamically -->
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
+            <button class="nav-btn" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Animation states
+        const states = [
+            {
+                description: "Let's calculate C(5,2) using the optimized approach",
+                elements: [
+                    { type: "text", content: "C(5,2) = ?", x: 50, y: 50, size: 24, color: "#000000" }
+                ],
+                result: "?"
+            },
+            {
+                description: "We start with result = 1",
+                elements: [
+                    { type: "text", content: "result = 1", x: 50, y: 50, size: 24, color: "#000000" }
+                ],
+                result: "1"
+            },
+            {
+                description: "Step 1: We multiply the result by (n - 0) = 5",
+                elements: [
+                    { type: "circle", content: "1", x: 250, y: 150, size: 60, color: "#FD9F78" },
+                    { type: "text", content: "×", x: 320, y: 150, size: 30, color: "#FF4800" },
+                    { type: "circle", content: "5", x: 390, y: 150, size: 60, color: "#FD9F78" }
+                ],
+                result: "1"
+            },
+            {
+                description: "Step 1: result = 1 × 5 = 5",
+                elements: [
+                    { type: "circle", content: "5", x: 320, y: 150, size: 80, color: "#FF4800" }
+                ],
+                result: "5"
+            },
+            {
+                description: "Step 1: We divide the result by 1",
+                elements: [
+                    { type: "circle", content: "5", x: 250, y: 150, size: 60, color: "#FD9F78" },
+                    { type: "text", content: "÷", x: 320, y: 150, size: 30, color: "#FF4800" },
+                    { type: "circle", content: "1", x: 390, y: 150, size: 60, color: "#FD9F78" }
+                ],
+                result: "5"
+            },
+            {
+                description: "Step 1: result = 5 ÷ 1 = 5",
+                elements: [
+                    { type: "circle", content: "5", x: 320, y: 150, size: 80, color: "#FF4800" }
+                ],
+                result: "5"
+            },
+            {
+                description: "Step 2: We multiply the result by (n - 1) = 4",
+                elements: [
+                    { type: "circle", content: "5", x: 250, y: 150, size: 60, color: "#FD9F78" },
+                    { type: "text", content: "×", x: 320, y: 150, size: 30, color: "#FF4800" },
+                    { type: "circle", content: "4", x: 390, y: 150, size: 60, color: "#FD9F78" }
+                ],
+                result: "5"
+            },
+            {
+                description: "Step 2: result = 5 × 4 = 20",
+                elements: [
+                    { type: "circle", content: "20", x: 320, y: 150, size: 80, color: "#FF4800" }
+                ],
+                result: "20"
+            },
+            {
+                description: "Step 2: We divide the result by 2",
+                elements: [
+                    { type: "circle", content: "20", x: 250, y: 150, size: 60, color: "#FD9F78" },
+                    { type: "text", content: "÷", x: 320, y: 150, size: 30, color: "#FF4800" },
+                    { type: "circle", content: "2", x: 390, y: 150, size: 60, color: "#FD9F78" }
+                ],
+                result: "20"
+            },
+            {
+                description: "Step 2: result = 20 ÷ 2 = 10",
+                elements: [
+                    { type: "circle", content: "10", x: 320, y: 150, size: 80, color: "#FF4800" }
+                ],
+                result: "10"
+            },
+            {
+                description: "Therefore, C(5,2) = 10, which means there are 10 ways to choose 2 items from 5 items.",
+                elements: [
+                    { type: "text", content: "C(5,2) = 10", x: 50, y: 100, size: 32, color: "#FF4800" },
+                    { type: "circle", content: "10", x: 320, y: 200, size: 100, color: "#FF4800" }
+                ],
+                result: "10"
+            }
+        ];
+
+        // Animation variables
+        let currentState = 0;
+        const container = document.getElementById('animation-container');
+        const description = document.getElementById('description');
+        const resultValue = document.getElementById('result-value');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepIndicator = document.getElementById('step-indicator');
+
+        // Initialize step indicator
+        function initializeStepIndicator() {
+            for (let i = 0; i < states.length; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'step-dot' + (i === 0 ? ' active' : '');
+                dot.addEventListener('click', () => {
+                    goToState(i);
+                });
+                stepIndicator.appendChild(dot);
+            }
+        }
+
+        // Render the current state
+        function renderState() {
+            // Update description and result
+            description.textContent = states[currentState].description;
+            resultValue.textContent = states[currentState].result;
+            
+            // Clear previous elements
+            container.innerHTML = '';
+            container.appendChild(description);
+            
+            // Add new elements
+            states[currentState].elements.forEach(element => {
+                const el = document.createElement('div');
+                
+                if (element.type === "circle") {
+                    el.className = 'element';
+                    el.style.width = element.size + 'px';
+                    el.style.height = element.size + 'px';
+                    el.style.backgroundColor = element.color;
+                    el.style.color = "#FFFFFF";
+                    el.style.fontSize = element.size / 2 + 'px';
+                } else if (element.type === "text") {
+                    el.className = 'operation';
+                    el.style.color = element.color;
+                    el.style.fontSize = element.size + 'px';
+                }
+                
+                el.textContent = element.content;
+                el.style.left = element.x + 'px';
+                el.style.top = element.y + 'px';
+                
+                container.appendChild(el);
+            });
+            
+            // Update navigation buttons
+            prevBtn.disabled = currentState === 0;
+            nextBtn.disabled = currentState === states.length - 1;
+            
+            // Update step indicator
+            const dots = stepIndicator.querySelectorAll('.step-dot');
+            dots.forEach((dot, i) => {
+                dot.className = 'step-dot' + (i === currentState ? ' active' : '');
+            });
+        }
+
+        // Go to a specific state
+        function goToState(stateIndex) {
+            currentState = stateIndex;
+            renderState();
+        }
+
+        // Event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentState > 0) {
+                currentState--;
+                renderState();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentState < states.length - 1) {
+                currentState++;
+                renderState();
+            }
+        });
+
+        // Initialize
+        initializeStepIndicator();
+        renderState();
+    </script>
+</body>
+</html>
