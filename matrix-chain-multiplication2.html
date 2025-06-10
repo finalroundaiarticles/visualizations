@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Chain Multiplication - Dynamic Programming</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .explanation {
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .animation-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .matrix-table {
+            margin: 0 auto;
+            border-collapse: collapse;
+        }
+        
+        .matrix-table td {
+            width: 60px;
+            height: 60px;
+            text-align: center;
+            border: 1px solid #000000;
+            position: relative;
+        }
+        
+        .matrix-table th {
+            padding: 10px;
+            background-color: #FD9F78;
+            color: #FFFFFF;
+        }
+        
+        .cell-highlight {
+            background-color: #FD9F78;
+            transition: background-color 0.5s;
+        }
+        
+        .optimal-path {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .arrow {
+            position: absolute;
+            color: #FF4800;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .dimension-label {
+            background-color: #FD9F78;
+            color: #FFFFFF;
+            padding: 5px;
+            border-radius: 4px;
+            margin: 5px;
+            display: inline-block;
+        }
+        
+        .step-info {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+            background-color: #FFFFFF;
+        }
+        
+        .matrix-representation {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .matrix-box {
+            padding: 10px;
+            margin: 0 5px;
+            background-color: #FD9F78;
+            color: #FFFFFF;
+            border-radius: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Matrix Chain Multiplication - Dynamic Programming</h1>
+        
+        <div class="explanation">
+            <p>Matrix Chain Multiplication is a classic Dynamic Programming problem that determines the most efficient way to multiply a sequence of matrices. This animation demonstrates how to fill the DP table for matrices with dimensions [10, 20, 30, 40].</p>
+        </div>
+        
+        <div class="matrix-representation">
+            <div class="matrix-box">A₁<br>10×20</div>
+            <div class="matrix-box">A₂<br>20×30</div>
+            <div class="matrix-box">A₃<br>30×40</div>
+        </div>
+        
+        <div class="step-info" id="step-info">
+            Step 1: Initialize the table - the main diagonal will be zeros (cost of multiplying a single matrix is 0).
+        </div>
+        
+        <div class="animation-container" id="animation-container">
+            <!-- Animation will be rendered here -->
+        </div>
+        
+        <div class="navigation">
+            <button id="prev-btn" disabled>Previous Step</button>
+            <button id="next-btn">Next Step</button>
+        </div>
+    </div>
+
+    <script>
+        // Define matrices dimensions
+        const dimensions = [10, 20, 30, 40];
+        const n = dimensions.length - 1; // Number of matrices
+        
+        // Initialize DP table
+        const dp = Array(n + 1).fill().map(() => Array(n + 1).fill(0));
+        const split = Array(n + 1).fill().map(() => Array(n + 1).fill(0));
+        
+        // Animation steps
+        let currentStep = 0;
+        const steps = [];
+        
+        // Pre-compute all steps for the animation
+        function computeAllSteps() {
+            // Step 1: Initialize with zeros on main diagonal
+            steps.push({
+                type: "initialize",
+                message: "Step 1: Initialize the table - the main diagonal will be zeros (cost of multiplying a single matrix is 0)."
+            });
+            
+            // Fill the DP table
+            for (let l = 2; l <= n; l++) {
+                // l is the chain length
+                for (let i = 1; i <= n - l + 1; i++) {
+                    const j = i + l - 1;
+                    dp[i][j] = Infinity;
+                    
+                    steps.push({
+                        type: "highlight_cell",
+                        i: i,
+                        j: j,
+                        message: `Step: Calculating minimum cost for multiplying matrices A${i} to A${j}`
+                    });
+                    
+                    for (let k = i; k < j; k++) {
+                        // Try splitting at different positions
+                        const cost = dp[i][k] + dp[k+1][j] + dimensions[i-1] * dimensions[k] * dimensions[j];
+                        
+                        steps.push({
+                            type: "calculate",
+                            i: i,
+                            j: j,
+                            k: k,
+                            cost: cost,
+                            currentMin: dp[i][j],
+                            leftCell: {i: i, j: k, value: dp[i][k]},
+                            rightCell: {i: k+1, j: j, value: dp[k+1][j]},
+                            message: `Calculating cost when splitting between A${k} and A${k+1}: ` +
+                                    `Cost(A${i}...A${k}) + Cost(A${k+1}...A${j}) + (${dimensions[i-1]} × ${dimensions[k]} × ${dimensions[j]}) = ` +
+                                    `${dp[i][k]} + ${dp[k+1][j]} + ${dimensions[i-1] * dimensions[k] * dimensions[j]} = ${cost}`
+                        });
+                        
+                        if (cost < dp[i][j]) {
+                            dp[i][j] = cost;
+                            split[i][j] = k;
+                            
+                            steps.push({
+                                type: "update_min",
+                                i: i,
+                                j: j,
+                                k: k,
+                                newMin: cost,
+                                message: `Found a better splitting point at k=${k} with cost ${cost}`
+                            });
+                        }
+                    }
+                    
+                    steps.push({
+                        type: "final_cell",
+                        i: i,
+                        j: j,
+                        value: dp[i][j],
+                        splitAt: split[i][j],
+                        message: `Final minimum cost for multiplying A${i} to A${j} is ${dp[i][j]}, with optimal split at k=${split[i][j]}`
+                    });
+                }
+            }
+            
+            // Final step: Show optimal parenthesization
+            steps.push({
+                type: "optimal_path",
+                message: "Final DP table with the optimal multiplication cost highlighted. The minimum cost for multiplying all matrices is " + dp[1][n]
+            });
+            
+            // Parenthesization step
+            steps.push({
+                type: "parenthesization",
+                message: "The optimal parenthesization: " + getOptimalParenthesization(1, n)
+            });
+        }
+        
+        // Function to get optimal parenthesization
+        function getOptimalParenthesization(i, j) {
+            if (i === j) {
+                return "A" + i;
+            }
+            return "(" + getOptimalParenthesization(i, split[i][j]) + " × " + 
+                   getOptimalParenthesization(split[i][j] + 1, j) + ")";
+        }
+        
+        // Render the DP table
+        function renderTable() {
+            const container = document.getElementById('animation-container');
+            container.innerHTML = '';
+            
+            const table = document.createElement('table');
+            table.className = 'matrix-table';
+            
+            // Create header row with matrix indices
+            const headerRow = document.createElement('tr');
+            const emptyHeader = document.createElement('th');
+            headerRow.appendChild(emptyHeader);
+            
+            for (let j = 1; j <= n; j++) {
+                const th = document.createElement('th');
+                th.textContent = 'A' + j;
+                headerRow.appendChild(th);
+            }
+            table.appendChild(headerRow);
+            
+            // Create table rows
+            for (let i = 1; i <= n; i++) {
+                const row = document.createElement('tr');
+                
+                // Row header
+                const rowHeader = document.createElement('th');
+                rowHeader.textContent = 'A' + i;
+                row.appendChild(rowHeader);
+                
+                // Table cells
+                for (let j = 1; j <= n; j++) {
+                    const cell = document.createElement('td');
+                    cell.id = `cell-${i}-${j}`;
+                    
+                    if (dp[i][j] !== Infinity && dp[i][j] !== 0) {
+                        cell.textContent = dp[i][j];
+                        
+                        if (split[i][j] > 0) {
+                            const splitInfo = document.createElement('div');
+                            splitInfo.className = 'arrow';
+                            splitInfo.style.fontSize = '10px';
+                            splitInfo.style.bottom = '2px';
+                            splitInfo.style.right = '2px';
+                            splitInfo.textContent = 'k=' + split[i][j];
+                            cell.appendChild(splitInfo);
+                        }
+                    } else if (i === j) {
+                        cell.textContent = '0';
+                    } else {
+                        cell.textContent = '';
+                    }
+                    
+                    row.appendChild(cell);
+                }
+                
+                table.appendChild(row);
+            }
+            
+            container.appendChild(table);
+            
+            // Add dimensions information
+            const dimensionsInfo = document.createElement('div');
+            dimensionsInfo.style.marginTop = '20px';
+            dimensionsInfo.style.textAlign = 'center';
+            
+            dimensionsInfo.innerHTML = 'Matrix Dimensions: ';
+            for (let i = 0; i < dimensions.length - 1; i++) {
+                dimensionsInfo.innerHTML += `<span class="dimension-label">A${i+1}: ${dimensions[i]}×${dimensions[i+1]}</span> `;
+            }
+            
+            container.appendChild(dimensionsInfo);
+        }
+        
+        // Function to update step information
+        function updateStepInfo(message) {
+            document.getElementById('step-info').textContent = message;
+        }
+        
+        // Apply the current step
+        function applyStep(step) {
+            updateStepInfo(step.message);
+            
+            // Reset previous highlights
+            const cells = document.querySelectorAll('.matrix-table td');
+            cells.forEach(cell => {
+                cell.classList.remove('cell-highlight');
+                cell.classList.remove('optimal-path');
+            });
+            
+            switch (step.type) {
+                case "initialize":
+                    // Just render the initial table
+                    break;
+                    
+                case "highlight_cell":
+                    document.getElementById(`cell-${step.i}-${step.j}`).classList.add('cell-highlight');
+                    break;
+                    
+                case "calculate":
+                    document.getElementById(`cell-${step.i}-${step.j}`).classList.add('cell-highlight');
+                    document.getElementById(`cell-${step.leftCell.i}-${step.leftCell.j}`).classList.add('cell-highlight');
+                    document.getElementById(`cell-${step.rightCell.i}-${step.rightCell.j}`).classList.add('cell-highlight');
+                    break;
+                    
+                case "update_min":
+                    document.getElementById(`cell-${step.i}-${step.j}`).classList.add('cell-highlight');
+                    document.getElementById(`cell-${step.i}-${step.j}`).textContent = step.newMin;
+                    break;
+                    
+                case "final_cell":
+                    document.getElementById(`cell-${step.i}-${step.j}`).classList.add('cell-highlight');
+                    
+                    if (step.splitAt > 0) {
+                        const cell = document.getElementById(`cell-${step.i}-${step.j}`);
+                        
+                        // Check if arrow already exists
+                        let arrow = cell.querySelector('.arrow');
+                        if (!arrow) {
+                            arrow = document.createElement('div');
+                            arrow.className = 'arrow';
+                            arrow.style.fontSize = '10px';
+                            arrow.style.bottom = '2px';
+                            arrow.style.right = '2px';
+                            cell.appendChild(arrow);
+                        }
+                        
+                        arrow.textContent = 'k=' + step.splitAt;
+                    }
+                    break;
+                    
+                case "optimal_path":
+                    // Highlight the optimal path
+                    highlightOptimalPath(1, n);
+                    break;
+                    
+                case "parenthesization":
+                    // Already handled in updateStepInfo
+                    break;
+            }
+        }
+        
+        // Recursively highlight the optimal path
+        function highlightOptimalPath(i, j) {
+            if (i !== j) {
+                document.getElementById(`cell-${i}-${j}`).classList.add('optimal-path');
+                const k = split[i][j];
+                highlightOptimalPath(i, k);
+                highlightOptimalPath(k + 1, j);
+            }
+        }
+        
+        // Navigation functions
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                applyStep(steps[currentStep]);
+                document.getElementById('prev-btn').disabled = false;
+                if (currentStep === steps.length - 1) {
+                    document.getElementById('next-btn').disabled = true;
+                }
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                applyStep(steps[currentStep]);
+                document.getElementById('next-btn').disabled = false;
+                if (currentStep === 0) {
+                    document.getElementById('prev-btn').disabled = true;
+                }
+            }
+        }
+        
+        // Initialize the animation
+        window.onload = function() {
+            computeAllSteps();
+            renderTable();
+            applyStep(steps[0]);
+            
+            document.getElementById('next-btn').addEventListener('click', nextStep);
+            document.getElementById('prev-btn').addEventListener('click', prevStep);
+        };
+    </script>
+</body>
+</html>
