@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knapsack Problem - Dynamic Programming Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background-color: #FFFFFF;
+            color: #000000;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .description {
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 30px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #000000;
+            padding: 12px;
+            text-align: center;
+            min-width: 60px;
+            position: relative;
+        }
+        th {
+            background-color: #FD9F78;
+            color: #000000;
+            font-weight: bold;
+        }
+        .highlight {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .current-cell {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transition: background-color 0.3s;
+        }
+        .item-info {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #FD9F78;
+            border-radius: 5px;
+        }
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+            background-color: #FFFFFF;
+            min-height: 100px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-counter {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .legend {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dynamic Programming Table for Knapsack Problem</h1>
+        
+        <div class="description">
+            <p>The Knapsack Problem is a classic optimization problem where we need to select items with given weights and values to maximize the total value while keeping the total weight under a capacity limit. Dynamic Programming offers an efficient solution by building a table that stores intermediate results.</p>
+        </div>
+        
+        <div class="item-info">
+            <p><strong>Items:</strong> weights = [2, 3, 4, 5], values = [3, 4, 5, 6]</p>
+            <p><strong>Knapsack Capacity:</strong> 10</p>
+        </div>
+        
+        <div class="table-container">
+            <table id="dp-table">
+                <thead>
+                    <tr>
+                        <th>Items / Capacity</th>
+                        <th>0</th>
+                        <th>1</th>
+                        <th>2</th>
+                        <th>3</th>
+                        <th>4</th>
+                        <th>5</th>
+                        <th>6</th>
+                        <th>7</th>
+                        <th>8</th>
+                        <th>9</th>
+                        <th>10</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>0 (No Items)</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <th>1 (w=2, v=3)</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <th>2 (w=3, v=4)</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <th>3 (w=4, v=5)</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <th>4 (w=5, v=6)</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <p>Starting with an empty table. The first row (0 items) is all zeros because with no items, we can achieve no value regardless of capacity.</p>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FF4800;"></div>
+                <span>Current cell being calculated</span>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+        
+        <div class="step-counter" id="step-counter">Step: 1 / 55</div>
+    </div>
+
+    <script>
+        const weights = [2, 3, 4, 5];
+        const values = [3, 4, 5, 6];
+        const capacity = 10;
+        
+        // Create DP table data
+        const dpTable = Array(weights.length + 1).fill(0).map(() => Array(capacity + 1).fill(0));
+        
+        // Fill DP table (for reference only)
+        for (let i = 1; i <= weights.length; i++) {
+            for (let w = 0; w <= capacity; w++) {
+                if (weights[i-1] <= w) {
+                    dpTable[i][w] = Math.max(
+                        values[i-1] + dpTable[i-1][w - weights[i-1]],
+                        dpTable[i-1][w]
+                    );
+                } else {
+                    dpTable[i][w] = dpTable[i-1][w];
+                }
+            }
+        }
+        
+        // Animation control
+        let currentStep = 0;
+        const totalSteps = (weights.length + 1) * (capacity + 1);
+        
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepCounter = document.getElementById('step-counter');
+        const explanation = document.getElementById('explanation');
+        
+        function getCoordinates(step) {
+            // Row-wise traversal
+            const row = Math.floor(step / (capacity + 1));
+            const col = step % (capacity + 1);
+            return { row, col };
+        }
+        
+        function updateTable() {
+            // Reset all cells
+            const allCells = document.querySelectorAll('td');
+            allCells.forEach(cell => {
+                cell.classList.remove('current-cell');
+                cell.classList.remove('highlight');
+            });
+            
+            const { row, col } = getCoordinates(currentStep);
+            
+            // Skip first row (already filled with zeros)
+            if (row >= 1) {
+                // Fill all cells up to current step
+                for (let r = 0; r <= row; r++) {
+                    for (let c = 0; c <= capacity; c++) {
+                        if (r === row && c > col) continue;
+                        
+                        const cell = document.querySelector(`#dp-table tbody tr:nth-child(${r + 1}) td:nth-child(${c + 1})`);
+                        if (cell) {
+                            cell.textContent = dpTable[r][c];
+                        }
+                    }
+                }
+                
+                // Highlight current cell
+                const currentCell = document.querySelector(`#dp-table tbody tr:nth-child(${row + 1}) td:nth-child(${col + 1})`);
+                if (currentCell) {
+                    currentCell.classList.add('current-cell');
+                }
+            }
+            
+            // Update explanation
+            updateExplanation(row, col);
+            
+            // Update step counter
+            stepCounter.textContent = `Step: ${currentStep + 1} / ${totalSteps}`;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+        }
+        
+        function updateExplanation(row, col) {
+            if (row === 0) {
+                explanation.innerHTML = `<p>First row (0 items): With no items, we can achieve no value regardless of capacity, so all cells are 0.</p>`;
+                return;
+            }
+            
+            const itemIndex = row - 1;
+            const weight = weights[itemIndex];
+            const value = values[itemIndex];
+            
+            if (col === 0) {
+                explanation.innerHTML = `<p>For capacity 0: We can't put any items in a knapsack with 0 capacity, so the value is 0.</p>`;
+                return;
+            }
+            
+            if (weight > col) {
+                explanation.innerHTML = `
+                    <p>Current item (${itemIndex+1}): weight = ${weight}, value = ${value}</p>
+                    <p>Current capacity: ${col}</p>
+                    <p>Since the weight of item ${itemIndex+1} (${weight}) is greater than current capacity (${col}), we cannot include this item.</p>
+                    <p>Therefore, we take the value from the cell directly above: dp[${row}][${col}] = dp[${row-1}][${col}] = ${dpTable[row-1][col]}</p>
+                `;
+            } else {
+                const includeValue = value + dpTable[row-1][col-weight];
+                const excludeValue = dpTable[row-1][col];
+                
+                explanation.innerHTML = `
+                    <p>Current item (${itemIndex+1}): weight = ${weight}, value = ${value}</p>
+                    <p>Current capacity: ${col}</p>
+                    <p>We have two options:</p>
+                    <p>1. Include this item: Value = ${value} + dp[${row-1}][${col-weight}] = ${value} + ${dpTable[row-1][col-weight]} = ${includeValue}</p>
+                    <p>2. Exclude this item: Value = dp[${row-1}][${col}] = ${excludeValue}</p>
+                    <p>We choose the maximum of these two: dp[${row}][${col}] = max(${includeValue}, ${excludeValue}) = ${dpTable[row][col]}</p>
+                `;
+            }
+        }
+        
+        // Event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateTable();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateTable();
+            }
+        });
+        
+        // Initialize
+        updateTable();
+    </script>
+</body>
+</html>
