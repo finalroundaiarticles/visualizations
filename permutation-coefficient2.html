@@ -3,264 +3,244 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Factorial vs. Optimized Calculation Comparison</title>
+    <title>Permutation Coefficient Visualization</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #FFFFFF;
             margin: 0;
             padding: 20px;
-            color: #000000;
-        }
-        
-        h1 {
-            color: #FF4800;
-            text-align: center;
-            margin-bottom: 30px;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
         }
         
         .container {
-            display: flex;
-            justify-content: space-around;
-            max-width: 1000px;
-            margin: 0 auto;
-            overflow: hidden;
+            max-width: 800px;
+            width: 100%;
         }
         
-        .method-box {
-            width: 45%;
-            border: 3px solid #FF4800;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 10px;
-            position: relative;
-        }
-        
-        .method-title {
-            background-color: #FF4800;
-            color: #FFFFFF;
-            padding: 10px 15px;
-            border-radius: 5px;
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 18px;
-            font-weight: bold;
-        }
-        
-        .step {
-            margin: 15px 0;
-            padding: 15px;
-            border-radius: 8px;
-            background-color: #FFFFFF;
-            border: 2px dashed #FD9F78;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.5s ease, transform 0.5s ease;
-        }
-        
-        .step.active {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        .highlight {
-            font-weight: bold;
-            color: #FF4800;
-        }
-        
-        .number-box {
-            display: inline-block;
-            width: 30px;
-            height: 30px;
-            line-height: 30px;
-            text-align: center;
-            background-color: #FD9F78;
-            color: #000000;
-            border-radius: 5px;
-            margin: 0 3px;
-            font-weight: bold;
-        }
-        
-        .navigation {
+        .controls {
             display: flex;
             justify-content: center;
-            margin-top: 30px;
+            gap: 20px;
+            margin-bottom: 30px;
         }
         
-        .nav-button {
-            background-color: #FF4800;
-            color: #FFFFFF;
+        .btn {
+            background-color: #ff4800;
+            color: white;
             border: none;
-            border-radius: 5px;
-            padding: 10px 20px;
-            margin: 0 10px;
-            cursor: pointer;
+            padding: 12px 24px;
             font-size: 16px;
-            transition: background-color 0.3s ease;
+            font-family: Arial, sans-serif;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: opacity 0.3s;
         }
         
-        .nav-button:hover {
-            background-color: #FD9F78;
+        .btn:hover {
+            opacity: 0.8;
         }
         
-        .nav-button:disabled {
-            background-color: #FD9F78;
+        .btn:disabled {
+            background-color: #1c1d20;
             opacity: 0.5;
             cursor: not-allowed;
         }
         
-        .explanation {
+        .visualization {
+            background-color: white;
+            border: 2px solid #1c1d20;
+            border-radius: 10px;
+            padding: 30px;
             text-align: center;
-            margin: 20px auto;
-            max-width: 800px;
-            padding: 15px;
-            background-color: #FFF;
-            border-radius: 8px;
-            border: 2px solid #FF4800;
+            margin-bottom: 20px;
         }
         
-        .final-result {
+        .formula {
             font-size: 24px;
+            color: #1c1d20;
+            margin-bottom: 20px;
             font-weight: bold;
-            text-align: center;
-            margin-top: 15px;
-            color: #FF4800;
         }
         
-        .arrow {
-            font-size: 24px;
-            color: #FF4800;
-            margin: 10px 0;
-            text-align: center;
+        .calculation {
+            font-size: 18px;
+            color: #ff4800;
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+        
+        .result {
+            font-size: 32px;
+            color: #1c1d20;
+            font-weight: bold;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f8f8;
+            border-radius: 5px;
+        }
+        
+        .step {
+            display: inline-block;
+            margin: 5px;
+            padding: 8px 12px;
+            background-color: #ff4800;
+            color: white;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .multiplication {
+            color: #1c1d20;
+            font-size: 20px;
+            margin: 0 10px;
+        }
+        
+        .info {
+            background-color: #f0f0f0;
+            padding: 20px;
+            border-radius: 5px;
+            color: #1c1d20;
+            font-size: 16px;
         }
     </style>
 </head>
 <body>
-    <h1>Factorial vs. Optimized Calculation Comparison</h1>
-    
-    <div class="explanation">
-        <p>Comparing two methods to calculate P(5,2) - Permutation of 5 items taken 2 at a time</p>
-    </div>
-    
     <div class="container">
-        <div class="method-box">
-            <div class="method-title">Factorial Method</div>
-            <div id="factorial-steps">
-                <div class="step" data-step="1">
-                    <p>The formula for permutation P(n,r) is:</p>
-                    <p class="highlight">P(n,r) = n! / (n-r)!</p>
-                </div>
-                
-                <div class="step" data-step="2">
-                    <p>Substituting n=5, r=2:</p>
-                    <p class="highlight">P(5,2) = 5! / (5-2)!</p>
-                    <p class="highlight">P(5,2) = 5! / 3!</p>
-                </div>
-                
-                <div class="step" data-step="3">
-                    <p>Calculate 5!:</p>
-                    <p>5! = 5 × 4 × 3 × 2 × 1</p>
-                    <p class="highlight">5! = 120</p>
-                </div>
-                
-                <div class="step" data-step="4">
-                    <p>Calculate 3!:</p>
-                    <p>3! = 3 × 2 × 1</p>
-                    <p class="highlight">3! = 6</p>
-                </div>
-                
-                <div class="step" data-step="5">
-                    <p>Divide 5! by 3!:</p>
-                    <p class="highlight">P(5,2) = 120 / 6</p>
-                    <div class="arrow">↓</div>
-                    <div class="final-result">P(5,2) = 20</div>
-                </div>
-            </div>
+        <div class="controls">
+            <button class="btn" id="prevBtn" onclick="previousExample()">Previous</button>
+            <button class="btn" id="nextBtn" onclick="nextExample()">Next</button>
         </div>
         
-        <div class="method-box">
-            <div class="method-title">Optimized Method</div>
-            <div id="optimized-steps">
-                <div class="step" data-step="1">
-                    <p>For P(n,r), we can use an optimized formula:</p>
-                    <p class="highlight">P(n,r) = n × (n-1) × (n-2) × ... × (n-r+1)</p>
-                </div>
-                
-                <div class="step" data-step="2">
-                    <p>Substituting n=5, r=2:</p>
-                    <p class="highlight">P(5,2) = 5 × (5-1) × (5-2) × ... × (5-2+1)</p>
-                    <p class="highlight">P(5,2) = 5 × 4</p>
-                </div>
-                
-                <div class="step" data-step="3">
-                    <p>We only need to multiply the first r terms:</p>
-                    <p>P(5,2) = <span class="number-box">5</span> × <span class="number-box">4</span></p>
-                </div>
-                
-                <div class="step" data-step="4">
-                    <p>Calculate directly:</p>
-                    <p class="highlight">P(5,2) = 5 × 4 = 20</p>
-                </div>
-                
-                <div class="step" data-step="5">
-                    <p>The optimized calculation is simpler and faster:</p>
-                    <div class="arrow">↓</div>
-                    <div class="final-result">P(5,2) = 20</div>
-                </div>
-            </div>
+        <div class="visualization" id="visualization">
+            <!-- Content will be dynamically generated -->
+        </div>
+        
+        <div class="info" id="info">
+            <!-- Information will be dynamically generated -->
         </div>
     </div>
-    
-    <div class="navigation">
-        <button id="prev-btn" class="nav-button" disabled>Previous</button>
-        <button id="next-btn" class="nav-button">Next</button>
-    </div>
-    
+
     <script>
-        const factorialSteps = document.querySelectorAll('#factorial-steps .step');
-        const optimizedSteps = document.querySelectorAll('#optimized-steps .step');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
+        const examples = [
+            {
+                n: 5,
+                r: 2,
+                description: "P(5,2) - Selecting 2 items from 5 in order"
+            },
+            {
+                n: 4,
+                r: 3,
+                description: "P(4,3) - Selecting 3 items from 4 in order"
+            },
+            {
+                n: 6,
+                r: 2,
+                description: "P(6,2) - Selecting 2 items from 6 in order"
+            },
+            {
+                n: 3,
+                r: 3,
+                description: "P(3,3) - Selecting all 3 items from 3 in order"
+            },
+            {
+                n: 7,
+                r: 1,
+                description: "P(7,1) - Selecting 1 item from 7 in order"
+            },
+            {
+                n: 5,
+                r: 0,
+                description: "P(5,0) - Selecting 0 items from 5 (edge case)"
+            }
+        ];
         
-        let currentStep = 0;
-        const totalSteps = factorialSteps.length;
+        let currentIndex = 0;
         
-        // Show the first step initially
-        showStep(currentStep);
-        
-        function showStep(stepIndex) {
-            // Hide all steps
-            factorialSteps.forEach(step => step.classList.remove('active'));
-            optimizedSteps.forEach(step => step.classList.remove('active'));
-            
-            // Show steps up to current index
-            for(let i = 0; i <= stepIndex; i++) {
-                if(i < factorialSteps.length) {
-                    factorialSteps[i].classList.add('active');
-                }
-                if(i < optimizedSteps.length) {
-                    optimizedSteps[i].classList.add('active');
-                }
+        function permutationCoefficient(n, r) {
+            if (r > n || r < 0 || n < 0) {
+                return 0;
+            }
+            if (r == 0) {
+                return 1;
             }
             
-            // Update button states
-            prevBtn.disabled = stepIndex === 0;
-            nextBtn.disabled = stepIndex === totalSteps - 1;
+            let result = 1;
+            for (let i = 0; i < r; i++) {
+                result *= (n - i);
+            }
+            return result;
         }
         
-        prevBtn.addEventListener('click', () => {
-            if(currentStep > 0) {
-                currentStep--;
-                showStep(currentStep);
+        function generateSteps(n, r) {
+            if (r > n || r < 0 || n < 0) {
+                return [];
             }
-        });
+            if (r == 0) {
+                return [1];
+            }
+            
+            let steps = [];
+            for (let i = 0; i < r; i++) {
+                steps.push(n - i);
+            }
+            return steps;
+        }
         
-        nextBtn.addEventListener('click', () => {
-            if(currentStep < totalSteps - 1) {
-                currentStep++;
-                showStep(currentStep);
+        function updateVisualization() {
+            const example = examples[currentIndex];
+            const { n, r, description } = example;
+            const result = permutationCoefficient(n, r);
+            const steps = generateSteps(n, r);
+            
+            let calculationHtml = '';
+            if (r === 0) {
+                calculationHtml = '<div class="calculation">P(n,0) = 1 (by definition)</div>';
+            } else if (steps.length > 0) {
+                calculationHtml = '<div class="calculation">';
+                calculationHtml += steps.map(step => `<span class="step">${step}</span>`).join('<span class="multiplication">×</span>');
+                calculationHtml += '</div>';
             }
-        });
+            
+            const visualizationHtml = `
+                <div class="formula">P(${n}, ${r})</div>
+                ${calculationHtml}
+                <div class="result">Result: ${result}</div>
+            `;
+            
+            const infoHtml = `
+                <strong>${description}</strong><br><br>
+                Formula: P(n,r) = n × (n-1) × (n-2) × ... × (n-r+1)<br>
+                This calculates the number of ways to arrange r items selected from n items where order matters.
+            `;
+            
+            document.getElementById('visualization').innerHTML = visualizationHtml;
+            document.getElementById('info').innerHTML = infoHtml;
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentIndex === 0;
+            document.getElementById('nextBtn').disabled = currentIndex === examples.length - 1;
+        }
+        
+        function previousExample() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateVisualization();
+            }
+        }
+        
+        function nextExample() {
+            if (currentIndex < examples.length - 1) {
+                currentIndex++;
+                updateVisualization();
+            }
+        }
+        
+        // Initialize
+        updateVisualization();
     </script>
 </body>
 </html>
