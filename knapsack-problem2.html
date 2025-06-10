@@ -3,384 +3,396 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Knapsack Items Visualization</title>
+    <title>Knapsack DP Visualization</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #FFFFFF;
+            background-color: white;
             margin: 0;
             padding: 20px;
-            color: #000000;
         }
+
         .container {
-            max-width: 900px;
+            max-width: 1200px;
             margin: 0 auto;
-            position: relative;
         }
-        h1 {
+
+        .controls {
             text-align: center;
-            color: #FF4800;
             margin-bottom: 30px;
         }
-        .visualization {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            position: relative;
-            height: 400px;
-        }
-        .items-container {
-            display: flex;
-            flex-wrap: wrap;
-            width: 60%;
-            justify-content: space-around;
-        }
-        .item {
-            width: 80px;
-            height: 80px;
-            margin: 10px;
-            border-radius: 10px;
-            background-color: #FD9F78;
-            color: #000000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            border: 2px solid #FF4800;
-            position: relative;
-            cursor: pointer;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        .item:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        .item.selected {
-            background-color: #FF4800;
+
+        .btn {
+            background-color: #ff4800;
             color: white;
-            box-shadow: 0 0 10px rgba(255,72,0,0.7);
-        }
-        .knapsack {
-            width: 200px;
-            height: 250px;
-            background-color: #FFFFFF;
-            border: 3px solid #000000;
-            border-radius: 15px 15px 30px 30px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-            overflow: hidden;
-        }
-        .knapsack-label {
-            position: absolute;
-            top: -40px;
-            width: 100%;
-            text-align: center;
-            font-weight: bold;
-            color: #000000;
-        }
-        .knapsack-content {
-            width: 100%;
-            height: 100%;
-            padding: 10px;
-            display: flex;
-            flex-wrap: wrap;
-            align-content: flex-start;
-            justify-content: center;
-        }
-        .mini-item {
-            width: 40px;
-            height: 40px;
-            margin: 5px;
-            border-radius: 5px;
-            background-color: #FF4800;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-size: 10px;
-            font-weight: bold;
-        }
-        .capacity-bar {
-            position: absolute;
-            bottom: 10px;
-            width: 80%;
-            height: 20px;
-            background-color: #FFFFFF;
-            border: 2px solid #000000;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .capacity-fill {
-            height: 100%;
-            width: 0%;
-            background-color: #FD9F78;
-            transition: width 0.5s;
-        }
-        .info-panel {
-            background-color: #FFFFFF;
-            border: 2px solid #FF4800;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 30px;
-        }
-        .navigation {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-        .nav-btn {
-            background-color: #FF4800;
-            color: #FFFFFF;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-family: Arial, sans-serif;
             cursor: pointer;
-            font-weight: bold;
-            transition: background-color 0.3s;
+            border-radius: 5px;
+            margin: 0 10px;
         }
-        .nav-btn:hover {
-            background-color: #FD9F78;
+
+        .btn:hover {
+            opacity: 0.8;
         }
-        .nav-btn:disabled {
-            background-color: #ccc;
+
+        .btn:disabled {
+            background-color: #1c1d20;
             cursor: not-allowed;
+            opacity: 0.6;
         }
-        .total-value, .total-weight {
-            margin-top: 10px;
+
+        .info-panel {
+            background-color: #f8f9fa;
+            border: 2px solid #1c1d20;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        .step-info {
+            font-size: 18px;
             font-weight: bold;
+            color: #1c1d20;
+            margin-bottom: 10px;
         }
-        .step-indicator {
-            text-align: center;
+
+        .current-calculation {
+            font-size: 16px;
+            color: #ff4800;
             margin-bottom: 15px;
-            color: #FF4800;
+        }
+
+        .items-display {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .item {
+            background-color: #f0f0f0;
+            border: 2px solid #1c1d20;
+            padding: 10px 15px;
+            border-radius: 6px;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .item.current {
+            background-color: #ff4800;
+            color: white;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin: 0 auto;
+            background-color: white;
+            border: 2px solid #1c1d20;
+        }
+
+        th, td {
+            border: 1px solid #1c1d20;
+            padding: 8px 12px;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            min-width: 40px;
+            font-size: 14px;
+        }
+
+        th {
+            background-color: #1c1d20;
+            color: white;
             font-weight: bold;
+        }
+
+        .current-cell {
+            background-color: #ff4800;
+            color: white;
+            font-weight: bold;
+        }
+
+        .completed-cell {
+            background-color: #ffebe5;
+        }
+
+        .result-panel {
+            background-color: #e8f5e8;
+            border: 2px solid #ff4800;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result-text {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1c1d20;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Knapsack Problem Visualization</h1>
-        
-        <div class="step-indicator">Step <span id="current-step">1</span> of <span id="total-steps">5</span></div>
-        
-        <div class="info-panel" id="info-panel">
-            <p>The Knapsack Problem involves selecting items to maximize value while staying within a weight limit.</p>
-            <p>Here we have 4 items with different weights and values, and a knapsack with 10kg capacity.</p>
+        <div class="controls">
+            <button class="btn" id="prevBtn">Previous</button>
+            <button class="btn" id="nextBtn">Next</button>
         </div>
-        
-        <div class="visualization">
-            <div class="items-container" id="items-container">
-                <div class="item" data-weight="2" data-value="3" data-id="1">
-                    <div>Weight: 2kg</div>
-                    <div>Value: $3</div>
-                </div>
-                <div class="item" data-weight="3" data-value="4" data-id="2">
-                    <div>Weight: 3kg</div>
-                    <div>Value: $4</div>
-                </div>
-                <div class="item" data-weight="4" data-value="5" data-id="3">
-                    <div>Weight: 4kg</div>
-                    <div>Value: $5</div>
-                </div>
-                <div class="item" data-weight="5" data-value="6" data-id="4">
-                    <div>Weight: 5kg</div>
-                    <div>Value: $6</div>
-                </div>
-            </div>
-            
-            <div class="knapsack">
-                <div class="knapsack-label">Capacity: 10kg</div>
-                <div class="knapsack-content" id="knapsack-content"></div>
-                <div class="capacity-bar">
-                    <div class="capacity-fill" id="capacity-fill"></div>
-                </div>
-            </div>
+
+        <div class="info-panel">
+            <div class="step-info" id="stepInfo"></div>
+            <div class="current-calculation" id="calculationInfo"></div>
+            <div class="items-display" id="itemsDisplay"></div>
         </div>
-        
-        <div class="total-weight">Total Weight: <span id="total-weight">0</span>/10 kg</div>
-        <div class="total-value">Total Value: $<span id="total-value">0</span></div>
-        
-        <div class="navigation">
-            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
-            <button class="nav-btn" id="next-btn">Next</button>
+
+        <div class="table-container">
+            <table id="dpTable"></table>
+        </div>
+
+        <div class="result-panel" id="resultPanel">
+            <div class="result-text" id="resultText"></div>
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const items = document.querySelectorAll('.item');
-            const knapsackContent = document.getElementById('knapsack-content');
-            const capacityFill = document.getElementById('capacity-fill');
-            const totalWeightDisplay = document.getElementById('total-weight');
-            const totalValueDisplay = document.getElementById('total-value');
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
-            const infoPanel = document.getElementById('info-panel');
-            const currentStepDisplay = document.getElementById('current-step');
-            const totalStepsDisplay = document.getElementById('total-steps');
-            
-            const maxCapacity = 10;
-            let totalWeight = 0;
-            let totalValue = 0;
-            let currentStep = 1;
-            const totalSteps = 5;
-            
-            totalStepsDisplay.textContent = totalSteps;
-            
-            // Define the steps in our animation
-            const steps = [
-                {
-                    info: "The Knapsack Problem involves selecting items to maximize value while staying within a weight limit. Here we have 4 items with different weights and values, and a knapsack with 10kg capacity.",
-                    action: function() {
-                        // Initial state
-                        resetKnapsack();
-                    }
-                },
-                {
-                    info: "Let's try adding the first two items. The first item (2kg, $3) and the second item (3kg, $4) together weigh 5kg, which is within our 10kg limit.",
-                    action: function() {
-                        resetKnapsack();
-                        selectItem(1);
-                        selectItem(2);
-                    }
-                },
-                {
-                    info: "Now let's add the third item (4kg, $5). With the first two items (5kg) plus this item (4kg), we now have 9kg total, still within our limit.",
-                    action: function() {
-                        resetKnapsack();
-                        selectItem(1);
-                        selectItem(2);
-                        selectItem(3);
-                    }
-                },
-                {
-                    info: "If we try to add the fourth item (5kg, $6), we exceed our capacity! 9kg + 5kg = 14kg, which is over our 10kg limit.",
-                    action: function() {
-                        resetKnapsack();
-                        selectItem(1);
-                        selectItem(2);
-                        selectItem(3);
-                        // Indicate we can't add the 4th item
-                        animateFailedAddition(4);
-                    }
-                },
-                {
-                    info: "Let's try a different combination. What if we remove item 1 and 2, and instead use items 3 and 4? That's 4kg + 5kg = 9kg, with a value of $5 + $6 = $11, which is better than our previous $12!",
-                    action: function() {
-                        resetKnapsack();
-                        selectItem(3);
-                        selectItem(4);
-                    }
-                }
-            ];
-            
-            function updateStepInfo() {
-                infoPanel.innerHTML = `<p>${steps[currentStep - 1].info}</p>`;
-                currentStepDisplay.textContent = currentStep;
-                
-                // Enable/disable navigation buttons
-                prevBtn.disabled = currentStep === 1;
-                nextBtn.disabled = currentStep === totalSteps;
-                
-                // Execute the action for this step
-                steps[currentStep - 1].action();
-            }
-            
-            function selectItem(id) {
-                const item = document.querySelector(`.item[data-id="${id}"]`);
-                if (!item) return;
-                
-                const weight = parseInt(item.getAttribute('data-weight'));
-                const value = parseInt(item.getAttribute('data-value'));
-                
-                item.classList.add('selected');
-                
-                // Add mini version to knapsack
-                const miniItem = document.createElement('div');
-                miniItem.className = 'mini-item';
-                miniItem.setAttribute('data-id', id);
-                miniItem.innerHTML = `<div>${weight}kg</div><div>$${value}</div>`;
-                knapsackContent.appendChild(miniItem);
-                
-                // Update totals
-                totalWeight += weight;
-                totalValue += value;
-                updateKnapsackDisplay();
-            }
-            
-            function animateFailedAddition(id) {
-                const item = document.querySelector(`.item[data-id="${id}"]`);
-                if (!item) return;
-                
-                // Animate the item moving towards the knapsack but then bouncing back
-                item.style.transition = 'transform 0.5s ease-in-out';
-                item.style.transform = 'translateX(50px)';
-                
-                setTimeout(() => {
-                    item.style.transform = 'translateX(0)';
-                    
-                    // Flash the capacity bar red to indicate overflow
-                    capacityFill.style.backgroundColor = '#FF0000';
-                    setTimeout(() => {
-                        capacityFill.style.backgroundColor = '#FD9F78';
-                    }, 500);
-                    
-                }, 500);
-            }
-            
-            function resetKnapsack() {
-                // Clear the knapsack
-                knapsackContent.innerHTML = '';
-                totalWeight = 0;
-                totalValue = 0;
-                
-                // Deselect all items
-                items.forEach(item => {
-                    item.classList.remove('selected');
-                });
-                
-                updateKnapsackDisplay();
-            }
-            
-            function updateKnapsackDisplay() {
-                totalWeightDisplay.textContent = totalWeight;
-                totalValueDisplay.textContent = totalValue;
-                
-                // Update capacity fill
-                const fillPercentage = (totalWeight / maxCapacity) * 100;
-                capacityFill.style.width = `${fillPercentage}%`;
-                
-                // Change color if overweight
-                if (totalWeight > maxCapacity) {
-                    capacityFill.style.backgroundColor = '#FF0000';
-                } else {
-                    capacityFill.style.backgroundColor = '#FD9F78';
+        const weights = [2, 3, 4, 5];
+        const values = [1, 4, 5, 7];
+        const capacity = 10;
+        const n = weights.length;
+
+        let currentStep = 0;
+        let dp = [];
+        let totalSteps = 0;
+
+        function initializeData() {
+            dp = [];
+            for (let i = 0; i <= n; i++) {
+                dp[i] = [];
+                for (let w = 0; w <= capacity; w++) {
+                    dp[i][w] = 0;
                 }
             }
-            
-            // Set up navigation event listeners
-            prevBtn.addEventListener('click', function() {
-                if (currentStep > 1) {
-                    currentStep--;
-                    updateStepInfo();
+            totalSteps = n * capacity + 1;
+        }
+
+        function buildTable() {
+            const table = document.getElementById('dpTable');
+            table.innerHTML = '';
+
+            const headerRow = document.createElement('tr');
+            const cornerHeader = document.createElement('th');
+            cornerHeader.textContent = 'Items/Cap';
+            headerRow.appendChild(cornerHeader);
+
+            for (let w = 0; w <= capacity; w++) {
+                const th = document.createElement('th');
+                th.textContent = w;
+                headerRow.appendChild(th);
+            }
+            table.appendChild(headerRow);
+
+            for (let i = 0; i <= n; i++) {
+                const row = document.createElement('tr');
+                const rowHeader = document.createElement('th');
+                rowHeader.textContent = i;
+                row.appendChild(rowHeader);
+
+                for (let w = 0; w <= capacity; w++) {
+                    const cell = document.createElement('td');
+                    cell.textContent = dp[i][w];
+                    cell.id = 'c' + i + '_' + w;
+                    row.appendChild(cell);
                 }
-            });
+                table.appendChild(row);
+            }
+        }
+
+        function buildItemsDisplay() {
+            const container = document.getElementById('itemsDisplay');
+            container.innerHTML = '';
             
-            nextBtn.addEventListener('click', function() {
-                if (currentStep < totalSteps) {
-                    currentStep++;
-                    updateStepInfo();
+            for (let i = 0; i < n; i++) {
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.id = 'item' + i;
+                item.innerHTML = 'Item ' + (i + 1) + '<br>W: ' + weights[i] + '<br>V: ' + values[i];
+                container.appendChild(item);
+            }
+        }
+
+        function calculateStepByStep() {
+            // Only calculate up to current step
+            if (currentStep === 0) {
+                return; // Just initialization
+            }
+            
+            let stepCount = 0;
+            for (let i = 1; i <= n; i++) {
+                for (let w = 1; w <= capacity; w++) {
+                    stepCount++;
+                    if (stepCount < currentStep) {
+                        const itemIndex = i - 1;
+                        const withoutCurrent = dp[i-1][w];
+                        let withCurrent = 0;
+                        
+                        if (weights[itemIndex] <= w) {
+                            withCurrent = values[itemIndex] + dp[i-1][w - weights[itemIndex]];
+                        }
+                        
+                        dp[i][w] = Math.max(withoutCurrent, withCurrent);
+                    }
                 }
-            });
-            
-            // Initialize with the first step
-            updateStepInfo();
-        });
+            }
+        }
+
+        function updateVisualization() {
+            // Reinitialize and calculate only up to current step
+            initializeData();
+            calculateStepByStep();
+            buildTable();
+
+            const stepInfo = document.getElementById('stepInfo');
+            const calculationInfo = document.getElementById('calculationInfo');
+            const resultPanel = document.getElementById('resultPanel');
+
+            // Clear all highlights
+            for (let i = 0; i <= n; i++) {
+                for (let w = 0; w <= capacity; w++) {
+                    const cell = document.getElementById('c' + i + '_' + w);
+                    if (cell) {
+                        cell.className = '';
+                    }
+                }
+            }
+
+            for (let i = 0; i < n; i++) {
+                const item = document.getElementById('item' + i);
+                if (item) {
+                    item.className = 'item';
+                }
+            }
+
+            if (currentStep === 0) {
+                stepInfo.textContent = 'DP table initialized with base cases (0 items or 0 capacity = 0 value)';
+                calculationInfo.textContent = '';
+                resultPanel.style.display = 'none';
+            } else if (currentStep <= totalSteps - 1) {
+                const stepIndex = currentStep - 1;
+                const currentI = Math.floor(stepIndex / capacity) + 1;
+                const currentW = (stepIndex % capacity) + 1;
+
+                if (currentI <= n && currentW <= capacity) {
+                    stepInfo.textContent = 'Processing item ' + currentI + ', capacity ' + currentW;
+
+                    const itemIndex = currentI - 1;
+                    const item = document.getElementById('item' + itemIndex);
+                    if (item) {
+                        item.className = 'item current';
+                    }
+
+                    const cell = document.getElementById('c' + currentI + '_' + currentW);
+                    if (cell) {
+                        cell.className = 'current-cell';
+                    }
+
+                    // Mark completed cells
+                    for (let i = 1; i <= n; i++) {
+                        for (let w = 1; w <= capacity; w++) {
+                            const cellIndex = (i - 1) * capacity + w - 1;
+                            if (cellIndex < stepIndex) {
+                                const completedCell = document.getElementById('c' + i + '_' + w);
+                                if (completedCell) {
+                                    completedCell.className = 'completed-cell';
+                                }
+                            }
+                        }
+                    }
+
+                    // Calculate current step values
+                    const withoutCurrent = dp[currentI - 1][currentW];
+                    let withCurrent = 0;
+                    let canTake = weights[itemIndex] <= currentW;
+
+                    if (canTake) {
+                        withCurrent = values[itemIndex] + dp[currentI - 1][currentW - weights[itemIndex]];
+                        calculationInfo.innerHTML = 
+                            'Without item: ' + withoutCurrent + '<br>' +
+                            'With item: ' + values[itemIndex] + ' + ' + dp[currentI - 1][currentW - weights[itemIndex]] + ' = ' + withCurrent + '<br>' +
+                            'Choose max: ' + Math.max(withoutCurrent, withCurrent);
+                    } else {
+                        calculationInfo.innerHTML = 
+                            'Item weight (' + weights[itemIndex] + ') > current capacity (' + currentW + ')<br>' +
+                            'Cannot take item, value = ' + withoutCurrent;
+                    }
+
+                    // Update the current cell after calculation
+                    dp[currentI][currentW] = Math.max(withoutCurrent, withCurrent);
+                    const currentCell = document.getElementById('c' + currentI + '_' + currentW);
+                    if (currentCell) {
+                        currentCell.textContent = dp[currentI][currentW];
+                    }
+                }
+            } else {
+                stepInfo.textContent = 'Algorithm completed!';
+                calculationInfo.textContent = '';
+                resultPanel.style.display = 'block';
+                
+                // Complete the full calculation for final result
+                for (let i = 1; i <= n; i++) {
+                    for (let w = 1; w <= capacity; w++) {
+                        const itemIndex = i - 1;
+                        const withoutCurrent = dp[i-1][w];
+                        let withCurrent = 0;
+                        
+                        if (weights[itemIndex] <= w) {
+                            withCurrent = values[itemIndex] + dp[i-1][w - weights[itemIndex]];
+                        }
+                        
+                        dp[i][w] = Math.max(withoutCurrent, withCurrent);
+                    }
+                }
+                
+                buildTable();
+                document.getElementById('resultText').textContent = 'Maximum value: ' + dp[n][capacity];
+                
+                const finalCell = document.getElementById('c' + n + '_' + capacity);
+                if (finalCell) {
+                    finalCell.className = 'current-cell';
+                }
+            }
+
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep >= totalSteps;
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateVisualization();
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        }
+
+        document.getElementById('nextBtn').addEventListener('click', nextStep);
+        document.getElementById('prevBtn').addEventListener('click', previousStep);
+
+        buildItemsDisplay();
+        updateVisualization();
     </script>
 </body>
 </html>
