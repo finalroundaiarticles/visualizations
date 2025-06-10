@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subset Sum Dynamic Programming</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .table-container {
+            margin-bottom: 30px;
+            overflow-x: auto;
+        }
+        table {
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #000000;
+            padding: 10px;
+            text-align: center;
+            min-width: 50px;
+        }
+        th {
+            background-color: #FD9F78;
+            color: #000000;
+        }
+        .true {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            font-weight: bold;
+        }
+        .false {
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .highlight {
+            background-color: #FD9F78;
+            transition: background-color 0.5s;
+        }
+        .array-box {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            margin: 5px;
+            background-color: #FD9F78;
+            color: #000000;
+            font-weight: bold;
+            border: 1px solid #000000;
+        }
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 300px;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-left: 5px solid #FF4800;
+            color: #000000;
+        }
+        .step-counter {
+            font-weight: bold;
+            color: #FF4800;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Subset Sum Dynamic Programming</h1>
+        
+        <p>Array: </p>
+        <div class="array-display">
+            <div class="array-box">3</div>
+            <div class="array-box">4</div>
+            <div class="array-box">5</div>
+        </div>
+        <p>Target Sum: <strong style="color: #FF4800;">9</strong></p>
+        
+        <div class="table-container">
+            <table id="dp-table"></table>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            Welcome to the Subset Sum visualization! We'll build a DP table step by step to find if we can make a sum of 9 using any subset of elements [3, 4, 5].
+        </div>
+        
+        <div class="step-counter" id="step-counter">Step: 0 / 33</div>
+        
+        <div class="buttons">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        const array = [3, 4, 5];
+        const target = 9;
+        const table = document.getElementById('dp-table');
+        const explanation = document.getElementById('explanation');
+        const stepCounter = document.getElementById('step-counter');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        
+        // Create DP table (rows = array.length + 1, cols = target + 1)
+        function createTable() {
+            table.innerHTML = '';
+            
+            // Header row
+            const headerRow = document.createElement('tr');
+            
+            // First cell (empty)
+            const emptyHeader = document.createElement('th');
+            emptyHeader.textContent = 'Sum →';
+            headerRow.appendChild(emptyHeader);
+            
+            // Column headers (0 to target)
+            for (let j = 0; j <= target; j++) {
+                const th = document.createElement('th');
+                th.textContent = j;
+                th.id = `header-${j}`;
+                headerRow.appendChild(th);
+            }
+            
+            table.appendChild(headerRow);
+            
+            // Create rows
+            for (let i = 0; i <= array.length; i++) {
+                const row = document.createElement('tr');
+                
+                // Row header
+                const rowHeader = document.createElement('th');
+                if (i === 0) {
+                    rowHeader.textContent = 'Empty';
+                } else {
+                    rowHeader.textContent = `[${array.slice(0, i)}]`;
+                }
+                rowHeader.id = `row-${i}`;
+                row.appendChild(rowHeader);
+                
+                // Table cells
+                for (let j = 0; j <= target; j++) {
+                    const td = document.createElement('td');
+                    td.id = `cell-${i}-${j}`;
+                    td.textContent = '?';
+                    row.appendChild(td);
+                }
+                
+                table.appendChild(row);
+            }
+        }
+        
+        // Animation steps
+        const steps = [];
+        
+        // Initialize the steps array with explanations and cell updates
+        function initializeSteps() {
+            // Step 0 - Introduction
+            steps.push({
+                explanation: "Welcome to the Subset Sum visualization! We'll build a DP table step by step to find if we can make a sum of 9 using any subset of elements [3, 4, 5]."
+            });
+            
+            // Step 1 - Explain the table structure
+            steps.push({
+                explanation: "Our DP table has rows representing the subsets of our array, and columns representing sums from 0 to 9. Each cell will store 'true' if we can achieve that sum with the corresponding subset, otherwise 'false'."
+            });
+            
+            // First row - Empty subset
+            steps.push({
+                explanation: "First, let's fill the row for the empty subset. With no elements, we can only make a sum of 0.",
+                highlight: "row-0"
+            });
+            
+            // Cell [0][0] = true (empty subset can make sum 0)
+            steps.push({
+                explanation: "With an empty subset, we can make a sum of 0 (by taking no elements). So dp[0][0] = true.",
+                update: { cell: "cell-0-0", value: "true", className: "true" },
+                highlight: "cell-0-0"
+            });
+            
+            // Cells [0][1] to [0][target] = false (empty subset cannot make non-zero sums)
+            for (let j = 1; j <= target; j++) {
+                steps.push({
+                    explanation: `With an empty subset, we cannot make a sum of ${j}. So dp[0][${j}] = false.`,
+                    update: { cell: `cell-0-${j}`, value: "false", className: "false" },
+                    highlight: `cell-0-${j}`
+                });
+            }
+            
+            // Process each element
+            for (let i = 1; i <= array.length; i++) {
+                const currentElement = array[i - 1];
+                
+                steps.push({
+                    explanation: `Now, let's consider the subset [${array.slice(0, i)}], which includes the element ${currentElement}.`,
+                    highlight: `row-${i}`
+                });
+                
+                // Fill in the row
+                for (let j = 0; j <= target; j++) {
+                    if (j === 0) {
+                        steps.push({
+                            explanation: `For sum 0, we can always make it by not selecting any elements. So dp[${i}][0] = true.`,
+                            update: { cell: `cell-${i}-${j}`, value: "true", className: "true" },
+                            highlight: `cell-${i}-${j}`
+                        });
+                    } else if (j < currentElement) {
+                        steps.push({
+                            explanation: `For sum ${j}, since it's less than our current element ${currentElement}, we can only achieve it if we could make it without using this element. We copy the value from the previous row: dp[${i}][${j}] = dp[${i-1}][${j}]`,
+                            highlight: [`cell-${i-1}-${j}`, `cell-${i}-${j}`],
+                            update: { 
+                                cell: `cell-${i}-${j}`, 
+                                value: document.getElementById(`cell-${i-1}-${j}`).textContent === "true" ? "true" : "false", 
+                                className: document.getElementById(`cell-${i-1}-${j}`).textContent === "true" ? "true" : "false"
+                            }
+                        });
+                    } else {
+                        const prevRowSameCol = document.getElementById(`cell-${i-1}-${j}`).textContent;
+                        const prevRowDiff = j - currentElement >= 0 ? document.getElementById(`cell-${i-1}-${j - currentElement}`).textContent : "false";
+                        
+                        steps.push({
+                            explanation: `For sum ${j}, we have two options:\n1) Don't use element ${currentElement}: dp[${i-1}][${j}] = ${prevRowSameCol}\n2) Use element ${currentElement}: dp[${i-1}][${j-currentElement}] = ${prevRowDiff}\nIf either option is true, we can achieve this sum.`,
+                            highlight: [`cell-${i-1}-${j}`, j - currentElement >= 0 ? `cell-${i-1}-${j - currentElement}` : null, `cell-${i}-${j}`].filter(Boolean)
+                        });
+                        
+                        const canMakeSum = prevRowSameCol === "true" || prevRowDiff === "true";
+                        steps.push({
+                            explanation: `Can we make sum ${j} using subset [${array.slice(0, i)}]? ${canMakeSum ? "Yes!" : "No."}${canMakeSum ? " Either by not using " + currentElement + " or by using it." : ""}`,
+                            update: { 
+                                cell: `cell-${i}-${j}`, 
+                                value: canMakeSum ? "true" : "false", 
+                                className: canMakeSum ? "true" : "false"
+                            },
+                            highlight: `cell-${i}-${j}`
+                        });
+                    }
+                }
+            }
+            
+            // Final step - show the answer
+            steps.push({
+                explanation: `The answer is in cell dp[${array.length}][${target}]. ${document.getElementById(`cell-${array.length}-${target}`).textContent === "true" ? "We CAN" : "We CANNOT"} make a sum of ${target} using a subset of [${array}].`,
+                highlight: `cell-${array.length}-${target}`
+            });
+        }
+        
+        // Current step
+        let currentStep = 0;
+        
+        // Update the visualization based on current step
+        function updateVisualization() {
+            // Remove all highlights
+            document.querySelectorAll('.highlight').forEach(el => {
+                el.classList.remove('highlight');
+            });
+            
+            const step = steps[currentStep];
+            
+            // Update explanation
+            explanation.textContent = step.explanation;
+            
+            // Update cell if needed
+            if (step.update) {
+                const cell = document.getElementById(step.update.cell);
+                cell.textContent = step.update.value;
+                cell.className = step.update.className;
+            }
+            
+            // Add highlights
+            if (step.highlight) {
+                if (Array.isArray(step.highlight)) {
+                    step.highlight.forEach(id => {
+                        if (id) document.getElementById(id).classList.add('highlight');
+                    });
+                } else {
+                    document.getElementById(step.highlight).classList.add('highlight');
+                }
+            }
+            
+            // Update step counter
+            stepCounter.textContent = `Step: ${currentStep} / ${steps.length - 1}`;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        // Event handlers for buttons
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        });
+        
+        // Initialize
+        createTable();
+        initializeSteps();
+        updateVisualization();
+    </script>
+</body>
+</html>
