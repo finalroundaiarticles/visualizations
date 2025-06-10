@@ -3,321 +3,327 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Optimized Binomial Coefficient Calculation</title>
+    <title>Binomial Coefficient Visualization</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #FFFFFF;
             margin: 0;
             padding: 20px;
-            color: #000000;
+            background-color: white;
+            color: #1c1d20;
         }
+        
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
-            text-align: center;
         }
-        h1 {
-            color: #FF4800;
+        
+        .controls {
+            text-align: center;
             margin-bottom: 30px;
         }
-        .explanation {
-            margin-bottom: 20px;
-            text-align: left;
-            padding: 10px;
-            border-radius: 5px;
-            background-color: #FFF;
-        }
-        .animation-container {
-            width: 100%;
-            height: 400px;
-            position: relative;
-            margin-bottom: 20px;
-            border: 2px solid #FD9F78;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .formula {
-            font-size: 24px;
-            margin: 10px 0;
-        }
-        .navigation {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 20px;
-        }
+        
         .nav-btn {
-            padding: 10px 20px;
-            background-color: #FF4800;
-            color: #FFFFFF;
+            background-color: #ff4800;
+            color: white;
             border: none;
-            border-radius: 5px;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border-radius: 6px;
             cursor: pointer;
+            font-family: Arial, sans-serif;
             font-size: 16px;
-            transition: background-color 0.3s;
+            font-weight: bold;
         }
+        
         .nav-btn:hover {
-            background-color: #FD9F78;
+            background-color: #e63f00;
         }
+        
         .nav-btn:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
         }
-        .step-indicator {
-            display: flex;
-            justify-content: center;
-            margin-top: 10px;
+        
+        .step-info {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
         }
-        .step-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background-color: #FD9F78;
-            margin: 0 5px;
-            cursor: pointer;
+        
+        .visualization {
+            background-color: white;
+            border: 2px solid #1c1d20;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 20px;
+            min-height: 400px;
         }
-        .step-dot.active {
-            background-color: #FF4800;
-        }
-        .element {
-            position: absolute;
-            transition: all 0.5s ease-in-out;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            font-weight: bold;
-        }
-        .operation {
-            position: absolute;
-            transition: all 0.5s ease-in-out;
+        
+        .input-display {
+            text-align: center;
             font-size: 24px;
             font-weight: bold;
+            margin-bottom: 30px;
+            color: #ff4800;
         }
-        .description {
-            position: absolute;
-            bottom: 20px;
-            left: 0;
-            right: 0;
-            text-align: center;
+        
+        .calculation-step {
+            background-color: #f8f8f8;
+            border: 2px solid #1c1d20;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
             font-size: 18px;
-            background-color: rgba(253, 159, 120, 0.1);
-            padding: 10px;
-            border-radius: 5px;
-            margin: 0 20px;
+        }
+        
+        .current-step {
+            background-color: #ff4800;
+            color: white;
+            border-color: #ff4800;
+        }
+        
+        .completed-step {
+            background-color: #1c1d20;
+            color: white;
+            border-color: #1c1d20;
+        }
+        
+        .variable-display {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .variable {
+            background-color: #1c1d20;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin: 5px;
+            font-weight: bold;
+        }
+        
+        .result-display {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #ff4800;
+            margin-top: 30px;
+            padding: 20px;
+            border: 3px solid #ff4800;
+            border-radius: 10px;
+        }
+        
+        .formula {
+            text-align: center;
+            font-size: 20px;
+            margin: 20px 0;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Optimized Binomial Coefficient Calculation</h1>
-        
-        <div class="explanation">
-            <p>The binomial coefficient C(n,k) represents the number of ways to choose k items from n items without considering the order.</p>
-            <p>Traditional method uses factorials: C(n,k) = n! / (k! × (n-k)!)</p>
-            <p>Optimized method directly calculates C(n,k) by multiplying and dividing appropriately.</p>
+        <div class="controls">
+            <button class="nav-btn" id="prevBtn" onclick="previousStep()">Previous</button>
+            <button class="nav-btn" id="nextBtn" onclick="nextStep()">Next</button>
         </div>
         
-        <div class="formula">
-            C(5,2) = <span id="result-value">?</span>
+        <div class="step-info">
+            <span id="stepCounter">Step 1 of 8</span>
         </div>
         
-        <div class="animation-container" id="animation-container">
-            <div class="description" id="description">Let's calculate C(5,2) using the optimized approach</div>
-        </div>
-        
-        <div class="step-indicator" id="step-indicator">
-            <!-- Step dots will be added dynamically -->
-        </div>
-        
-        <div class="navigation">
-            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
-            <button class="nav-btn" id="next-btn">Next</button>
+        <div class="visualization" id="visualization">
+            <!-- Content will be dynamically generated -->
         </div>
     </div>
 
     <script>
-        // Animation states
-        const states = [
-            {
-                description: "Let's calculate C(5,2) using the optimized approach",
-                elements: [
-                    { type: "text", content: "C(5,2) = ?", x: 50, y: 50, size: 24, color: "#000000" }
-                ],
-                result: "?"
-            },
-            {
-                description: "We start with result = 1",
-                elements: [
-                    { type: "text", content: "result = 1", x: 50, y: 50, size: 24, color: "#000000" }
-                ],
-                result: "1"
-            },
-            {
-                description: "Step 1: We multiply the result by (n - 0) = 5",
-                elements: [
-                    { type: "circle", content: "1", x: 250, y: 150, size: 60, color: "#FD9F78" },
-                    { type: "text", content: "×", x: 320, y: 150, size: 30, color: "#FF4800" },
-                    { type: "circle", content: "5", x: 390, y: 150, size: 60, color: "#FD9F78" }
-                ],
-                result: "1"
-            },
-            {
-                description: "Step 1: result = 1 × 5 = 5",
-                elements: [
-                    { type: "circle", content: "5", x: 320, y: 150, size: 80, color: "#FF4800" }
-                ],
-                result: "5"
-            },
-            {
-                description: "Step 1: We divide the result by 1",
-                elements: [
-                    { type: "circle", content: "5", x: 250, y: 150, size: 60, color: "#FD9F78" },
-                    { type: "text", content: "÷", x: 320, y: 150, size: 30, color: "#FF4800" },
-                    { type: "circle", content: "1", x: 390, y: 150, size: 60, color: "#FD9F78" }
-                ],
-                result: "5"
-            },
-            {
-                description: "Step 1: result = 5 ÷ 1 = 5",
-                elements: [
-                    { type: "circle", content: "5", x: 320, y: 150, size: 80, color: "#FF4800" }
-                ],
-                result: "5"
-            },
-            {
-                description: "Step 2: We multiply the result by (n - 1) = 4",
-                elements: [
-                    { type: "circle", content: "5", x: 250, y: 150, size: 60, color: "#FD9F78" },
-                    { type: "text", content: "×", x: 320, y: 150, size: 30, color: "#FF4800" },
-                    { type: "circle", content: "4", x: 390, y: 150, size: 60, color: "#FD9F78" }
-                ],
-                result: "5"
-            },
-            {
-                description: "Step 2: result = 5 × 4 = 20",
-                elements: [
-                    { type: "circle", content: "20", x: 320, y: 150, size: 80, color: "#FF4800" }
-                ],
-                result: "20"
-            },
-            {
-                description: "Step 2: We divide the result by 2",
-                elements: [
-                    { type: "circle", content: "20", x: 250, y: 150, size: 60, color: "#FD9F78" },
-                    { type: "text", content: "÷", x: 320, y: 150, size: 30, color: "#FF4800" },
-                    { type: "circle", content: "2", x: 390, y: 150, size: 60, color: "#FD9F78" }
-                ],
-                result: "20"
-            },
-            {
-                description: "Step 2: result = 20 ÷ 2 = 10",
-                elements: [
-                    { type: "circle", content: "10", x: 320, y: 150, size: 80, color: "#FF4800" }
-                ],
-                result: "10"
-            },
-            {
-                description: "Therefore, C(5,2) = 10, which means there are 10 ways to choose 2 items from 5 items.",
-                elements: [
-                    { type: "text", content: "C(5,2) = 10", x: 50, y: 100, size: 32, color: "#FF4800" },
-                    { type: "circle", content: "10", x: 320, y: 200, size: 100, color: "#FF4800" }
-                ],
-                result: "10"
-            }
+        let currentStep = 0;
+        const testCases = [
+            {n: 5, k: 2, expected: 10},
+            {n: 10, k: 3, expected: 120},
+            {n: 4, k: 0, expected: 1}
         ];
-
-        // Animation variables
-        let currentState = 0;
-        const container = document.getElementById('animation-container');
-        const description = document.getElementById('description');
-        const resultValue = document.getElementById('result-value');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const stepIndicator = document.getElementById('step-indicator');
-
-        // Initialize step indicator
-        function initializeStepIndicator() {
-            for (let i = 0; i < states.length; i++) {
-                const dot = document.createElement('div');
-                dot.className = 'step-dot' + (i === 0 ? ' active' : '');
-                dot.addEventListener('click', () => {
-                    goToState(i);
+        let currentCase = 0;
+        
+        function binomialCoefficientSteps(n, k) {
+            const steps = [];
+            
+            // Step 1: Initial input
+            steps.push({
+                type: 'input',
+                title: 'Input Values',
+                content: `Computing C(${n}, ${k})`,
+                variables: {n: n, k: k}
+            });
+            
+            // Step 2: Edge case check
+            if (k > n) {
+                steps.push({
+                    type: 'edge',
+                    title: 'Edge Case: k > n',
+                    content: `Since k (${k}) > n (${n}), return 0`,
+                    result: 0
                 });
-                stepIndicator.appendChild(dot);
+                return steps;
             }
+            
+            if (k === 0 || k === n) {
+                steps.push({
+                    type: 'edge',
+                    title: 'Edge Case: k = 0 or k = n',
+                    content: `Since k = ${k} ${k === 0 ? '(equals 0)' : '(equals n)'}, return 1`,
+                    result: 1
+                });
+                return steps;
+            }
+            
+            steps.push({
+                type: 'check',
+                title: 'Edge Case Check',
+                content: `k (${k}) is not 0, ${n}, or greater than ${n}. Continue with calculation.`,
+                variables: {n: n, k: k}
+            });
+            
+            // Step 3: Symmetry optimization
+            const originalK = k;
+            k = Math.min(k, n - k);
+            
+            steps.push({
+                type: 'symmetry',
+                title: 'Symmetry Optimization',
+                content: `Use C(n,k) = C(n,n-k). Choose min(${originalK}, ${n-originalK}) = ${k}`,
+                variables: {n: n, k: k, 'original k': originalK}
+            });
+            
+            // Step 4: Initialize result
+            steps.push({
+                type: 'init',
+                title: 'Initialize',
+                content: 'Set result = 1',
+                variables: {n: n, k: k, result: 1}
+            });
+            
+            // Steps 5+: Iterative calculation
+            let result = 1;
+            for (let i = 0; i < k; i++) {
+                const newResult = result * (n - i) / (i + 1);
+                steps.push({
+                    type: 'iteration',
+                    title: `Iteration ${i + 1}`,
+                    content: `result = result × (${n} - ${i}) ÷ (${i} + 1) = ${result} × ${n - i} ÷ ${i + 1} = ${Math.floor(newResult)}`,
+                    variables: {
+                        i: i,
+                        'n-i': n - i,
+                        'i+1': i + 1,
+                        'previous result': result,
+                        result: Math.floor(newResult)
+                    }
+                });
+                result = Math.floor(newResult);
+            }
+            
+            // Final result
+            steps.push({
+                type: 'result',
+                title: 'Final Result',
+                content: `C(${n}, ${originalK}) = ${result}`,
+                result: result
+            });
+            
+            return steps;
         }
-
-        // Render the current state
-        function renderState() {
-            // Update description and result
-            description.textContent = states[currentState].description;
-            resultValue.textContent = states[currentState].result;
+        
+        function renderStep() {
+            const testCase = testCases[currentCase];
+            const steps = binomialCoefficientSteps(testCase.n, testCase.k);
+            const step = steps[currentStep];
+            const visualization = document.getElementById('visualization');
             
-            // Clear previous elements
-            container.innerHTML = '';
-            container.appendChild(description);
+            document.getElementById('stepCounter').textContent = `Step ${currentStep + 1} of ${steps.length}`;
             
-            // Add new elements
-            states[currentState].elements.forEach(element => {
-                const el = document.createElement('div');
-                
-                if (element.type === "circle") {
-                    el.className = 'element';
-                    el.style.width = element.size + 'px';
-                    el.style.height = element.size + 'px';
-                    el.style.backgroundColor = element.color;
-                    el.style.color = "#FFFFFF";
-                    el.style.fontSize = element.size / 2 + 'px';
-                } else if (element.type === "text") {
-                    el.className = 'operation';
-                    el.style.color = element.color;
-                    el.style.fontSize = element.size + 'px';
+            let html = `<div class="input-display">C(${testCase.n}, ${testCase.k})</div>`;
+            
+            if (step.type === 'input') {
+                html += `
+                    <div class="formula">Computing Binomial Coefficient C(n, k)</div>
+                    <div class="calculation-step current-step">
+                        <strong>${step.title}</strong><br>
+                        ${step.content}
+                    </div>
+                `;
+            } else if (step.type === 'edge') {
+                html += `
+                    <div class="calculation-step current-step">
+                        <strong>${step.title}</strong><br>
+                        ${step.content}
+                    </div>
+                    <div class="result-display">Result: ${step.result}</div>
+                `;
+            } else if (step.type === 'result') {
+                html += `
+                    <div class="calculation-step current-step">
+                        <strong>${step.title}</strong><br>
+                        ${step.content}
+                    </div>
+                    <div class="result-display">Final Answer: ${step.result}</div>
+                `;
+            } else {
+                html += `
+                    <div class="calculation-step current-step">
+                        <strong>${step.title}</strong><br>
+                        ${step.content}
+                    </div>
+                `;
+            }
+            
+            if (step.variables) {
+                html += '<div class="variable-display">';
+                for (const [key, value] of Object.entries(step.variables)) {
+                    html += `<div class="variable">${key}: ${value}</div>`;
                 }
-                
-                el.textContent = element.content;
-                el.style.left = element.x + 'px';
-                el.style.top = element.y + 'px';
-                
-                container.appendChild(el);
-            });
-            
-            // Update navigation buttons
-            prevBtn.disabled = currentState === 0;
-            nextBtn.disabled = currentState === states.length - 1;
-            
-            // Update step indicator
-            const dots = stepIndicator.querySelectorAll('.step-dot');
-            dots.forEach((dot, i) => {
-                dot.className = 'step-dot' + (i === currentState ? ' active' : '');
-            });
-        }
-
-        // Go to a specific state
-        function goToState(stateIndex) {
-            currentState = stateIndex;
-            renderState();
-        }
-
-        // Event listeners
-        prevBtn.addEventListener('click', () => {
-            if (currentState > 0) {
-                currentState--;
-                renderState();
+                html += '</div>';
             }
-        });
-
-        nextBtn.addEventListener('click', () => {
-            if (currentState < states.length - 1) {
-                currentState++;
-                renderState();
+            
+            visualization.innerHTML = html;
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === steps.length - 1;
+        }
+        
+        function nextStep() {
+            const testCase = testCases[currentCase];
+            const steps = binomialCoefficientSteps(testCase.n, testCase.k);
+            
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                renderStep();
+            } else if (currentCase < testCases.length - 1) {
+                currentCase++;
+                currentStep = 0;
+                renderStep();
             }
-        });
-
+        }
+        
+        function previousStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                renderStep();
+            } else if (currentCase > 0) {
+                currentCase--;
+                const testCase = testCases[currentCase];
+                const steps = binomialCoefficientSteps(testCase.n, testCase.k);
+                currentStep = steps.length - 1;
+                renderStep();
+            }
+        }
+        
         // Initialize
-        initializeStepIndicator();
-        renderState();
+        renderStep();
     </script>
 </body>
 </html>
