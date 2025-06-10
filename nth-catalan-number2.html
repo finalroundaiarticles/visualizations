@@ -3,1010 +3,272 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catalan Number Applications</title>
+    <title>Catalan Numbers Visualization</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #FFFFFF;
             margin: 0;
-            padding: 20px;
-            color: #000000;
-        }
-        
-        h1 {
-            color: #FF4800;
-            text-align: center;
-            margin-bottom: 20px;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
         
         .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
         }
         
-        .navigation {
+        .controls {
+            margin-bottom: 30px;
             display: flex;
-            justify-content: space-between;
-            margin: 20px 0;
+            gap: 20px;
+            align-items: center;
         }
         
         button {
-            background-color: #FF4800;
-            color: #FFFFFF;
+            background-color: #ff4800;
+            color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 12px 24px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
             cursor: pointer;
-            font-weight: bold;
-            transition: background-color 0.3s;
+            border-radius: 5px;
+            transition: opacity 0.3s;
         }
         
         button:hover {
-            background-color: #FD9F78;
+            opacity: 0.8;
         }
         
         button:disabled {
-            background-color: #FD9F78;
+            background-color: #1c1d20;
             opacity: 0.5;
             cursor: not-allowed;
         }
         
-        .slide {
-            display: none;
-            animation: fadeIn 0.5s;
-        }
-        
-        .slide.active {
-            display: block;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        .catalan-count {
-            color: #FF4800;
+        .current-info {
+            color: #1c1d20;
+            font-size: 18px;
             font-weight: bold;
-            font-size: 1.2em;
-        }
-        
-        .explanation {
-            margin-bottom: 20px;
-            line-height: 1.6;
+            margin: 0 20px;
         }
         
         .visualization {
-            margin: 20px 0;
+            background-color: white;
+            border: 2px solid #1c1d20;
+            border-radius: 10px;
+            padding: 30px;
+            min-height: 500px;
+            width: 90%;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
         
-        canvas {
-            margin: 20px 0;
-            border: 1px solid #FD9F78;
-            border-radius: 5px;
-        }
-        
-        .catalan-formula {
-            background-color: #FD9F78;
-            color: #000000;
-            padding: 10px;
-            border-radius: 5px;
-            text-align: center;
-            margin: 20px 0;
-        }
-        
-        .example-title {
-            color: #FF4800;
+        .dp-table {
+            display: grid;
+            gap: 10px;
             margin-top: 20px;
-            font-weight: bold;
+            justify-content: center;
         }
         
-        .slide-indicator {
+        .cell {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #1c1d20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            border-radius: 5px;
+            background-color: white;
+            transition: all 0.3s;
+        }
+        
+        .cell.filled {
+            background-color: #ff4800;
+            color: white;
+        }
+        
+        .cell.current {
+            background-color: #ff4800;
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 72, 0, 0.5);
+        }
+        
+        .calculation-display {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f8f8;
+            border: 2px solid #1c1d20;
+            border-radius: 10px;
+            min-height: 100px;
+            width: 80%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .formula {
+            font-size: 16px;
+            color: #1c1d20;
+            margin: 5px 0;
             text-align: center;
-            margin: 10px 0;
-            color: #000000;
+        }
+        
+        .result {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff4800;
+            margin-top: 15px;
+        }
+        
+        .method-title {
+            font-size: 20px;
+            color: #1c1d20;
+            margin-bottom: 20px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Catalan Number Applications</h1>
-        
-        <div class="catalan-formula">
-            Catalan Number Formula: C(n) = (1/(n+1)) × (2n choose n)
+        <div class="controls">
+            <button id="prevBtn" onclick="previousStep()">Previous</button>
+            <div class="current-info">
+                <span id="currentStep">n = 0</span>
+            </div>
+            <button id="nextBtn" onclick="nextStep()">Next</button>
         </div>
         
-        <div class="slide active" id="slide1">
-            <h2>Introduction to Catalan Numbers</h2>
-            <div class="explanation">
-                <p>Catalan numbers form a sequence of positive integers that appear in various counting problems. The first few Catalan numbers are:</p>
-                <p class="catalan-count">C(0) = 1, C(1) = 1, C(2) = 2, C(3) = 5, C(4) = 14, ...</p>
-                <p>These numbers have fascinating applications in combinatorial mathematics and can be visualized in multiple ways.</p>
+        <div class="visualization">
+            <div class="method-title">Dynamic Programming Approach</div>
+            <div id="dpTable" class="dp-table"></div>
+            <div class="calculation-display">
+                <div id="calculationText" class="formula">Starting with base case: C(0) = 1</div>
+                <div id="resultText" class="result">C(0) = 1</div>
             </div>
-            <div class="visualization">
-                <canvas id="intro-canvas" width="700" height="300"></canvas>
-            </div>
-        </div>
-        
-        <div class="slide" id="slide2">
-            <h2>Catalan Number C(1) = 1</h2>
-            <div class="explanation">
-                <p>For n=1, the Catalan number is 1, which represents:</p>
-                <p class="example-title">Valid Parentheses:</p>
-                <p>There is only 1 way to arrange 1 pair of parentheses: ()</p>
-                
-                <p class="example-title">Binary Trees:</p>
-                <p>There is only 1 possible binary tree with 1 node.</p>
-                
-                <p class="example-title">Polygon Triangulation:</p>
-                <p>For a polygon with n+2 = 3 sides (triangle), there is 1 way to triangulate it (it's already a triangle).</p>
-            </div>
-            <div class="visualization">
-                <canvas id="c1-canvas" width="700" height="300"></canvas>
-            </div>
-        </div>
-        
-        <div class="slide" id="slide3">
-            <h2>Catalan Number C(2) = 2</h2>
-            <div class="explanation">
-                <p>For n=2, the Catalan number is 2, which represents:</p>
-                <p class="example-title">Valid Parentheses:</p>
-                <p>There are 2 ways to arrange 2 pairs of parentheses: (()) and ()()</p>
-                
-                <p class="example-title">Binary Trees:</p>
-                <p>There are 2 possible binary trees with 2 nodes.</p>
-                
-                <p class="example-title">Polygon Triangulation:</p>
-                <p>For a polygon with n+2 = 4 sides (square), there are 2 ways to triangulate it.</p>
-            </div>
-            <div class="visualization">
-                <canvas id="c2-canvas" width="700" height="300"></canvas>
-            </div>
-        </div>
-        
-        <div class="slide" id="slide4">
-            <h2>Catalan Number C(3) = 5</h2>
-            <div class="explanation">
-                <p>For n=3, the Catalan number is 5, which represents:</p>
-                <p class="example-title">Valid Parentheses:</p>
-                <p>There are 5 ways to arrange 3 pairs of parentheses: ((())), (()()), (())(), ()(()), ()()()</p>
-                
-                <p class="example-title">Binary Trees:</p>
-                <p>There are 5 possible binary trees with 3 nodes.</p>
-                
-                <p class="example-title">Polygon Triangulation:</p>
-                <p>For a polygon with n+2 = 5 sides (pentagon), there are 5 ways to triangulate it.</p>
-            </div>
-            <div class="visualization">
-                <canvas id="c3-canvas" width="700" height="300"></canvas>
-            </div>
-        </div>
-        
-        <div class="slide" id="slide5">
-            <h2>Catalan Number C(4) = 14</h2>
-            <div class="explanation">
-                <p>For n=4, the Catalan number is 14. We'll show just a few examples for each application:</p>
-                <p class="example-title">Valid Parentheses:</p>
-                <p>There are 14 ways to arrange 4 pairs of parentheses, including: ((()())), ((())()), ((()))(), etc.</p>
-                
-                <p class="example-title">Binary Trees:</p>
-                <p>There are 14 possible binary trees with 4 nodes.</p>
-                
-                <p class="example-title">Polygon Triangulation:</p>
-                <p>For a polygon with n+2 = 6 sides (hexagon), there are 14 ways to triangulate it.</p>
-            </div>
-            <div class="visualization">
-                <canvas id="c4-canvas" width="700" height="300"></canvas>
-            </div>
-        </div>
-        
-        <div class="slide-indicator">
-            Slide <span id="current-slide">1</span> of 5
-        </div>
-        
-        <div class="navigation">
-            <button id="prev-btn" disabled>Previous</button>
-            <button id="next-btn">Next</button>
         </div>
     </div>
 
     <script>
-        // Navigation functionality
-        const slides = document.querySelectorAll('.slide');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const currentSlideIndicator = document.getElementById('current-slide');
+        let currentN = 0;
+        let maxN = 8;
+        let catalanNumbers = [];
         
-        let currentSlide = 0;
-        
-        function showSlide(index) {
-            slides.forEach((slide, i) => {
-                slide.classList.remove('active');
-                if (i === index) {
-                    slide.classList.add('active');
+        // Calculate Catalan numbers using DP
+        function calculateCatalans() {
+            catalanNumbers = [1]; // C(0) = 1
+            for (let i = 1; i <= maxN; i++) {
+                let catalan = 0;
+                for (let j = 0; j < i; j++) {
+                    catalan += catalanNumbers[j] * catalanNumbers[i - 1 - j];
                 }
-            });
-            
-            currentSlide = index;
-            currentSlideIndicator.textContent = currentSlide + 1;
-            
-            prevBtn.disabled = currentSlide === 0;
-            nextBtn.disabled = currentSlide === slides.length - 1;
-        }
-        
-        prevBtn.addEventListener('click', () => {
-            if (currentSlide > 0) {
-                showSlide(currentSlide - 1);
-            }
-        });
-        
-        nextBtn.addEventListener('click', () => {
-            if (currentSlide < slides.length - 1) {
-                showSlide(currentSlide + 1);
-            }
-        });
-        
-        // Drawing functions
-        function drawIntroduction(canvas) {
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Title
-            ctx.fillStyle = '#FF4800';
-            ctx.font = 'bold 20px Arial';
-            ctx.fillText('Visual Representation of Catalan Numbers', 180, 30);
-            
-            // Draw the numbers
-            ctx.fillStyle = '#000000';
-            ctx.font = '16px Arial';
-            
-            const numbers = ['C(0) = 1', 'C(1) = 1', 'C(2) = 2', 'C(3) = 5', 'C(4) = 14'];
-            const startX = 50;
-            const startY = 80;
-            const spacingY = 40;
-            
-            numbers.forEach((num, i) => {
-                ctx.fillText(num, startX, startY + i * spacingY);
-            });
-            
-            // Draw applications
-            ctx.fillStyle = '#FD9F78';
-            ctx.font = 'bold 18px Arial';
-            ctx.fillText('Applications:', 350, 80);
-            
-            ctx.fillStyle = '#000000';
-            ctx.font = '16px Arial';
-            const applications = [
-                '1. Valid Parentheses Combinations',
-                '2. Different Binary Trees',
-                '3. Polygon Triangulation'
-            ];
-            
-            applications.forEach((app, i) => {
-                ctx.fillText(app, 350, startY + 40 + i * spacingY);
-            });
-            
-            // Draw animated pattern
-            const time = new Date().getTime() / 1000;
-            for (let i = 0; i < 5; i++) {
-                const x = 200 + Math.sin(time + i) * 20;
-                const y = 220 + Math.cos(time + i) * 20;
-                const radius = 10 + i * 5;
-                
-                ctx.beginPath();
-                ctx.arc(x, y, radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(${255}, ${72}, ${0}, ${0.7 - i * 0.1})`;
-                ctx.fill();
+                catalanNumbers[i] = catalan;
             }
         }
         
-        function drawC1Canvas(canvas) {
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        function createTable() {
+            const table = document.getElementById('dpTable');
+            table.innerHTML = '';
+            table.style.gridTemplateColumns = `repeat(${maxN + 1}, 1fr)`;
             
-            // Title
-            ctx.fillStyle = '#FF4800';
-            ctx.font = 'bold 20px Arial';
-            ctx.fillText('C(1) = 1: One way for each pattern', 200, 30);
+            // Create header row
+            for (let i = 0; i <= maxN; i++) {
+                const headerCell = document.createElement('div');
+                headerCell.className = 'cell';
+                headerCell.textContent = `n=${i}`;
+                headerCell.style.backgroundColor = '#1c1d20';
+                headerCell.style.color = 'white';
+                table.appendChild(headerCell);
+            }
             
-            // Draw parentheses
-            ctx.fillStyle = '#000000';
-            ctx.font = 'bold 24px Arial';
-            ctx.fillText('Valid Parentheses:', 50, 80);
-            
-            ctx.beginPath();
-            ctx.roundRect(50, 90, 120, 60, 10);
-            ctx.fillStyle = '#FD9F78';
-            ctx.fill();
-            
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 30px Arial';
-            ctx.fillText('( )', 90, 130);
-            
-            // Draw binary tree
-            ctx.fillStyle = '#000000';
-            ctx.font = 'bold 24px Arial';
-            ctx.fillText('Binary Tree:', 280, 80);
-            
-            ctx.beginPath();
-            ctx.arc(340, 120, 20, 0, Math.PI * 2);
-            ctx.fillStyle = '#FF4800';
-            ctx.fill();
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 20px Arial';
-            ctx.fillText('1', 335, 128);
-            
-            // Draw triangle
-            ctx.fillStyle = '#000000';
-            ctx.font = 'bold 24px Arial';
-            ctx.fillText('Polygon Triangulation:', 480, 80);
-            
-            // Draw a triangle
-            ctx.beginPath();
-            ctx.moveTo(550, 100);
-            ctx.lineTo(600, 170);
-            ctx.lineTo(500, 170);
-            ctx.closePath();
-            ctx.strokeStyle = '#FF4800';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-            
-            // Animate
-            const time = new Date().getTime() / 1000;
-            ctx.beginPath();
-            ctx.arc(550 + Math.sin(time * 2) * 10, 220 + Math.cos(time * 2) * 10, 15, 0, Math.PI * 2);
-            ctx.fillStyle = '#FD9F78';
-            ctx.fill();
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 16px Arial';
-            ctx.fillText('1', 546, 225);
-        }
-        
-        function drawC2Canvas(canvas) {
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Title
-            ctx.fillStyle = '#FF4800';
-            ctx.font = 'bold 20px Arial';
-            ctx.fillText('C(2) = 2: Two ways for each pattern', 200, 30);
-            
-            // Draw parentheses
-            ctx.fillStyle = '#000000';
-            ctx.font = 'bold 20px Arial';
-            ctx.fillText('Valid Parentheses:', 50, 70);
-            
-            // First pattern
-            ctx.beginPath();
-            ctx.roundRect(50, 80, 120, 50, 10);
-            ctx.fillStyle = '#FD9F78';
-            ctx.fill();
-            
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 24px Arial';
-            ctx.fillText('(())', 80, 110);
-            
-            // Second pattern
-            ctx.beginPath();
-            ctx.roundRect(50, 140, 120, 50, 10);
-            ctx.fillStyle = '#FD9F78';
-            ctx.fill();
-            
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 24px Arial';
-            ctx.fillText('()()', 80, 170);
-            
-            // Draw binary trees
-            ctx.fillStyle = '#000000';
-            ctx.font = 'bold 20px Arial';
-            ctx.fillText('Binary Trees:', 280, 70);
-            
-            // First tree
-            drawTree1(ctx, 330, 120);
-            
-            // Second tree
-            drawTree2(ctx, 330, 200);
-            
-            // Draw polygon triangulation
-            ctx.fillStyle = '#000000';
-            ctx.font = 'bold 20px Arial';
-            ctx.fillText('Polygon Triangulation:', 480, 70);
-            
-            // Draw a square with diagonal
-            drawSquareWithDiagonal1(ctx, 550, 120);
-            
-            // Draw a square with the other diagonal
-            drawSquareWithDiagonal2(ctx, 550, 200);
-            
-            // Animation
-            const time = new Date().getTime() / 1000;
-            ctx.fillStyle = '#FF4800';
-            ctx.beginPath();
-            ctx.arc(200 + Math.sin(time * 2) * 15, 250 + Math.cos(time * 2) * 5, 20, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 20px Arial';
-            ctx.fillText('2', 195, 257);
-        }
-        
-        function drawTree1(ctx, x, y) {
-            // Root
-            ctx.beginPath();
-            ctx.arc(x, y, 15, 0, Math.PI * 2);
-            ctx.fillStyle = '#FF4800';
-            ctx.fill();
-            
-            // Left child
-            ctx.beginPath();
-            ctx.arc(x - 30, y + 30, 15, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Edge
-            ctx.beginPath();
-            ctx.moveTo(x - 10, y + 10);
-            ctx.lineTo(x - 20, y + 20);
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
-        
-        function drawTree2(ctx, x, y) {
-            // Root
-            ctx.beginPath();
-            ctx.arc(x, y, 15, 0, Math.PI * 2);
-            ctx.fillStyle = '#FF4800';
-            ctx.fill();
-            
-            // Right child
-            ctx.beginPath();
-            ctx.arc(x + 30, y + 30, 15, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Edge
-            ctx.beginPath();
-            ctx.moveTo(x + 10, y + 10);
-            ctx.lineTo(x + 20, y + 20);
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
-        
-        function drawSquareWithDiagonal1(ctx, x, y) {
-            // Draw a square
-            ctx.beginPath();
-            ctx.moveTo(x - 40, y - 40);
-            ctx.lineTo(x + 40, y - 40);
-            ctx.lineTo(x + 40, y + 40);
-            ctx.lineTo(x - 40, y + 40);
-            ctx.closePath();
-            ctx.strokeStyle = '#FF4800';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-            
-            // Draw a diagonal
-            ctx.beginPath();
-            ctx.moveTo(x - 40, y - 40);
-            ctx.lineTo(x + 40, y + 40);
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
-        
-        function drawSquareWithDiagonal2(ctx, x, y) {
-            // Draw a square
-            ctx.beginPath();
-            ctx.moveTo(x - 40, y - 40);
-            ctx.lineTo(x + 40, y - 40);
-            ctx.lineTo(x + 40, y + 40);
-            ctx.lineTo(x - 40, y + 40);
-            ctx.closePath();
-            ctx.strokeStyle = '#FF4800';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-            
-            // Draw the other diagonal
-            ctx.beginPath();
-            ctx.moveTo(x + 40, y - 40);
-            ctx.lineTo(x - 40, y + 40);
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
-        
-        function drawC3Canvas(canvas) {
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Title
-            ctx.fillStyle = '#FF4800';
-            ctx.font = 'bold 20px Arial';
-            ctx.fillText('C(3) = 5: Five ways for each pattern', 200, 30);
-            
-            // Parentheses
-            ctx.fillStyle = '#000000';
-            ctx.font = 'bold 16px Arial';
-            ctx.fillText('Valid Parentheses:', 50, 60);
-            
-            const parentheses = ['((()))', '(()())', '(())()', '()(())', '()()()'];
-            parentheses.forEach((p, i) => {
-                ctx.beginPath();
-                ctx.roundRect(50, 70 + i * 40, 120, 30, 5);
-                ctx.fillStyle = '#FD9F78';
-                ctx.fill();
-                
-                ctx.fillStyle = '#FFFFFF';
-                ctx.font = 'bold 16px Arial';
-                ctx.fillText(p, 70, 90 + i * 40);
-            });
-            
-            // Binary Trees
-            ctx.fillStyle = '#000000';
-            ctx.font = 'bold 16px Arial';
-            ctx.fillText('Binary Trees:', 280, 60);
-            
-            // Draw simplified representations of 5 different trees
-            // Just showing dots representing nodes in different configurations
-            for (let i = 0; i < 5; i++) {
-                const baseY = 85 + i * 40;
-                ctx.fillStyle = '#FF4800';
-                
-                // Draw 3 nodes in different configurations
-                if (i === 0) {
-                    // Straight line tree
-                    ctx.beginPath();
-                    ctx.arc(320, baseY, 10, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.arc(350, baseY, 10, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.arc(380, baseY, 10, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    // Connections
-                    ctx.beginPath();
-                    ctx.moveTo(330, baseY);
-                    ctx.lineTo(340, baseY);
-                    ctx.moveTo(360, baseY);
-                    ctx.lineTo(370, baseY);
-                    ctx.strokeStyle = '#000000';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                } else if (i === 1) {
-                    // V shape
-                    ctx.beginPath();
-                    ctx.arc(350, baseY - 15, 10, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.arc(320, baseY + 15, 10, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.arc(380, baseY + 15, 10, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    // Connections
-                    ctx.beginPath();
-                    ctx.moveTo(345, baseY - 5);
-                    ctx.lineTo(330, baseY + 5);
-                    ctx.moveTo(355, baseY - 5);
-                    ctx.lineTo(370, baseY + 5);
-                    ctx.strokeStyle = '#000000';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                } else if (i === 2) {
-                    // Left heavy
-                    ctx.beginPath();
-                    ctx.arc(350, baseY - 15, 10, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.arc(320, baseY + 15, 10, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.arc(290, baseY + 15, 10, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    // Connections
-                    ctx.beginPath();
-                    ctx.moveTo(340, baseY - 10);
-                    ctx.lineTo(330, baseY + 10);
-                    ctx.moveTo(310, baseY + 15);
-                    ctx.lineTo(300, baseY + 15);
-                    ctx.strokeStyle = '#000000';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                } else if (i === 3) {
-                    // Right heavy
-                    ctx.beginPath();
-                    ctx.arc(350, baseY - 15, 10, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.arc(380, baseY + 15, 10, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.arc(410, baseY + 15, 10, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    // Connections
-                    ctx.beginPath();
-                    ctx.moveTo(360, baseY - 10);
-                    ctx.lineTo(370, baseY + 10);
-                    ctx.moveTo(390, baseY + 15);
-                    ctx.lineTo(400, baseY + 15);
-                    ctx.strokeStyle = '#000000';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
+            // Create value row
+            for (let i = 0; i <= maxN; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.id = `cell-${i}`;
+                if (i <= currentN) {
+                    cell.classList.add('filled');
+                    cell.textContent = catalanNumbers[i];
                 } else {
-                    // Balanced
-                    ctx.beginPath();
-                    ctx.arc(350, baseY - 15, 10, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.arc(320, baseY + 15, 10, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.arc(380, baseY + 15, 10, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    // Connections
-                    ctx.beginPath();
-                    ctx.moveTo(342, baseY - 8);
-                    ctx.lineTo(328, baseY + 8);
-                    ctx.moveTo(358, baseY - 8);
-                    ctx.lineTo(372, baseY + 8);
-                    ctx.strokeStyle = '#000000';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
+                    cell.textContent = '?';
                 }
+                table.appendChild(cell);
             }
             
-            // Polygon Triangulation
-            ctx.fillStyle = '#000000';
-            ctx.font = 'bold 16px Arial';
-            ctx.fillText('Polygon Triangulation (Pentagon):', 480, 60);
-            
-            // Draw simplified pentagon with different triangulations
-            for (let i = 0; i < 5; i++) {
-                const baseY = 85 + i * 40;
-                drawPentagonWithTriangulation(ctx, 550, baseY, i);
+            // Highlight current cell
+            if (currentN <= maxN) {
+                document.getElementById(`cell-${currentN}`).classList.add('current');
             }
-            
-            // Animated counter
-            const time = new Date().getTime() / 1000;
-            ctx.beginPath();
-            ctx.arc(200 + Math.sin(time * 3) * 10, 270 + Math.cos(time * 3) * 10, 25, 0, Math.PI * 2);
-            ctx.fillStyle = '#FF4800';
-            ctx.fill();
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 22px Arial';
-            ctx.fillText('5', 195, 277);
         }
         
-        function drawPentagonWithTriangulation(ctx, x, y, type) {
-            const size = 25;
+        function updateCalculation() {
+            const calcText = document.getElementById('calculationText');
+            const resultText = document.getElementById('resultText');
             
-            // Draw pentagon
-            ctx.beginPath();
-            ctx.moveTo(x, y - size);  // top
-            ctx.lineTo(x + size, y - size/3);  // top right
-            ctx.lineTo(x + size/1.5, y + size);  // bottom right
-            ctx.lineTo(x - size/1.5, y + size);  // bottom left
-            ctx.lineTo(x - size, y - size/3);  // top left
-            ctx.closePath();
-            ctx.strokeStyle = '#FF4800';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            
-            // Draw different triangulations
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 1;
-            
-            if (type === 0) {
-                // Fan from top
-                ctx.beginPath();
-                ctx.moveTo(x, y - size);
-                ctx.lineTo(x + size/1.5, y + size);
-                ctx.moveTo(x, y - size);
-                ctx.lineTo(x - size/1.5, y + size);
-                ctx.stroke();
-            } else if (type === 1) {
-                // Fan from bottom right
-                ctx.beginPath();
-                ctx.moveTo(x + size/1.5, y + size);
-                ctx.lineTo(x, y - size);
-                ctx.moveTo(x + size/1.5, y + size);
-                ctx.lineTo(x - size, y - size/3);
-                ctx.stroke();
-            } else if (type === 2) {
-                // Fan from bottom left
-                ctx.beginPath();
-                ctx.moveTo(x - size/1.5, y + size);
-                ctx.lineTo(x, y - size);
-                ctx.moveTo(x - size/1.5, y + size);
-                ctx.lineTo(x + size, y - size/3);
-                ctx.stroke();
-            } else if (type === 3) {
-                // Fan from top right
-                ctx.beginPath();
-                ctx.moveTo(x + size, y - size/3);
-                ctx.lineTo(x - size/1.5, y + size);
-                ctx.moveTo(x + size, y - size/3);
-                ctx.lineTo(x - size, y - size/3);
-                ctx.stroke();
+            if (currentN === 0) {
+                calcText.textContent = 'Base case: C(0) = 1';
+                resultText.textContent = 'C(0) = 1';
             } else {
-                // Fan from top left
-                ctx.beginPath();
-                ctx.moveTo(x - size, y - size/3);
-                ctx.lineTo(x + size/1.5, y + size);
-                ctx.moveTo(x - size, y - size/3);
-                ctx.lineTo(x + size, y - size/3);
-                ctx.stroke();
-            }
-        }
-        
-        function drawC4Canvas(canvas) {
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Title
-            ctx.fillStyle = '#FF4800';
-            ctx.font = 'bold 20px Arial';
-            ctx.fillText('C(4) = 14: Examples from the 14 possible patterns', 180, 30);
-            
-            // Draw simplified examples for C(4)
-            ctx.fillStyle = '#000000';
-            ctx.font = 'bold 18px Arial';
-            ctx.fillText('Valid Parentheses (Sample of 4 out of 14):', 50, 70);
-            
-            const parenthesesExamples = ['(((())))', '((())())', '(()()())', '()()()()'];
-            parenthesesExamples.forEach((p, i) => {
-                ctx.beginPath();
-                ctx.roundRect(50, 80 + i * 35, 150, 30, 5);
-                ctx.fillStyle = '#FD9F78';
-                ctx.fill();
+                let formula = `C(${currentN}) = `;
+                let calculation = '';
+                let sum = 0;
                 
-                ctx.fillStyle = '#FFFFFF';
-                ctx.font = 'bold 16px Arial';
-                ctx.fillText(p, 60, 100 + i * 35);
-            });
-            
-            // Binary Trees
-            ctx.fillStyle = '#000000';
-            ctx.font = 'bold 18px Arial';
-            ctx.fillText('Binary Trees (Sample of 4 out of 14):', 300, 70);
-            
-            // Draw simplified tree examples
-            for (let i = 0; i < 4; i++) {
-                drawSimplifiedTree(ctx, 375, 100 + i * 35, i);
-            }
-            
-            // Polygon Triangulation
-            ctx.fillStyle = '#000000';
-            ctx.font = 'bold 18px Arial';
-            ctx.fillText('Hexagon Triangulation (Sample of 4 out of 14):', 50, 230);
-            
-            // Draw simplified hexagon with triangulations
-            for (let i = 0; i < 4; i++) {
-                drawHexagonWithTriangulation(ctx, 150 + i * 120, 260, i);
-            }
-            
-            // Large counter with animation
-            const time = new Date().getTime() / 1000;
-            ctx.beginPath();
-            ctx.arc(550 + Math.sin(time * 2) * 10, 260 + Math.cos(time * 2) * 10, 40, 0, Math.PI * 2);
-            ctx.fillStyle = '#FF4800';
-            ctx.fill();
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 32px Arial';
-            ctx.fillText('14', 540, 272);
-        }
-        
-        function drawSimplifiedTree(ctx, x, y, type) {
-            ctx.fillStyle = '#FF4800';
-            
-            if (type === 0) {
-                // Line tree
-                for (let i = 0; i < 4; i++) {
-                    ctx.beginPath();
-                    ctx.arc(x + i * 30, y, 7, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    if (i < 3) {
-                        ctx.beginPath();
-                        ctx.moveTo(x + i * 30 + 7, y);
-                        ctx.lineTo(x + (i+1) * 30 - 7, y);
-                        ctx.strokeStyle = '#000000';
-                        ctx.lineWidth = 1;
-                        ctx.stroke();
+                for (let j = 0; j < currentN; j++) {
+                    if (j > 0) {
+                        formula += ' + ';
+                        calculation += ' + ';
                     }
+                    formula += `C(${j}) × C(${currentN - 1 - j})`;
+                    const product = catalanNumbers[j] * catalanNumbers[currentN - 1 - j];
+                    calculation += `${catalanNumbers[j]} × ${catalanNumbers[currentN - 1 - j]} = ${product}`;
+                    sum += product;
                 }
-            } else if (type === 1) {
-                // Balanced tree
-                // Root
-                ctx.beginPath();
-                ctx.arc(x, y, 7, 0, Math.PI * 2);
-                ctx.fill();
                 
-                // Level 1
-                ctx.beginPath();
-                ctx.arc(x - 25, y + 15, 7, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.beginPath();
-                ctx.arc(x + 25, y + 15, 7, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Level 2
-                ctx.beginPath();
-                ctx.arc(x - 40, y + 30, 7, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Connections
-                ctx.beginPath();
-                ctx.moveTo(x - 5, y + 5);
-                ctx.lineTo(x - 20, y + 10);
-                ctx.moveTo(x + 5, y + 5);
-                ctx.lineTo(x + 20, y + 10);
-                ctx.moveTo(x - 30, y + 20);
-                ctx.lineTo(x - 35, y + 25);
-                ctx.strokeStyle = '#000000';
-                ctx.lineWidth = 1;
-                ctx.stroke();
-            } else if (type === 2) {
-                // Left-heavy
-                // Root
-                ctx.beginPath();
-                ctx.arc(x, y, 7, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Left branch
-                ctx.beginPath();
-                ctx.arc(x - 25, y + 15, 7, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.beginPath();
-                ctx.arc(x - 40, y + 30, 7, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.beginPath();
-                ctx.arc(x - 55, y + 45, 7, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Connections
-                ctx.beginPath();
-                ctx.moveTo(x - 5, y + 5);
-                ctx.lineTo(x - 20, y + 10);
-                ctx.moveTo(x - 30, y + 20);
-                ctx.lineTo(x - 35, y + 25);
-                ctx.moveTo(x - 45, y + 35);
-                ctx.lineTo(x - 50, y + 40);
-                ctx.strokeStyle = '#000000';
-                ctx.lineWidth = 1;
-                ctx.stroke();
-            } else {
-                // Right-heavy
-                // Root
-                ctx.beginPath();
-                ctx.arc(x, y, 7, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Right branch
-                ctx.beginPath();
-                ctx.arc(x + 25, y + 15, 7, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.beginPath();
-                ctx.arc(x + 40, y + 30, 7, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.beginPath();
-                ctx.arc(x + 55, y + 45, 7, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Connections
-                ctx.beginPath();
-                ctx.moveTo(x + 5, y + 5);
-                ctx.lineTo(x + 20, y + 10);
-                ctx.moveTo(x + 30, y + 20);
-                ctx.lineTo(x + 35, y + 25);
-                ctx.moveTo(x + 45, y + 35);
-                ctx.lineTo(x + 50, y + 40);
-                ctx.strokeStyle = '#000000';
-                ctx.lineWidth = 1;
-                ctx.stroke();
+                calcText.innerHTML = `${formula}<br>${calculation}`;
+                resultText.textContent = `C(${currentN}) = ${sum}`;
             }
         }
         
-        function drawHexagonWithTriangulation(ctx, x, y, type) {
-            const size = 30;
+        function updateDisplay() {
+            document.getElementById('currentStep').textContent = `n = ${currentN}`;
+            createTable();
+            updateCalculation();
             
-            // Draw hexagon
-            ctx.beginPath();
-            for (let i = 0; i < 6; i++) {
-                const angle = i * Math.PI / 3;
-                ctx.lineTo(x + size * Math.cos(angle), y + size * Math.sin(angle));
-            }
-            ctx.closePath();
-            ctx.strokeStyle = '#FF4800';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            
-            // Draw different triangulations
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 1;
-            
-            if (type === 0) {
-                // Fan from center
-                ctx.beginPath();
-                ctx.moveTo(x, y - size);  // top
-                ctx.lineTo(x, y);  // center
-                ctx.lineTo(x + size * 0.866, y - size * 0.5);  // top-right
-                ctx.moveTo(x, y);
-                ctx.lineTo(x + size * 0.866, y + size * 0.5);  // bottom-right
-                ctx.moveTo(x, y);
-                ctx.lineTo(x, y + size);  // bottom
-                ctx.moveTo(x, y);
-                ctx.lineTo(x - size * 0.866, y + size * 0.5);  // bottom-left
-                ctx.moveTo(x, y);
-                ctx.lineTo(x - size * 0.866, y - size * 0.5);  // top-left
-                ctx.stroke();
-            } else if (type === 1) {
-                // Triangulation from one vertex
-                ctx.beginPath();
-                ctx.moveTo(x, y - size);  // top
-                ctx.lineTo(x + size * 0.866, y + size * 0.5);  // bottom-right
-                ctx.moveTo(x, y - size);
-                ctx.lineTo(x - size * 0.866, y + size * 0.5);  // bottom-left
-                ctx.moveTo(x, y - size);
-                ctx.lineTo(x, y + size);  // bottom
-                ctx.stroke();
-            } else if (type === 2) {
-                // Zigzag triangulation
-                ctx.beginPath();
-                ctx.moveTo(x, y - size);  // top
-                ctx.lineTo(x, y + size);  // bottom
-                ctx.moveTo(x - size * 0.866, y - size * 0.5);  // top-left
-                ctx.lineTo(x + size * 0.866, y - size * 0.5);  // top-right
-                ctx.moveTo(x - size * 0.866, y + size * 0.5);  // bottom-left
-                ctx.lineTo(x + size * 0.866, y + size * 0.5);  // bottom-right
-                ctx.stroke();
-            } else {
-                // Spiral triangulation
-                ctx.beginPath();
-                ctx.moveTo(x, y - size);  // top
-                ctx.lineTo(x + size * 0.866, y + size * 0.5);  // bottom-right
-                ctx.moveTo(x + size * 0.866, y - size * 0.5);  // top-right
-                ctx.lineTo(x - size * 0.866, y + size * 0.5);  // bottom-left
-                ctx.moveTo(x, y + size);  // bottom
-                ctx.lineTo(x - size * 0.866, y - size * 0.5);  // top-left
-                ctx.stroke();
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentN === 0;
+            document.getElementById('nextBtn').disabled = currentN === maxN;
+        }
+        
+        function nextStep() {
+            if (currentN < maxN) {
+                currentN++;
+                updateDisplay();
             }
         }
         
-        // Animation loop
-        function animate() {
-            const introCanvas = document.getElementById('intro-canvas');
-            const c1Canvas = document.getElementById('c1-canvas');
-            const c2Canvas = document.getElementById('c2-canvas');
-            const c3Canvas = document.getElementById('c3-canvas');
-            const c4Canvas = document.getElementById('c4-canvas');
-            
-            if (introCanvas) drawIntroduction(introCanvas);
-            if (c1Canvas) drawC1Canvas(c1Canvas);
-            if (c2Canvas) drawC2Canvas(c2Canvas);
-            if (c3Canvas) drawC3Canvas(c3Canvas);
-            if (c4Canvas) drawC4Canvas(c4Canvas);
-            
-            requestAnimationFrame(animate);
+        function previousStep() {
+            if (currentN > 0) {
+                currentN--;
+                updateDisplay();
+            }
         }
         
-        // Start the animation
-        animate();
+        // Initialize
+        calculateCatalans();
+        updateDisplay();
     </script>
 </body>
 </html>
