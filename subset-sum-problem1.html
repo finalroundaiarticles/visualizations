@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Decision Tree for Subset Sum</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .slide.active {
+            opacity: 1;
+        }
+        
+        svg {
+            max-width: 100%;
+            max-height: 400px;
+        }
+        
+        .node circle {
+            stroke: #000000;
+            stroke-width: 2px;
+        }
+        
+        .node text {
+            font-size: 14px;
+            fill: #000000;
+        }
+        
+        .link {
+            fill: none;
+            stroke: #000000;
+            stroke-width: 2px;
+        }
+        
+        .success-path {
+            stroke: #FF4800;
+            stroke-width: 3px;
+        }
+        
+        .success-node circle {
+            fill: #FF4800;
+        }
+        
+        .normal-node circle {
+            fill: #FD9F78;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .explanation {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #000000;
+            text-align: center;
+            max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Binary Decision Tree for Subset Sum</h1>
+    <div class="container" id="container">
+        <div class="slide active" id="slide1">
+            <svg width="700" height="400" id="tree1">
+                <g transform="translate(350, 50)">
+                    <!-- Root node -->
+                    <g class="node normal-node" transform="translate(0,0)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Start</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=9</text>
+                    </g>
+                </g>
+            </svg>
+            <div class="explanation">
+                We start with our problem: find a subset of numbers from [3, 4, 5] that adds up to 9.
+            </div>
+        </div>
+
+        <div class="slide" id="slide2">
+            <svg width="700" height="400" id="tree2">
+                <g transform="translate(350, 50)">
+                    <!-- Root node -->
+                    <g class="node normal-node" transform="translate(0,0)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Start</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=9</text>
+                    </g>
+                    
+                    <!-- Level 1: Decision on 3 -->
+                    <!-- Left branch (exclude 3) -->
+                    <line class="link" x1="0" y1="25" x2="-150" y2="95"></line>
+                    <g class="node normal-node" transform="translate(-150,120)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Exclude 3</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=9</text>
+                    </g>
+                    
+                    <!-- Right branch (include 3) -->
+                    <line class="link" x1="0" y1="25" x2="150" y2="95"></line>
+                    <g class="node normal-node" transform="translate(150,120)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Include 3</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=6</text>
+                    </g>
+                </g>
+            </svg>
+            <div class="explanation">
+                For the first element (3), we have two choices: include it or exclude it. If we include 3, our new target becomes 9-3=6.
+            </div>
+        </div>
+
+        <div class="slide" id="slide3">
+            <svg width="700" height="400" id="tree3">
+                <g transform="translate(350, 50)">
+                    <!-- Root node -->
+                    <g class="node normal-node" transform="translate(0,0)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Start</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=9</text>
+                    </g>
+                    
+                    <!-- Level 1: Decision on 3 -->
+                    <!-- Left branch (exclude 3) -->
+                    <line class="link" x1="0" y1="25" x2="-150" y2="95"></line>
+                    <g class="node normal-node" transform="translate(-150,120)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Exclude 3</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=9</text>
+                    </g>
+                    
+                    <!-- Right branch (include 3) -->
+                    <line class="link" x1="0" y1="25" x2="150" y2="95"></line>
+                    <g class="node normal-node" transform="translate(150,120)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Include 3</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=6</text>
+                    </g>
+                    
+                    <!-- Level 2: Decision on 4 -->
+                    <!-- Exclude 3, Exclude 4 -->
+                    <line class="link" x1="-150" y1="145" x2="-225" y2="195"></line>
+                    <g class="node normal-node" transform="translate(-225,220)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Exclude 4</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=9</text>
+                    </g>
+                    
+                    <!-- Exclude 3, Include 4 -->
+                    <line class="link" x1="-150" y1="145" x2="-75" y2="195"></line>
+                    <g class="node success-node" transform="translate(-75,220)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Include 4</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=5</text>
+                    </g>
+                    
+                    <!-- Include 3, Exclude 4 -->
+                    <line class="link" x1="150" y1="145" x2="75" y2="195"></line>
+                    <g class="node normal-node" transform="translate(75,220)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Exclude 4</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=6</text>
+                    </g>
+                    
+                    <!-- Include 3, Include 4 -->
+                    <line class="link" x1="150" y1="145" x2="225" y2="195"></line>
+                    <g class="node normal-node" transform="translate(225,220)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Include 4</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=2</text>
+                    </g>
+                </g>
+            </svg>
+            <div class="explanation">
+                For the second element (4), we again have two choices from each previous state. 
+                Note that if we excluded 3 and included 4, our target becomes 9-4=5.
+                If we included 3 and included 4, our target becomes 6-4=2.
+            </div>
+        </div>
+
+        <div class="slide" id="slide4">
+            <svg width="700" height="400" id="tree4">
+                <g transform="translate(350, 30)">
+                    <!-- Root node -->
+                    <g class="node normal-node" transform="translate(0,0)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Start</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=9</text>
+                    </g>
+                    
+                    <!-- Level 1: Decision on 3 -->
+                    <!-- Left branch (exclude 3) -->
+                    <line class="link" x1="0" y1="25" x2="-150" y2="75"></line>
+                    <g class="node normal-node" transform="translate(-150,100)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Exclude 3</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=9</text>
+                    </g>
+                    
+                    <!-- Right branch (include 3) -->
+                    <line class="link" x1="0" y1="25" x2="150" y2="75"></line>
+                    <g class="node normal-node" transform="translate(150,100)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Include 3</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=6</text>
+                    </g>
+                    
+                    <!-- Level 2: Decision on 4 -->
+                    <!-- Exclude 3, Exclude 4 -->
+                    <line class="link" x1="-150" y1="125" x2="-225" y2="175"></line>
+                    <g class="node normal-node" transform="translate(-225,200)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Exclude 4</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=9</text>
+                    </g>
+                    
+                    <!-- Exclude 3, Include 4 -->
+                    <line class="link success-path" x1="-150" y1="125" x2="-75" y2="175"></line>
+                    <g class="node success-node" transform="translate(-75,200)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Include 4</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=5</text>
+                    </g>
+                    
+                    <!-- Include 3, Exclude 4 -->
+                    <line class="link" x1="150" y1="125" x2="75" y2="175"></line>
+                    <g class="node normal-node" transform="translate(75,200)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Exclude 4</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=6</text>
+                    </g>
+                    
+                    <!-- Include 3, Include 4 -->
+                    <line class="link" x1="150" y1="125" x2="225" y2="175"></line>
+                    <g class="node normal-node" transform="translate(225,200)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Include 4</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=2</text>
+                    </g>
+                    
+                    <!-- Level 3: Decision on 5 -->
+                    <!-- Decision paths for exclude 3, exclude 4 -->
+                    <line class="link" x1="-225" y1="225" x2="-262" y2="275"></line>
+                    <g class="node normal-node" transform="translate(-262,300)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Exclude 5</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=9</text>
+                        <text text-anchor="middle" dy="39" font-size="12">❌ No sum</text>
+                    </g>
+                    
+                    <line class="link" x1="-225" y1="225" x2="-188" y2="275"></line>
+                    <g class="node normal-node" transform="translate(-188,300)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Include 5</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=4</text>
+                        <text text-anchor="middle" dy="39" font-size="12">❌ No sum</text>
+                    </g>
+                    
+                    <!-- Decision paths for exclude 3, include 4 -->
+                    <line class="link" x1="-75" y1="225" x2="-112" y2="275"></line>
+                    <g class="node normal-node" transform="translate(-112,300)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Exclude 5</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=5</text>
+                        <text text-anchor="middle" dy="39" font-size="12">❌ No sum</text>
+                    </g>
+                    
+                    <line class="link success-path" x1="-75" y1="225" x2="-38" y2="275"></line>
+                    <g class="node success-node" transform="translate(-38,300)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Include 5</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=0</text>
+                        <text text-anchor="middle" dy="39" font-size="12">✓ Found!</text>
+                    </g>
+                    
+                    <!-- Decision paths for include 3, exclude 4 -->
+                    <line class="link" x1="75" y1="225" x2="38" y2="275"></line>
+                    <g class="node normal-node" transform="translate(38,300)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Exclude 5</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=6</text>
+                        <text text-anchor="middle" dy="39" font-size="12">❌ No sum</text>
+                    </g>
+                    
+                    <line class="link" x1="75" y1="225" x2="112" y2="275"></line>
+                    <g class="node normal-node" transform="translate(112,300)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Include 5</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=1</text>
+                        <text text-anchor="middle" dy="39" font-size="12">❌ No sum</text>
+                    </g>
+                    
+                    <!-- Decision paths for include 3, include 4 -->
+                    <line class="link" x1="225" y1="225" x2="188" y2="275"></line>
+                    <g class="node normal-node" transform="translate(188,300)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Exclude 5</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=2</text>
+                        <text text-anchor="middle" dy="39" font-size="12">❌ No sum</text>
+                    </g>
+                    
+                    <line class="link" x1="225" y1="225" x2="262" y2="275"></line>
+                    <g class="node normal-node" transform="translate(262,300)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Include 5</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=-3</text>
+                        <text text-anchor="middle" dy="39" font-size="12">❌ No sum</text>
+                    </g>
+                </g>
+            </svg>
+            <div class="explanation">
+                For the third element (5), we again have two choices from each previous state. Only one path leads to a solution - exclude 3, include 4, include 5, which gives us 4+5=9. This path is highlighted in orange. When the target becomes 0, we know we've found a valid subset.
+            </div>
+        </div>
+
+        <div class="slide" id="slide5">
+            <svg width="700" height="400" id="tree5">
+                <g transform="translate(350, 30)">
+                    <!-- Root node -->
+                    <g class="node normal-node" transform="translate(0,0)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Start</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=9</text>
+                    </g>
+                    
+                    <!-- Level 1: Decision on 3 -->
+                    <!-- Left branch (exclude 3) -->
+                    <line class="link success-path" x1="0" y1="25" x2="-150" y2="75"></line>
+                    <g class="node success-node" transform="translate(-150,100)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Exclude 3</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=9</text>
+                    </g>
+                    
+                    <!-- Right branch (include 3) -->
+                    <line class="link" x1="0" y1="25" x2="150" y2="75"></line>
+                    <g class="node normal-node" transform="translate(150,100)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Include 3</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=6</text>
+                    </g>
+                    
+                    <!-- Level 2: Decision on 4 -->
+                    <!-- Exclude 3, Exclude 4 -->
+                    <line class="link" x1="-150" y1="125" x2="-225" y2="175"></line>
+                    <g class="node normal-node" transform="translate(-225,200)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Exclude 4</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=9</text>
+                    </g>
+                    
+                    <!-- Exclude 3, Include 4 -->
+                    <line class="link success-path" x1="-150" y1="125" x2="-75" y2="175"></line>
+                    <g class="node success-node" transform="translate(-75,200)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Include 4</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=5</text>
+                    </g>
+                    
+                    <!-- Include 3, Exclude 4 -->
+                    <line class="link" x1="150" y1="125" x2="75" y2="175"></line>
+                    <g class="node normal-node" transform="translate(75,200)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Exclude 4</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=6</text>
+                    </g>
+                    
+                    <!-- Include 3, Include 4 -->
+                    <line class="link" x1="150" y1="125" x2="225" y2="175"></line>
+                    <g class="node normal-node" transform="translate(225,200)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Include 4</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=2</text>
+                    </g>
+                    
+                    <!-- Level 3: Decision on 5 -->
+                    <!-- Decision paths for exclude 3, exclude 4 -->
+                    <line class="link" x1="-225" y1="225" x2="-262" y2="275"></line>
+                    <g class="node normal-node" transform="translate(-262,300)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Exclude 5</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=9</text>
+                        <text text-anchor="middle" dy="39" font-size="12">❌ No sum</text>
+                    </g>
+                    
+                    <line class="link" x1="-225" y1="225" x2="-188" y2="275"></line>
+                    <g class="node normal-node" transform="translate(-188,300)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Include 5</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=4</text>
+                        <text text-anchor="middle" dy="39" font-size="12">❌ No sum</text>
+                    </g>
+                    
+                    <!-- Decision paths for exclude 3, include 4 -->
+                    <line class="link" x1="-75" y1="225" x2="-112" y2="275"></line>
+                    <g class="node normal-node" transform="translate(-112,300)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Exclude 5</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=5</text>
+                        <text text-anchor="middle" dy="39" font-size="12">❌ No sum</text>
+                    </g>
+                    
+                    <line class="link success-path" x1="-75" y1="225" x2="-38" y2="275"></line>
+                    <g class="node success-node" transform="translate(-38,300)">
+                        <circle r="25"></circle>
+                        <text text-anchor="middle" dy="5">Include 5</text>
+                        <text text-anchor="middle" dy="22" font-size="12">Target=0</text>
+                        <text text-anchor="middle" dy="39" font-size="12">✓ Found!</text>
+                    </g>
+                </g>
+            </svg>
+            <div class="explanation">
+                <strong>Solution Found!</strong> The highlighted path shows our successful subset: {4, 5} which sums to 9. 
+                This binary decision tree method explored all possible combinations systematically. The key was making binary decisions (include/exclude) for each element of the array.
+            </div>
+        </div>
+    </div>
+    
+    <div class="nav-buttons">
+        <button id="prevBtn" disabled>Previous</button>
+        <button id="nextBtn">Next</button>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        let currentSlide = 0;
+        
+        function showSlide(index) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[index].classList.add('active');
+            
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === slides.length - 1;
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        });
+        
+        showSlide(currentSlide);
+    </script>
+</body>
+</html>
