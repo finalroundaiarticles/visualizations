@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recursive Catalan Number Tree</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        #animation-container {
+            width: 100%;
+            height: 500px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .explanation {
+            background-color: rgba(253, 159, 120, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #FF4800;
+        }
+        
+        .node {
+            position: absolute;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.5s ease;
+            opacity: 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .edge {
+            position: absolute;
+            background-color: #FD9F78;
+            height: 2px;
+            transform-origin: 0% 50%;
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #FF4800;
+            font-weight: bold;
+        }
+        
+        .formula {
+            text-align: center;
+            font-size: 18px;
+            margin: 20px 0;
+            color: #FF4800;
+        }
+        
+        .highlight {
+            color: #FF4800;
+            font-weight: bold;
+        }
+        
+        .repeated {
+            border: 3px dashed #FF4800 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Recursive Catalan Number Tree Visualization</h1>
+        
+        <div class="formula">
+            <p>C(n) = Σ C(i) × C(n-i-1) for i from 0 to n-1</p>
+        </div>
+        
+        <div class="explanation" id="step-explanation">
+            Welcome to the Catalan Number recursive tree visualization. Click "Next" to start.
+        </div>
+        
+        <div id="animation-container"></div>
+        
+        <div class="navigation">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="step-indicator">Step 0 of 8</div>
+    </div>
+
+    <script>
+        // Configuration
+        const container = document.getElementById('animation-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepExplanation = document.getElementById('step-explanation');
+        const stepIndicator = document.getElementById('step-indicator');
+        
+        let currentStep = 0;
+        const totalSteps = 8;
+        
+        // Node colors
+        const nodeColors = {
+            main: '#FF4800',
+            secondary: '#FD9F78',
+            result: '#000000',
+            repeated: '#FD9F78'
+        };
+        
+        // Explanation for each step
+        const explanations = [
+            "Welcome to the Catalan Number recursive tree visualization. Click 'Next' to start exploring C(3).",
+            "To calculate C(3), we need to apply the formula: C(3) = C(0)×C(2) + C(1)×C(1) + C(2)×C(0). Let's visualize this recursive breakdown.",
+            "For C(2), we apply the formula again: C(2) = C(0)×C(1) + C(1)×C(0). These are the first subproblems we encounter.",
+            "For C(1), we know it equals 1 directly. And C(0) is defined as 1. These are our base cases.",
+            "Notice how C(0) and C(1) appear multiple times in our calculation tree. These are repeated subproblems.",
+            "Let's calculate upward: C(2) = C(0)×C(1) + C(1)×C(0) = 1×1 + 1×1 = 2",
+            "Now we can solve C(3) = C(0)×C(2) + C(1)×C(1) + C(2)×C(0) = 1×2 + 1×1 + 2×1 = 5",
+            "The Catalan number C(3) = 5. Notice how the recursive tree had repeated subproblems (highlighted with dashed borders), making dynamic programming an efficient approach for larger Catalan numbers."
+        ];
+        
+        // Update UI based on current step
+        function updateUI() {
+            stepExplanation.textContent = explanations[currentStep];
+            stepIndicator.textContent = `Step ${currentStep} of ${totalSteps - 1}`;
+            
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+        }
+        
+        // Create a node
+        function createNode(text, x, y, color, size = 50, opacity = 0) {
+            const node = document.createElement('div');
+            node.className = 'node';
+            node.textContent = text;
+            node.style.width = size + 'px';
+            node.style.height = size + 'px';
+            node.style.backgroundColor = color;
+            node.style.color = color === nodeColors.result ? '#FFFFFF' : '#000000';
+            node.style.left = x + 'px';
+            node.style.top = y + 'px';
+            node.style.opacity = opacity;
+            container.appendChild(node);
+            return node;
+        }
+        
+        // Create an edge between two nodes
+        function createEdge(x1, y1, x2, y2, opacity = 0) {
+            const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+            
+            const edge = document.createElement('div');
+            edge.className = 'edge';
+            edge.style.width = length + 'px';
+            edge.style.left = x1 + 'px';
+            edge.style.top = (y1 + 25) + 'px';
+            edge.style.transform = `rotate(${angle}rad)`;
+            edge.style.opacity = opacity;
+            
+            container.appendChild(edge);
+            return edge;
+        }
+        
+        // Clear the container
+        function clearContainer() {
+            container.innerHTML = '';
+        }
+        
+        // Animation steps
+        const animationSteps = [
+            // Step 0: Initial blank state
+            function() {
+                clearContainer();
+            },
+            
+            // Step 1: Show C(3) root node
+            function() {
+                clearContainer();
+                const rootNode = createNode('C(3)', 475, 50, nodeColors.main, 60, 1);
+            },
+            
+            // Step 2: Show first level breakdown
+            function() {
+                clearContainer();
+                const rootNode = createNode('C(3)', 475, 50, nodeColors.main, 60, 1);
+                
+                const node1 = createNode('C(0)×C(2)', 300, 150, nodeColors.secondary, 80, 1);
+                const node2 = createNode('C(1)×C(1)', 475, 150, nodeColors.secondary, 80, 1);
+                const node3 = createNode('C(2)×C(0)', 650, 150, nodeColors.secondary, 80, 1);
+                
+                createEdge(505, 80, 340, 150, 1);
+                createEdge(505, 80, 515, 150, 1);
+                createEdge(505, 80, 690, 150, 1);
+            },
+            
+            // Step 3: Expand C(2) nodes
+            function() {
+                clearContainer();
+                const rootNode = createNode('C(3)', 475, 50, nodeColors.main, 60, 1);
+                
+                const node1 = createNode('C(0)×C(2)', 300, 150, nodeColors.secondary, 80, 1);
+                const node2 = createNode('C(1)×C(1)', 475, 150, nodeColors.secondary, 80, 1);
+                const node3 = createNode('C(2)×C(0)', 650, 150, nodeColors.secondary, 80, 1);
+                
+                createEdge(505, 80, 340, 150, 1);
+                createEdge(505, 80, 515, 150, 1);
+                createEdge(505, 80, 690, 150, 1);
+                
+                // Expand C(2) in the first term
+                const node4 = createNode('C(0)×C(1)', 225, 250, nodeColors.secondary, 70, 1);
+                const node5 = createNode('C(1)×C(0)', 375, 250, nodeColors.secondary, 70, 1);
+                
+                createEdge(300, 190, 225, 250, 1);
+                createEdge(300, 190, 375, 250, 1);
+                
+                // Expand C(2) in the third term
+                const node6 = createNode('C(0)×C(1)', 575, 250, nodeColors.secondary, 70, 1);
+                const node7 = createNode('C(1)×C(0)', 725, 250, nodeColors.secondary, 70, 1);
+                
+                createEdge(650, 190, 575, 250, 1);
+                createEdge(650, 190, 725, 250, 1);
+            },
+            
+            // Step 4: Show all base cases
+            function() {
+                clearContainer();
+                const rootNode = createNode('C(3)', 475, 50, nodeColors.main, 60, 1);
+                
+                const node1 = createNode('C(0)×C(2)', 300, 150, nodeColors.secondary, 80, 1);
+                const node2 = createNode('C(1)×C(1)', 475, 150, nodeColors.secondary, 80, 1);
+                const node3 = createNode('C(2)×C(0)', 650, 150, nodeColors.secondary, 80, 1);
+                
+                createEdge(505, 80, 340, 150, 1);
+                createEdge(505, 80, 515, 150, 1);
+                createEdge(505, 80, 690, 150, 1);
+                
+                // Expand C(2) in the first term
+                const node4 = createNode('C(0)×C(1)', 225, 250, nodeColors.secondary, 70, 1);
+                const node5 = createNode('C(1)×C(0)', 375, 250, nodeColors.secondary, 70, 1);
+                
+                createEdge(300, 190, 225, 250, 1);
+                createEdge(300, 190, 375, 250, 1);
+                
+                // Expand C(2) in the third term
+                const node6 = createNode('C(0)×C(1)', 575, 250, nodeColors.secondary, 70, 1);
+                const node7 = createNode('C(1)×C(0)', 725, 250, nodeColors.secondary, 70, 1);
+                
+                createEdge(650, 190, 575, 250, 1);
+                createEdge(650, 190, 725, 250, 1);
+                
+                // Add base cases for all leaf nodes
+                const baseCase1 = createNode('1×1', 225, 350, nodeColors.result, 50, 1);
+                const baseCase2 = createNode('1×1', 375, 350, nodeColors.result, 50, 1);
+                const baseCase3 = createNode('1×1', 475, 250, nodeColors.result, 50, 1);
+                const baseCase4 = createNode('1×1', 575, 350, nodeColors.result, 50, 1);
+                const baseCase5 = createNode('1×1', 725, 350, nodeColors.result, 50, 1);
+                const baseCase6 = createNode('1', 175, 150, nodeColors.result, 40, 1);
+                const baseCase7 = createNode('1', 725, 150, nodeColors.result, 40, 1);
+                
+                createEdge(225, 285, 225, 350, 1);
+                createEdge(375, 285, 375, 350, 1);
+                createEdge(475, 190, 475, 250, 1);
+                createEdge(575, 285, 575, 350, 1);
+                createEdge(725, 285, 725, 350, 1);
+                createEdge(280, 165, 195, 150, 1);
+                createEdge(670, 165, 705, 150, 1);
+            },
+            
+            // Step 5: Highlight repeated subproblems
+            function() {
+                clearContainer();
+                const rootNode = createNode('C(3)', 475, 50, nodeColors.main, 60, 1);
+                
+                const node1 = createNode('C(0)×C(2)', 300, 150, nodeColors.secondary, 80, 1);
+                const node2 = createNode('C(1)×C(1)', 475, 150, nodeColors.secondary, 80, 1);
+                const node3 = createNode('C(2)×C(0)', 650, 150, nodeColors.secondary, 80, 1);
+                
+                createEdge(505, 80, 340, 150, 1);
+                createEdge(505, 80, 515, 150, 1);
+                createEdge(505, 80, 690, 150, 1);
+                
+                // Expand C(2) in the first term
+                const node4 = createNode('C(0)×C(1)', 225, 250, nodeColors.secondary, 70, 1);
+                const node5 = createNode('C(1)×C(0)', 375, 250, nodeColors.secondary, 70, 1);
+                
+                createEdge(300, 190, 225, 250, 1);
+                createEdge(300, 190, 375, 250, 1);
+                
+                // Expand C(2) in the third term
+                const node6 = createNode('C(0)×C(1)', 575, 250, nodeColors.secondary, 70, 1);
+                const node7 = createNode('C(1)×C(0)', 725, 250, nodeColors.secondary, 70, 1);
+                
+                createEdge(650, 190, 575, 250, 1);
+                createEdge(650, 190, 725, 250, 1);
+                
+                // Add base cases for all leaf nodes - highlight repeated calculations
+                const baseCase1 = createNode('1×1', 225, 350, nodeColors.result, 50, 1);
+                const baseCase2 = createNode('1×1', 375, 350, nodeColors.result, 50, 1);
+                const baseCase3 = createNode('1×1', 475, 250, nodeColors.result, 50, 1);
+                const baseCase4 = createNode('1×1', 575, 350, nodeColors.result, 50, 1);
+                const baseCase5 = createNode('1×1', 725, 350, nodeColors.result, 50, 1);
+                const baseCase6 = createNode('1', 175, 150, nodeColors.result, 40, 1);
+                const baseCase7 = createNode('1', 725, 150, nodeColors.result, 40, 1);
+                
+                createEdge(225, 285, 225, 350, 1);
+                createEdge(375, 285, 375, 350, 1);
+                createEdge(475, 190, 475, 250, 1);
+                createEdge(575, 285, 575, 350, 1);
+                createEdge(725, 285, 725, 350, 1);
+                createEdge(280, 165, 195, 150, 1);
+                createEdge(670, 165, 705, 150, 1);
+                
+                // Highlight repeated calculations
+                baseCase1.classList.add('repeated');
+                baseCase4.classList.add('repeated');
+                baseCase2.classList.add('repeated');
+                baseCase5.classList.add('repeated');
+                baseCase6.classList.add('repeated');
+                baseCase7.classList.add('repeated');
+            },
+            
+            // Step 6: Calculate C(2) values
+            function() {
+                clearContainer();
+                const rootNode = createNode('C(3)', 475, 50, nodeColors.main, 60, 1);
+                
+                const node1 = createNode('1×2', 300, 150, nodeColors.secondary, 80, 1);
+                const node2 = createNode('1×1', 475, 150, nodeColors.secondary, 80, 1);
+                const node3 = createNode('2×1', 650, 150, nodeColors.secondary, 80, 1);
+                
+                createEdge(505, 80, 340, 150, 1);
+                createEdge(505, 80, 515, 150, 1);
+                createEdge(505, 80, 690, 150, 1);
+                
+                // Add C(2) calculation
+                const c2calc1 = createNode('C(2)=2', 300, 250, nodeColors.result, 70, 1);
+                const c2calc2 = createNode('C(2)=2', 650, 250, nodeColors.result, 70, 1);
+                
+                createEdge(300, 190, 300, 250, 1);
+                createEdge(650, 190, 650, 250, 1);
+                
+                // Show C(1) and C(0) values
+                const baseCase3 = createNode('C(1)=1', 475, 250, nodeColors.result, 60, 1);
+                const baseCase6 = createNode('C(0)=1', 175, 150, nodeColors.result, 60, 1);
+                const baseCase7 = createNode('C(0)=1', 775, 150, nodeColors.result, 60, 1);
+                
+                createEdge(475, 190, 475, 250, 1);
+                createEdge(280, 165, 205, 150, 1);
+                createEdge(670, 165, 755, 150, 1);
+            },
+            
+            // Step 7: Calculate final C(3) value
+            function() {
+                clearContainer();
+                const rootNode = createNode('C(3)=5', 475, 50, nodeColors.main, 70, 1);
+                
+                const node1 = createNode('1×2=2', 300, 150, nodeColors.secondary, 80, 1);
+                const node2 = createNode('1×1=1', 475, 150, nodeColors.secondary, 80, 1);
+                const node3 = createNode('2×1=2', 650, 150, nodeColors.secondary, 80, 1);
+                
+                createEdge(505, 80, 340, 150, 1);
+                createEdge(505, 80, 515, 150, 1);
+                createEdge(505, 80, 690, 150, 1);
+                
+                // Show final calculation
+                const finalCalc = createNode('2+1+2=5', 475, 250, nodeColors.result, 80, 1);
+                
+                createEdge(340, 190, 475, 250, 1);
+                createEdge(515, 190, 475, 250, 1);
+                createEdge(690, 190, 475, 250, 1);
+            }
+        ];
+        
+        // Event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                animationSteps[currentStep]();
+                updateUI();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                animationSteps[currentStep]();
+                updateUI();
+            }
+        });
+        
+        // Initialize
+        updateUI();
+        animationSteps[currentStep]();
+    </script>
+</body>
+</html>
