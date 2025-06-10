@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Representation of Catalan Numbers</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 20px auto;
+            text-align: center;
+        }
+        h1 {
+            color: #000000;
+        }
+        .description {
+            color: #000000;
+            margin-bottom: 20px;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .catalan-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            min-height: 400px;
+        }
+        .catalan-number {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #FF4800;
+        }
+        .visual-area {
+            width: 100%;
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .parenthesis-container, .tree-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .parenthesis {
+            font-size: 18px;
+            padding: 10px;
+            background-color: #FD9F78;
+            border-radius: 5px;
+            color: #000000;
+        }
+        .tree-svg {
+            margin: 10px;
+            border: 2px solid #FD9F78;
+            border-radius: 5px;
+            padding: 5px;
+        }
+        .toggle-view {
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            background-color: #000000;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .toggle-view:hover {
+            background-color: #333333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Visual Representation of Catalan Numbers</h1>
+        <p class="description">
+            Catalan numbers are a sequence of positive integers that appear in various counting problems, often involving recursively-defined objects.
+        </p>
+        <button class="toggle-view" id="toggle-view">Switch to Binary Trees</button>
+        
+        <div class="catalan-display">
+            <div class="catalan-number" id="catalan-number">Catalan Number C0 = 1</div>
+            <div class="visual-area" id="visual-area"></div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prev-button" disabled>Previous</button>
+            <button class="nav-button" id="next-button">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const catalans = [1, 1, 2, 5, 14];
+        let currentIndex = 0;
+        let showParentheses = true;
+
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+        const catalanNumber = document.getElementById('catalan-number');
+        const visualArea = document.getElementById('visual-area');
+        const toggleViewButton = document.getElementById('toggle-view');
+
+        function updateButtons() {
+            prevButton.disabled = currentIndex === 0;
+            nextButton.disabled = currentIndex === catalans.length - 1;
+        }
+
+        function showParenthesisRepresentation(n) {
+            visualArea.innerHTML = '';
+            const parenthesisContainer = document.createElement('div');
+            parenthesisContainer.className = 'parenthesis-container';
+            
+            // Generate all valid parentheses for Catalan number n
+            const combinations = [];
+            
+            if (n === 0) {
+                combinations.push(""); // Empty string for C0
+            } else if (n === 1) {
+                combinations.push("()"); // Only one combination for C1
+            } else if (n === 2) {
+                combinations.push("(())", "()()"); // Two combinations for C2
+            } else if (n === 3) {
+                combinations.push("((()))", "(()())", "(())()", "()(())", "()()()"); // Five combinations for C3
+            } else if (n === 4) {
+                combinations.push("(((())))", "((()()))", "((())())", "((()))()", "(()(()))", 
+                                 "(()()())", "(())(())", "(())()()", "()(((())))", "()((()))", 
+                                 "()(()())", "()(())()", "()()(())", "()()()()");
+            }
+            
+            combinations.forEach(combo => {
+                const parenthesisElement = document.createElement('div');
+                parenthesisElement.className = 'parenthesis';
+                parenthesisElement.textContent = combo;
+                parenthesisContainer.appendChild(parenthesisElement);
+            });
+            
+            visualArea.appendChild(parenthesisContainer);
+        }
+
+        function showBinaryTreeRepresentation(n) {
+            visualArea.innerHTML = '';
+            const treeContainer = document.createElement('div');
+            treeContainer.className = 'tree-container';
+            
+            // Generate binary trees based on Catalan number
+            if (n === 0) {
+                // Single node for C0
+                const svg = createSvg(100, 100);
+                svg.innerHTML = `<circle cx="50" cy="50" r="10" fill="#FF4800" />`;
+                treeContainer.appendChild(svg);
+            } else if (n === 1) {
+                // One binary tree for C1
+                const svg = createSvg(100, 150);
+                svg.innerHTML = `
+                    <circle cx="50" cy="30" r="10" fill="#FF4800" />
+                    <circle cx="20" cy="80" r="10" fill="#FF4800" />
+                    <circle cx="80" cy="80" r="10" fill="#FF4800" />
+                    <line x1="50" y1="40" x2="20" y2="70" stroke="#000000" stroke-width="2" />
+                    <line x1="50" y1="40" x2="80" y2="70" stroke="#000000" stroke-width="2" />
+                `;
+                treeContainer.appendChild(svg);
+            } else if (n === 2) {
+                // Two binary trees for C2
+                const svg1 = createSvg(150, 200);
+                svg1.innerHTML = `
+                    <circle cx="75" cy="30" r="10" fill="#FF4800" />
+                    <circle cx="40" cy="80" r="10" fill="#FF4800" />
+                    <circle cx="110" cy="80" r="10" fill="#FF4800" />
+                    <circle cx="20" cy="130" r="10" fill="#FF4800" />
+                    <circle cx="60" cy="130" r="10" fill="#FF4800" />
+                    <line x1="75" y1="40" x2="40" y2="70" stroke="#000000" stroke-width="2" />
+                    <line x1="75" y1="40" x2="110" y2="70" stroke="#000000" stroke-width="2" />
+                    <line x1="40" y1="90" x2="20" y2="120" stroke="#000000" stroke-width="2" />
+                    <line x1="40" y1="90" x2="60" y2="120" stroke="#000000" stroke-width="2" />
+                `;
+                
+                const svg2 = createSvg(150, 200);
+                svg2.innerHTML = `
+                    <circle cx="75" cy="30" r="10" fill="#FF4800" />
+                    <circle cx="40" cy="80" r="10" fill="#FF4800" />
+                    <circle cx="110" cy="80" r="10" fill="#FF4800" />
+                    <circle cx="90" cy="130" r="10" fill="#FF4800" />
+                    <circle cx="130" cy="130" r="10" fill="#FF4800" />
+                    <line x1="75" y1="40" x2="40" y2="70" stroke="#000000" stroke-width="2" />
+                    <line x1="75" y1="40" x2="110" y2="70" stroke="#000000" stroke-width="2" />
+                    <line x1="110" y1="90" x2="90" y2="120" stroke="#000000" stroke-width="2" />
+                    <line x1="110" y1="90" x2="130" y2="120" stroke="#000000" stroke-width="2" />
+                `;
+                
+                treeContainer.appendChild(svg1);
+                treeContainer.appendChild(svg2);
+            } else if (n === 3) {
+                // For C3 (5 trees), show simplified representations
+                for (let i = 0; i < 5; i++) {
+                    const svg = createSvg(120, 150);
+                    let treeStructure;
+                    
+                    switch(i) {
+                        case 0: // Linear tree (all right)
+                            treeStructure = `
+                                <circle cx="60" cy="20" r="8" fill="#FF4800" />
+                                <circle cx="40" cy="50" r="8" fill="#FF4800" />
+                                <circle cx="80" cy="50" r="8" fill="#FF4800" />
+                                <circle cx="60" cy="80" r="8" fill="#FF4800" />
+                                <circle cx="100" cy="80" r="8" fill="#FF4800" />
+                                <circle cx="80" cy="110" r="8" fill="#FF4800" />
+                                <circle cx="120" cy="110" r="8" fill="#FF4800" />
+                                <line x1="60" y1="28" x2="40" y2="42" stroke="#000000" stroke-width="2" />
+                                <line x1="60" y1="28" x2="80" y2="42" stroke="#000000" stroke-width="2" />
+                                <line x1="80" y1="58" x2="60" y2="72" stroke="#000000" stroke-width="2" />
+                                <line x1="80" y1="58" x2="100" y2="72" stroke="#000000" stroke-width="2" />
+                                <line x1="100" y1="88" x2="80" y2="102" stroke="#000000" stroke-width="2" />
+                                <line x1="100" y1="88" x2="120" y2="102" stroke="#000000" stroke-width="2" />
+                            `;
+                            break;
+                        case 1: // Balanced tree
+                            treeStructure = `
+                                <circle cx="60" cy="20" r="8" fill="#FF4800" />
+                                <circle cx="30" cy="50" r="8" fill="#FF4800" />
+                                <circle cx="90" cy="50" r="8" fill="#FF4800" />
+                                <circle cx="15" cy="80" r="8" fill="#FF4800" />
+                                <circle cx="45" cy="80" r="8" fill="#FF4800" />
+                                <circle cx="75" cy="80" r="8" fill="#FF4800" />
+                                <circle cx="105" cy="80" r="8" fill="#FF4800" />
+                                <line x1="60" y1="28" x2="30" y2="42" stroke="#000000" stroke-width="2" />
+                                <line x1="60" y1="28" x2="90" y2="42" stroke="#000000" stroke-width="2" />
+                                <line x1="30" y1="58" x2="15" y2="72" stroke="#000000" stroke-width="2" />
+                                <line x1="30" y1="58" x2="45" y2="72" stroke="#000000" stroke-width="2" />
+                                <line x1="90" y1="58" x2="75" y2="72" stroke="#000000" stroke-width="2" />
+                                <line x1="90" y1="58" x2="105" y2="72" stroke="#000000" stroke-width="2" />
+                            `;
+                            break;
+                        case 2: // Left-heavy tree
+                            treeStructure = `
+                                <circle cx="60" cy="20" r="8" fill="#FF4800" />
+                                <circle cx="30" cy="50" r="8" fill="#FF4800" />
+                                <circle cx="90" cy="50" r="8" fill="#FF4800" />
+                                <circle cx="15" cy="80" r="8" fill="#FF4800" />
+                                <circle cx="45" cy="80" r="8" fill="#FF4800" />
+                                <circle cx="30" cy="110" r="8" fill="#FF4800" />
+                                <circle cx="60" cy="110" r="8" fill="#FF4800" />
+                                <line x1="60" y1="28" x2="30" y2="42" stroke="#000000" stroke-width="2" />
+                                <line x1="60" y1="28" x2="90" y2="42" stroke="#000000" stroke-width="2" />
+                                <line x1="30" y1="58" x2="15" y2="72" stroke="#000000" stroke-width="2" />
+                                <line x1="30" y1="58" x2="45" y2="72" stroke="#000000" stroke-width="2" />
+                                <line x1="45" y1="88" x2="30" y2="102" stroke="#000000" stroke-width="2" />
+                                <line x1="45" y1="88" x2="60" y2="102" stroke="#000000" stroke-width="2" />
+                            `;
+                            break;
+                        case 3: // Right-heavy tree
+                            treeStructure = `
+                                <circle cx="60" cy="20" r="8" fill="#FF4800" />
+                                <circle cx="30" cy="50" r="8" fill="#FF4800" />
+                                <circle cx="90" cy="50" r="8" fill="#FF4800" />
+                                <circle cx="75" cy="80" r="8" fill="#FF4800" />
+                                <circle cx="105" cy="80" r="8" fill="#FF4800" />
+                                <circle cx="90" cy="110" r="8" fill="#FF4800" />
+                                <circle cx="120" cy="110" r="8" fill="#FF4800" />
+                                <line x1="60" y1="28" x2="30" y2="42" stroke="#000000" stroke-width="2" />
+                                <line x1="60" y1="28" x2="90" y2="42" stroke="#000000" stroke-width="2" />
+                                <line x1="90" y1="58" x2="75" y2="72" stroke="#000000" stroke-width="2" />
+                                <line x1="90" y1="58" x2="105" y2="72" stroke="#000000" stroke-width="2" />
+                                <line x1="105" y1="88" x2="90" y2="102" stroke="#000000" stroke-width="2" />
+                                <line x1="105" y1="88" x2="120" y2="102" stroke="#000000" stroke-width="2" />
+                            `;
+                            break;
+                        case 4: // Linear tree (all left)
+                            treeStructure = `
+                                <circle cx="60" cy="20" r="8" fill="#FF4800" />
+                                <circle cx="40" cy="50" r="8" fill="#FF4800" />
+                                <circle cx="80" cy="50" r="8" fill="#FF4800" />
+                                <circle cx="20" cy="80" r="8" fill="#FF4800" />
+                                <circle cx="60" cy="80" r="8" fill="#FF4800" />
+                                <circle cx="0" cy="110" r="8" fill="#FF4800" />
+                                <circle cx="40" cy="110" r="8" fill="#FF4800" />
+                                <line x1="60" y1="28" x2="40" y2="42" stroke="#000000" stroke-width="2" />
+                                <line x1="60" y1="28" x2="80" y2="42" stroke="#000000" stroke-width="2" />
+                                <line x1="40" y1="58" x2="20" y2="72" stroke="#000000" stroke-width="2" />
+                                <line x1="40" y1="58" x2="60" y2="72" stroke="#000000" stroke-width="2" />
+                                <line x1="20" y1="88" x2="0" y2="102" stroke="#000000" stroke-width="2" />
+                                <line x1="20" y1="88" x2="40" y2="102" stroke="#000000" stroke-width="2" />
+                            `;
+                            break;
+                    }
+                    
+                    svg.innerHTML = treeStructure;
+                    treeContainer.appendChild(svg);
+                }
+            } else if (n === 4) {
+                // For C4 (14 trees), show a simplified representation
+                const infoDiv = document.createElement('div');
+                infoDiv.style.textAlign = 'center';
+                infoDiv.style.marginBottom = '20px';
+                infoDiv.style.color = '#FF4800';
+                infoDiv.style.fontWeight = 'bold';
+                infoDiv.textContent = "There are 14 different binary trees for C4";
+                visualArea.appendChild(infoDiv);
+                
+                // Just show a few examples
+                for (let i = 0; i < 6; i++) {
+                    const svg = createSvg(120, 150);
+                    let treeStructure;
+                    
+                    // Different sample tree shapes
+                    if (i % 2 === 0) {
+                        treeStructure = `
+                            <circle cx="60" cy="20" r="8" fill="#FF4800" />
+                            <circle cx="30" cy="50" r="8" fill="#FF4800" />
+                            <circle cx="90" cy="50" r="8" fill="#FF4800" />
+                            <circle cx="15" cy="80" r="8" fill="#FF4800" />
+                            <circle cx="45" cy="80" r="8" fill="#FF4800" />
+                            <circle cx="75" cy="80" r="8" fill="#FF4800" />
+                            <circle cx="105" cy="80" r="8" fill="#FF4800" />
+                            <circle cx="60" cy="110" r="8" fill="#FF4800" />
+                            <circle cx="90" cy="110" r="8" fill="#FF4800" />
+                            <line x1="60" y1="28" x2="30" y2="42" stroke="#000000" stroke-width="2" />
+                            <line x1="60" y1="28" x2="90" y2="42" stroke="#000000" stroke-width="2" />
+                            <line x1="30" y1="58" x2="15" y2="72" stroke="#000000" stroke-width="2" />
+                            <line x1="30" y1="58" x2="45" y2="72" stroke="#000000" stroke-width="2" />
+                            <line x1="90" y1="58" x2="75" y2="72" stroke="#000000" stroke-width="2" />
+                            <line x1="90" y1="58" x2="105" y2="72" stroke="#000000" stroke-width="2" />
+                            <line x1="45" y1="88" x2="60" y2="102" stroke="#000000" stroke-width="2" />
+                            <line x1="75" y1="88" x2="90" y2="102" stroke="#000000" stroke-width="2" />
+                        `;
+                    } else {
+                        treeStructure = `
+                            <circle cx="60" cy="20" r="8" fill="#FF4800" />
+                            <circle cx="30" cy="50" r="8" fill="#FF4800" />
+                            <circle cx="90" cy="50" r="8" fill="#FF4800" />
+                            <circle cx="15" cy="80" r="8" fill="#FF4800" />
+                            <circle cx="105" cy="80" r="8" fill="#FF4800" />
+                            <circle cx="5" cy="110" r="8" fill="#FF4800" />
+                            <circle cx="25" cy="110" r="8" fill="#FF4800" />
+                            <circle cx="95" cy="110" r="8" fill="#FF4800" />
+                            <circle cx="115" cy="110" r="8" fill="#FF4800" />
+                            <line x1="60" y1="28" x2="30" y2="42" stroke="#000000" stroke-width="2" />
+                            <line x1="60" y1="28" x2="90" y2="42" stroke="#000000" stroke-width="2" />
+                            <line x1="30" y1="58" x2="15" y2="72" stroke="#000000" stroke-width="2" />
+                            <line x1="90" y1="58" x2="105" y2="72" stroke="#000000" stroke-width="2" />
+                            <line x1="15" y1="88" x2="5" y2="102" stroke="#000000" stroke-width="2" />
+                            <line x1="15" y1="88" x2="25" y2="102" stroke="#000000" stroke-width="2" />
+                            <line x1="105" y1="88" x2="95" y2="102" stroke="#000000" stroke-width="2" />
+                            <line x1="105" y1="88" x2="115" y2="102" stroke="#000000" stroke-width="2" />
+                        `;
+                    }
+                    
+                    svg.innerHTML = treeStructure;
+                    treeContainer.appendChild(svg);
+                }
+                
+                const moreInfoDiv = document.createElement('div');
+                moreInfoDiv.style.textAlign = 'center';
+                moreInfoDiv.style.marginTop = '20px';
+                moreInfoDiv.style.color = '#000000';
+                moreInfoDiv.textContent = "(Showing 6 examples out of 14 possible trees)";
+                treeContainer.appendChild(moreInfoDiv);
+            }
+            
+            visualArea.appendChild(treeContainer);
+        }
+        
+        function createSvg(width, height) {
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", width);
+            svg.setAttribute("height", height);
+            svg.setAttribute("class", "tree-svg");
+            return svg;
+        }
+
+        function updateDisplay() {
+            const n = currentIndex;
+            catalanNumber.textContent = `Catalan Number C${n} = ${catalans[n]}`;
+            
+            if (showParentheses) {
+                showParenthesisRepresentation(n);
+            } else {
+                showBinaryTreeRepresentation(n);
+            }
+            
+            updateButtons();
+        }
+
+        prevButton.addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateDisplay();
+            }
+        });
+
+        nextButton.addEventListener('click', () => {
+            if (currentIndex < catalans.length - 1) {
+                currentIndex++;
+                updateDisplay();
+            }
+        });
+        
+        toggleViewButton.addEventListener('click', () => {
+            showParentheses = !showParentheses;
+            toggleViewButton.textContent = showParentheses ? 
+                "Switch to Binary Trees" : 
+                "Switch to Parentheses";
+            updateDisplay();
+        });
+
+        // Initial display
+        updateDisplay();
+    </script>
+</body>
+</html>
