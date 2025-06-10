@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binomial Coefficient Calculation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 30px;
+        }
+        
+        .method {
+            width: 45%;
+            padding: 20px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            position: relative;
+        }
+        
+        .method h2 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .calculation-area {
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+        }
+        
+        .formula {
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .step {
+            margin: 10px 0;
+            opacity: 0;
+            transition: opacity 0.5s;
+            text-align: center;
+            width: 100%;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .highlight {
+            color: #FF4800;
+            font-weight: bold;
+        }
+
+        .explanation {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 18px;
+            max-width: 800px;
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <h1>Optimized Binomial Coefficient Calculation: C(10,3)</h1>
+    
+    <div class="container">
+        <div class="method">
+            <h2>Brute Force Method</h2>
+            <div class="formula">C(10,3) = 10! / (3! × (10-3)!)</div>
+            <div class="calculation-area" id="bruteForceArea">
+                <div class="step">C(10,3) = 10! / (3! × 7!)</div>
+                <div class="step">= (10 × 9 × 8 × 7 × 6 × 5 × 4 × 3 × 2 × 1) / ((3 × 2 × 1) × (7 × 6 × 5 × 4 × 3 × 2 × 1))</div>
+                <div class="step">= 3,628,800 / (6 × 5,040)</div>
+                <div class="step">= 3,628,800 / 30,240</div>
+                <div class="step">= 120</div>
+            </div>
+        </div>
+        
+        <div class="method">
+            <h2>Optimized Method</h2>
+            <div class="formula">C(10,3) = (10 × 9 × 8) / (3 × 2 × 1)</div>
+            <div class="calculation-area" id="optimizedArea">
+                <div class="step">Step 1: Calculate <span class="highlight">10 × 9</span> = 90</div>
+                <div class="step">Step 2: Calculate <span class="highlight">90 × 8</span> = 720</div>
+                <div class="step">Step 3: Calculate <span class="highlight">3 × 2</span> = 6</div>
+                <div class="step">Step 4: Calculate <span class="highlight">6 × 1</span> = 6</div>
+                <div class="step">Step 5: Divide <span class="highlight">720 ÷ 6</span> = 120</div>
+                <div class="step">C(10,3) = 120</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="explanation" id="explanation">
+        Binomial Coefficient C(n,k) represents the number of ways to choose k items from a set of n items. There are two approaches to calculate it:
+    </div>
+    
+    <div class="navigation">
+        <button id="prevBtn" disabled>Previous</button>
+        <button id="nextBtn">Next</button>
+    </div>
+
+    <script>
+        const bruteForceSteps = document.querySelectorAll('#bruteForceArea .step');
+        const optimizedSteps = document.querySelectorAll('#optimizedArea .step');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const explanation = document.getElementById('explanation');
+        
+        let currentStep = -1;
+        const totalSteps = 6;
+        
+        const explanations = [
+            "Binomial Coefficient C(n,k) represents the number of ways to choose k items from a set of n items. There are two approaches to calculate it:",
+            "The brute force method uses the full factorial formula: C(n,k) = n! / (k! × (n-k)!). For C(10,3), we need to calculate 10!, 3!, and 7!",
+            "The brute force method requires calculating large factorials, which can be computationally expensive. Notice the many multiplications needed.",
+            "Many terms in the numerator and denominator cancel out, leading to unnecessary calculations in the brute force method.",
+            "The optimized method recognizes that we only need the first k terms from n! in the numerator, divided by k!",
+            "The optimized method is much more efficient as it performs fewer calculations and avoids dealing with very large numbers.",
+            "Both methods give the same answer: C(10,3) = 120, but the optimized method is clearly more efficient."
+        ];
+
+        function updateStep() {
+            // Hide all steps
+            bruteForceSteps.forEach(step => step.style.opacity = '0');
+            optimizedSteps.forEach(step => step.style.opacity = '0');
+            
+            // Show steps up to current step
+            for (let i = 0; i <= currentStep; i++) {
+                if (i < bruteForceSteps.length) {
+                    bruteForceSteps[i].style.opacity = '1';
+                }
+                if (i < optimizedSteps.length) {
+                    optimizedSteps[i].style.opacity = '1';
+                }
+            }
+            
+            // Update explanation
+            explanation.textContent = explanations[currentStep + 1];
+            explanation.style.opacity = '1';
+            
+            // Enable/disable buttons
+            prevBtn.disabled = currentStep < 0;
+            nextBtn.disabled = currentStep >= totalSteps - 1;
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > -1) {
+                currentStep--;
+                updateStep();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateStep();
+            }
+        });
+        
+        // Initialize
+        updateStep();
+    </script>
+</body>
+</html>
