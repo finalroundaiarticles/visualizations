@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LCS Dynamic Programming Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        .dp-table {
+            border-collapse: collapse;
+            margin: 30px auto;
+        }
+        .dp-table td {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            border: 1px solid #000000;
+            position: relative;
+            font-size: 18px;
+            transition: background-color 0.5s;
+        }
+        .dp-table .header {
+            background-color: #FD9F78;
+            font-weight: bold;
+        }
+        .dp-table .highlighted {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .dp-table .arrow {
+            position: absolute;
+            color: #FF4800;
+            font-weight: bold;
+        }
+        .explanation {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px auto;
+            max-width: 600px;
+            color: #000000;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .btn {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #FD9F78;
+        }
+        .btn:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <h1>Longest Common Subsequence (LCS) - Dynamic Programming</h1>
+    
+    <div class="container">
+        <p>Text 1: "abcde", Text 2: "ace"</p>
+        
+        <div class="explanation" id="explanation">
+            Welcome to LCS dynamic programming visualization. We'll fill a table to find the longest common subsequence of "abcde" and "ace".
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="prevBtn" disabled>Previous</button>
+            <button class="btn" id="nextBtn">Next</button>
+        </div>
+
+        <table class="dp-table" id="dpTable"></table>
+    </div>
+
+    <script>
+        // Setup variables
+        const text1 = " abcde"; // Space added to align with 1-indexed DP table
+        const text2 = " ace";   // Space added to align with 1-indexed DP table
+        let currentStep = 0;
+        
+        // Steps for animation
+        const steps = [
+            {
+                desc: "We start with a table where rows represent characters of 'ace' and columns represent 'abcde'. We add an extra row and column for the base case (empty string).",
+                highlights: []
+            },
+            {
+                desc: "First, we initialize the first row and column with 0's. This represents that the LCS of any string with an empty string is 0.",
+                highlights: [{row: 0, col: 0}, {row: 0, col: 1}, {row: 0, col: 2}, {row: 0, col: 3}, {row: 0, col: 4}, {row: 0, col: 5},
+                             {row: 1, col: 0}, {row: 2, col: 0}, {row: 3, col: 0}]
+            }
+        ];
+
+        // Generate the rest of the steps for filling the DP table
+        let stepIndex = 2;
+        for (let i = 1; i <= text2.length - 1; i++) {
+            for (let j = 1; j <= text1.length - 1; j++) {
+                if (text2[i] === text1[j]) {
+                    steps.push({
+                        desc: `At position (${i},${j}), we compare "${text2[i]}" and "${text1[j]}". They match! So we take the value from the diagonal (${i-1},${j-1}) and add 1.`,
+                        highlights: [{row: i, col: j}, {row: i-1, col: j-1}],
+                        match: true
+                    });
+                } else {
+                    steps.push({
+                        desc: `At position (${i},${j}), we compare "${text2[i]}" and "${text1[j]}". They don't match, so we take the maximum of the value above (${i-1},${j}) and to the left (${i},${j-1}).`,
+                        highlights: [{row: i, col: j}, {row: i-1, col: j}, {row: i, col: j-1}],
+                        match: false
+                    });
+                }
+                stepIndex++;
+            }
+        }
+
+        // Final step to show the result
+        steps.push({
+            desc: "The bottom-right cell shows the length of the Longest Common Subsequence. For 'abcde' and 'ace', the LCS length is 3. The LCS is 'ace'.",
+            highlights: [{row: text2.length-1, col: text1.length-1}]
+        });
+
+        // Initialize the table
+        function initTable() {
+            const table = document.getElementById('dpTable');
+            table.innerHTML = '';
+
+            // Create header row
+            const headerRow = document.createElement('tr');
+            
+            // Empty corner cell
+            const cornerCell = document.createElement('td');
+            cornerCell.className = 'header';
+            cornerCell.textContent = '';
+            headerRow.appendChild(cornerCell);
+            
+            // Text1 characters as headers
+            for (let j = 0; j < text1.length; j++) {
+                const headerCell = document.createElement('td');
+                headerCell.className = 'header';
+                headerCell.textContent = text1[j] === ' ' ? 'ε' : text1[j];
+                headerRow.appendChild(headerCell);
+            }
+            
+            table.appendChild(headerRow);
+            
+            // Create data rows
+            for (let i = 0; i < text2.length; i++) {
+                const row = document.createElement('tr');
+                
+                // Text2 characters as row headers
+                const rowHeaderCell = document.createElement('td');
+                rowHeaderCell.className = 'header';
+                rowHeaderCell.textContent = text2[i] === ' ' ? 'ε' : text2[i];
+                row.appendChild(rowHeaderCell);
+                
+                // Cells for DP values
+                for (let j = 0; j < text1.length; j++) {
+                    const cell = document.createElement('td');
+                    cell.id = `cell-${i}-${j}`;
+                    cell.textContent = ''; // Will be filled during animation
+                    row.appendChild(cell);
+                }
+                
+                table.appendChild(row);
+            }
+        }
+
+        // Update the table for the current step
+        function updateTable() {
+            // Clear all highlights
+            const cells = document.querySelectorAll('.dp-table td');
+            cells.forEach(cell => {
+                cell.classList.remove('highlighted');
+            });
+
+            // Fill in the DP table values based on current step
+            const dpTable = calculateDPTableUpToStep(currentStep);
+            
+            for (let i = 0; i < text2.length; i++) {
+                for (let j = 0; j < text1.length; j++) {
+                    const cell = document.getElementById(`cell-${i}-${j}`);
+                    if (dpTable[i][j] !== undefined) {
+                        cell.textContent = dpTable[i][j];
+                    } else {
+                        cell.textContent = '';
+                    }
+                }
+            }
+
+            // Apply highlights for current step
+            if (currentStep < steps.length) {
+                const step = steps[currentStep];
+                step.highlights.forEach(pos => {
+                    const cell = document.getElementById(`cell-${pos.row}-${pos.col}`);
+                    if (cell) {
+                        cell.classList.add('highlighted');
+                    }
+                });
+
+                // Update explanation
+                document.getElementById('explanation').textContent = step.desc;
+            }
+
+            // Update buttons
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === steps.length - 1;
+        }
+
+        // Calculate the DP table values up to the current step
+        function calculateDPTableUpToStep(stepIndex) {
+            const dp = Array(text2.length).fill().map(() => Array(text1.length).fill(undefined));
+            
+            // Base case initialization
+            if (stepIndex >= 1) {
+                for (let j = 0; j < text1.length; j++) {
+                    dp[0][j] = 0;
+                }
+                for (let i = 0; i < text2.length; i++) {
+                    dp[i][0] = 0;
+                }
+            }
+            
+            // Fill in values based on steps completed
+            let currentFillStep = 2; // Starting from step 2 (after initialization)
+            
+            for (let i = 1; i < text2.length && currentFillStep <= stepIndex; i++) {
+                for (let j = 1; j < text1.length && currentFillStep <= stepIndex; j++) {
+                    if (text2[i] === text1[j]) {
+                        dp[i][j] = dp[i-1][j-1] + 1;
+                    } else {
+                        dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
+                    }
+                    currentFillStep++;
+                }
+            }
+            
+            return dp;
+        }
+
+        // Initialize the page
+        initTable();
+        updateTable();
+
+        // Event listeners for buttons
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateTable();
+            }
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateTable();
+            }
+        });
+    </script>
+</body>
+</html>
