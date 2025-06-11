@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LCS 2D DP Table Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            color: #000000;
+            margin-bottom: 30px;
+        }
+        .dp-table {
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        .dp-table td {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            border: 1px solid #000000;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        .header-cell {
+            background-color: #FD9F78;
+            color: #000000;
+        }
+        .lcs-cell {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .explanation {
+            margin: 20px auto;
+            max-width: 700px;
+            text-align: left;
+            padding: 20px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 300px;
+            margin: 20px auto;
+        }
+        .nav-btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            margin: 10px 0;
+            font-weight: bold;
+            color: #000000;
+        }
+        .highlight {
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Longest Common Subsequence (LCS) Visualization</h1>
+        
+        <div class="step-indicator">Step <span id="current-step">1</span> of <span id="total-steps">6</span></div>
+        
+        <table class="dp-table" id="dp-table"></table>
+        
+        <div class="explanation" id="explanation"></div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
+            <button class="nav-btn" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const string1 = " ABCDGH"; // Space added to align with 1-indexed DP table
+        const string2 = " AEDFHR"; // Space added to align with 1-indexed DP table
+        
+        // Create the DP table
+        let dpTable = Array(string2.length).fill().map(() => Array(string1.length).fill(0));
+        
+        // Compute the LCS table
+        for (let i = 1; i < string2.length; i++) {
+            for (let j = 1; j < string1.length; j++) {
+                if (string2[i] === string1[j]) {
+                    dpTable[i][j] = dpTable[i-1][j-1] + 1;
+                } else {
+                    dpTable[i][j] = Math.max(dpTable[i-1][j], dpTable[i][j-1]);
+                }
+            }
+        }
+        
+        // Trace back to find the LCS
+        function findLCS() {
+            let i = string2.length - 1;
+            let j = string1.length - 1;
+            let lcsPath = [];
+            
+            while (i > 0 && j > 0) {
+                if (string2[i] === string1[j]) {
+                    lcsPath.push([i, j]);
+                    i--;
+                    j--;
+                } else if (dpTable[i-1][j] >= dpTable[i][j-1]) {
+                    i--;
+                } else {
+                    j--;
+                }
+            }
+            
+            return lcsPath.reverse();
+        }
+        
+        const lcsPath = findLCS();
+        
+        // Steps for visualization
+        const steps = [
+            {
+                title: "Initial Setup",
+                desc: "This is a 2D Dynamic Programming table for finding the Longest Common Subsequence (LCS) between two strings: 'ABCDGH' and 'AEDFHR'. The table is initialized with zeros in the first row and column. Each cell will eventually contain the length of the LCS for the substrings considered up to that point."
+            },
+            {
+                title: "Filling the Table",
+                desc: "We fill the table cell by cell. For each position (i,j), if the characters match, we take the value at the diagonal (i-1, j-1) and add 1. If they don't match, we take the maximum of the values to the left (i, j-1) and above (i-1, j)."
+            },
+            {
+                title: "Completed DP Table",
+                desc: "The table is now filled completely. The bottom-right cell contains the length of the LCS, which is 3. This means the longest common subsequence between 'ABCDGH' and 'AEDFHR' has 3 characters."
+            },
+            {
+                title: "Tracing Back - Step 1",
+                desc: "To find the actual LCS, we trace back from the bottom-right cell. When we find a cell where the characters match (diagonal move), that character is part of the LCS. The first character in our LCS is 'A'."
+            },
+            {
+                title: "Tracing Back - Step 2",
+                desc: "Continuing the trace back, we find the second character in our LCS is 'D'."
+            },
+            {
+                title: "Tracing Back - Step 3",
+                desc: "Finally, the third character in our LCS is 'H'. So the Longest Common Subsequence between 'ABCDGH' and 'AEDFHR' is 'ADH'."
+            }
+        ];
+        
+        let currentStep = 0;
+        const totalSteps = steps.length;
+        
+        // Initialize the table
+        function initTable() {
+            const table = document.getElementById('dp-table');
+            table.innerHTML = '';
+            
+            // Create the header row
+            const headerRow = document.createElement('tr');
+            const emptyCell = document.createElement('td');
+            emptyCell.classList.add('header-cell');
+            headerRow.appendChild(emptyCell);
+            
+            for (let j = 0; j < string1.length; j++) {
+                const cell = document.createElement('td');
+                cell.classList.add('header-cell');
+                cell.textContent = string1[j] || '';
+                headerRow.appendChild(cell);
+            }
+            table.appendChild(headerRow);
+            
+            // Create the rows
+            for (let i = 0; i < string2.length; i++) {
+                const row = document.createElement('tr');
+                
+                // First cell is the character from string2
+                const firstCell = document.createElement('td');
+                firstCell.classList.add('header-cell');
+                firstCell.textContent = string2[i] || '';
+                row.appendChild(firstCell);
+                
+                // Remaining cells are from the DP table
+                for (let j = 0; j < string1.length; j++) {
+                    const cell = document.createElement('td');
+                    cell.id = `cell-${i}-${j}`;
+                    cell.textContent = '0';
+                    row.appendChild(cell);
+                }
+                table.appendChild(row);
+            }
+        }
+        
+        // Update table for the current step
+        function updateTable() {
+            // Reset all cells
+            document.querySelectorAll('.dp-table td:not(.header-cell)').forEach(cell => {
+                cell.classList.remove('lcs-cell', 'highlight');
+                cell.textContent = '0';
+            });
+            
+            if (currentStep >= 1) {
+                // Fill the table progressively
+                for (let i = 0; i < string2.length; i++) {
+                    for (let j = 0; j < string1.length; j++) {
+                        const cell = document.getElementById(`cell-${i}-${j}`);
+                        if (cell) {
+                            cell.textContent = dpTable[i][j];
+                        }
+                    }
+                }
+            }
+            
+            if (currentStep >= 3) {
+                // Highlight LCS cells based on step
+                const highlightIndex = Math.min(currentStep - 3, lcsPath.length - 1);
+                for (let i = 0; i <= highlightIndex; i++) {
+                    const [row, col] = lcsPath[i];
+                    const cell = document.getElementById(`cell-${row}-${col}`);
+                    if (cell) {
+                        cell.classList.add('lcs-cell');
+                        if (i === highlightIndex) {
+                            cell.classList.add('highlight');
+                        }
+                    }
+                }
+            }
+            
+            // Update explanation
+            document.getElementById('explanation').textContent = steps[currentStep].desc;
+            
+            // Update step indicator
+            document.getElementById('current-step').textContent = currentStep + 1;
+            document.getElementById('total-steps').textContent = totalSteps;
+            
+            // Update button states
+            document.getElementById('prev-btn').disabled = (currentStep === 0);
+            document.getElementById('next-btn').disabled = (currentStep === totalSteps - 1);
+        }
+        
+        // Event listeners for navigation
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateTable();
+            }
+        });
+        
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateTable();
+            }
+        });
+        
+        // Initialize
+        initTable();
+        updateTable();
+    </script>
+</body>
+</html>
