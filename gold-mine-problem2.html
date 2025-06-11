@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Programming Table Evolution</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .explanation {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #000000;
+        }
+        
+        .grid-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        
+        .dp-table {
+            border-collapse: collapse;
+        }
+        
+        .dp-table td {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #000000;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            position: relative;
+        }
+        
+        .dp-table .original {
+            background-color: #FD9F78;
+        }
+        
+        .dp-table .current {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .dp-table .computed {
+            background-color: rgba(253, 159, 120, 0.3);
+        }
+        
+        .dp-table .not-computed {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        .arrow {
+            position: absolute;
+            color: #FF4800;
+            font-weight: bold;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-counter {
+            text-align: center;
+            font-size: 18px;
+            margin-top: 10px;
+            color: #FF4800;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dynamic Programming Table Evolution</h1>
+        <div class="explanation" id="explanation">
+            Welcome to the step-by-step visualization of how a Dynamic Programming table is filled for a 3x4 grid gold collection problem. We start from the rightmost column and work backwards to determine the maximum gold collectable from each position.
+        </div>
+        
+        <div class="grid-container">
+            <table class="dp-table" id="dpTable"></table>
+        </div>
+        
+        <div class="step-counter" id="stepCounter">Step 0 of 12</div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Initial gold values in the grid
+        const originalGrid = [
+            [1, 3, 1, 5],
+            [2, 2, 4, 1],
+            [5, 0, 2, 3]
+        ];
+        
+        // DP table that will be filled
+        let dpTable = [
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0]
+        ];
+        
+        // Steps to show the evolution of the DP table
+        const steps = [
+            { // Step 0: Initial grid
+                message: "This is our initial 3x4 grid with gold values. We will use dynamic programming to find the maximum gold we can collect starting from any position and moving only right, up-right, or down-right.",
+                current: null,
+                computed: []
+            },
+            { // Step 1: Rightmost column
+                message: "First, we initialize the rightmost column of our DP table with the original values from the grid, as these are the ending positions.",
+                current: {row: 0, col: 3},
+                computed: [{row: 0, col: 3}]
+            },
+            { // Step 2
+                message: "We continue initializing the rightmost column with the original values.",
+                current: {row: 1, col: 3},
+                computed: [{row: 0, col: 3}, {row: 1, col: 3}]
+            },
+            { // Step 3
+                message: "We finish initializing the rightmost column with the original values.",
+                current: {row: 2, col: 3},
+                computed: [{row: 0, col: 3}, {row: 1, col: 3}, {row: 2, col: 3}]
+            },
+            { // Step 4: Start filling the DP table
+                message: "Now we start filling the DP table from right to left. For position (0,2), we can move right, which gives us 1 (current) + 5 (right) = 6.",
+                current: {row: 0, col: 2},
+                computed: [{row: 0, col: 3}, {row: 1, col: 3}, {row: 2, col: 3}, {row: 0, col: 2}]
+            },
+            { // Step 5
+                message: "For position (1,2), we can move right, up-right, or down-right. The maximum is 4 (current) + max(1, 5, 3) = 4 + 5 = 9.",
+                current: {row: 1, col: 2},
+                computed: [{row: 0, col: 3}, {row: 1, col: 3}, {row: 2, col: 3}, {row: 0, col: 2}, {row: 1, col: 2}]
+            },
+            { // Step 6
+                message: "For position (2,2), we can move right or up-right. The maximum is 2 (current) + max(3, 1) = 2 + 3 = 5.",
+                current: {row: 2, col: 2},
+                computed: [{row: 0, col: 3}, {row: 1, col: 3}, {row: 2, col: 3}, {row: 0, col: 2}, {row: 1, col: 2}, {row: 2, col: 2}]
+            },
+            { // Step 7
+                message: "For position (0,1), we can move right, down-right. The maximum is 3 (current) + max(6, 9) = 3 + 9 = 12.",
+                current: {row: 0, col: 1},
+                computed: [{row: 0, col: 3}, {row: 1, col: 3}, {row: 2, col: 3}, {row: 0, col: 2}, {row: 1, col: 2}, {row: 2, col: 2}, {row: 0, col: 1}]
+            },
+            { // Step 8
+                message: "For position (1,1), we can move right, up-right, or down-right. The maximum is 2 (current) + max(9, 6, 5) = 2 + 9 = 11.",
+                current: {row: 1, col: 1},
+                computed: [{row: 0, col: 3}, {row: 1, col: 3}, {row: 2, col: 3}, {row: 0, col: 2}, {row: 1, col: 2}, {row: 2, col: 2}, {row: 0, col: 1}, {row: 1, col: 1}]
+            },
+            { // Step 9
+                message: "For position (2,1), we can move right, up-right. The maximum is 0 (current) + max(5, 9) = 0 + 9 = 9.",
+                current: {row: 2, col: 1},
+                computed: [{row: 0, col: 3}, {row: 1, col: 3}, {row: 2, col: 3}, {row: 0, col: 2}, {row: 1, col: 2}, {row: 2, col: 2}, {row: 0, col: 1}, {row: 1, col: 1}, {row: 2, col: 1}]
+            },
+            { // Step 10
+                message: "For position (0,0), we can move right, down-right. The maximum is 1 (current) + max(12, 11) = 1 + 12 = 13.",
+                current: {row: 0, col: 0},
+                computed: [{row: 0, col: 3}, {row: 1, col: 3}, {row: 2, col: 3}, {row: 0, col: 2}, {row: 1, col: 2}, {row: 2, col: 2}, {row: 0, col: 1}, {row: 1, col: 1}, {row: 2, col: 1}, {row: 0, col: 0}]
+            },
+            { // Step 11
+                message: "For position (1,0), we can move right, up-right, down-right. The maximum is 2 (current) + max(11, 12, 9) = 2 + 12 = 14.",
+                current: {row: 1, col: 0},
+                computed: [{row: 0, col: 3}, {row: 1, col: 3}, {row: 2, col: 3}, {row: 0, col: 2}, {row: 1, col: 2}, {row: 2, col: 2}, {row: 0, col: 1}, {row: 1, col: 1}, {row: 2, col: 1}, {row: 0, col: 0}, {row: 1, col: 0}]
+            },
+            { // Step 12
+                message: "For position (2,0), we can move right, up-right. The maximum is 5 (current) + max(9, 11) = 5 + 11 = 16. This completes our DP table! The maximum gold we can collect is 16, starting from position (2,0).",
+                current: {row: 2, col: 0},
+                computed: [{row: 0, col: 3}, {row: 1, col: 3}, {row: 2, col: 3}, {row: 0, col: 2}, {row: 1, col: 2}, {row: 2, col: 2}, {row: 0, col: 1}, {row: 1, col: 1}, {row: 2, col: 1}, {row: 0, col: 0}, {row: 1, col: 0}, {row: 2, col: 0}]
+            }
+        ];
+        
+        // Calculate the DP table values (for animation)
+        dpTable[0][3] = originalGrid[0][3]; // 5
+        dpTable[1][3] = originalGrid[1][3]; // 1
+        dpTable[2][3] = originalGrid[2][3]; // 3
+        
+        dpTable[0][2] = originalGrid[0][2] + dpTable[0][3]; // 1 + 5 = 6
+        dpTable[1][2] = originalGrid[1][2] + Math.max(dpTable[0][3], dpTable[1][3], dpTable[2][3]); // 4 + max(5,1,3) = 9
+        dpTable[2][2] = originalGrid[2][2] + Math.max(dpTable[1][3], dpTable[2][3]); // 2 + max(1,3) = 5
+        
+        dpTable[0][1] = originalGrid[0][1] + Math.max(dpTable[0][2], dpTable[1][2]); // 3 + max(6,9) = 12
+        dpTable[1][1] = originalGrid[1][1] + Math.max(dpTable[0][2], dpTable[1][2], dpTable[2][2]); // 2 + max(6,9,5) = 11
+        dpTable[2][1] = originalGrid[2][1] + Math.max(dpTable[1][2], dpTable[2][2]); // 0 + max(9,5) = 9
+        
+        dpTable[0][0] = originalGrid[0][0] + Math.max(dpTable[0][1], dpTable[1][1]); // 1 + max(12,11) = 13
+        dpTable[1][0] = originalGrid[1][0] + Math.max(dpTable[0][1], dpTable[1][1], dpTable[2][1]); // 2 + max(12,11,9) = 14
+        dpTable[2][0] = originalGrid[2][0] + Math.max(dpTable[1][1], dpTable[2][1]); // 5 + max(11,9) = 16
+        
+        let currentStep = 0;
+        const totalSteps = steps.length;
+        
+        // DOM elements
+        const dpTableElement = document.getElementById('dpTable');
+        const explanationElement = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepCounter = document.getElementById('stepCounter');
+        
+        // Initialize the table
+        function initializeTable() {
+            dpTableElement.innerHTML = '';
+            
+            for (let i = 0; i < 3; i++) {
+                const row = document.createElement('tr');
+                
+                for (let j = 0; j < 4; j++) {
+                    const cell = document.createElement('td');
+                    cell.id = `cell-${i}-${j}`;
+                    cell.textContent = originalGrid[i][j];
+                    cell.className = 'original';
+                    row.appendChild(cell);
+                }
+                
+                dpTableElement.appendChild(row);
+            }
+        }
+        
+        // Update the table based on the current step
+        function updateTable() {
+            // Reset all cells
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 4; j++) {
+                    const cell = document.getElementById(`cell-${i}-${j}`);
+                    cell.className = 'not-computed';
+                    cell.textContent = '';
+                    
+                    // Clear any arrows
+                    const arrows = cell.querySelectorAll('.arrow');
+                    arrows.forEach(arrow => arrow.remove());
+                }
+            }
+            
+            if (currentStep === 0) {
+                // Show original grid
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 0; j < 4; j++) {
+                        const cell = document.getElementById(`cell-${i}-${j}`);
+                        cell.className = 'original';
+                        cell.textContent = originalGrid[i][j];
+                    }
+                }
+            } else {
+                // Mark computed cells
+                steps[currentStep].computed.forEach(({row, col}) => {
+                    const cell = document.getElementById(`cell-${row}-${col}`);
+                    cell.className = 'computed';
+                    cell.textContent = dpTable[row][col];
+                });
+                
+                // Mark current cell being processed
+                if (steps[currentStep].current) {
+                    const { row, col } = steps[currentStep].current;
+                    const cell = document.getElementById(`cell-${row}-${col}`);
+                    cell.className = 'current';
+                    cell.textContent = dpTable[row][col];
+                    
+                    // Add arrows for visual guidance (if not rightmost column)
+                    if (col < 3) {
+                        // Right arrow
+                        if (row >= 0 && row < 3 && col + 1 < 4) {
+                            const rightArrow = document.createElement('div');
+                            rightArrow.className = 'arrow';
+                            rightArrow.textContent = '→';
+                            rightArrow.style.top = '50%';
+                            rightArrow.style.right = '-15px';
+                            rightArrow.style.transform = 'translateY(-50%)';
+                            cell.appendChild(rightArrow);
+                        }
+                        
+                        // Up-right arrow
+                        if (row - 1 >= 0 && col + 1 < 4) {
+                            const upRightArrow = document.createElement('div');
+                            upRightArrow.className = 'arrow';
+                            upRightArrow.textContent = '↗';
+                            upRightArrow.style.top = '-10px';
+                            upRightArrow.style.right = '-10px';
+                            cell.appendChild(upRightArrow);
+                        }
+                        
+                        // Down-right arrow
+                        if (row + 1 < 3 && col + 1 < 4) {
+                            const downRightArrow = document.createElement('div');
+                            downRightArrow.className = 'arrow';
+                            downRightArrow.textContent = '↘';
+                            downRightArrow.style.bottom = '-10px';
+                            downRightArrow.style.right = '-10px';
+                            cell.appendChild(downRightArrow);
+                        }
+                    }
+                }
+            }
+            
+            // Update explanation
+            explanationElement.textContent = steps[currentStep].message;
+            
+            // Update step counter
+            stepCounter.textContent = `Step ${currentStep} of ${totalSteps - 1}`;
+            
+            // Update button states
+            prevBtn.disabled = (currentStep === 0);
+            nextBtn.disabled = (currentStep === totalSteps - 1);
+        }
+        
+        // Event listeners for buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateTable();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateTable();
+            }
+        });
+        
+        // Initialize
+        initializeTable();
+        updateTable();
+    </script>
+</body>
+</html>
