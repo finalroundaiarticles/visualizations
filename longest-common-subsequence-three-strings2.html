@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subsequence Identification in Three Strings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            margin: 20px auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        .explanation {
+            margin-bottom: 20px;
+            line-height: 1.5;
+            font-size: 16px;
+        }
+        .strings-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px 0;
+        }
+        .string-row {
+            display: flex;
+            margin: 10px 0;
+            align-items: center;
+        }
+        .string-label {
+            width: 100px;
+            font-weight: bold;
+            color: #000000;
+            text-align: right;
+            margin-right: 15px;
+        }
+        .character {
+            width: 40px;
+            height: 40px;
+            margin: 0 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 4px;
+            background-color: #FFFFFF;
+            border: 2px solid #000000;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        .highlighted {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.1);
+            border-color: #FF4800;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .lcs-display {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .lcs-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #000000;
+        }
+        .lcs-characters {
+            display: flex;
+        }
+        .step-indicator {
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        .lines-container {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            margin-top: 20px;
+        }
+        .line {
+            position: absolute;
+            background-color: #FD9F78;
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Subsequence Identification in Three Strings</h1>
+    
+    <div class="container">
+        <div class="explanation">
+            A subsequence is a sequence that can be derived from another sequence by deleting some or no elements without changing the order of the remaining elements. The Longest Common Subsequence (LCS) of three strings is the longest sequence that appears in all three strings.
+        </div>
+        
+        <div class="step-indicator" id="step-indicator">Step 1: Let's visualize our three strings</div>
+        
+        <div class="strings-container">
+            <div class="string-row">
+                <div class="string-label">String 1:</div>
+                <div class="character" id="s1-0">A</div>
+                <div class="character" id="s1-1">B</div>
+                <div class="character" id="s1-2">C</div>
+                <div class="character" id="s1-3">D</div>
+                <div class="character" id="s1-4">G</div>
+                <div class="character" id="s1-5">H</div>
+            </div>
+            
+            <div class="string-row">
+                <div class="string-label">String 2:</div>
+                <div class="character" id="s2-0">A</div>
+                <div class="character" id="s2-1">E</div>
+                <div class="character" id="s2-2">D</div>
+                <div class="character" id="s2-3">F</div>
+                <div class="character" id="s2-4">H</div>
+                <div class="character" id="s2-5">R</div>
+            </div>
+            
+            <div class="string-row">
+                <div class="string-label">String 3:</div>
+                <div class="character" id="s3-0">A</div>
+                <div class="character" id="s3-1">B</div>
+                <div class="character" id="s3-2">D</div>
+                <div class="character" id="s3-3">F</div>
+                <div class="character" id="s3-4">H</div>
+                <div class="character" id="s3-5">R</div>
+            </div>
+        </div>
+        
+        <div class="lines-container" id="lines-container">
+            <!-- Lines will be added here by JS -->
+        </div>
+        
+        <div class="lcs-display">
+            <div class="lcs-title">Longest Common Subsequence:</div>
+            <div class="lcs-characters" id="lcs-characters">
+                <!-- Will be filled by JS -->
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        const steps = [
+            {
+                desc: "Let's visualize our three strings",
+                action: () => {
+                    // Reset all highlighting
+                    document.querySelectorAll('.character').forEach(el => {
+                        el.classList.remove('highlighted');
+                    });
+                    document.querySelectorAll('.line').forEach(el => {
+                        el.style.opacity = '0';
+                    });
+                    // Clear LCS display
+                    document.getElementById('lcs-characters').innerHTML = '';
+                }
+            },
+            {
+                desc: "First, we find characters that appear in all three strings",
+                action: () => {}
+            },
+            {
+                desc: "Identifying common character 'A' in all three strings",
+                action: () => {
+                    highlight('s1-0', 's2-0', 's3-0');
+                    drawLine('s1-0', 's2-0', 's3-0');
+                    addToLCS('A');
+                }
+            },
+            {
+                desc: "Identifying common character 'D' in all three strings",
+                action: () => {
+                    highlight('s1-3', 's2-2', 's3-2');
+                    drawLine('s1-3', 's2-2', 's3-2');
+                    addToLCS('D');
+                }
+            },
+            {
+                desc: "Identifying common character 'H' in all three strings",
+                action: () => {
+                    highlight('s1-5', 's2-4', 's3-4');
+                    drawLine('s1-5', 's2-4', 's3-4');
+                    addToLCS('H');
+                }
+            },
+            {
+                desc: "The longest common subsequence is 'ADH'",
+                action: () => {}
+            }
+        ];
+        
+        let currentStep = 0;
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepIndicator = document.getElementById('step-indicator');
+        
+        function updateButtons() {
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        function updateStep() {
+            stepIndicator.textContent = `Step ${currentStep + 1}: ${steps[currentStep].desc}`;
+            steps[currentStep].action();
+            updateButtons();
+        }
+        
+        function highlight(...ids) {
+            ids.forEach(id => {
+                document.getElementById(id).classList.add('highlighted');
+            });
+        }
+        
+        function addToLCS(char) {
+            const lcsContainer = document.getElementById('lcs-characters');
+            const charElement = document.createElement('div');
+            charElement.className = 'character highlighted';
+            charElement.textContent = char;
+            lcsContainer.appendChild(charElement);
+        }
+        
+        function drawLine(id1, id2, id3) {
+            const el1 = document.getElementById(id1);
+            const el2 = document.getElementById(id2);
+            const el3 = document.getElementById(id3);
+            const container = document.getElementById('lines-container');
+            
+            const createLine = (start, end) => {
+                const startRect = start.getBoundingClientRect();
+                const endRect = end.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                
+                const startX = startRect.left + startRect.width / 2 - containerRect.left;
+                const startY = startRect.top + startRect.height / 2 - containerRect.top;
+                const endX = endRect.left + endRect.width / 2 - containerRect.left;
+                const endY = endRect.top + endRect.height / 2 - containerRect.top;
+                
+                const length = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+                const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
+                
+                const line = document.createElement('div');
+                line.className = 'line';
+                line.style.width = `${length}px`;
+                line.style.height = '2px';
+                line.style.left = `${startX}px`;
+                line.style.top = `${startY}px`;
+                line.style.transform = `rotate(${angle}deg)`;
+                line.style.transformOrigin = '0 0';
+                
+                container.appendChild(line);
+                
+                setTimeout(() => {
+                    line.style.opacity = '1';
+                }, 100);
+            };
+            
+            // Only create visual lines if positions are available
+            if (el1 && el2) createLine(el1, el2);
+            if (el2 && el3) createLine(el2, el3);
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateStep();
+            }
+        });
+        
+        // Initialize
+        updateStep();
+    </script>
+</body>
+</html>
