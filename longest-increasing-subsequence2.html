@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search Tails Array Evolution</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .explanation {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #000000;
+        }
+        
+        .visualization {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        .array-container {
+            display: flex;
+            margin-bottom: 30px;
+            align-items: flex-start;
+        }
+        
+        .array {
+            display: flex;
+            margin-right: 20px;
+        }
+        
+        .element {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #000000;
+            margin-right: 5px;
+            font-weight: bold;
+            position: relative;
+        }
+        
+        .index {
+            position: absolute;
+            top: -25px;
+            font-size: 12px;
+            color: #000000;
+        }
+        
+        .original {
+            background-color: #FFFFFF;
+        }
+        
+        .tails {
+            background-color: #FD9F78;
+        }
+        
+        .current {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .highlight {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .found {
+            border: 2px dashed #FF4800;
+        }
+        
+        .binary-search {
+            width: 100%;
+            height: 60px;
+            margin: 10px 0;
+            position: relative;
+            border-bottom: 2px solid #000000;
+        }
+        
+        .pointer {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #FF4800;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #FFFFFF;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+        }
+        
+        .step-counter {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #000000;
+        }
+        
+        .legend {
+            display: flex;
+            margin-top: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+        }
+        
+        .description {
+            margin-top: 10px;
+            padding: 15px;
+            background-color: #FD9F78;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Search Tails Array Evolution</h1>
+        
+        <div class="explanation">
+            <p>This visualization demonstrates how the tails array evolves while processing each element from the original array [10, 9, 2, 5, 3, 7, 101, 18]. The tails array stores the smallest ending value of all increasing subsequences of a given length.</p>
+        </div>
+        
+        <div class="visualization">
+            <div class="array-container">
+                <div>
+                    <h3>Original Array:</h3>
+                    <div class="array" id="original-array"></div>
+                </div>
+            </div>
+            
+            <div class="array-container">
+                <div>
+                    <h3>Current Element:</h3>
+                    <div class="array" id="current-element"></div>
+                </div>
+            </div>
+            
+            <div class="array-container">
+                <div>
+                    <h3>Tails Array:</h3>
+                    <div class="array" id="tails-array"></div>
+                </div>
+            </div>
+            
+            <div class="description" id="step-description">
+                Press "Next" to start the visualization.
+            </div>
+            
+            <div class="binary-search" id="binary-search">
+                <!-- Binary search visualization will be here -->
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+        
+        <div class="step-counter" id="step-counter">Step: 0/8</div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FFFFFF; border: 2px solid #000000;"></div>
+                <span>Original Array Element</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FF4800;"></div>
+                <span>Current Element</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FD9F78; border: 2px solid #000000;"></div>
+                <span>Tails Array Element</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="border: 2px dashed #FF4800; background-color: #FFFFFF;"></div>
+                <span>Position Found</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Original array
+        const originalArray = [10, 9, 2, 5, 3, 7, 101, 18];
+        
+        // Initialize states for each step
+        const steps = [
+            {
+                tails: [],
+                current: null,
+                binarySearch: null,
+                description: "Initial state: The tails array is empty. We'll process each element of the original array one by one."
+            },
+            {
+                tails: [10],
+                current: 10,
+                binarySearch: null,
+                description: "First element 10: Since tails array is empty, we simply add 10 as the first element."
+            },
+            {
+                tails: [9],
+                current: 9,
+                binarySearch: {
+                    left: 0,
+                    right: 0,
+                    mid: 0,
+                    found: 0
+                },
+                description: "Process 9: Using binary search, we find that 9 < 10, so we replace tails[0] with 9 as it's smaller."
+            },
+            {
+                tails: [2],
+                current: 2,
+                binarySearch: {
+                    left: 0,
+                    right: 0,
+                    mid: 0,
+                    found: 0
+                },
+                description: "Process 2: Using binary search, we find that 2 < 9, so we replace tails[0] with 2 as it's smaller."
+            },
+            {
+                tails: [2, 5],
+                current: 5,
+                binarySearch: {
+                    left: 0,
+                    right: 0,
+                    mid: 0,
+                    found: 1
+                },
+                description: "Process 5: Using binary search, we find that 5 > 2, so we extend the tails array by adding 5 at index 1."
+            },
+            {
+                tails: [2, 3],
+                current: 3,
+                binarySearch: {
+                    left: 0,
+                    right: 1,
+                    mid: 0,
+                    found: 1
+                },
+                description: "Process 3: Using binary search, we find that 3 is greater than 2 but smaller than 5, so we replace tails[1] with 3."
+            },
+            {
+                tails: [2, 3, 7],
+                current: 7,
+                binarySearch: {
+                    left: 0,
+                    right: 1,
+                    mid: 1,
+                    found: 2
+                },
+                description: "Process 7: Using binary search, we find that 7 > 3, so we extend the tails array by adding 7 at index 2."
+            },
+            {
+                tails: [2, 3, 7, 101],
+                current: 101,
+                binarySearch: {
+                    left: 0,
+                    right: 2,
+                    mid: 2,
+                    found: 3
+                },
+                description: "Process 101: Using binary search, we find that 101 > 7, so we extend the tails array by adding 101 at index 3."
+            },
+            {
+                tails: [2, 3, 7, 18],
+                current: 18,
+                binarySearch: {
+                    left: 2,
+                    right: 3,
+                    mid: 2,
+                    found: 3
+                },
+                description: "Process 18: Using binary search, we find that 18 is greater than 7 but smaller than 101, so we replace tails[3] with 18."
+            }
+        ];
+        
+        // Current step
+        let currentStep = 0;
+        
+        // DOM Elements
+        const originalArrayEl = document.getElementById('original-array');
+        const currentElementEl = document.getElementById('current-element');
+        const tailsArrayEl = document.getElementById('tails-array');
+        const binarySearchEl = document.getElementById('binary-search');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepCounterEl = document.getElementById('step-counter');
+        const stepDescriptionEl = document.getElementById('step-description');
+        
+        // Render original array (doesn't change)
+        function renderOriginalArray() {
+            originalArrayEl.innerHTML = '';
+            originalArray.forEach((num, idx) => {
+                const el = document.createElement('div');
+                el.className = 'element original';
+                el.innerHTML = num;
+                
+                const indexEl = document.createElement('div');
+                indexEl.className = 'index';
+                indexEl.textContent = idx;
+                el.appendChild(indexEl);
+                
+                originalArrayEl.appendChild(el);
+            });
+        }
+        
+        // Render current element
+        function renderCurrentElement() {
+            currentElementEl.innerHTML = '';
+            
+            if (steps[currentStep].current !== null) {
+                const el = document.createElement('div');
+                el.className = 'element current';
+                el.innerHTML = steps[currentStep].current;
+                currentElementEl.appendChild(el);
+            }
+        }
+        
+        // Render tails array
+        function renderTailsArray() {
+            tailsArrayEl.innerHTML = '';
+            
+            steps[currentStep].tails.forEach((num, idx) => {
+                const el = document.createElement('div');
+                el.className = 'element tails';
+                
+                // Highlight the position where the binary search found the place
+                if (steps[currentStep].binarySearch && idx === steps[currentStep].binarySearch.found) {
+                    el.classList.add('found');
+                }
+                
+                el.innerHTML = num;
+                
+                const indexEl = document.createElement('div');
+                indexEl.className = 'index';
+                indexEl.textContent = idx;
+                el.appendChild(indexEl);
+                
+                tailsArrayEl.appendChild(el);
+            });
+        }
+        
+        // Render binary search visualization
+        function renderBinarySearch() {
+            binarySearchEl.innerHTML = '';
+            
+            if (!steps[currentStep].binarySearch) return;
+            
+            const bs = steps[currentStep].binarySearch;
+            const width = binarySearchEl.clientWidth;
+            
+            const tails = steps[currentStep].tails;
+            const tLength = tails.length > 0 ? tails.length : 1;
+            
+            if (bs.left !== undefined) {
+                const leftEl = document.createElement('div');
+                leftEl.className = 'pointer';
+                leftEl.style.left = (bs.left / tLength * width) + 'px';
+                leftEl.textContent = 'L';
+                binarySearchEl.appendChild(leftEl);
+            }
+            
+            if (bs.right !== undefined) {
+                const rightEl = document.createElement('div');
+                rightEl.className = 'pointer';
+                rightEl.style.left = (bs.right / tLength * width) + 'px';
+                rightEl.textContent = 'R';
+                binarySearchEl.appendChild(rightEl);
+            }
+            
+            if (bs.mid !== undefined) {
+                const midEl = document.createElement('div');
+                midEl.className = 'pointer';
+                midEl.style.left = (bs.mid / tLength * width) + 'px';
+                midEl.style.top = '30px';
+                midEl.textContent = 'M';
+                binarySearchEl.appendChild(midEl);
+            }
+        }
+        
+        // Update step counter
+        function updateStepCounter() {
+            stepCounterEl.textContent = `Step: ${currentStep}/${steps.length - 1}`;
+        }
+        
+        // Update step description
+        function updateStepDescription() {
+            stepDescriptionEl.textContent = steps[currentStep].description;
+        }
+        
+        // Render current state
+        function renderState() {
+            renderOriginalArray();
+            renderCurrentElement();
+            renderTailsArray();
+            renderBinarySearch();
+            updateStepCounter();
+            updateStepDescription();
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        // Event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                renderState();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                renderState();
+            }
+        });
+        
+        // Initial render
+        renderState();
+    </script>
+</body>
+</html>
