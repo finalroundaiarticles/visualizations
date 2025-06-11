@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subsequence Reconstruction Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .canvas-container {
+            width: 100%;
+            height: 500px;
+            margin: 20px 0;
+            position: relative;
+        }
+        canvas {
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+        }
+        .description {
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .step-counter {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Subsequence Reconstruction Visualization</h1>
+        
+        <div class="description">
+            This visualization demonstrates how to reconstruct the longest increasing subsequence [1, 2, 3, 100] from the array [1, 101, 2, 3, 100, 4, 5] using parent pointers.
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="myCanvas" width="900" height="500"></canvas>
+        </div>
+        
+        <div class="step-counter" id="stepCounter">Step 1 of 6</div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prevBtn" disabled>Previous</button>
+            <button class="nav-button" id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Get canvas and context
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Animation variables
+        let currentStep = 0;
+        const totalSteps = 6;
+        
+        // Original array and subsequence
+        const originalArray = [1, 101, 2, 3, 100, 4, 5];
+        const optimalSubsequence = [1, 2, 3, 100];
+        
+        // Parent array (showing relationships)
+        const parentArray = [-1, 0, 0, 2, 3, 3, 5];
+        
+        // Element colors
+        const colors = {
+            default: '#000000',
+            highlight: '#FF4800',
+            subsequence: '#FD9F78',
+            arrow: '#FF4800',
+            parentHighlight: '#FD9F78'
+        };
+        
+        // Navigation buttons
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepCounter = document.getElementById('stepCounter');
+        
+        // Draw array elements
+        function drawArray(x, y, array, title, highlightIndices = [], subsequenceIndices = []) {
+            ctx.font = '18px Arial';
+            ctx.fillStyle = colors.default;
+            ctx.fillText(title, x, y - 30);
+            
+            const cellWidth = 60;
+            const cellHeight = 40;
+            
+            // Draw array elements
+            for (let i = 0; i < array.length; i++) {
+                const cellX = x + i * cellWidth;
+                
+                // Determine fill color based on highlighting
+                if (subsequenceIndices.includes(i)) {
+                    ctx.fillStyle = colors.subsequence;
+                } else if (highlightIndices.includes(i)) {
+                    ctx.fillStyle = colors.highlight;
+                } else {
+                    ctx.fillStyle = '#FFFFFF';
+                }
+                
+                // Draw cell
+                ctx.beginPath();
+                ctx.rect(cellX, y, cellWidth, cellHeight);
+                ctx.fill();
+                ctx.strokeStyle = colors.default;
+                ctx.stroke();
+                
+                // Draw value
+                ctx.fillStyle = colors.default;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(array[i], cellX + cellWidth/2, y + cellHeight/2);
+                
+                // Draw index below
+                ctx.fillText(i, cellX + cellWidth/2, y + cellHeight + 20);
+            }
+        }
+        
+        // Draw parent pointers
+        function drawParentPointers(x, y, parentArray, highlightIndices = []) {
+            const cellWidth = 60;
+            const cellHeight = 40;
+            
+            for (let i = 0; i < parentArray.length; i++) {
+                if (parentArray[i] !== -1 && highlightIndices.includes(i)) {
+                    const startX = x + i * cellWidth + cellWidth/2;
+                    const startY = y;
+                    
+                    const endX = x + parentArray[i] * cellWidth + cellWidth/2;
+                    const endY = y;
+                    
+                    // Calculate control point for curved arrow
+                    const controlY = y - 80; // Higher for more curve
+                    
+                    // Draw curved arrow
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY);
+                    ctx.quadraticCurveTo(
+                        (startX + endX) / 2, 
+                        controlY,
+                        endX, 
+                        endY
+                    );
+                    
+                    ctx.strokeStyle = colors.arrow;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    // Draw arrowhead
+                    const arrowSize = 8;
+                    const angle = Math.atan2(endY - controlY, endX - (startX + endX) / 2);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(endX, endY);
+                    ctx.lineTo(
+                        endX - arrowSize * Math.cos(angle - Math.PI/6),
+                        endY - arrowSize * Math.sin(angle - Math.PI/6)
+                    );
+                    ctx.lineTo(
+                        endX - arrowSize * Math.cos(angle + Math.PI/6),
+                        endY - arrowSize * Math.sin(angle + Math.PI/6)
+                    );
+                    ctx.closePath();
+                    ctx.fillStyle = colors.arrow;
+                    ctx.fill();
+                }
+            }
+        }
+        
+        // Draw explanation text
+        function drawExplanation(text, y) {
+            ctx.font = '16px Arial';
+            ctx.fillStyle = colors.default;
+            ctx.textAlign = 'left';
+            ctx.fillText(text, 50, y);
+        }
+        
+        // Draw the current step
+        function drawStep() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Update step counter
+            stepCounter.textContent = `Step ${currentStep + 1} of ${totalSteps}`;
+            
+            // Common elements - always show the array
+            drawArray(50, 60, originalArray, "Original Array [1, 101, 2, 3, 100, 4, 5]");
+            
+            // Draw parent array
+            drawArray(50, 160, parentArray, "Parent Array (tracks which element comes before current element)");
+            
+            // Step-specific content
+            switch(currentStep) {
+                case 0:
+                    drawExplanation("The parent array helps us reconstruct the longest increasing subsequence.", 260);
+                    drawExplanation("Each value in the parent array points to the index of the previous element in the subsequence.", 290);
+                    drawExplanation("A value of -1 means there is no previous element (it's the start of a subsequence).", 320);
+                    break;
+                    
+                case 1:
+                    drawExplanation("Let's start by finding the end of our optimal subsequence.", 260);
+                    drawExplanation("We know the subsequence [1, 2, 3, 100] ends with 100, which is at index 4.", 290);
+                    drawArray(50, 60, originalArray, "Original Array", [4]);
+                    drawArray(50, 160, parentArray, "Parent Array", [4]);
+                    break;
+                    
+                case 2:
+                    drawExplanation("The parent pointer at index 4 is 3, so we look at index 3 next.", 260);
+                    drawExplanation("This tells us that 3 (at index 3) comes before 100 in our subsequence.", 290);
+                    drawArray(50, 60, originalArray, "Original Array", [3, 4], [4]);
+                    drawArray(50, 160, parentArray, "Parent Array", [3, 4]);
+                    drawParentPointers(50, 60, parentArray, [4]);
+                    break;
+                    
+                case 3:
+                    drawExplanation("The parent pointer at index 3 is 2, so we look at index 2 next.", 260);
+                    drawExplanation("This tells us that 2 (at index 2) comes before 3 in our subsequence.", 290);
+                    drawArray(50, 60, originalArray, "Original Array", [2, 3, 4], [3, 4]);
+                    drawArray(50, 160, parentArray, "Parent Array", [2, 3, 4]);
+                    drawParentPointers(50, 60, parentArray, [3, 4]);
+                    break;
+                    
+                case 4:
+                    drawExplanation("The parent pointer at index 2 is 0, so we look at index 0 next.", 260);
+                    drawExplanation("This tells us that 1 (at index 0) comes before 2 in our subsequence.", 290);
+                    drawArray(50, 60, originalArray, "Original Array", [0, 2, 3, 4], [2, 3, 4]);
+                    drawArray(50, 160, parentArray, "Parent Array", [0, 2, 3, 4]);
+                    drawParentPointers(50, 60, parentArray, [2, 3, 4]);
+                    break;
+                    
+                case 5:
+                    drawExplanation("The parent pointer at index 0 is -1, which means we've reached the start of the subsequence.", 260);
+                    drawExplanation("By following the parent pointers backward, we reconstructed the subsequence [1, 2, 3, 100].", 290);
+                    drawExplanation("This is our longest increasing subsequence from the original array.", 320);
+                    drawArray(50, 60, originalArray, "Original Array", [], [0, 2, 3, 4]);
+                    drawArray(50, 160, parentArray, "Parent Array", [0, 2, 3, 4]);
+                    drawParentPointers(50, 60, parentArray, [2, 3, 4]);
+                    
+                    // Show the final reconstructed subsequence
+                    ctx.fillStyle = colors.highlight;
+                    ctx.font = 'bold 18px Arial';
+                    ctx.textAlign = 'left';
+                    ctx.fillText("Reconstructed Subsequence: [1, 2, 3, 100]", 50, 380);
+                    break;
+            }
+        }
+        
+        // Navigation button handlers
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                drawStep();
+                nextBtn.disabled = false;
+                if (currentStep === 0) {
+                    prevBtn.disabled = true;
+                }
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                drawStep();
+                prevBtn.disabled = false;
+                if (currentStep === totalSteps - 1) {
+                    nextBtn.disabled = true;
+                }
+            }
+        });
+        
+        // Initial draw
+        drawStep();
+    </script>
+</body>
+</html>
