@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recursive Decision Tree for LCS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide {
+            display: none;
+            text-align: center;
+        }
+
+        .active {
+            display: block;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f8f8f8;
+            border-left: 5px solid #FF4800;
+        }
+
+        svg {
+            margin: 0 auto;
+        }
+
+        .node circle {
+            fill: #FFFFFF;
+            stroke: #FF4800;
+            stroke-width: 2;
+        }
+
+        .node text {
+            font-size: 12px;
+        }
+
+        .link {
+            fill: none;
+            stroke: #000000;
+            stroke-width: 1.5;
+        }
+
+        .match-path {
+            stroke: #FF4800;
+            stroke-width: 2.5;
+        }
+
+        .highlight {
+            fill: #FD9F78;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 20px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Recursive Decision Tree for LCS</h1>
+    <div class="container">
+        <div class="slide active" id="slide1">
+            <div class="explanation">
+                <h3>Longest Common Subsequence (LCS)</h3>
+                <p>The LCS problem: Find the longest subsequence common to two sequences. A subsequence is a sequence that can be derived from another sequence by deleting some elements without changing the order of the remaining elements.</p>
+                <p>Let's visualize the recursive decision tree for finding the LCS of "ab" and "ac".</p>
+            </div>
+            <svg id="tree-svg1" width="800" height="120"></svg>
+        </div>
+
+        <div class="slide" id="slide2">
+            <div class="explanation">
+                <h3>Starting the Recursion</h3>
+                <p>We start comparing the strings "ab" and "ac" from the beginning (indices 0,0). For each position, we have at most 3 choices:</p>
+                <p>1. If characters match, include them and move to next characters in both strings</p>
+                <p>2. Skip character in first string</p>
+                <p>3. Skip character in second string</p>
+            </div>
+            <svg id="tree-svg2" width="800" height="200"></svg>
+        </div>
+
+        <div class="slide" id="slide3">
+            <div class="explanation">
+                <h3>Expanding the Tree</h3>
+                <p>As we expand the recursion tree, we can see multiple paths and choices at each step. The decision tree grows exponentially with string length.</p>
+                <p>Each node shows the indices (i,j) being compared from strings "ab" and "ac".</p>
+            </div>
+            <svg id="tree-svg3" width="800" height="300"></svg>
+        </div>
+
+        <div class="slide" id="slide4">
+            <div class="explanation">
+                <h3>Complete Recursion Tree</h3>
+                <p>The complete recursion tree shows all possible paths. Notice how some nodes are visited multiple times (overlapping subproblems), making this inefficient.</p>
+                <p>Red paths indicate character matches ('a' matches at position 0,0).</p>
+            </div>
+            <svg id="tree-svg4" width="800" height="400"></svg>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #FF4800;"></div>
+                    <span>Character Match Path</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #000000;"></div>
+                    <span>Skip Character Path</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #FD9F78;"></div>
+                    <span>Highlighted Node (Visited Multiple Times)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide" id="slide5">
+            <div class="explanation">
+                <h3>Exponential Complexity</h3>
+                <p>Notice the exponential branching pattern - for strings of length m and n, the naive recursive approach has O(3^(m+n)) complexity in the worst case.</p>
+                <p>This is why dynamic programming (memoization or tabulation) is typically used to solve the LCS problem efficiently.</p>
+            </div>
+            <svg id="tree-svg5" width="800" height="400"></svg>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #FF4800;"></div>
+                    <span>Character Match Path</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #000000;"></div>
+                    <span>Skip Character Path</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #FD9F78;"></div>
+                    <span>Duplicated Subproblems</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <button id="prev-btn" class="nav-btn" disabled>Previous</button>
+        <button id="next-btn" class="nav-btn">Next</button>
+    </div>
+
+    <script>
+        // Navigation functionality
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        let currentSlide = 0;
+
+        function showSlide(index) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[index].classList.add('active');
+            
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === slides.length - 1;
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        });
+
+        // Tree visualization code
+        function drawTree1() {
+            const svg = document.getElementById('tree-svg1');
+            svg.innerHTML = `
+                <g transform="translate(400, 60)">
+                    <circle cx="0" cy="0" r="30" class="node-circle" stroke="#FF4800" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="0" y="5" text-anchor="middle">LCS("ab","ac")</text>
+                </g>
+            `;
+        }
+
+        function drawTree2() {
+            const svg = document.getElementById('tree-svg2');
+            svg.innerHTML = `
+                <g transform="translate(400, 60)">
+                    <circle cx="0" cy="0" r="30" class="node-circle" stroke="#FF4800" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="0" y="0" text-anchor="middle">LCS(0,0)</text>
+                    <text x="0" y="15" text-anchor="middle" font-size="10">a vs a</text>
+                    
+                    <!-- Left branch - skip first string -->
+                    <line x1="-20" y1="20" x2="-100" y2="80" class="link"></line>
+                    <circle cx="-100" cy="80" r="25" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="-100" y="80" text-anchor="middle">LCS(1,0)</text>
+                    <text x="-100" y="95" text-anchor="middle" font-size="10">b vs a</text>
+                    
+                    <!-- Middle branch - match -->
+                    <line x1="0" y1="30" x2="0" y2="80" class="link match-path"></line>
+                    <circle cx="0" cy="80" r="25" class="node-circle" stroke="#FF4800" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="0" y="80" text-anchor="middle">LCS(1,1)</text>
+                    <text x="0" y="95" text-anchor="middle" font-size="10">b vs c</text>
+                    
+                    <!-- Right branch - skip second string -->
+                    <line x1="20" y1="20" x2="100" y2="80" class="link"></line>
+                    <circle cx="100" cy="80" r="25" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="100" y="80" text-anchor="middle">LCS(0,1)</text>
+                    <text x="100" y="95" text-anchor="middle" font-size="10">a vs c</text>
+                </g>
+            `;
+        }
+
+        function drawTree3() {
+            const svg = document.getElementById('tree-svg3');
+            svg.innerHTML = `
+                <g transform="translate(400, 60)">
+                    <!-- Root node -->
+                    <circle cx="0" cy="0" r="30" class="node-circle" stroke="#FF4800" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="0" y="0" text-anchor="middle">LCS(0,0)</text>
+                    <text x="0" y="15" text-anchor="middle" font-size="10">a vs a</text>
+                    
+                    <!-- First level -->
+                    <!-- Left branch - skip first string -->
+                    <line x1="-20" y1="20" x2="-150" y2="80" class="link"></line>
+                    <circle cx="-150" cy="80" r="25" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="-150" y="80" text-anchor="middle">LCS(1,0)</text>
+                    <text x="-150" y="95" text-anchor="middle" font-size="10">b vs a</text>
+                    
+                    <!-- Middle branch - match -->
+                    <line x1="0" y1="30" x2="0" y2="80" class="link match-path"></line>
+                    <circle cx="0" cy="80" r="25" class="node-circle" stroke="#FF4800" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="0" y="80" text-anchor="middle">LCS(1,1)</text>
+                    <text x="0" y="95" text-anchor="middle" font-size="10">b vs c</text>
+                    
+                    <!-- Right branch - skip second string -->
+                    <line x1="20" y1="20" x2="150" y2="80" class="link"></line>
+                    <circle cx="150" cy="80" r="25" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="150" y="80" text-anchor="middle">LCS(0,1)</text>
+                    <text x="150" y="95" text-anchor="middle" font-size="10">a vs c</text>
+                    
+                    <!-- Second level for LCS(1,0) -->
+                    <line x1="-170" y1="100" x2="-200" y2="160" class="link"></line>
+                    <circle cx="-200" cy="160" r="25" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="-200" y="160" text-anchor="middle">LCS(2,0)</text>
+                    <text x="-200" y="175" text-anchor="middle" font-size="10">- vs a</text>
+                    
+                    <line x1="-130" y1="100" x2="-100" y2="160" class="link"></line>
+                    <circle cx="-100" cy="160" r="25" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="-100" y="160" text-anchor="middle">LCS(1,1)</text>
+                    <text x="-100" y="175" text-anchor="middle" font-size="10">b vs c</text>
+                    
+                    <!-- Second level for LCS(1,1) -->
+                    <line x1="-20" y1="100" x2="-50" y2="160" class="link"></line>
+                    <circle cx="-50" cy="160" r="25" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="-50" y="160" text-anchor="middle">LCS(2,1)</text>
+                    <text x="-50" y="175" text-anchor="middle" font-size="10">- vs c</text>
+                    
+                    <line x1="20" y1="100" x2="50" y2="160" class="link"></line>
+                    <circle cx="50" cy="160" r="25" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="50" y="160" text-anchor="middle">LCS(1,2)</text>
+                    <text x="50" y="175" text-anchor="middle" font-size="10">b vs -</text>
+                    
+                    <!-- Second level for LCS(0,1) -->
+                    <line x1="130" y1="100" x2="100" y2="160" class="link"></line>
+                    <circle cx="100" cy="160" r="25" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="100" y="160" text-anchor="middle">LCS(1,1)</text>
+                    <text x="100" y="175" text-anchor="middle" font-size="10">b vs c</text>
+                    
+                    <line x1="170" y1="100" x2="200" y2="160" class="link"></line>
+                    <circle cx="200" cy="160" r="25" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="200" y="160" text-anchor="middle">LCS(0,2)</text>
+                    <text x="200" y="175" text-anchor="middle" font-size="10">a vs -</text>
+                    
+                    <!-- Highlight duplicate node -->
+                    <circle cx="-100" cy="160" r="25" class="node-circle" stroke="#FF4800" stroke-width="2" fill="#FD9F78" fill-opacity="0.5"></circle>
+                    <circle cx="100" cy="160" r="25" class="node-circle" stroke="#FF4800" stroke-width="2" fill="#FD9F78" fill-opacity="0.5"></circle>
+                </g>
+            `;
+        }
+
+        function drawTree4() {
+            const svg = document.getElementById('tree-svg4');
+            svg.innerHTML = `
+                <g transform="translate(400, 60)">
+                    <!-- Root node -->
+                    <circle cx="0" cy="0" r="30" class="node-circle" stroke="#FF4800" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="0" y="0" text-anchor="middle">LCS(0,0)</text>
+                    <text x="0" y="15" text-anchor="middle" font-size="10">a vs a</text>
+                    
+                    <!-- First level -->
+                    <!-- Left branch - skip first string -->
+                    <line x1="-20" y1="20" x2="-200" y2="80" class="link"></line>
+                    <circle cx="-200" cy="80" r="25" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="-200" y="80" text-anchor="middle">LCS(1,0)</text>
+                    <text x="-200" y="95" text-anchor="middle" font-size="10">b vs a</text>
+                    
+                    <!-- Middle branch - match -->
+                    <line x1="0" y1="30" x2="0" y2="80" class="link match-path"></line>
+                    <circle cx="0" cy="80" r="25" class="node-circle" stroke="#FF4800" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="0" y="80" text-anchor="middle">LCS(1,1)</text>
+                    <text x="0" y="95" text-anchor="middle" font-size="10">b vs c</text>
+                    
+                    <!-- Right branch - skip second string -->
+                    <line x1="20" y1="20" x2="200" y2="80" class="link"></line>
+                    <circle cx="200" cy="80" r="25" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="200" y="80" text-anchor="middle">LCS(0,1)</text>
+                    <text x="200" y="95" text-anchor="middle" font-size="10">a vs c</text>
+                    
+                    <!-- Second level for LCS(1,0) -->
+                    <line x1="-220" y1="100" x2="-280" y2="160" class="link"></line>
+                    <circle cx="-280" cy="160" r="25" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="-280" y="160" text-anchor="middle">LCS(2,0)</text>
+                    <text x="-280" y="175" text-anchor="middle" font-size="10">- vs a</text>
+                    
+                    <line x1="-180" y1="100" x2="-140" y2="160" class="link"></line>
+                    <circle cx="-140" cy="160" r="25" class="node-circle" stroke="#000000" stroke-width="2" fill="#FD9F78"></circle>
+                    <text x="-140" y="160" text-anchor="middle">LCS(1,1)</text>
+                    <text x="-140" y="175" text-anchor="middle" font-size="10">b vs c</text>
+                    
+                    <!-- Second level for LCS(1,1) -->
+                    <line x1="-20" y1="100" x2="-70" y2="160" class="link"></line>
+                    <circle cx="-70" cy="160" r="25" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="-70" y="160" text-anchor="middle">LCS(2,1)</text>
+                    <text x="-70" y="175" text-anchor="middle" font-size="10">- vs c</text>
+                    
+                    <line x1="20" y1="100" x2="70" y2="160" class="link"></line>
+                    <circle cx="70" cy="160" r="25" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="70" y="160" text-anchor="middle">LCS(1,2)</text>
+                    <text x="70" y="175" text-anchor="middle" font-size="10">b vs -</text>
+                    
+                    <!-- Second level for LCS(0,1) -->
+                    <line x1="180" y1="100" x2="140" y2="160" class="link"></line>
+                    <circle cx="140" cy="160" r="25" class="node-circle" stroke="#000000" stroke-width="2" fill="#FD9F78"></circle>
+                    <text x="140" y="160" text-anchor="middle">LCS(1,1)</text>
+                    <text x="140" y="175" text-anchor="middle" font-size="10">b vs c</text>
+                    
+                    <line x1="220" y1="100" x2="280" y2="160" class="link"></line>
+                    <circle cx="280" cy="160" r="25" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="280" y="160" text-anchor="middle">LCS(0,2)</text>
+                    <text x="280" y="175" text-anchor="middle" font-size="10">a vs -</text>
+                    
+                    <!-- Third level for duplicated nodes -->
+                    <!-- For LCS(1,1) at (-140,160) -->
+                    <line x1="-160" y1="180" x2="-180" y2="240" class="link"></line>
+                    <circle cx="-180" cy="240" r="20" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="-180" y="240" text-anchor="middle" font-size="10">LCS(2,1)</text>
+                    
+                    <line x1="-120" y1="180" x2="-100" y2="240" class="link"></line>
+                    <circle cx="-100" cy="240" r="20" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="-100" y="240" text-anchor="middle" font-size="10">LCS(1,2)</text>
+                    
+                    <!-- For LCS(1,1) at (140,160) -->
+                    <line x1="120" y1="180" x2="100" y2="240" class="link"></line>
+                    <circle cx="100" cy="240" r="20" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="100" y="240" text-anchor="middle" font-size="10">LCS(2,1)</text>
+                    
+                    <line x1="160" y1="180" x2="180" y2="240" class="link"></line>
+                    <circle cx="180" cy="240" r="20" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="180" y="240" text-anchor="middle" font-size="10">LCS(1,2)</text>
+                    
+                    <!-- Fourth level (leaf nodes) -->
+                    <line x1="-280" y1="180" x2="-300" y2="240" class="link"></line>
+                    <circle cx="-300" cy="240" r="20" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="-300" y="240" text-anchor="middle" font-size="10">LCS(2,1)</text>
+                    
+                    <line x1="-70" y1="180" x2="-50" y2="240" class="link"></line>
+                    <circle cx="-50" cy="240" r="20" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="-50" y="240" text-anchor="middle" font-size="10">LCS(2,2)</text>
+                    
+                    <line x1="70" y1="180" x2="50" y2="240" class="link"></line>
+                    <circle cx="50" cy="240" r="20" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="50" y="240" text-anchor="middle" font-size="10">LCS(2,2)</text>
+                    
+                    <line x1="280" y1="180" x2="300" y2="240" class="link"></line>
+                    <circle cx="300" cy="240" r="20" class="node-circle" stroke="#000000" stroke-width="2" fill="#FFFFFF"></circle>
+                    <text x="300" y="240" text-anchor="middle" font-size="10">LCS(1,2)</text>
+                    
+                    <!-- Highlight leaf nodes that are visited multiple times -->
+                    <circle cx="-300" cy="240" r="20" class="node-circle" stroke="#000000" stroke-width="2" fill="#FD9F78" fill-opacity="0.5"></circle>
+                    <circle cx="-50" cy="240" r="20" class="node-circle" stroke="#000000" stroke-width="2" fill="#FD9F78" fill-opacity="0.5"></circle>
+                    <circle cx="50" cy="240" r="20" class="node-circle" stroke="#000000" stroke-width="2" fill="#FD9F78" fill-opacity="0.5"></circle>
+                    <circle cx="300" cy="240" r="20" class="node-circle" stroke="#000000" stroke-width="2" fill="#FD9F78" fill-opacity="0.5"></circle>
+                </g>
+            `;
+        }
+
+        function drawTree5() {
+            const svg = document.getElementById('tree-svg5');
+            // Use same tree as tree4 but add highlights and annotations
+            drawTree4();
+            
+            // Add annotations to show exponential growth
+            svg.innerHTML += `
+                <g transform="translate(400, 300)">
+                    <path d="M-350,-150 Q-400,-50 -350,50" stroke="#FF4800" stroke-width="2" fill="none" stroke-dasharray="5,5"></path>
+                    <text x="-400" y="0" text-anchor="middle" fill="#FF4800" font-weight="bold">Exponential</text>
+                    <text x="-400" y="20" text-anchor="middle" fill="#FF4800" font-weight="bold">Growth</text>
+                    
+                    <rect x="150" y="-100" width="120" height="60" rx="10" fill="#FD9F78" fill-opacity="0.3" stroke="#FF4800"></rect>
+                    <text x="210" y="-70" text-anchor="middle" fill="#000000" font-weight="bold">Overlapping</text>
+                    <text x="210" y="-50" text-anchor="middle" fill="#000000" font-weight="bold">Subproblems</text>
+                    <line x1="150" y1="-70" x2="100" y2="-40" stroke="#FF4800" stroke-width="2"></line>
+                </g>
+            `;
+        }
+
+        // Initialize all trees
+        window.onload = function() {
+            drawTree1();
+            drawTree2();
+            drawTree3();
+            drawTree4();
+            drawTree5();
+        };
+    </script>
+</body>
+</html>
