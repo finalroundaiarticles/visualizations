@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recursive Call Tree for Rod Length 7</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            position: relative;
+        }
+        .slide {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        .active-slide {
+            display: flex;
+        }
+        canvas {
+            border: 2px solid #000000;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            width: 100%;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .explanation {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            color: #000000;
+            max-width: 800px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Recursive Call Tree for Rod Length 7</h1>
+    <div class="container">
+        <div class="slide active-slide" id="slide1">
+            <div class="explanation">
+                Let's visualize the recursive calls for cutting a rod of length 7. We have three possible cut lengths: 2, 3, and 5.
+                We want to find the maximum number of segments possible.
+            </div>
+            <canvas id="canvas1" width="850" height="500"></canvas>
+        </div>
+        
+        <div class="slide" id="slide2">
+            <div class="explanation">
+                The tree expands by trying all three possible cuts (2, 3, or 5) at each step.
+                Notice how some branches lead to invalid cuts (shown in red) where the remaining length is not enough.
+            </div>
+            <canvas id="canvas2" width="850" height="500"></canvas>
+        </div>
+        
+        <div class="slide" id="slide3">
+            <div class="explanation">
+                Here's the complete decision tree. The optimal path is highlighted in green.
+                We can cut the rod of length 7 into 3 segments by making cuts of length 2, 2, and 3.
+            </div>
+            <canvas id="canvas3" width="850" height="500"></canvas>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Navigation logic
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        let currentSlide = 0;
+
+        function showSlide(index) {
+            slides.forEach(slide => slide.classList.remove('active-slide'));
+            slides[index].classList.add('active-slide');
+            
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === slides.length - 1;
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        });
+
+        // Drawing functions
+        function drawNode(ctx, x, y, radius, text, color = "#FFFFFF", textColor = "#000000", borderColor = "#000000") {
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = borderColor;
+            ctx.stroke();
+            
+            ctx.font = "16px Arial";
+            ctx.fillStyle = textColor;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(text, x, y);
+        }
+
+        function drawLine(ctx, x1, y1, x2, y2, color = "#000000", width = 2, label = "") {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.stroke();
+            
+            if (label) {
+                const midX = (x1 + x2) / 2;
+                const midY = (y1 + y2) / 2;
+                ctx.font = "14px Arial";
+                ctx.fillStyle = color;
+                ctx.textAlign = "center";
+                ctx.fillText(label, midX, midY - 10);
+            }
+        }
+
+        // Draw Slide 1
+        const canvas1 = document.getElementById('canvas1');
+        const ctx1 = canvas1.getContext('2d');
+        
+        function drawSlide1() {
+            const nodeRadius = 25;
+            
+            // Draw root node
+            drawNode(ctx1, 425, 50, nodeRadius, "n=7", "#FF4800", "#FFFFFF");
+            
+            // Draw first level children
+            drawNode(ctx1, 225, 150, nodeRadius, "n=5", "#FD9F78");
+            drawNode(ctx1, 425, 150, nodeRadius, "n=4", "#FD9F78");
+            drawNode(ctx1, 625, 150, nodeRadius, "n=2", "#FD9F78");
+            
+            // Draw connecting lines
+            drawLine(ctx1, 425, 75, 225, 125, "#000000", 2, "cut 2");
+            drawLine(ctx1, 425, 75, 425, 125, "#000000", 2, "cut 3");
+            drawLine(ctx1, 425, 75, 625, 125, "#000000", 2, "cut 5");
+            
+            // Add explanation text
+            ctx1.font = "16px Arial";
+            ctx1.fillStyle = "#000000";
+            ctx1.textAlign = "center";
+            ctx1.fillText("Starting with a rod of length 7, we have three options:", 425, 250);
+            ctx1.fillText("Cut length 2: Leaves 5 remaining", 425, 280);
+            ctx1.fillText("Cut length 3: Leaves 4 remaining", 425, 310);
+            ctx1.fillText("Cut length 5: Leaves 2 remaining", 425, 340);
+            
+            ctx1.fillText("Our goal is to maximize the number of segments.", 425, 380);
+            ctx1.fillText("Each valid cut adds 1 to our segment count.", 425, 410);
+        }
+        
+        // Draw Slide 2
+        const canvas2 = document.getElementById('canvas2');
+        const ctx2 = canvas2.getContext('2d');
+        
+        function drawSlide2() {
+            const nodeRadius = 20;
+            
+            // Draw root node
+            drawNode(ctx2, 425, 50, nodeRadius, "n=7", "#FF4800", "#FFFFFF");
+            
+            // Draw first level
+            drawNode(ctx2, 225, 130, nodeRadius, "n=5", "#FD9F78");
+            drawNode(ctx2, 425, 130, nodeRadius, "n=4", "#FD9F78");
+            drawNode(ctx2, 625, 130, nodeRadius, "n=2", "#FD9F78");
+            
+            // Connect first level
+            drawLine(ctx2, 425, 70, 225, 110, "#000000", 2, "cut 2");
+            drawLine(ctx2, 425, 70, 425, 110, "#000000", 2, "cut 3");
+            drawLine(ctx2, 425, 70, 625, 110, "#000000", 2, "cut 5");
+            
+            // Draw second level from n=5
+            drawNode(ctx2, 125, 210, nodeRadius, "n=3", "#FD9F78");
+            drawNode(ctx2, 225, 210, nodeRadius, "n=2", "#FD9F78");
+            drawNode(ctx2, 325, 210, nodeRadius, "n=0", "#FD9F78");
+            
+            // Connect second level from n=5
+            drawLine(ctx2, 225, 150, 125, 190, "#000000", 1, "cut 2");
+            drawLine(ctx2, 225, 150, 225, 190, "#000000", 1, "cut 3");
+            drawLine(ctx2, 225, 150, 325, 190, "#000000", 1, "cut 5");
+            
+            // Draw second level from n=4
+            drawNode(ctx2, 375, 210, nodeRadius, "n=2", "#FD9F78");
+            drawNode(ctx2, 425, 210, nodeRadius, "n=1", "#FD9F78");
+            drawNode(ctx2, 475, 210, nodeRadius, "n=-1", "#FF4800", "#FFFFFF");
+            
+            // Connect second level from n=4
+            drawLine(ctx2, 425, 150, 375, 190, "#000000", 1, "cut 2");
+            drawLine(ctx2, 425, 150, 425, 190, "#000000", 1, "cut 3");
+            drawLine(ctx2, 425, 150, 475, 190, "#FF4800", 1, "cut 5");
+            
+            // Draw second level from n=2
+            drawNode(ctx2, 575, 210, nodeRadius, "n=0", "#FD9F78");
+            drawNode(ctx2, 625, 210, nodeRadius, "n=-1", "#FF4800", "#FFFFFF");
+            drawNode(ctx2, 675, 210, nodeRadius, "n=-3", "#FF4800", "#FFFFFF");
+            
+            // Connect second level from n=2
+            drawLine(ctx2, 625, 150, 575, 190, "#000000", 1, "cut 2");
+            drawLine(ctx2, 625, 150, 625, 190, "#FF4800", 1, "cut 3");
+            drawLine(ctx2, 625, 150, 675, 190, "#FF4800", 1, "cut 5");
+            
+            // Draw third level from n=3
+            drawNode(ctx2, 75, 290, nodeRadius, "n=1", "#FD9F78");
+            drawNode(ctx2, 125, 290, nodeRadius, "n=0", "#FD9F78");
+            drawNode(ctx2, 175, 290, nodeRadius, "n=-2", "#FF4800", "#FFFFFF");
+            
+            // Connect third level from n=3
+            drawLine(ctx2, 125, 230, 75, 270, "#000000", 1, "cut 2");
+            drawLine(ctx2, 125, 230, 125, 270, "#000000", 1, "cut 3");
+            drawLine(ctx2, 125, 230, 175, 270, "#FF4800", 1, "cut 5");
+            
+            // Draw third level from n=2 (first branch)
+            drawNode(ctx2, 225, 290, nodeRadius, "n=0", "#FD9F78");
+            drawNode(ctx2, 275, 290, nodeRadius, "n=-1", "#FF4800", "#FFFFFF");
+            drawNode(ctx2, 325, 290, nodeRadius, "n=-3", "#FF4800", "#FFFFFF");
+            
+            // Connect third level from n=2 (first branch)
+            drawLine(ctx2, 225, 230, 225, 270, "#000000", 1, "cut 2");
+            drawLine(ctx2, 225, 230, 275, 270, "#FF4800", 1, "cut 3");
+            drawLine(ctx2, 225, 230, 325, 270, "#FF4800", 1, "cut 5");
+            
+            // Draw third level from n=2 (second branch)
+            drawNode(ctx2, 375, 290, nodeRadius, "n=0", "#FD9F78");
+            drawNode(ctx2, 425, 290, nodeRadius, "n=-1", "#FF4800", "#FFFFFF");
+            drawNode(ctx2, 475, 290, nodeRadius, "n=-3", "#FF4800", "#FFFFFF");
+            
+            // Connect third level from n=2 (second branch)
+            drawLine(ctx2, 375, 230, 375, 270, "#000000", 1, "cut 2");
+            drawLine(ctx2, 375, 230, 425, 270, "#FF4800", 1, "cut 3");
+            drawLine(ctx2, 375, 230, 475, 270, "#FF4800", 1, "cut 5");
+            
+            // Legend
+            ctx2.font = "16px Arial";
+            ctx2.fillStyle = "#000000";
+            ctx2.textAlign = "left";
+            
+            ctx2.fillText("Legend:", 650, 300);
+            drawNode(ctx2, 670, 330, 15, "", "#FD9F78");
+            ctx2.fillText("Valid remaining length", 690, 330);
+            
+            drawNode(ctx2, 670, 360, 15, "", "#FF4800", "#FFFFFF");
+            ctx2.fillText("Invalid cut (negative length)", 690, 360);
+            
+            ctx2.fillText("n=0 means exactly consumed", 650, 390);
+            ctx2.fillText("n<0 means invalid cut", 650, 420);
+        }
+        
+        // Draw Slide 3
+        const canvas3 = document.getElementById('canvas3');
+        const ctx3 = canvas3.getContext('2d');
+        
+        function drawSlide3() {
+            const nodeRadius = 18;
+            
+            // Draw root node
+            drawNode(ctx3, 425, 40, nodeRadius, "n=7", "#FF4800", "#FFFFFF");
+            
+            // Draw first level
+            drawNode(ctx3, 225, 100, nodeRadius, "n=5", "#00CC00"); // Optimal path
+            drawNode(ctx3, 425, 100, nodeRadius, "n=4", "#FD9F78");
+            drawNode(ctx3, 625, 100, nodeRadius, "n=2", "#FD9F78");
+            
+            // Connect first level
+            drawLine(ctx3, 425, 58, 225, 82, "#00CC00", 3, "cut 2"); // Optimal path
+            drawLine(ctx3, 425, 58, 425, 82, "#000000", 1, "cut 3");
+            drawLine(ctx3, 425, 58, 625, 82, "#000000", 1, "cut 5");
+            
+            // Draw second level from n=5
+            drawNode(ctx3, 125, 160, nodeRadius, "n=3", "#FD9F78");
+            drawNode(ctx3, 225, 160, nodeRadius, "n=2", "#00CC00"); // Optimal path
+            drawNode(ctx3, 325, 160, nodeRadius, "n=0", "#FD9F78");
+            
+            // Connect second level from n=5
+            drawLine(ctx3, 225, 118, 125, 142, "#000000", 1, "cut 2");
+            drawLine(ctx3, 225, 118, 225, 142, "#00CC00", 3, "cut 3"); // Optimal path
+            drawLine(ctx3, 225, 118, 325, 142, "#000000", 1, "cut 5");
+            
+            // Draw second level from n=4
+            drawNode(ctx3, 375, 160, nodeRadius, "n=2", "#FD9F78");
+            drawNode(ctx3, 425, 160, nodeRadius, "n=1", "#FD9F78");
+            drawNode(ctx3, 475, 160, nodeRadius, "n=-1", "#FF4800", "#FFFFFF");
+            
+            // Connect second level from n=4
+            drawLine(ctx3, 425, 118, 375, 142, "#000000", 1, "cut 2");
+            drawLine(ctx3, 425, 118, 425, 142, "#000000", 1, "cut 3");
+            drawLine(ctx3, 425, 118, 475, 142, "#FF4800", 1, "cut 5");
+            
+            // Draw second level from n=2
+            drawNode(ctx3, 575, 160, nodeRadius, "n=0", "#FD9F78");
+            drawNode(ctx3, 625, 160, nodeRadius, "n=-1", "#FF4800", "#FFFFFF");
+            drawNode(ctx3, 675, 160, nodeRadius, "n=-3", "#FF4800", "#FFFFFF");
+            
+            // Connect second level from n=2
+            drawLine(ctx3, 625, 118, 575, 142, "#000000", 1, "cut 2");
+            drawLine(ctx3, 625, 118, 625, 142, "#FF4800", 1, "cut 3");
+            drawLine(ctx3, 625, 118, 675, 142, "#FF4800", 1, "cut 5");
+            
+            // Draw third level from n=3
+            drawNode(ctx3, 75, 220, nodeRadius, "n=1", "#FD9F78");
+            drawNode(ctx3, 125, 220, nodeRadius, "n=0", "#FD9F78");
+            drawNode(ctx3, 175, 220, nodeRadius, "n=-2", "#FF4800", "#FFFFFF");
+            
+            // Connect third level from n=3
+            drawLine(ctx3, 125, 178, 75, 202, "#000000", 1, "cut 2");
+            drawLine(ctx3, 125, 178, 125, 202, "#000000", 1, "cut 3");
+            drawLine(ctx3, 125, 178, 175, 202, "#FF4800", 1, "cut 5");
+            
+            // Draw third level from n=2 (first optimal branch)
+            drawNode(ctx3, 225, 220, nodeRadius, "n=0", "#00CC00"); // Optimal path
+            drawNode(ctx3, 275, 220, nodeRadius, "n=-1", "#FF4800", "#FFFFFF");
+            drawNode(ctx3, 325, 220, nodeRadius, "n=-3", "#FF4800", "#FFFFFF");
+            
+            // Connect third level from n=2 (first optimal branch)
+            drawLine(ctx3, 225, 178, 225, 202, "#00CC00", 3, "cut 2"); // Optimal path
+            drawLine(ctx3, 225, 178, 275, 202, "#FF4800", 1, "cut 3");
+            drawLine(ctx3, 225, 178, 325, 202, "#FF4800", 1, "cut 5");
+            
+            // Draw third level from n=2 (second branch)
+            drawNode(ctx3, 375, 220, nodeRadius, "n=0", "#FD9F78");
+            drawNode(ctx3, 425, 220, nodeRadius, "n=-1", "#FF4800", "#FFFFFF");
+            drawNode(ctx3, 475, 220, nodeRadius, "n=-3", "#FF4800", "#FFFFFF");
+            
+            // Connect third level from n=2 (second branch)
+            drawLine(ctx3, 375, 178, 375, 202, "#000000", 1, "cut 2");
+            drawLine(ctx3, 375, 178, 425, 202, "#FF4800", 1, "cut 3");
+            drawLine(ctx3, 375, 178, 475, 202, "#FF4800", 1, "cut 5");
+            
+            // Draw n=1 children
+            drawNode(ctx3, 75, 280, nodeRadius, "n=-1", "#FF4800", "#FFFFFF");
+            drawNode(ctx3, 125, 280, nodeRadius, "n=-2", "#FF4800", "#FFFFFF");
+            drawNode(ctx3, 175, 280, nodeRadius, "n=-4", "#FF4800", "#FFFFFF");
+            
+            // Connect n=1 children
+            drawLine(ctx3, 75, 238, 75, 262, "#FF4800", 1, "cut 2");
+            drawLine(ctx3, 75, 238, 125, 262, "#FF4800", 1, "cut 3");
+            drawLine(ctx3, 75, 238, 175, 262, "#FF4800", 1, "cut 5");
+            
+            // Legend
+            ctx3.font = "16px Arial";
+            ctx3.fillStyle = "#000000";
+            ctx3.textAlign = "left";
+            
+            ctx3.fillText("Legend:", 600, 260);
+            drawNode(ctx3, 620, 290, 15, "", "#00CC00");
+            ctx3.fillText("Optimal path (3 segments)", 640, 290);
+            
+            drawNode(ctx3, 620, 320, 15, "", "#FD9F78");
+            ctx3.fillText("Valid cut but not optimal", 640, 320);
+            
+            drawNode(ctx3, 620, 350, 15, "", "#FF4800", "#FFFFFF");
+            ctx3.fillText("Invalid cut", 640, 350);
+            
+            // Explain the solution
+            ctx3.textAlign = "center";
+            ctx3.fillText("Solution: The optimal way to cut a rod of length 7 is to make 3 segments", 325, 320);
+            ctx3.fillText("using cuts of length 2, 3, and 2", 325, 350);
+            ctx3.fillText("Maximum number of segments = 3", 325, 380);
+        }
+        
+        // Initialize all slides
+        window.onload = function() {
+            drawSlide1();
+            drawSlide2();
+            drawSlide3();
+        };
+    </script>
+</body>
+</html>
