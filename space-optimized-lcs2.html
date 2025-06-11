@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Optimization Comparison - Dynamic Programming</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .comparison-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        
+        .table-approach, .optimized-approach {
+            width: 48%;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        h2 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .grid-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        
+        .dp-table {
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .dp-table td {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            border: 1px solid #000000;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        
+        .dp-table th {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            border: 1px solid #000000;
+            background-color: #FD9F78;
+            color: #000000;
+        }
+        
+        .memory-usage {
+            margin-top: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .explanation {
+            background-color: #f9f9f9;
+            border-left: 4px solid #FF4800;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .highlighted {
+            background-color: #FD9F78;
+        }
+        
+        .current-cell {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .memory-bar {
+            height: 30px;
+            background-color: #FF4800;
+            margin-top: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .memory-comparison {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+        }
+        
+        .memory-block {
+            text-align: center;
+            width: 45%;
+        }
+        
+        .step-display {
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Space Optimization Comparison in Dynamic Programming</h1>
+        
+        <div class="step-display">
+            Step <span id="current-step">1</span> of <span id="total-steps">5</span>
+        </div>
+        
+        <div class="comparison-container">
+            <div class="table-approach">
+                <h2>2D Table Approach</h2>
+                <div class="grid-container">
+                    <div>Example strings: <strong>s1 = "ABC"</strong>, <strong>s2 = "XYZ"</strong></div>
+                    <table class="dp-table" id="full-table">
+                        <!-- Table will be populated with JavaScript -->
+                    </table>
+                    <div class="memory-usage">
+                        Memory Usage: <span id="table-memory">16 cells</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="optimized-approach">
+                <h2>Optimized 1D Arrays</h2>
+                <div class="grid-container">
+                    <div>Example strings: <strong>s1 = "ABC"</strong>, <strong>s2 = "XYZ"</strong></div>
+                    <div style="margin-top: 10px;">Current Row:</div>
+                    <table class="dp-table" id="current-row">
+                        <!-- Current row will be populated with JavaScript -->
+                    </table>
+                    <div style="margin-top: 10px;">Previous Row:</div>
+                    <table class="dp-table" id="previous-row">
+                        <!-- Previous row will be populated with JavaScript -->
+                    </table>
+                    <div class="memory-usage">
+                        Memory Usage: <span id="optimized-memory">8 cells</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="memory-comparison">
+            <div class="memory-block">
+                <h3>2D Table Memory</h3>
+                <div class="memory-bar" id="table-memory-bar" style="width: 100%;"></div>
+                <div id="table-memory-text">(m+1) × (n+1) = 4 × 4 = 16 cells</div>
+            </div>
+            <div class="memory-block">
+                <h3>Optimized 1D Arrays Memory</h3>
+                <div class="memory-bar" id="optimized-memory-bar" style="width: 50%;"></div>
+                <div id="optimized-memory-text">2 × (n+1) = 2 × 4 = 8 cells</div>
+            </div>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <p><strong>Space Optimization in Dynamic Programming:</strong></p>
+            <p>Welcome to the comparison of memory usage between a standard 2D DP table and an optimized approach using two 1D arrays.</p>
+            <p>Click "Next" to see how the space optimization works.</p>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
+            <button class="nav-btn" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Define the strings for the example
+        const s1 = "ABC";
+        const s2 = "XYZ";
+        
+        // Initialize the animation steps
+        const steps = [
+            {
+                title: "Initial Setup",
+                explanation: `<p><strong>Initial Setup:</strong></p>
+                <p>For our example, we're using strings s1 = "ABC" and s2 = "XYZ".</p>
+                <p><strong>2D Approach:</strong> Creates a table of size (m+1)×(n+1) = 4×4 = 16 cells</p>
+                <p><strong>Optimized Approach:</strong> Uses only two rows of size (n+1) = 4 cells each, totaling 8 cells</p>
+                <p>This gives us a 50% reduction in memory usage for this small example!</p>`
+            },
+            {
+                title: "Memory Usage Comparison",
+                explanation: `<p><strong>Memory Usage Comparison:</strong></p>
+                <p>The 2D table requires (m+1)×(n+1) cells in memory:</p>
+                <p>For larger strings, the difference becomes even more significant:</p>
+                <ul>
+                    <li>For strings of length 100, 2D approach needs 10,201 cells</li>
+                    <li>Optimized approach needs only 202 cells</li>
+                    <li>That's approximately 98% memory saving!</li>
+                </ul>
+                <p>The optimized approach only keeps the information we need at each step.</p>`
+            },
+            {
+                title: "How Optimization Works",
+                explanation: `<p><strong>How the Optimization Works:</strong></p>
+                <p>In many DP problems, when filling a cell in row i, we only need information from:</p>
+                <ul>
+                    <li>The previous row (i-1)</li>
+                    <li>The already filled cells in the current row</li>
+                </ul>
+                <p>Since we don't need rows from earlier calculations, we can just keep two rows in memory and alternate between them.</p>`
+            },
+            {
+                title: "Processing Logic",
+                explanation: `<p><strong>Processing Logic:</strong></p>
+                <p>As we process each row:</p>
+                <ol>
+                    <li>We compute values for the current row using values from the previous row</li>
+                    <li>Once a row is complete, the current row becomes the previous row for the next iteration</li>
+                    <li>We reuse the array space by alternating between the two arrays</li>
+                </ol>
+                <p>This "rolling array" technique maintains correctness while using minimal memory.</p>`
+            },
+            {
+                title: "Practical Benefits",
+                explanation: `<p><strong>Practical Benefits:</strong></p>
+                <p>This optimization is critical for:</p>
+                <ul>
+                    <li>Working with very long strings or sequences</li>
+                    <li>Memory-constrained environments</li>
+                    <li>Improving cache efficiency for better performance</li>
+                </ul>
+                <p>For our example strings "ABC" and "XYZ", we've reduced memory from 16 cells to just 8 cells. For real-world problems with strings of length 1000+, the savings become enormous!</p>`
+            }
+        ];
+        
+        // Track the current step
+        let currentStep = 0;
+        const totalSteps = steps.length;
+        document.getElementById('total-steps').textContent = totalSteps;
+        
+        // Initialize the tables
+        function initializeTables() {
+            // 2D table
+            const fullTable = document.getElementById('full-table');
+            fullTable.innerHTML = '';
+            
+            // Header row
+            let headerRow = document.createElement('tr');
+            headerRow.innerHTML = '<th></th>';
+            
+            for (let j = 0; j <= s2.length; j++) {
+                headerRow.innerHTML += `<th>${j === 0 ? '' : s2[j-1]}</th>`;
+            }
+            fullTable.appendChild(headerRow);
+            
+            // Data rows
+            for (let i = 0; i <= s1.length; i++) {
+                let row = document.createElement('tr');
+                let headerCell = document.createElement('th');
+                headerCell.textContent = i === 0 ? '' : s1[i-1];
+                row.appendChild(headerCell);
+                
+                for (let j = 0; j <= s2.length; j++) {
+                    let cell = document.createElement('td');
+                    cell.textContent = '0';
+                    row.appendChild(cell);
+                }
+                fullTable.appendChild(row);
+            }
+            
+            // Optimized approach - Current row
+            const currentRow = document.getElementById('current-row');
+            currentRow.innerHTML = '';
+            let curRow = document.createElement('tr');
+            
+            for (let j = 0; j <= s2.length; j++) {
+                let headerCell = document.createElement('th');
+                headerCell.textContent = j === 0 ? '' : s2[j-1];
+                curRow.appendChild(headerCell);
+            }
+            currentRow.appendChild(curRow);
+            
+            let dataRow = document.createElement('tr');
+            for (let j = 0; j <= s2.length; j++) {
+                let cell = document.createElement('td');
+                cell.textContent = '0';
+                dataRow.appendChild(cell);
+            }
+            currentRow.appendChild(dataRow);
+            
+            // Optimized approach - Previous row
+            const previousRow = document.getElementById('previous-row');
+            previousRow.innerHTML = '';
+            let prevHeaderRow = document.createElement('tr');
+            
+            for (let j = 0; j <= s2.length; j++) {
+                let headerCell = document.createElement('th');
+                headerCell.textContent = j === 0 ? '' : s2[j-1];
+                prevHeaderRow.appendChild(headerCell);
+            }
+            previousRow.appendChild(prevHeaderRow);
+            
+            let prevDataRow = document.createElement('tr');
+            for (let j = 0; j <= s2.length; j++) {
+                let cell = document.createElement('td');
+                cell.textContent = '0';
+                prevDataRow.appendChild(cell);
+            }
+            previousRow.appendChild(prevDataRow);
+            
+            // Update memory indicators
+            document.getElementById('table-memory').textContent = `${(s1.length + 1) * (s2.length + 1)} cells`;
+            document.getElementById('optimized-memory').textContent = `${2 * (s2.length + 1)} cells`;
+            
+            // Update memory bars
+            const fullMemory = (s1.length + 1) * (s2.length + 1);
+            const optimizedMemory = 2 * (s2.length + 1);
+            const percentage = (optimizedMemory / fullMemory) * 100;
+            
+            document.getElementById('table-memory-bar').style.width = '100%';
+            document.getElementById('optimized-memory-bar').style.width = `${percentage}%`;
+            
+            document.getElementById('table-memory-text').textContent = 
+                `(m+1) × (n+1) = ${s1.length + 1} × ${s2.length + 1} = ${fullMemory} cells`;
+            document.getElementById('optimized-memory-text').textContent = 
+                `2 × (n+1) = 2 × ${s2.length + 1} = ${optimizedMemory} cells`;
+        }
+        
+        // Update the explanation text
+        function updateExplanation() {
+            document.getElementById('current-step').textContent = currentStep + 1;
+            document.getElementById('explanation').innerHTML = steps[currentStep].explanation;
+        }
+        
+        // Navigation handlers
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateExplanation();
+                updateButtonStates();
+            }
+        });
+        
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateExplanation();
+                updateButtonStates();
+            }
+        });
+        
+        // Update button states
+        function updateButtonStates() {
+            document.getElementById('prev-btn').disabled = (currentStep === 0);
+            document.getElementById('next-btn').disabled = (currentStep === totalSteps - 1);
+        }
+        
+        // Initialize the visualization
+        initializeTables();
+        updateExplanation();
+        updateButtonStates();
+    </script>
+</body>
+</html>
