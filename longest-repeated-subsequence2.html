@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Programming Table Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .dp-table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .dp-table {
+            border-collapse: collapse;
+            margin: 20px auto;
+        }
+
+        .dp-table td {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            border: 1px solid #000000;
+            position: relative;
+            font-weight: bold;
+        }
+
+        .header-cell {
+            background-color: #FD9F78;
+            color: #000000;
+        }
+
+        .active-cell {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transition: background-color 0.5s ease;
+        }
+
+        .highlighted-cell {
+            background-color: #FD9F78;
+            transition: background-color 0.5s ease;
+        }
+
+        .arrow {
+            position: absolute;
+            font-size: 18px;
+            color: #000000;
+        }
+
+        .explanation {
+            margin: 20px auto;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #FFF;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            line-height: 1.6;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .step-indicator {
+            margin: 0 15px;
+            font-weight: bold;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dynamic Programming for Longest Palindromic Subsequence</h1>
+        
+        <div class="dp-table-container">
+            <table id="dpTable" class="dp-table"></table>
+        </div>
+        
+        <div id="explanation" class="explanation">
+            Welcome to the Dynamic Programming visualization for finding the Longest Palindromic Subsequence of string "aabaaaba".
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" class="nav-btn" disabled>Previous</button>
+            <span id="stepIndicator" class="step-indicator">Step 1 of 26</span>
+            <button id="nextBtn" class="nav-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // The string we are working with
+        const str = "aabaaaba";
+        const n = str.length;
+        
+        // Create the DP table
+        function createTable() {
+            const table = document.getElementById('dpTable');
+            table.innerHTML = '';
+            
+            // Create header row with indices
+            const headerRow = document.createElement('tr');
+            const emptyCell = document.createElement('td');
+            emptyCell.classList.add('header-cell');
+            headerRow.appendChild(emptyCell);
+            
+            // Add j indices header (0 to n-1)
+            for (let j = 0; j < n; j++) {
+                const cell = document.createElement('td');
+                cell.textContent = str[j];
+                cell.classList.add('header-cell');
+                headerRow.appendChild(cell);
+            }
+            table.appendChild(headerRow);
+            
+            // Create the rest of the table
+            for (let i = 0; i < n; i++) {
+                const row = document.createElement('tr');
+                
+                // Add i index as first cell in each row
+                const indexCell = document.createElement('td');
+                indexCell.textContent = str[i];
+                indexCell.classList.add('header-cell');
+                row.appendChild(indexCell);
+                
+                // Add empty cells for DP values
+                for (let j = 0; j < n; j++) {
+                    const cell = document.createElement('td');
+                    cell.id = `cell-${i}-${j}`;
+                    cell.textContent = "-";
+                    row.appendChild(cell);
+                }
+                
+                table.appendChild(row);
+            }
+        }
+        
+        // Calculate the full DP table for the animation
+        function calculateDP() {
+            const dp = Array(n).fill().map(() => Array(n).fill(0));
+            
+            // Base case: single characters are palindromes with length 1
+            for (let i = 0; i < n; i++) {
+                dp[i][i] = 1;
+            }
+            
+            // Fill the DP table
+            for (let len = 2; len <= n; len++) {
+                for (let i = 0; i <= n - len; i++) {
+                    const j = i + len - 1;
+                    
+                    if (str[i] === str[j] && len === 2) {
+                        dp[i][j] = 2;
+                    } else if (str[i] === str[j]) {
+                        dp[i][j] = dp[i+1][j-1] + 2;
+                    } else {
+                        dp[i][j] = Math.max(dp[i+1][j], dp[i][j-1]);
+                    }
+                }
+            }
+            
+            return dp;
+        }
+        
+        // Animation steps setup
+        const dp = calculateDP();
+        let steps = [];
+        
+        // Generate steps for the animation
+        function generateSteps() {
+            // Base case: single characters (diagonal)
+            for (let i = 0; i < n; i++) {
+                steps.push({
+                    type: 'base',
+                    i: i,
+                    j: i,
+                    value: 1,
+                    explanation: `Base case: Each single character is a palindrome with length 1. Setting dp[${i}][${i}] = 1.`
+                });
+            }
+            
+            // Fill the rest of the table by length
+            for (let len = 2; len <= n; len++) {
+                for (let i = 0; i <= n - len; i++) {
+                    const j = i + len - 1;
+                    
+                    steps.push({
+                        type: 'considering',
+                        i: i,
+                        j: j,
+                        explanation: `Considering substring ${str.substring(i, j+1)} from index ${i} to ${j}.`
+                    });
+                    
+                    if (str[i] === str[j]) {
+                        if (len === 2) {
+                            steps.push({
+                                type: 'match-len-2',
+                                i: i,
+                                j: j,
+                                value: 2,
+                                explanation: `Characters at positions ${i} and ${j} match (both are '${str[i]}'). Since they are adjacent, we set dp[${i}][${j}] = 2.`
+                            });
+                        } else {
+                            steps.push({
+                                type: 'match',
+                                i: i,
+                                j: j,
+                                innerI: i+1,
+                                innerJ: j-1,
+                                innerValue: dp[i+1][j-1],
+                                value: dp[i+1][j-1] + 2,
+                                explanation: `Characters at positions ${i} and ${j} match (both are '${str[i]}'). We add 2 to the solution for substring from ${i+1} to ${j-1}, which is ${dp[i+1][j-1]}. So dp[${i}][${j}] = ${dp[i+1][j-1]} + 2 = ${dp[i+1][j-1] + 2}.`
+                            });
+                        }
+                    } else {
+                        steps.push({
+                            type: 'no-match',
+                            i: i,
+                            j: j,
+                            leftI: i,
+                            leftJ: j-1,
+                            leftValue: dp[i][j-1],
+                            downI: i+1,
+                            downJ: j,
+                            downValue: dp[i+1][j],
+                            value: Math.max(dp[i+1][j], dp[i][j-1]),
+                            explanation: `Characters at positions ${i} ('${str[i]}') and ${j} ('${str[j]}') don't match. We take the maximum of dp[${i}][${j-1}] = ${dp[i][j-1]} and dp[${i+1}][${j}] = ${dp[i+1][j]}. So dp[${i}][${j}] = max(${dp[i][j-1]}, ${dp[i+1][j]}) = ${Math.max(dp[i+1][j], dp[i][j-1])}.`
+                        });
+                    }
+                }
+            }
+            
+            // Final step highlighting the answer
+            steps.push({
+                type: 'final',
+                i: 0,
+                j: n-1,
+                value: dp[0][n-1],
+                explanation: `The length of the Longest Palindromic Subsequence of "${str}" is ${dp[0][n-1]}, found at dp[0][${n-1}].`
+            });
+        }
+        
+        // Update the table for the current step
+        let currentStep = 0;
+        
+        function resetHighlights() {
+            const cells = document.querySelectorAll('.dp-table td');
+            cells.forEach(cell => {
+                cell.classList.remove('active-cell');
+                cell.classList.remove('highlighted-cell');
+            });
+            
+            // Remove arrows
+            const arrows = document.querySelectorAll('.arrow');
+            arrows.forEach(arrow => arrow.remove());
+        }
+        
+        function showStep(stepIndex) {
+            resetHighlights();
+            const step = steps[stepIndex];
+            const explanation = document.getElementById('explanation');
+            
+            // Update step indicator
+            document.getElementById('stepIndicator').textContent = `Step ${stepIndex + 1} of ${steps.length}`;
+            
+            // Base case: initializing diagonal
+            if (step.type === 'base') {
+                const cell = document.getElementById(`cell-${step.i}-${step.j}`);
+                cell.textContent = step.value;
+                cell.classList.add('active-cell');
+                explanation.textContent = step.explanation;
+            }
+            // Considering a new cell
+            else if (step.type === 'considering') {
+                const cell = document.getElementById(`cell-${step.i}-${step.j}`);
+                cell.classList.add('highlighted-cell');
+                explanation.textContent = step.explanation;
+            }
+            // Match case for len=2
+            else if (step.type === 'match-len-2') {
+                const cell = document.getElementById(`cell-${step.i}-${step.j}`);
+                cell.textContent = step.value;
+                cell.classList.add('active-cell');
+                explanation.textContent = step.explanation;
+            }
+            // Match case (characters at i and j match)
+            else if (step.type === 'match') {
+                const cell = document.getElementById(`cell-${step.i}-${step.j}`);
+                const innerCell = document.getElementById(`cell-${step.innerI}-${step.innerJ}`);
+                
+                cell.textContent = step.value;
+                cell.classList.add('active-cell');
+                innerCell.classList.add('highlighted-cell');
+                
+                // Add diagonal arrow
+                const arrow = document.createElement('div');
+                arrow.classList.add('arrow');
+                arrow.textContent = '↖';
+                arrow.style.bottom = '0';
+                arrow.style.right = '0';
+                cell.appendChild(arrow);
+                
+                explanation.textContent = step.explanation;
+            }
+            // No match case (take max of left or down)
+            else if (step.type === 'no-match') {
+                const cell = document.getElementById(`cell-${step.i}-${step.j}`);
+                const leftCell = document.getElementById(`cell-${step.leftI}-${step.leftJ}`);
+                const downCell = document.getElementById(`cell-${step.downI}-${step.downJ}`);
+                
+                cell.textContent = step.value;
+                cell.classList.add('active-cell');
+                
+                // Highlight the cell with the maximum value
+                if (step.leftValue >= step.downValue) {
+                    leftCell.classList.add('highlighted-cell');
+                    
+                    // Add left arrow
+                    const arrow = document.createElement('div');
+                    arrow.classList.add('arrow');
+                    arrow.textContent = '←';
+                    arrow.style.bottom = '0';
+                    arrow.style.right = '0';
+                    cell.appendChild(arrow);
+                }
+                
+                if (step.downValue >= step.leftValue) {
+                    downCell.classList.add('highlighted-cell');
+                    
+                    // Add down arrow
+                    const arrow = document.createElement('div');
+                    arrow.classList.add('arrow');
+                    arrow.textContent = '↑';
+                    arrow.style.bottom = '0';
+                    arrow.style.right = '10px';
+                    cell.appendChild(arrow);
+                }
+                
+                explanation.textContent = step.explanation;
+            }
+            // Final result
+            else if (step.type === 'final') {
+                const cell = document.getElementById(`cell-${step.i}-${step.j}`);
+                cell.classList.add('active-cell');
+                explanation.textContent = step.explanation;
+            }
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = stepIndex === 0;
+            document.getElementById('nextBtn').disabled = stepIndex === steps.length - 1;
+        }
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            createTable();
+            generateSteps();
+            showStep(currentStep);
+            
+            // Set up navigation buttons
+            document.getElementById('prevBtn').addEventListener('click', function() {
+                if (currentStep > 0) {
+                    currentStep--;
+                    showStep(currentStep);
+                }
+            });
+            
+            document.getElementById('nextBtn').addEventListener('click', function() {
+                if (currentStep < steps.length - 1) {
+                    currentStep++;
+                    showStep(currentStep);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
