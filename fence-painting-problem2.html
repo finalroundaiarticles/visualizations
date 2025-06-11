@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Programming State Transitions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .animation-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            margin: 20px 0 40px;
+            overflow: hidden;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+
+        .nav-btn {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+
+        .nav-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #FF4800;
+        }
+
+        .explanation {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid #FF4800;
+            margin-bottom: 20px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0 auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .table th, .table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .table th {
+            background-color: #FF4800;
+            color: white;
+        }
+
+        .table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .highlight {
+            background-color: #FD9F78 !important;
+            font-weight: bold;
+            transition: background-color 0.5s;
+        }
+
+        .arrow {
+            position: absolute;
+            width: 100px;
+            height: 30px;
+            opacity: 0;
+        }
+
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid #FF4800;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+        }
+
+        .arrow-line {
+            position: absolute;
+            height: 2px;
+            background-color: #FF4800;
+            top: 50%;
+            transform: translateY(-50%);
+            left: 0;
+            width: 100%;
+        }
+
+        .formula-box {
+            position: absolute;
+            background-color: #f9f9f9;
+            border: 2px solid #FF4800;
+            padding: 10px;
+            border-radius: 5px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dynamic Programming State Transitions</h1>
+        <div class="explanation" id="explanation">
+            Welcome to the Dynamic Programming State Transitions visualization for n=3, k=2. We'll show how the values of same[i] and diff[i] progress from base cases through each iteration.
+        </div>
+        
+        <div class="animation-container" id="animation-container">
+            <table class="table" id="dp-table">
+                <thead>
+                    <tr>
+                        <th>i</th>
+                        <th>same[i]</th>
+                        <th>diff[i]</th>
+                        <th>Total ways</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr id="row-1">
+                        <td>1</td>
+                        <td id="same-1">0</td>
+                        <td id="diff-1">2</td>
+                        <td id="total-1">2</td>
+                    </tr>
+                    <tr id="row-2">
+                        <td>2</td>
+                        <td id="same-2">2</td>
+                        <td id="diff-2">2</td>
+                        <td id="total-2">4</td>
+                    </tr>
+                    <tr id="row-3">
+                        <td>3</td>
+                        <td id="same-3">2</td>
+                        <td id="diff-3">4</td>
+                        <td id="total-3">6</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div id="formula-same-2" class="formula-box">same[2] = diff[1] = 2</div>
+            <div id="formula-diff-2" class="formula-box">diff[2] = (k-1) × (same[1] + diff[1]) = 1 × (0 + 2) = 2</div>
+            <div id="formula-same-3" class="formula-box">same[3] = diff[2] = 2</div>
+            <div id="formula-diff-3" class="formula-box">diff[3] = (k-1) × (same[2] + diff[2]) = 1 × (2 + 2) = 4</div>
+
+            <div id="arrow-1" class="arrow"><div class="arrow-line"></div></div>
+            <div id="arrow-2" class="arrow"><div class="arrow-line"></div></div>
+            <div id="arrow-3" class="arrow"><div class="arrow-line"></div></div>
+            <div id="arrow-4" class="arrow"><div class="arrow-line"></div></div>
+        </div>
+
+        <div class="step-indicator" id="step-indicator">Step 1 of 6</div>
+        
+        <div class="nav-buttons">
+            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
+            <button class="nav-btn" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dpTable = document.getElementById('dp-table');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const stepIndicator = document.getElementById('step-indicator');
+            const explanation = document.getElementById('explanation');
+            
+            const row1 = document.getElementById('row-1');
+            const row2 = document.getElementById('row-2');
+            const row3 = document.getElementById('row-3');
+            
+            const same1 = document.getElementById('same-1');
+            const diff1 = document.getElementById('diff-1');
+            const same2 = document.getElementById('same-2');
+            const diff2 = document.getElementById('diff-2');
+            const same3 = document.getElementById('same-3');
+            const diff3 = document.getElementById('diff-3');
+            
+            const formulaSame2 = document.getElementById('formula-same-2');
+            const formulaDiff2 = document.getElementById('formula-diff-2');
+            const formulaSame3 = document.getElementById('formula-same-3');
+            const formulaDiff3 = document.getElementById('formula-diff-3');
+            
+            const arrow1 = document.getElementById('arrow-1');
+            const arrow2 = document.getElementById('arrow-2');
+            const arrow3 = document.getElementById('arrow-3');
+            const arrow4 = document.getElementById('arrow-4');
+            
+            // Set initial state
+            dpTable.style.opacity = 1;
+            
+            let currentStep = 1;
+            const totalSteps = 6;
+            
+            // Define each step
+            const steps = [
+                // Step 1: Explain the base case
+                function() {
+                    resetHighlights();
+                    row1.classList.add('highlight');
+                    explanation.innerHTML = `
+                        <strong>Step 1: Base Case (i=1)</strong><br>
+                        For the first position (i=1), we have n=3 positions and k=2 colors.<br>
+                        <ul>
+                            <li><strong>same[1] = 0</strong>: There's no previous position, so we can't have the same color.</li>
+                            <li><strong>diff[1] = k = 2</strong>: We can choose any of the k=2 colors for the first position.</li>
+                            <li><strong>Total ways = 2</strong></li>
+                        </ul>
+                    `;
+                },
+                
+                // Step 2: Calculate same[2]
+                function() {
+                    resetHighlights();
+                    diff1.classList.add('highlight');
+                    same2.classList.add('highlight');
+                    
+                    // Position the arrow and formula
+                    positionArrow(arrow1, diff1, same2);
+                    positionFormula(formulaSame2, diff1, same2);
+                    
+                    arrow1.style.opacity = 1;
+                    formulaSame2.style.opacity = 1;
+                    
+                    explanation.innerHTML = `
+                        <strong>Step 2: Calculate same[2]</strong><br>
+                        For i=2, we calculate the number of ways where the color is the same as position 1:<br>
+                        <ul>
+                            <li><strong>same[2] = diff[1] = 2</strong></li>
+                            <li>This means we can use the same color as position 1 only if position 1 used a different color than its previous position, which is diff[1].</li>
+                        </ul>
+                    `;
+                },
+                
+                // Step 3: Calculate diff[2]
+                function() {
+                    resetHighlights();
+                    same1.classList.add('highlight');
+                    diff1.classList.add('highlight');
+                    diff2.classList.add('highlight');
+                    
+                    // Position the arrow and formula
+                    arrow1.style.opacity = 0;
+                    formulaSame2.style.opacity = 0;
+                    
+                    positionArrow(arrow2, document.getElementById('row-1'), diff2);
+                    positionFormula(formulaDiff2, document.getElementById('row-1'), diff2);
+                    
+                    arrow2.style.opacity = 1;
+                    formulaDiff2.style.opacity = 1;
+                    
+                    explanation.innerHTML = `
+                        <strong>Step 3: Calculate diff[2]</strong><br>
+                        For i=2, we calculate the number of ways where the color is different from position 1:<br>
+                        <ul>
+                            <li><strong>diff[2] = (k-1) × (same[1] + diff[1]) = 1 × (0 + 2) = 2</strong></li>
+                            <li>We have k-1 = 1 colors different from position 1, and we can choose from either same[1] or diff[1] arrangements.</li>
+                        </ul>
+                    `;
+                },
+                
+                // Step 4: Calculate same[3]
+                function() {
+                    resetHighlights();
+                    diff2.classList.add('highlight');
+                    same3.classList.add('highlight');
+                    
+                    // Position the arrow and formula
+                    arrow2.style.opacity = 0;
+                    formulaDiff2.style.opacity = 0;
+                    
+                    positionArrow(arrow3, diff2, same3);
+                    positionFormula(formulaSame3, diff2, same3);
+                    
+                    arrow3.style.opacity = 1;
+                    formulaSame3.style.opacity = 1;
+                    
+                    explanation.innerHTML = `
+                        <strong>Step 4: Calculate same[3]</strong><br>
+                        For i=3, we calculate the number of ways where the color is the same as position 2:<br>
+                        <ul>
+                            <li><strong>same[3] = diff[2] = 2</strong></li>
+                            <li>This means we can use the same color as position 2 only if position 2 used a different color than position 1.</li>
+                        </ul>
+                    `;
+                },
+                
+                // Step 5: Calculate diff[3]
+                function() {
+                    resetHighlights();
+                    same2.classList.add('highlight');
+                    diff2.classList.add('highlight');
+                    diff3.classList.add('highlight');
+                    
+                    // Position the arrow and formula
+                    arrow3.style.opacity = 0;
+                    formulaSame3.style.opacity = 0;
+                    
+                    positionArrow(arrow4, document.getElementById('row-2'), diff3);
+                    positionFormula(formulaDiff3, document.getElementById('row-2'), diff3);
+                    
+                    arrow4.style.opacity = 1;
+                    formulaDiff3.style.opacity = 1;
+                    
+                    explanation.innerHTML = `
+                        <strong>Step 5: Calculate diff[3]</strong><br>
+                        For i=3, we calculate the number of ways where the color is different from position 2:<br>
+                        <ul>
+                            <li><strong>diff[3] = (k-1) × (same[2] + diff[2]) = 1 × (2 + 2) = 4</strong></li>
+                            <li>We have k-1 = 1 colors different from position 2, and we can choose from either same[2] or diff[2] arrangements.</li>
+                        </ul>
+                    `;
+                },
+                
+                // Step 6: Final result
+                function() {
+                    resetHighlights();
+                    row3.classList.add('highlight');
+                    document.getElementById('total-3').classList.add('highlight');
+                    
+                    // Hide the arrow and formula
+                    arrow4.style.opacity = 0;
+                    formulaDiff3.style.opacity = 0;
+                    
+                    explanation.innerHTML = `
+                        <strong>Step 6: Final Result</strong><br>
+                        For n=3 positions with k=2 colors, we have:<br>
+                        <ul>
+                            <li><strong>Total ways = same[3] + diff[3] = 2 + 4 = 6</strong></li>
+                            <li>This represents all the possible ways to color 3 positions with 2 colors, such that no adjacent positions have the same color.</li>
+                            <li>The recurrence relation helps us build solutions for larger values by using solutions to smaller subproblems.</li>
+                        </ul>
+                    `;
+                }
+            ];
+            
+            // Function to position the arrow between two elements
+            function positionArrow(arrow, from, to) {
+                const fromRect = from.getBoundingClientRect();
+                const toRect = to.getBoundingClientRect();
+                const containerRect = document.getElementById('animation-container').getBoundingClientRect();
+                
+                const startX = fromRect.left + fromRect.width/2 - containerRect.left;
+                const startY = fromRect.top + fromRect.height/2 - containerRect.top;
+                const endX = toRect.left + toRect.width/2 - containerRect.left;
+                const endY = toRect.top + toRect.height/2 - containerRect.top;
+                
+                const length = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+                const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
+                
+                arrow.style.width = `${length}px`;
+                arrow.style.left = `${startX}px`;
+                arrow.style.top = `${startY}px`;
+                arrow.style.transform = `rotate(${angle}deg)`;
+                arrow.style.transformOrigin = 'left center';
+            }
+            
+            // Function to position the formula box
+            function positionFormula(formula, from, to) {
+                const fromRect = from.getBoundingClientRect();
+                const toRect = to.getBoundingClientRect();
+                const containerRect = document.getElementById('animation-container').getBoundingClientRect();
+                
+                const midX = (fromRect.left + toRect.left) / 2 - containerRect.left;
+                const midY = (fromRect.top + toRect.top) / 2 - containerRect.top;
+                
+                formula.style.left = `${midX - formula.offsetWidth / 2}px`;
+                formula.style.top = `${midY - 40}px`;
+            }
+            
+            // Function to reset all highlights
+            function resetHighlights() {
+                const highlightElements = document.querySelectorAll('.highlight');
+                highlightElements.forEach(el => {
+                    el.classList.remove('highlight');
+                });
+                
+                arrow1.style.opacity = 0;
+                arrow2.style.opacity = 0;
+                arrow3.style.opacity = 0;
+                arrow4.style.opacity = 0;
+                
+                formulaSame2.style.opacity = 0;
+                formulaDiff2.style.opacity = 0;
+                formulaSame3.style.opacity = 0;
+                formulaDiff3.style.opacity = 0;
+            }
+            
+            // Update the current step
+            function updateStep() {
+                steps[currentStep - 1]();
+                stepIndicator.textContent = `Step ${currentStep} of ${totalSteps}`;
+                
+                prevBtn.disabled = currentStep === 1;
+                nextBtn.disabled = currentStep === totalSteps;
+            }
+            
+            // Event listeners for navigation buttons
+            prevBtn.addEventListener('click', function() {
+                if (currentStep > 1) {
+                    currentStep--;
+                    updateStep();
+                }
+            });
+            
+            nextBtn.addEventListener('click', function() {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    updateStep();
+                }
+            });
+            
+            // Initialize the first step
+            updateStep();
+        });
+    </script>
+</body>
+</html>
