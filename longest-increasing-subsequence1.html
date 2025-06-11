@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Longest Increasing Subsequence Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        
+        .description {
+            margin-bottom: 30px;
+            font-size: 18px;
+            line-height: 1.5;
+            text-align: left;
+        }
+        
+        .visualization {
+            position: relative;
+            height: 400px;
+            margin: 30px 0;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 50px;
+        }
+        
+        .array-element {
+            width: 60px;
+            height: 60px;
+            margin: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            font-size: 24px;
+            font-weight: bold;
+            position: relative;
+        }
+        
+        .array-element.highlighted {
+            background-color: #FD9F78;
+            color: #FFFFFF;
+        }
+        
+        .arrow {
+            position: absolute;
+            stroke: #FF4800;
+            stroke-width: 3;
+            fill: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .index {
+            position: absolute;
+            top: -25px;
+            width: 100%;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .btn-container {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #FFF;
+            border-left: 5px solid #FF4800;
+            text-align: left;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        .step-indicator {
+            margin-top: 15px;
+            font-weight: bold;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Longest Increasing Subsequence (LIS) Visualization</h1>
+        
+        <div class="description">
+            <p>The Longest Increasing Subsequence (LIS) is a subsequence of an array where elements are in strictly increasing order and not necessarily contiguous. For example, in the array [10, 9, 2, 5, 3, 7, 101, 18], one of the longest increasing subsequences is [2, 3, 7, 101].</p>
+        </div>
+        
+        <div class="visualization">
+            <div class="array-container" id="arrayContainer"></div>
+            <svg id="arrowSvg" width="100%" height="200" style="position: absolute; top: 140px; left: 0;"></svg>
+            <div class="explanation" id="explanation">
+                Let's visualize one of the longest increasing subsequences in the array [10, 9, 2, 5, 3, 7, 101, 18].
+            </div>
+            <div class="step-indicator" id="stepIndicator">Step 0/5</div>
+        </div>
+        
+        <div class="btn-container">
+            <button id="prevBtn" class="btn" disabled>Previous</button>
+            <button id="nextBtn" class="btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const array = [10, 9, 2, 5, 3, 7, 101, 18];
+            const lis = [2, 3, 7, 101]; // One of the possible longest increasing subsequences
+            const lisIndices = [2, 4, 5, 6]; // Indices of LIS elements in the array
+            
+            // Create array elements
+            const arrayContainer = document.getElementById('arrayContainer');
+            const arrowSvg = document.getElementById('arrowSvg');
+            const explanation = document.getElementById('explanation');
+            const stepIndicator = document.getElementById('stepIndicator');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            let currentStep = 0;
+            const totalSteps = 5;
+            
+            // Create array elements
+            array.forEach((value, index) => {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.id = `element-${index}`;
+                element.textContent = value;
+                
+                const indexSpan = document.createElement('div');
+                indexSpan.className = 'index';
+                indexSpan.textContent = `Index ${index}`;
+                element.appendChild(indexSpan);
+                
+                arrayContainer.appendChild(element);
+            });
+            
+            // Draw arrows between LIS elements
+            function drawArrow(fromIndex, toIndex) {
+                const fromElement = document.getElementById(`element-${fromIndex}`);
+                const toElement = document.getElementById(`element-${toIndex}`);
+                
+                const fromRect = fromElement.getBoundingClientRect();
+                const toRect = toElement.getBoundingClientRect();
+                
+                const svgRect = arrowSvg.getBoundingClientRect();
+                
+                const fromX = fromRect.left + fromRect.width/2 - svgRect.left;
+                const fromY = fromRect.top + fromRect.height/2 - svgRect.top;
+                const toX = toRect.left + toRect.width/2 - svgRect.left;
+                const toY = toRect.top + toRect.height/2 - svgRect.top;
+                
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", `M ${fromX} ${fromY} C ${fromX} ${fromY-30}, ${toX} ${toY-30}, ${toX} ${toY}`);
+                path.setAttribute("marker-end", "url(#arrowhead)");
+                path.classList.add("arrow");
+                path.id = `arrow-${fromIndex}-${toIndex}`;
+                
+                arrowSvg.appendChild(path);
+                
+                return path;
+            }
+            
+            // Create arrowhead marker
+            const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+            marker.setAttribute("id", "arrowhead");
+            marker.setAttribute("markerWidth", "10");
+            marker.setAttribute("markerHeight", "7");
+            marker.setAttribute("refX", "10");
+            marker.setAttribute("refY", "3.5");
+            marker.setAttribute("orient", "auto");
+            
+            const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+            polygon.setAttribute("points", "0 0, 10 3.5, 0 7");
+            polygon.setAttribute("fill", "#FF4800");
+            
+            marker.appendChild(polygon);
+            
+            const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+            defs.appendChild(marker);
+            arrowSvg.appendChild(defs);
+            
+            // Draw all arrows
+            for (let i = 0; i < lisIndices.length - 1; i++) {
+                drawArrow(lisIndices[i], lisIndices[i+1]);
+            }
+            
+            // Update visualization based on current step
+            function updateVisualization() {
+                // Reset all elements
+                array.forEach((_, index) => {
+                    const element = document.getElementById(`element-${index}`);
+                    element.classList.remove('highlighted');
+                });
+                
+                // Hide all arrows
+                document.querySelectorAll('.arrow').forEach(arrow => {
+                    arrow.style.opacity = '0';
+                });
+                
+                stepIndicator.textContent = `Step ${currentStep}/${totalSteps}`;
+                
+                switch(currentStep) {
+                    case 0:
+                        explanation.textContent = "Let's visualize one of the longest increasing subsequences in the array [10, 9, 2, 5, 3, 7, 101, 18].";
+                        break;
+                    case 1:
+                        explanation.textContent = "We start by identifying the first element of our LIS which is 2 (at index 2). This is the beginning of our subsequence.";
+                        document.getElementById(`element-${lisIndices[0]}`).classList.add('highlighted');
+                        break;
+                    case 2:
+                        explanation.textContent = "Next, we add 3 (at index 4) to our LIS because it's greater than 2 and maintains the increasing order.";
+                        document.getElementById(`element-${lisIndices[0]}`).classList.add('highlighted');
+                        document.getElementById(`element-${lisIndices[1]}`).classList.add('highlighted');
+                        document.getElementById(`arrow-${lisIndices[0]}-${lisIndices[1]}`).style.opacity = '1';
+                        break;
+                    case 3:
+                        explanation.textContent = "We continue by adding 7 (at index 5) to our LIS because it's greater than 3 and maintains the increasing order.";
+                        document.getElementById(`element-${lisIndices[0]}`).classList.add('highlighted');
+                        document.getElementById(`element-${lisIndices[1]}`).classList.add('highlighted');
+                        document.getElementById(`element-${lisIndices[2]}`).classList.add('highlighted');
+                        document.getElementById(`arrow-${lisIndices[0]}-${lisIndices[1]}`).style.opacity = '1';
+                        document.getElementById(`arrow-${lisIndices[1]}-${lisIndices[2]}`).style.opacity = '1';
+                        break;
+                    case 4:
+                        explanation.textContent = "Finally, we add 101 (at index 6) to our LIS because it's greater than 7 and maintains the increasing order.";
+                        document.getElementById(`element-${lisIndices[0]}`).classList.add('highlighted');
+                        document.getElementById(`element-${lisIndices[1]}`).classList.add('highlighted');
+                        document.getElementById(`element-${lisIndices[2]}`).classList.add('highlighted');
+                        document.getElementById(`element-${lisIndices[3]}`).classList.add('highlighted');
+                        document.getElementById(`arrow-${lisIndices[0]}-${lisIndices[1]}`).style.opacity = '1';
+                        document.getElementById(`arrow-${lisIndices[1]}-${lisIndices[2]}`).style.opacity = '1';
+                        document.getElementById(`arrow-${lisIndices[2]}-${lisIndices[3]}`).style.opacity = '1';
+                        break;
+                    case 5:
+                        explanation.textContent = "The length of the longest increasing subsequence is 4, and one possible LIS is [2, 3, 7, 101]. Note that there could be other valid LIS with the same length, such as [2, 5, 7, 101].";
+                        document.getElementById(`element-${lisIndices[0]}`).classList.add('highlighted');
+                        document.getElementById(`element-${lisIndices[1]}`).classList.add('highlighted');
+                        document.getElementById(`element-${lisIndices[2]}`).classList.add('highlighted');
+                        document.getElementById(`element-${lisIndices[3]}`).classList.add('highlighted');
+                        document.getElementById(`arrow-${lisIndices[0]}-${lisIndices[1]}`).style.opacity = '1';
+                        document.getElementById(`arrow-${lisIndices[1]}-${lisIndices[2]}`).style.opacity = '1';
+                        document.getElementById(`arrow-${lisIndices[2]}-${lisIndices[3]}`).style.opacity = '1';
+                        break;
+                }
+                
+                // Update button states
+                prevBtn.disabled = currentStep === 0;
+                nextBtn.disabled = currentStep === totalSteps;
+            }
+            
+            // Event listeners for buttons
+            prevBtn.addEventListener('click', function() {
+                if (currentStep > 0) {
+                    currentStep--;
+                    updateVisualization();
+                }
+            });
+            
+            nextBtn.addEventListener('click', function() {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    updateVisualization();
+                }
+            });
+            
+            // Initial visualization
+            updateVisualization();
+            
+            // Adjust arrows on window resize
+            window.addEventListener('resize', function() {
+                // Remove existing arrows
+                document.querySelectorAll('.arrow').forEach(arrow => arrow.remove());
+                
+                // Redraw arrows
+                for (let i = 0; i < lisIndices.length - 1; i++) {
+                    drawArrow(lisIndices[i], lisIndices[i+1]);
+                }
+                
+                // Re-apply current step visualization
+                updateVisualization();
+            });
+        });
+    </script>
+</body>
+</html>
