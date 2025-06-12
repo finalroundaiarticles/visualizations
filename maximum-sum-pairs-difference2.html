@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greedy Selection Process Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        .array-item {
+            width: 50px;
+            height: 50px;
+            margin: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #000000;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+        .selected {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .paired {
+            background-color: #FD9F78;
+            color: #000000;
+            border: 2px dashed #FF4800;
+        }
+        .pair-connection {
+            stroke: #FF4800;
+            stroke-width: 3;
+            stroke-dasharray: 5;
+            animation: dash 1s linear infinite;
+        }
+        @keyframes dash {
+            to {
+                stroke-dashoffset: 20;
+            }
+        }
+        .frequency-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .frequency-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 15px;
+        }
+        .frequency-value {
+            font-size: 18px;
+            margin-top: 5px;
+        }
+        .frequency-label {
+            font-size: 14px;
+            color: #666;
+        }
+        .step-info {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #FF4800;
+            border-radius: 5px;
+            background-color: rgba(255, 72, 0, 0.05);
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .nav-button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .step-counter {
+            text-align: center;
+            font-size: 18px;
+            margin: 10px 0;
+            color: #FF4800;
+        }
+        svg {
+            width: 100%;
+            height: 100px;
+            margin-top: -30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Greedy Selection Process</h1>
+        
+        <div class="step-counter">Step <span id="current-step">1</span> of <span id="total-steps">5</span></div>
+        
+        <div class="step-info" id="step-info">
+            Initial sorted array [1, 3, 3, 4, 5] with frequency counts
+        </div>
+        
+        <div class="array-container" id="array-container">
+            <!-- Array elements will be populated by JavaScript -->
+        </div>
+        
+        <svg id="connections-svg" preserveAspectRatio="xMidYMid meet"></svg>
+        
+        <div class="frequency-container" id="frequency-container">
+            <!-- Frequency counts will be populated by JavaScript -->
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prev-btn" disabled>Previous</button>
+            <button class="nav-button" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Initial array
+        const initialArray = [1, 3, 3, 4, 5];
+        
+        // Steps for visualization
+        const steps = [
+            {
+                title: "Initial sorted array [1, 3, 3, 4, 5] with frequency counts",
+                array: [1, 3, 3, 4, 5],
+                frequencies: { "1": 1, "3": 2, "4": 1, "5": 1 },
+                selected: [],
+                paired: [],
+                connections: []
+            },
+            {
+                title: "Looking for the first pair: Start with the highest element 5",
+                array: [1, 3, 3, 4, 5],
+                frequencies: { "1": 1, "3": 2, "4": 1, "5": 1 },
+                selected: [4], // Index of element 5
+                paired: [],
+                connections: []
+            },
+            {
+                title: "Find a pair for 5: We need value 3 (5 - 2 = 3)",
+                array: [1, 3, 3, 4, 5],
+                frequencies: { "1": 1, "3": 2, "4": 1, "5": 1 },
+                selected: [4, 1], // Index of elements 5 and 3
+                paired: [],
+                connections: []
+            },
+            {
+                title: "Form the pair (3, 5) and reduce their frequencies",
+                array: [1, 3, 4, 5],
+                frequencies: { "1": 1, "3": 1, "4": 1, "5": 0 },
+                selected: [],
+                paired: [3, 0], // Indices in the new array (3 and 5 paired)
+                connections: [{from: 0, to: 3}]
+            },
+            {
+                title: "Looking for the next pair: Start with the highest remaining element 4",
+                array: [1, 3, 4],
+                frequencies: { "1": 1, "3": 1, "4": 1, "5": 0 },
+                selected: [2], // Index of element 4
+                paired: [],
+                connections: []
+            },
+            {
+                title: "Find a pair for 4: We need value 2 (4 - 2 = 2), but 2 is not in the array",
+                array: [1, 3, 4],
+                frequencies: { "1": 1, "3": 1, "4": 1, "5": 0 },
+                selected: [2],
+                paired: [],
+                connections: []
+            },
+            {
+                title: "Continue with the next highest element 3",
+                array: [1, 3, 4],
+                frequencies: { "1": 1, "3": 1, "4": 1, "5": 0 },
+                selected: [1], // Index of element 3
+                paired: [],
+                connections: []
+            },
+            {
+                title: "Find a pair for 3: We need value 1 (3 - 2 = 1)",
+                array: [1, 3, 4],
+                frequencies: { "1": 1, "3": 1, "4": 1, "5": 0 },
+                selected: [1, 0], // Index of elements 3 and 1
+                paired: [],
+                connections: []
+            },
+            {
+                title: "Form the pair (1, 3) and reduce their frequencies",
+                array: [4],
+                frequencies: { "1": 0, "3": 0, "4": 1, "5": 0 },
+                selected: [],
+                paired: [0, 1], // Indices in the previous array (1 and 3 paired)
+                connections: [{from: 0, to: 1}]
+            },
+            {
+                title: "Final result: We formed two pairs (3,5) and (1,3)",
+                array: [4],
+                frequencies: { "1": 0, "3": 0, "4": 1, "5": 0 },
+                selected: [],
+                paired: [],
+                finalPairs: ["(3,5)", "(1,3)"],
+                connections: []
+            }
+        ];
+        
+        let currentStep = 0;
+        const totalSteps = steps.length;
+        
+        // DOM elements
+        const arrayContainer = document.getElementById('array-container');
+        const frequencyContainer = document.getElementById('frequency-container');
+        const stepInfo = document.getElementById('step-info');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const currentStepElement = document.getElementById('current-step');
+        const totalStepsElement = document.getElementById('total-steps');
+        const connectionsSvg = document.getElementById('connections-svg');
+        
+        // Initialize the visualization
+        totalStepsElement.textContent = totalSteps;
+        renderStep(currentStep);
+        
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                renderStep(currentStep);
+                nextBtn.disabled = false;
+                if (currentStep === 0) {
+                    prevBtn.disabled = true;
+                }
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                renderStep(currentStep);
+                prevBtn.disabled = false;
+                if (currentStep === totalSteps - 1) {
+                    nextBtn.disabled = true;
+                }
+            }
+        });
+        
+        function renderStep(stepIndex) {
+            const step = steps[stepIndex];
+            
+            // Update step counter
+            currentStepElement.textContent = stepIndex + 1;
+            
+            // Update step info
+            stepInfo.textContent = step.title;
+            
+            // Render array
+            arrayContainer.innerHTML = '';
+            step.array.forEach((value, index) => {
+                const arrayItem = document.createElement('div');
+                arrayItem.className = 'array-item';
+                
+                if (step.selected && step.selected.includes(index)) {
+                    arrayItem.classList.add('selected');
+                }
+                
+                if (step.paired && step.paired.includes(index)) {
+                    arrayItem.classList.add('paired');
+                }
+                
+                arrayItem.textContent = value;
+                arrayContainer.appendChild(arrayItem);
+            });
+            
+            // Display final pairs if available
+            if (step.finalPairs) {
+                const pairsElement = document.createElement('div');
+                pairsElement.style.width = '100%';
+                pairsElement.style.textAlign = 'center';
+                pairsElement.style.margin = '20px 0';
+                pairsElement.style.fontSize = '20px';
+                pairsElement.style.color = '#FF4800';
+                pairsElement.style.fontWeight = 'bold';
+                pairsElement.innerHTML = 'Final Pairs: ' + step.finalPairs.join(', ');
+                arrayContainer.appendChild(pairsElement);
+            }
+            
+            // Render frequency counts
+            frequencyContainer.innerHTML = '';
+            for (const [value, count] of Object.entries(step.frequencies)) {
+                const freqItem = document.createElement('div');
+                freqItem.className = 'frequency-item';
+                
+                const valueElement = document.createElement('div');
+                valueElement.className = 'array-item';
+                valueElement.style.backgroundColor = count === 0 ? '#ccc' : '#fff';
+                valueElement.textContent = value;
+                
+                const countElement = document.createElement('div');
+                countElement.className = 'frequency-value';
+                countElement.textContent = count;
+                
+                const labelElement = document.createElement('div');
+                labelElement.className = 'frequency-label';
+                labelElement.textContent = 'Frequency';
+                
+                freqItem.appendChild(valueElement);
+                freqItem.appendChild(countElement);
+                freqItem.appendChild(labelElement);
+                
+                frequencyContainer.appendChild(freqItem);
+            }
+            
+            // Draw connections
+            drawConnections(step);
+        }
+        
+        function drawConnections(step) {
+            connectionsSvg.innerHTML = '';
+            
+            if (!step.connections || step.connections.length === 0) {
+                return;
+            }
+            
+            const arrayItems = document.querySelectorAll('.array-item');
+            
+            step.connections.forEach(conn => {
+                if (conn.from < arrayItems.length && conn.to < arrayItems.length) {
+                    const fromItem = arrayItems[conn.from];
+                    const toItem = arrayItems[conn.to];
+                    
+                    const fromRect = fromItem.getBoundingClientRect();
+                    const toRect = toItem.getBoundingClientRect();
+                    
+                    const containerRect = arrayContainer.getBoundingClientRect();
+                    
+                    const x1 = fromRect.left + fromRect.width / 2 - containerRect.left;
+                    const y1 = fromRect.bottom - containerRect.top;
+                    const x2 = toRect.left + toRect.width / 2 - containerRect.left;
+                    const y2 = toRect.bottom - containerRect.top;
+                    
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    line.setAttribute('d', `M ${x1},${y1} C ${x1},${y1 + 40} ${x2},${y2 + 40} ${x2},${y2}`);
+                    line.classList.add('pair-connection');
+                    
+                    connectionsSvg.appendChild(line);
+                }
+            });
+        }
+        
+        // Handle window resize to redraw connections
+        window.addEventListener('resize', () => {
+            drawConnections(steps[currentStep]);
+        });
+    </script>
+</body>
+</html>
