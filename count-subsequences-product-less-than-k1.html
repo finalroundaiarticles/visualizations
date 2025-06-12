@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valid Subsequences Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+        
+        h1, h2 {
+            color: #000000;
+            text-align: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            position: relative;
+        }
+        
+        .explanation {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #000000;
+            line-height: 1.6;
+        }
+        
+        .slide {
+            display: none;
+            padding: 20px;
+            animation: fadeEffect 1s;
+        }
+        
+        @keyframes fadeEffect {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+        
+        .active {
+            display: block;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            width: 100%;
+        }
+        
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .subsequence {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+            position: relative;
+        }
+        
+        .number {
+            width: 40px;
+            height: 40px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 5px;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+        
+        .product {
+            margin-left: 20px;
+            background-color: #FD9F78;
+            padding: 5px 15px;
+            border-radius: 20px;
+            color: #000000;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        
+        .valid {
+            border: 3px solid #00CC00;
+        }
+        
+        .invalid {
+            opacity: 0.5;
+        }
+        
+        .original-array {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+        }
+        
+        .highlight {
+            animation: highlightAnimation 1s infinite alternate;
+        }
+        
+        @keyframes highlightAnimation {
+            from {
+                box-shadow: 0 0 0px #00CC00;
+            }
+            to {
+                box-shadow: 0 0 15px #00CC00;
+            }
+        }
+        
+        .progress-dots {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .dot {
+            height: 10px;
+            width: 10px;
+            margin: 0 5px;
+            background-color: #FD9F78;
+            border-radius: 50%;
+            display: inline-block;
+            transition: background-color 0.3s;
+        }
+        
+        .dot.active {
+            background-color: #FF4800;
+        }
+        
+        .main-title {
+            color: #FF4800;
+            margin-bottom: 10px;
+        }
+        
+        .decision-text {
+            font-weight: bold;
+            margin-top: 20px;
+            text-align: center;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="main-title">Valid Subsequences Visualization</h1>
+    <h2>Finding subsequences with product less than 6</h2>
+    
+    <div class="container">
+        <div class="explanation">
+            <p><strong>Subsequence:</strong> A subsequence is a sequence that can be derived from another sequence by deleting some or no elements without changing the order of the remaining elements.</p>
+            <p>For array [2, 3, 4], we'll visualize all possible subsequences and highlight those with a product less than 6.</p>
+        </div>
+        
+        <div class="original-array">
+            <div class="number">2</div>
+            <div class="number">3</div>
+            <div class="number">4</div>
+        </div>
+        
+        <div id="slides-container">
+            <!-- Slide 1 -->
+            <div class="slide active">
+                <h2>Empty Subsequence []</h2>
+                <div class="subsequence">
+                    <div class="product valid">Product: 1 (Valid: 1 < 6)</div>
+                </div>
+                <div class="decision-text">This is a valid subsequence since the empty product is 1, which is less than 6.</div>
+            </div>
+            
+            <!-- Slide 2 -->
+            <div class="slide">
+                <h2>Subsequence [2]</h2>
+                <div class="subsequence">
+                    <div class="number highlight">2</div>
+                    <div class="product valid">Product: 2 (Valid: 2 < 6)</div>
+                </div>
+                <div class="decision-text">This is a valid subsequence since 2 < 6.</div>
+            </div>
+            
+            <!-- Slide 3 -->
+            <div class="slide">
+                <h2>Subsequence [3]</h2>
+                <div class="subsequence">
+                    <div class="number highlight">3</div>
+                    <div class="product valid">Product: 3 (Valid: 3 < 6)</div>
+                </div>
+                <div class="decision-text">This is a valid subsequence since 3 < 6.</div>
+            </div>
+            
+            <!-- Slide 4 -->
+            <div class="slide">
+                <h2>Subsequence [4]</h2>
+                <div class="subsequence">
+                    <div class="number highlight">4</div>
+                    <div class="product valid">Product: 4 (Valid: 4 < 6)</div>
+                </div>
+                <div class="decision-text">This is a valid subsequence since 4 < 6.</div>
+            </div>
+            
+            <!-- Slide 5 -->
+            <div class="slide">
+                <h2>Subsequence [2, 3]</h2>
+                <div class="subsequence">
+                    <div class="number highlight">2</div>
+                    <div class="number highlight">3</div>
+                    <div class="product invalid">Product: 6 (Invalid: 6 ≥ 6)</div>
+                </div>
+                <div class="decision-text">This is not a valid subsequence since 6 ≥ 6.</div>
+            </div>
+            
+            <!-- Slide 6 -->
+            <div class="slide">
+                <h2>Subsequence [2, 4]</h2>
+                <div class="subsequence">
+                    <div class="number highlight">2</div>
+                    <div class="number highlight">4</div>
+                    <div class="product invalid">Product: 8 (Invalid: 8 ≥ 6)</div>
+                </div>
+                <div class="decision-text">This is not a valid subsequence since 8 ≥ 6.</div>
+            </div>
+            
+            <!-- Slide 7 -->
+            <div class="slide">
+                <h2>Subsequence [3, 4]</h2>
+                <div class="subsequence">
+                    <div class="number highlight">3</div>
+                    <div class="number highlight">4</div>
+                    <div class="product invalid">Product: 12 (Invalid: 12 ≥ 6)</div>
+                </div>
+                <div class="decision-text">This is not a valid subsequence since 12 ≥ 6.</div>
+            </div>
+            
+            <!-- Slide 8 -->
+            <div class="slide">
+                <h2>Subsequence [2, 3, 4]</h2>
+                <div class="subsequence">
+                    <div class="number highlight">2</div>
+                    <div class="number highlight">3</div>
+                    <div class="number highlight">4</div>
+                    <div class="product invalid">Product: 24 (Invalid: 24 ≥ 6)</div>
+                </div>
+                <div class="decision-text">This is not a valid subsequence since 24 ≥ 6.</div>
+            </div>
+            
+            <!-- Slide 9 -->
+            <div class="slide">
+                <h2>Summary: Valid Subsequences</h2>
+                <div class="subsequence">
+                    <div class="product valid">Empty [] - Product: 1</div>
+                </div>
+                <div class="subsequence">
+                    <div class="number">2</div>
+                    <div class="product valid">Product: 2</div>
+                </div>
+                <div class="subsequence">
+                    <div class="number">3</div>
+                    <div class="product valid">Product: 3</div>
+                </div>
+                <div class="subsequence">
+                    <div class="number">4</div>
+                    <div class="product valid">Product: 4</div>
+                </div>
+                <div class="decision-text">Total valid subsequences with product < 6: 4</div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prev" disabled>Previous</button>
+            <button class="nav-btn" id="next">Next</button>
+        </div>
+        
+        <div class="progress-dots" id="progress-dots">
+            <span class="dot active"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let slideIndex = 0;
+            const slides = document.getElementsByClassName('slide');
+            const prevBtn = document.getElementById('prev');
+            const nextBtn = document.getElementById('next');
+            const dots = document.getElementsByClassName('dot');
+            
+            function showSlide(n) {
+                if (n >= slides.length) {
+                    slideIndex = slides.length - 1;
+                    nextBtn.disabled = true;
+                } else if (n < 0) {
+                    slideIndex = 0;
+                    prevBtn.disabled = true;
+                } else {
+                    nextBtn.disabled = false;
+                    prevBtn.disabled = false;
+                    slideIndex = n;
+                }
+                
+                // If at the end or beginning, disable appropriate button
+                if (slideIndex === slides.length - 1) {
+                    nextBtn.disabled = true;
+                }
+                if (slideIndex === 0) {
+                    prevBtn.disabled = true;
+                }
+                
+                // Hide all slides
+                for (let i = 0; i < slides.length; i++) {
+                    slides[i].classList.remove('active');
+                    dots[i].classList.remove('active');
+                }
+                
+                // Show current slide
+                slides[slideIndex].classList.add('active');
+                dots[slideIndex].classList.add('active');
+            }
+            
+            // Event listeners for navigation buttons
+            prevBtn.addEventListener('click', function() {
+                showSlide(slideIndex - 1);
+            });
+            
+            nextBtn.addEventListener('click', function() {
+                showSlide(slideIndex + 1);
+            });
+            
+            // Event listeners for dots navigation
+            for (let i = 0; i < dots.length; i++) {
+                dots[i].addEventListener('click', function() {
+                    showSlide(i);
+                });
+            }
+            
+            // Initialize with first slide active
+            showSlide(0);
+        });
+    </script>
+</body>
+</html>
