@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valid vs Invalid Subsequence Selection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .slide {
+            display: none;
+            margin-bottom: 30px;
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            gap: 15px;
+        }
+        
+        .array-element {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #000000;
+            border-radius: 5px;
+            font-size: 24px;
+            font-weight: bold;
+            position: relative;
+        }
+        
+        .array-element.selected {
+            background-color: #FD9F78;
+            border-color: #FF4800;
+        }
+        
+        .array-element.consecutive {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .array-element .index {
+            position: absolute;
+            bottom: -25px;
+            font-size: 14px;
+            color: #000000;
+        }
+        
+        .explanation {
+            background-color: #FFF;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 40px;
+            line-height: 1.6;
+        }
+        
+        .explanation h3 {
+            color: #FF4800;
+            margin-top: 0;
+        }
+        
+        .highlight {
+            background-color: #FD9F78;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .title-container {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .title {
+            font-size: 24px;
+            color: #FF4800;
+            font-weight: bold;
+        }
+        
+        .subtitle {
+            font-size: 18px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Valid vs Invalid Subsequence Selection</h1>
+        
+        <div class="slide active" id="slide1">
+            <div class="title-container">
+                <div class="title">Original Array</div>
+                <div class="subtitle">Let's start with an array of [1, 2, 3, 4, 5]</div>
+            </div>
+            
+            <div class="array-container">
+                <div class="array-element">
+                    1
+                    <div class="index">Index 0</div>
+                </div>
+                <div class="array-element">
+                    2
+                    <div class="index">Index 1</div>
+                </div>
+                <div class="array-element">
+                    3
+                    <div class="index">Index 2</div>
+                </div>
+                <div class="array-element">
+                    4
+                    <div class="index">Index 3</div>
+                </div>
+                <div class="array-element">
+                    5
+                    <div class="index">Index 4</div>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <h3>Understanding Subsequence Selection</h3>
+                <p>A subsequence is a sequence that can be derived from another sequence by deleting some or no elements without changing the order of the remaining elements.</p>
+                <p>When selecting elements for a subsequence, there's an important rule: <span class="highlight">we cannot select three consecutive elements from the original array</span>.</p>
+                <p>In the following slides, we'll explore examples of valid and invalid subsequence selections from this array.</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide2">
+            <div class="title-container">
+                <div class="title">Valid Subsequence Selection</div>
+                <div class="subtitle">Elements at indices 0, 1, 3 (values: 1, 2, 4)</div>
+            </div>
+            
+            <div class="array-container">
+                <div class="array-element selected">
+                    1
+                    <div class="index">Index 0</div>
+                </div>
+                <div class="array-element selected">
+                    2
+                    <div class="index">Index 1</div>
+                </div>
+                <div class="array-element">
+                    3
+                    <div class="index">Index 2</div>
+                </div>
+                <div class="array-element selected">
+                    4
+                    <div class="index">Index 3</div>
+                </div>
+                <div class="array-element">
+                    5
+                    <div class="index">Index 4</div>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <h3>Valid Subsequence Selection</h3>
+                <p>This is a <span class="highlight">valid subsequence selection</span> because:</p>
+                <ul>
+                    <li>We've selected elements at indices 0, 1, and 3</li>
+                    <li>The selected elements are 1, 2, and 4</li>
+                    <li>We did not select three consecutive elements</li>
+                </ul>
+                <p>Notice that we selected elements at indices 0 and 1 (which are consecutive), but then we skipped index 2 and selected index 3. This breaks the pattern of consecutive selections, making it a valid subsequence.</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide3">
+            <div class="title-container">
+                <div class="title">Invalid Subsequence Selection</div>
+                <div class="subtitle">Elements at indices 0, 1, 2 (values: 1, 2, 3)</div>
+            </div>
+            
+            <div class="array-container">
+                <div class="array-element consecutive">
+                    1
+                    <div class="index">Index 0</div>
+                </div>
+                <div class="array-element consecutive">
+                    2
+                    <div class="index">Index 1</div>
+                </div>
+                <div class="array-element consecutive">
+                    3
+                    <div class="index">Index 2</div>
+                </div>
+                <div class="array-element">
+                    4
+                    <div class="index">Index 3</div>
+                </div>
+                <div class="array-element">
+                    5
+                    <div class="index">Index 4</div>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <h3>Invalid Subsequence Selection</h3>
+                <p>This is an <span class="highlight">invalid subsequence selection</span> because:</p>
+                <ul>
+                    <li>We've selected elements at indices 0, 1, and 2</li>
+                    <li>These indices are consecutive (0, 1, 2)</li>
+                    <li>The selected elements are 1, 2, and 3</li>
+                </ul>
+                <p>The rule states that we cannot select three consecutive elements from the original array. Since indices 0, 1, and 2 are consecutive, this selection violates the rule and is therefore invalid.</p>
+            </div>
+        </div>
+        
+        <div class="buttons">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 3;
+        
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        function updateSlide() {
+            // Hide all slides
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            // Show current slide
+            document.getElementById(`slide${currentSlide}`).classList.add('active');
+            
+            // Update button states
+            prevBtn.disabled = currentSlide === 1;
+            nextBtn.disabled = currentSlide === totalSlides;
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentSlide > 1) {
+                currentSlide--;
+                updateSlide();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                updateSlide();
+            }
+        });
+    </script>
+</body>
+</html>
