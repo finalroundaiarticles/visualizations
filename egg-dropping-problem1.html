@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Egg Dropping Decision Tree</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .explanation {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .animation-container {
+            width: 100%;
+            height: 500px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .decision-tree {
+            position: absolute;
+            transition: transform 0.5s ease;
+        }
+        
+        .node {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            position: absolute;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .node.root {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .node.highlight {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px rgba(255, 72, 0, 0.7);
+        }
+        
+        .edge {
+            position: absolute;
+            background-color: #000000;
+            transform-origin: 0 100%;
+        }
+        
+        .edge-label {
+            position: absolute;
+            background-color: #FFFFFF;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+        }
+        
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .slide.active {
+            opacity: 1;
+        }
+        
+        .description {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+            line-height: 1.6;
+            max-width: 80%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Egg Dropping Decision Tree</h1>
+        
+        <div class="explanation">
+            <p>This animation demonstrates how to use a decision tree to find the critical floor (the highest floor from which an egg can be dropped without breaking) with 2 eggs and 10 floors.</p>
+        </div>
+        
+        <div class="animation-container" id="animation-container">
+            <!-- Slides will be inserted here by JavaScript -->
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prev-button" disabled>Previous</button>
+            <button class="nav-button" id="next-button">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        // Define slides content
+        const slides = [
+            {
+                title: "The Egg Dropping Problem",
+                content: `
+                    <div class="description">
+                        <p>The problem: We have 2 eggs and a building with 10 floors. We need to find the highest floor from which an egg can be dropped without breaking.</p>
+                        <p>We want to minimize the number of drops in the worst case scenario.</p>
+                    </div>
+                `
+            },
+            {
+                title: "Linear Strategy",
+                content: `
+                    <div class="decision-tree" id="linear-tree"></div>
+                    <div class="description">
+                        <p>The simplest strategy: Start from floor 1 and work your way up.</p>
+                        <p>Worst case: 10 drops (if critical floor is 10)</p>
+                        <p>This is inefficient, especially for tall buildings.</p>
+                    </div>
+                `
+            },
+            {
+                title: "Binary Search Strategy",
+                content: `
+                    <div class="decision-tree" id="binary-tree"></div>
+                    <div class="description">
+                        <p>First drop at floor 5. If egg breaks, test floors 1-4 linearly with second egg. If egg doesn't break, test floors 6-10.</p>
+                        <p>Worst case: 5 drops (if critical floor is 4)</p>
+                        <p>Better, but not optimal. Can we do better?</p>
+                    </div>
+                `
+            },
+            {
+                title: "Optimal Strategy",
+                content: `
+                    <div class="decision-tree" id="optimal-tree"></div>
+                    <div class="description">
+                        <p>First drop at floor 4. Each subsequent first-egg drop decreases by 1.</p>
+                        <p>This distributes the risk optimally.</p>
+                        <p>Worst case: 4 drops (mathematically proven optimal solution for 2 eggs, 10 floors)</p>
+                    </div>
+                `
+            },
+            {
+                title: "Understanding the Decision Process",
+                content: `
+                    <div class="description">
+                        <p>The optimal strategy follows a simple pattern: If we have x drops available, we should:</p>
+                        <p>1. Use the first egg to eliminate as many floors as possible</p>
+                        <p>2. Use the second egg to test each remaining floor linearly</p>
+                        <p>3. The optimal first drop is at floor x, then x-1, then x-2, etc.</p>
+                        <p>For 10 floors and 2 eggs, our first drop should be at floor 4.</p>
+                    </div>
+                `
+            }
+        ];
+        
+        // Current slide index
+        let currentSlide = 0;
+        
+        // Create slide elements
+        const animationContainer = document.getElementById('animation-container');
+        slides.forEach((slide, index) => {
+            const slideDiv = document.createElement('div');
+            slideDiv.className = `slide ${index === 0 ? 'active' : ''}`;
+            slideDiv.innerHTML = slide.content;
+            animationContainer.appendChild(slideDiv);
+        });
+        
+        // Navigation buttons
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+        
+        prevButton.addEventListener('click', () => {
+            if (currentSlide > 0) {
+                document.querySelectorAll('.slide')[currentSlide].classList.remove('active');
+                currentSlide--;
+                document.querySelectorAll('.slide')[currentSlide].classList.add('active');
+                nextButton.disabled = false;
+                if (currentSlide === 0) {
+                    prevButton.disabled = true;
+                }
+            }
+        });
+        
+        nextButton.addEventListener('click', () => {
+            if (currentSlide < slides.length - 1) {
+                document.querySelectorAll('.slide')[currentSlide].classList.remove('active');
+                currentSlide++;
+                document.querySelectorAll('.slide')[currentSlide].classList.add('active');
+                prevButton.disabled = false;
+                if (currentSlide === slides.length - 1) {
+                    nextButton.disabled = true;
+                }
+                
+                // Initialize trees when the slide becomes active
+                if (currentSlide === 1) {
+                    setTimeout(createLinearTree, 100);
+                } else if (currentSlide === 2) {
+                    setTimeout(createBinaryTree, 100);
+                } else if (currentSlide === 3) {
+                    setTimeout(createOptimalTree, 100);
+                }
+            }
+        });
+        
+        // Create Linear Tree
+        function createLinearTree() {
+            const container = document.getElementById('linear-tree');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            // Root node
+            createNode(container, 'Start', 400, 30, 'root');
+            
+            // Level 1
+            for (let i = 1; i <= 3; i++) {
+                const x = 200 + i * 100;
+                createNode(container, `F${i}`, x, 120);
+                createEdge(container, 400, 60, x, 120, `Drop at F${i}`);
+            }
+            
+            // Dots
+            createNode(container, '...', 500, 200, '', '...');
+            
+            // Last nodes
+            createNode(container, 'F10', 500, 280);
+            createEdge(container, 500, 230, 500, 280, 'Drop at F10');
+            
+            // Results
+            createNode(container, 'Found!', 500, 380, '', 'Result');
+            createEdge(container, 500, 310, 500, 380, 'Worst case: 10 drops');
+        }
+        
+        // Create Binary Tree
+        function createBinaryTree() {
+            const container = document.getElementById('binary-tree');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            // Root node
+            createNode(container, 'Start', 400, 30, 'root');
+            
+            // Level 1
+            createNode(container, 'F5', 400, 120);
+            createEdge(container, 400, 60, 400, 120, 'First drop at F5');
+            
+            // Level 2
+            createNode(container, 'F1-4', 200, 210);
+            createNode(container, 'F6-10', 600, 210);
+            createEdge(container, 400, 150, 200, 210, 'Breaks');
+            createEdge(container, 400, 150, 600, 210, 'Survives');
+            
+            // Level 3
+            createNode(container, 'F1', 120, 300);
+            createNode(container, '...', 200, 300, '', '...');
+            createNode(container, 'F4', 280, 300);
+            
+            createNode(container, 'F6', 520, 300);
+            createNode(container, '...', 600, 300, '', '...');
+            createNode(container, 'F10', 680, 300);
+            
+            createEdge(container, 200, 240, 120, 300, 'Linear search');
+            createEdge(container, 200, 240, 280, 300, '');
+            
+            createEdge(container, 600, 240, 520, 300, 'Linear search');
+            createEdge(container, 600, 240, 680, 300, '');
+            
+            // Results
+            createNode(container, 'Found!', 400, 380, '', 'Result');
+            createEdge(container, 200, 330, 400, 380, 'Worst case: 5 drops');
+            createEdge(container, 600, 330, 400, 380, 'Worst case: 5 drops');
+        }
+        
+        // Create Optimal Tree
+        function createOptimalTree() {
+            const container = document.getElementById('optimal-tree');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            // Root node
+            createNode(container, 'Start', 400, 30, 'root');
+            
+            // Level 1
+            createNode(container, 'F4', 400, 120);
+            createEdge(container, 400, 60, 400, 120, 'First drop at F4');
+            
+            // Level 2
+            createNode(container, 'F1-3', 200, 210);
+            createNode(container, 'F7', 600, 210);
+            createEdge(container, 400, 150, 200, 210, 'Breaks');
+            createEdge(container, 400, 150, 600, 210, 'Survives');
+            
+            // Level 3 for F1-3
+            createNode(container, 'F1', 120, 300);
+            createNode(container, 'F2', 200, 300);
+            createNode(container, 'F3', 280, 300);
+            
+            createEdge(container, 200, 240, 120, 300, 'Linear search');
+            createEdge(container, 200, 240, 200, 300, '');
+            createEdge(container, 200, 240, 280, 300, '');
+            
+            // Level 3 for F7
+            createNode(container, 'F5-6', 500, 300);
+            createNode(container, 'F9', 700, 300);
+            createEdge(container, 600, 240, 500, 300, 'Breaks');
+            createEdge(container, 600, 240, 700, 300, 'Survives');
+            
+            // Level 4
+            createNode(container, 'F5', 460, 380);
+            createNode(container, 'F6', 540, 380);
+            createEdge(container, 500, 330, 460, 380, 'Linear');
+            createEdge(container, 500, 330, 540, 380, '');
+            
+            createNode(container, 'F8', 660, 380);
+            createNode(container, 'F10', 740, 380);
+            createEdge(container, 700, 330, 660, 380, 'Linear');
+            createEdge(container, 700, 330, 740, 380, '');
+            
+            // Results
+            createNode(container, 'Found!', 400, 460, '', 'Result');
+            createEdge(container, 200, 330, 400, 460, 'Max: 4 drops');
+            createEdge(container, 500, 410, 400, 460, 'Max: 4 drops');
+            createEdge(container, 700, 410, 400, 460, 'Max: 4 drops');
+        }
+        
+        // Helper function to create a node
+        function createNode(container, text, x, y, className = '', type = 'node') {
+            const node = document.createElement('div');
+            node.className = `node ${className}`;
+            node.innerHTML = text;
+            node.style.left = `${x - 30}px`;
+            node.style.top = `${y - 30}px`;
+            container.appendChild(node);
+        }
+        
+        // Helper function to create an edge
+        function createEdge(container, x1, y1, x2, y2, label = '') {
+            // Calculate length and angle
+            const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+            
+            // Create edge
+            const edge = document.createElement('div');
+            edge.className = 'edge';
+            edge.style.width = `${length}px`;
+            edge.style.height = '2px';
+            edge.style.left = `${x1}px`;
+            edge.style.top = `${y1}px`;
+            edge.style.transform = `rotate(${angle}deg)`;
+            container.appendChild(edge);
+            
+            // Create label
+            if (label) {
+                const labelDiv = document.createElement('div');
+                labelDiv.className = 'edge-label';
+                labelDiv.textContent = label;
+                labelDiv.style.left = `${(x1 + x2) / 2 - 30}px`;
+                labelDiv.style.top = `${(y1 + y2) / 2 - 20}px`;
+                container.appendChild(labelDiv);
+            }
+        }
+    </script>
+</body>
+</html>
