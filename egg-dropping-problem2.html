@@ -3,359 +3,293 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Programming Table - Egg Dropping Problem</title>
+    <title>Egg Drop Problem Visualization</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #FFFFFF;
-            color: #000000;
+            font-family: Arial, sans-serif;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         
         .container {
+            width: 100%;
             max-width: 1000px;
-            margin: 0 auto;
         }
         
-        h1 {
-            color: #FF4800;
+        .controls {
+            margin-bottom: 20px;
             text-align: center;
-            margin-bottom: 30px;
+        }
+        
+        button {
+            background-color: #ff4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            border-radius: 4px;
+        }
+        
+        button:hover {
+            background-color: #e63e00;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .info {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #1c1d20;
+        }
+        
+        .visualization {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         
         .dp-table {
             border-collapse: collapse;
-            margin: 20px auto;
-            background-color: #FFFFFF;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
-        .dp-table td, .dp-table th {
-            border: 1px solid #000000;
-            padding: 10px;
+        .dp-table th, .dp-table td {
+            border: 1px solid #1c1d20;
+            padding: 8px 12px;
             text-align: center;
-            width: 50px;
-            height: 50px;
-            position: relative;
+            font-family: Arial, sans-serif;
+            min-width: 40px;
         }
         
         .dp-table th {
-            background-color: #FD9F78;
-            color: #000000;
+            background-color: #1c1d20;
+            color: white;
         }
         
-        .active-cell {
-            background-color: #FF4800;
-            color: #FFFFFF;
-            transition: background-color 0.5s ease;
+        .dp-table .current {
+            background-color: #ff4800;
+            color: white;
+            font-weight: bold;
         }
         
-        .highlight-cell {
-            background-color: rgba(253, 159, 120, 0.3);
+        .dp-table .computed {
+            background-color: #ffd6c7;
         }
         
         .explanation {
-            margin: 20px auto;
-            padding: 20px;
-            border: 1px solid #FD9F78;
-            border-radius: 8px;
-            background-color: #FFFFFF;
             max-width: 800px;
-        }
-        
-        .controls {
-            display: flex;
-            justify-content: center;
             margin: 20px 0;
-            gap: 20px;
+            padding: 20px;
+            background-color: #f5f5f5;
+            border-left: 4px solid #ff4800;
+            color: #1c1d20;
+            font-family: Arial, sans-serif;
         }
         
-        button {
-            background-color: #FF4800;
-            color: #FFFFFF;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 5px;
-            font-weight: bold;
-            transition: background-color 0.3s ease;
-        }
-        
-        button:hover {
-            background-color: #FD9F78;
-        }
-        
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        
-        .calculation {
-            color: #FF4800;
-            font-weight: bold;
-        }
-        
-        .arrow {
-            position: absolute;
-            color: #FF4800;
-            font-weight: bold;
-            animation: pulse 1s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 0.5; }
-            50% { opacity: 1; }
-            100% { opacity: 0.5; }
-        }
-        
-        .progress {
-            text-align: center;
-            margin-bottom: 10px;
-            color: #FF4800;
-            font-weight: bold;
+        .step-info {
+            background-color: #1c1d20;
+            color: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Dynamic Programming: Egg Dropping Problem</h1>
-        
-        <div class="progress">Step <span id="current-step">1</span> of <span id="total-steps">21</span></div>
-        
-        <div class="explanation" id="explanation">
-            Welcome to the Dynamic Programming visualization for the Egg Dropping Problem!
-            <br><br>
-            <strong>Problem:</strong> We have 2 eggs and a 10-floor building. We need to find the minimum number of attempts needed to determine the highest floor from which an egg can be dropped without breaking.
-            <br><br>
-            This visualization shows how we fill a DP table bottom-up to solve this problem.
+        <div class="controls">
+            <button id="prevBtn">Previous</button>
+            <button id="nextBtn">Next</button>
         </div>
         
-        <table class="dp-table" id="dp-table">
-            <thead>
-                <tr>
-                    <th>Eggs \ Floors</th>
-                    <th>0</th>
-                    <th>1</th>
-                    <th>2</th>
-                    <th>3</th>
-                    <th>4</th>
-                    <th>5</th>
-                    <th>6</th>
-                    <th>7</th>
-                    <th>8</th>
-                    <th>9</th>
-                    <th>10</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>0</th>
-                    <td>0</td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td>0</td>
-                </tr>
-                <tr>
-                    <th>1</th>
-                    <td>0</td>
-                    <td>1</td>
-                    <td>2</td>
-                    <td>3</td>
-                    <td>4</td>
-                    <td>5</td>
-                    <td>6</td>
-                    <td>7</td>
-                    <td>8</td>
-                    <td>9</td>
-                    <td>10</td>
-                </tr>
-                <tr>
-                    <th>2</th>
-                    <td>0</td>
-                    <td>1</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>-</td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="info">
+            <h2>Egg Drop Problem: 2 Eggs, 10 Floors</h2>
+            <div id="stepInfo" class="step-info">Step 1: Initialize base cases</div>
+        </div>
         
-        <div class="controls">
-            <button id="prev-btn" disabled>Previous</button>
-            <button id="next-btn">Next</button>
+        <div class="visualization">
+            <table id="dpTable" class="dp-table"></table>
+            <div id="explanation" class="explanation"></div>
         </div>
     </div>
 
     <script>
-        const dpTable = [
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-            [0, 1, 2, 2, 3, 3, 3, 4, 4, 4, 4]
-        ];
-        
-        const explanations = [
-            "Welcome to the Dynamic Programming visualization for the Egg Dropping Problem! <br><br> <strong>Problem:</strong> We have 2 eggs and a 10-floor building. We need to find the minimum number of attempts needed to determine the highest floor from which an egg can be dropped without breaking. <br><br> This visualization shows how we fill a DP table bottom-up to solve this problem.",
-            
-            "First, let's understand the base cases: <br><br> 1. If we have 0 eggs, we can't perform any trials, so dp[0][j] = 0 for all floors j. <br><br> 2. If we have 1 egg, we need to check each floor from bottom to top, so dp[1][j] = j for all floors j.",
-            
-            "Now we'll start filling the table for 2 eggs, starting with floor 2. <br><br> For each floor j, we try dropping an egg from every floor x (1 to j) and take the minimum over all these possibilities.",
-            
-            "Let's calculate dp[2][2] (2 eggs, 2 floors): <br><br> We try dropping from floor 1: <br> - If egg breaks: We check dp[1][0] = 0 (0 floors below) <br> - If egg doesn't break: We check dp[2][1] = 1 (1 floor above) <br> Max(0, 1) + 1 = 2 <br><br> We try dropping from floor 2: <br> - If egg breaks: We check dp[1][1] = 1 (1 floor below) <br> - If egg doesn't break: We check dp[2][0] = 0 (0 floors above) <br> Max(1, 0) + 1 = 2 <br><br> Minimum of all attempts = min(2, 2) = 2",
-            
-            "Now let's calculate dp[2][3] (2 eggs, 3 floors): <br><br> We try dropping from floor 1: <br> - If egg breaks: We check dp[1][0] = 0 (0 floors below) <br> - If egg doesn't break: We check dp[2][2] = 2 (2 floors above) <br> Max(0, 2) + 1 = 3 <br><br> We try dropping from floor 2: <br> - If egg breaks: We check dp[1][1] = 1 (1 floor below) <br> - If egg doesn't break: We check dp[2][1] = 1 (1 floor above) <br> Max(1, 1) + 1 = 2 <br><br> We try dropping from floor 3: <br> - If egg breaks: We check dp[1][2] = 2 (2 floors below) <br> - If egg doesn't break: We check dp[2][0] = 0 (0 floors above) <br> Max(2, 0) + 1 = 3 <br><br> Minimum of all attempts = min(3, 2, 3) = 2",
-            
-            "Now let's calculate dp[2][4] (2 eggs, 4 floors): <br><br> We try dropping from floor 1: <br> - If egg breaks: We check dp[1][0] = 0 (0 floors below) <br> - If egg doesn't break: We check dp[2][3] = 2 (3 floors above) <br> Max(0, 2) + 1 = 3 <br><br> We try dropping from floor 2: <br> - If egg breaks: We check dp[1][1] = 1 (1 floor below) <br> - If egg doesn't break: We check dp[2][2] = 2 (2 floors above) <br> Max(1, 2) + 1 = 3 <br><br> We try dropping from floor 3: <br> - If egg breaks: We check dp[1][2] = 2 (2 floors below) <br> - If egg doesn't break: We check dp[2][1] = 1 (1 floor above) <br> Max(2, 1) + 1 = 3 <br><br> We try dropping from floor 4: <br> - If egg breaks: We check dp[1][3] = 3 (3 floors below) <br> - If egg doesn't break: We check dp[2][0] = 0 (0 floors above) <br> Max(3, 0) + 1 = 4 <br><br> Minimum of all attempts = min(3, 3, 3, 4) = 3",
-            
-            "Now let's calculate dp[2][5] (2 eggs, 5 floors): <br><br> After trying all possible floors to drop from, we find that the minimum number of attempts needed is 3.",
-            
-            "Now let's calculate dp[2][6] (2 eggs, 6 floors): <br><br> After trying all possible floors to drop from, we find that the minimum number of attempts needed is 3.",
-            
-            "Now let's calculate dp[2][7] (2 eggs, 7 floors): <br><br> After trying all possible floors to drop from, we find that the minimum number of attempts needed is 4.",
-            
-            "Now let's calculate dp[2][8] (2 eggs, 8 floors): <br><br> After trying all possible floors to drop from, we find that the minimum number of attempts needed is 4.",
-            
-            "Now let's calculate dp[2][9] (2 eggs, 9 floors): <br><br> After trying all possible floors to drop from, we find that the minimum number of attempts needed is 4.",
-            
-            "Finally, let's calculate dp[2][10] (2 eggs, 10 floors): <br><br> After trying all possible floors to drop from, we find that the minimum number of attempts needed is 4.",
-            
-            "Now our DP table is completely filled! <br><br> The answer to our original problem - minimum number of attempts needed with 2 eggs and 10 floors - is dp[2][10] = 4.",
-            
-            "Let's understand what dp[2][10] = 4 means: <br><br> With 2 eggs and 10 floors, we need at most 4 attempts to determine the highest floor from which an egg can be dropped without breaking.",
-            
-            "The optimal strategy for 2 eggs and 10 floors is to drop the first egg from floor 4: <br><br> - If it breaks, use the second egg to check floors 1, 2, and 3 one by one (worst case: 4 attempts) <br> - If it doesn't break, drop from floor 7 next <br> - If it breaks at floor 7, check floors 5 and 6 (worst case: 4 attempts) <br> - If it doesn't break at floor 7, check floors 8, 9, and 10 (worst case: 4 attempts)",
-            
-            "This problem demonstrates the power of dynamic programming: <br><br> 1. We broke down the problem into smaller subproblems (fewer eggs/floors) <br> 2. We stored the solutions to these subproblems in a table <br> 3. We built up to the final solution using previously computed results <br><br> This approach is much more efficient than trying all possible dropping strategies directly!",
-            
-            "The key insight in this problem is that at each step, we need to consider the worst-case scenario: <br><br> 1. If the egg breaks, we have one less egg and need to check lower floors <br> 2. If the egg doesn't break, we keep both eggs but need to check higher floors <br><br> We take the maximum of these two cases because we need to prepare for the worst-case scenario.",
-            
-            "The recurrence relation used in this DP solution is: <br><br> dp[i][j] = 1 + min(max(dp[i-1][x-1], dp[i][j-x])) for all x from 1 to j <br><br> Where: <br> - i is the number of eggs <br> - j is the number of floors <br> - x is the current floor we're dropping from",
-            
-            "In real-world applications, this type of dynamic programming approach can be used for: <br><br> 1. Resource allocation problems <br> 2. Testing and quality assurance optimization <br> 3. Risk management scenarios <br> 4. Any problem where we need to minimize the worst-case cost",
-            
-            "Thank you for exploring the Egg Dropping Problem using Dynamic Programming! <br><br> This is a classic example that demonstrates how DP can efficiently solve complex optimization problems by breaking them down into simpler subproblems and building up the solution."
-        ];
-        
-        const cellStates = [
-            [], // Step 0
-            [[0,0], [0,1], [0,2], [0,3], [0,4], [0,5], [0,6], [0,7], [0,8], [0,9], [0,10], 
-             [1,0], [1,1], [1,2], [1,3], [1,4], [1,5], [1,6], [1,7], [1,8], [1,9], [1,10]], // Step 1
-            [], // Step 2
-            [[2,2]], // Step 3
-            [[2,3]], // Step 4
-            [[2,4]], // Step 5
-            [[2,5]], // Step 6
-            [[2,6]], // Step 7
-            [[2,7]], // Step 8
-            [[2,8]], // Step 9
-            [[2,9]], // Step 10
-            [[2,10]], // Step 11
-            [[2,10]], // Step 12
-            [[2,10]], // Step 13
-            [[2,10]], // Step 14
-            [], // Step 15
-            [], // Step 16
-            [], // Step 17
-            [], // Step 18
-            [], // Step 19
-            [] // Step 20
-        ];
-        
+        const eggs = 2;
+        const floors = 10;
         let currentStep = 0;
-        const totalSteps = explanations.length;
-        document.getElementById('total-steps').textContent = totalSteps;
+        let dp = [];
+        let steps = [];
         
-        function updateTable() {
-            // Clear any active cells
-            const allCells = document.querySelectorAll('.dp-table td');
-            allCells.forEach(cell => {
-                cell.classList.remove('active-cell');
-                cell.classList.remove('highlight-cell');
+        function initializeDP() {
+            dp = Array(eggs + 1).fill().map(() => Array(floors + 1).fill(0));
+            
+            // Base cases
+            for (let i = 1; i <= eggs; i++) {
+                dp[i][0] = 0;
+                dp[i][1] = 1;
+            }
+            for (let j = 1; j <= floors; j++) {
+                dp[1][j] = j;
+            }
+        }
+        
+        function generateSteps() {
+            steps = [];
+            
+            // Step 1: Base cases
+            steps.push({
+                type: 'base',
+                description: 'Initialize base cases: 0 floors = 0 attempts, 1 floor = 1 attempt, 1 egg = try all floors sequentially',
+                currentCell: null,
+                explanation: 'Base cases form the foundation of our dynamic programming solution.'
             });
             
-            // Set the visible dp values based on the current step
-            for (let i = 0; i <= 2; i++) {
-                for (let j = 0; j <= 10; j++) {
-                    const cell = document.querySelector(`.dp-table tbody tr:nth-child(${i+1}) td:nth-child(${j+1})`);
+            // Steps for computing each cell
+            for (let i = 2; i <= eggs; i++) {
+                for (let j = 2; j <= floors; j++) {
+                    let minAttempts = Infinity;
+                    let bestFloor = 1;
                     
-                    // For the first two rows (i=0,1), show all values
-                    if (i < 2) {
-                        cell.textContent = dpTable[i][j];
-                    }
-                    // For the third row (i=2), show values progressively
-                    else {
-                        if (currentStep >= 3 && j <= 2) {
-                            cell.textContent = dpTable[i][j];
-                        } else if (currentStep >= 4 && j <= 3) {
-                            cell.textContent = dpTable[i][j];
-                        } else if (currentStep >= 5 && j <= 4) {
-                            cell.textContent = dpTable[i][j];
-                        } else if (currentStep >= 6 && j <= 5) {
-                            cell.textContent = dpTable[i][j];
-                        } else if (currentStep >= 7 && j <= 6) {
-                            cell.textContent = dpTable[i][j];
-                        } else if (currentStep >= 8 && j <= 7) {
-                            cell.textContent = dpTable[i][j];
-                        } else if (currentStep >= 9 && j <= 8) {
-                            cell.textContent = dpTable[i][j];
-                        } else if (currentStep >= 10 && j <= 9) {
-                            cell.textContent = dpTable[i][j];
-                        } else if (currentStep >= 11 && j <= 10) {
-                            cell.textContent = dpTable[i][j];
-                        } else {
-                            cell.textContent = "-";
+                    for (let x = 1; x <= j; x++) {
+                        const eggBreaks = dp[i-1][x-1];
+                        const eggSurvives = dp[i][j-x];
+                        const worstCase = 1 + Math.max(eggBreaks, eggSurvives);
+                        
+                        if (worstCase < minAttempts) {
+                            minAttempts = worstCase;
+                            bestFloor = x;
                         }
+                    }
+                    
+                    dp[i][j] = minAttempts;
+                    
+                    steps.push({
+                        type: 'compute',
+                        eggs: i,
+                        floors: j,
+                        result: minAttempts,
+                        bestFloor: bestFloor,
+                        description: `Computing dp[${i}][${j}]: ${i} eggs, ${j} floors`,
+                        currentCell: [i, j],
+                        explanation: `For ${i} eggs and ${j} floors, we try dropping from each floor and take the minimum worst-case scenario. The optimal strategy is to drop from floor ${bestFloor} first, requiring at most ${minAttempts} attempts.`
+                    });
+                }
+            }
+            
+            // Final step
+            steps.push({
+                type: 'final',
+                description: `Solution: With ${eggs} eggs and ${floors} floors, we need at most ${dp[eggs][floors]} attempts`,
+                currentCell: [eggs, floors],
+                explanation: `The final answer is ${dp[eggs][floors]} attempts. This represents the minimum number of attempts needed in the worst-case scenario to determine the critical floor.`
+            });
+        }
+        
+        function createTable() {
+            const table = document.getElementById('dpTable');
+            table.innerHTML = '';
+            
+            // Header row
+            const headerRow = table.insertRow();
+            headerRow.insertCell().innerHTML = '<th>Eggs\\Floors</th>';
+            for (let j = 0; j <= floors; j++) {
+                const cell = headerRow.insertCell();
+                cell.innerHTML = `<th>${j}</th>`;
+            }
+            
+            // Data rows
+            for (let i = 0; i <= eggs; i++) {
+                const row = table.insertRow();
+                const headerCell = row.insertCell();
+                headerCell.innerHTML = `<th>${i}</th>`;
+                
+                for (let j = 0; j <= floors; j++) {
+                    const cell = row.insertCell();
+                    if (i === 0) {
+                        cell.textContent = '-';
+                        cell.style.backgroundColor = '#f0f0f0';
+                    } else {
+                        cell.textContent = dp[i][j] || '';
+                        cell.id = `cell-${i}-${j}`;
+                    }
+                }
+            }
+        }
+        
+        function updateVisualization() {
+            const step = steps[currentStep];
+            const stepInfo = document.getElementById('stepInfo');
+            const explanation = document.getElementById('explanation');
+            
+            stepInfo.textContent = `Step ${currentStep + 1}: ${step.description}`;
+            explanation.textContent = step.explanation;
+            
+            // Clear previous highlighting
+            const cells = document.querySelectorAll('.dp-table td');
+            cells.forEach(cell => {
+                cell.classList.remove('current', 'computed');
+            });
+            
+            // Highlight computed cells up to current step
+            for (let s = 1; s <= currentStep; s++) {
+                const stepData = steps[s];
+                if (stepData.currentCell) {
+                    const [i, j] = stepData.currentCell;
+                    const cell = document.getElementById(`cell-${i}-${j}`);
+                    if (cell) {
+                        cell.classList.add('computed');
+                        cell.textContent = dp[i][j];
                     }
                 }
             }
             
-            // Highlight active cells for the current step
-            cellStates[currentStep].forEach(([i, j]) => {
-                const cell = document.querySelector(`.dp-table tbody tr:nth-child(${i+1}) td:nth-child(${j+1})`);
-                cell.classList.add('active-cell');
-            });
-            
-            // Update explanation
-            document.getElementById('explanation').innerHTML = explanations[currentStep];
-            
-            // Update current step display
-            document.getElementById('current-step').textContent = currentStep + 1;
+            // Highlight current cell
+            if (step.currentCell) {
+                const [i, j] = step.currentCell;
+                const cell = document.getElementById(`cell-${i}-${j}`);
+                if (cell) {
+                    cell.classList.add('current');
+                }
+            }
             
             // Update button states
-            document.getElementById('prev-btn').disabled = currentStep === 0;
-            document.getElementById('next-btn').disabled = currentStep === totalSteps - 1;
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === steps.length - 1;
         }
         
-        function nextStep() {
-            if (currentStep < totalSteps - 1) {
-                currentStep++;
-                updateTable();
-            }
+        function initialize() {
+            initializeDP();
+            generateSteps();
+            createTable();
+            updateVisualization();
         }
         
-        function prevStep() {
+        document.getElementById('prevBtn').addEventListener('click', () => {
             if (currentStep > 0) {
                 currentStep--;
-                updateTable();
+                updateVisualization();
             }
-        }
+        });
         
-        // Initialize
-        document.getElementById('next-btn').addEventListener('click', nextStep);
-        document.getElementById('prev-btn').addEventListener('click', prevStep);
-        updateTable();
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+        
+        initialize();
     </script>
 </body>
 </html>
