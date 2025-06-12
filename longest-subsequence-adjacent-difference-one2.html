@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Programming - LIS Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .explanation {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .animation-container {
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        .array-item {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #FF4800;
+            margin: 0 5px;
+            border-radius: 5px;
+            font-weight: bold;
+            position: relative;
+        }
+        .array-item.current {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .array-item.processed {
+            background-color: #FD9F78;
+            color: #FFFFFF;
+        }
+        .array-index {
+            position: absolute;
+            top: -20px;
+            font-size: 12px;
+            color: #000000;
+        }
+        .dp-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .dp-item {
+            width: 80px;
+            height: 80px;
+            margin: 10px;
+            border: 2px solid #FD9F78;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        .dp-item.highlight {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .dp-key {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .dp-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #FD9F78;
+            color: #FFFFFF;
+            border-radius: 5px;
+            text-align: center;
+            min-height: 60px;
+        }
+        .subsequence {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .subsequence-item {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #FF4800;
+            margin: 0 5px;
+            border-radius: 5px;
+            font-weight: bold;
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dynamic Programming: Longest Increasing Subsequence</h1>
+        
+        <div class="explanation">
+            <p>This visualization shows how Dynamic Programming is used to find the Longest Increasing Subsequence (LIS) in an array. We maintain a DP dictionary where each key is an array element and the value represents the length of the longest increasing subsequence ending at that element.</p>
+            <p>As we process each element, we look at all previously processed elements. If the current element is greater than a previous element, we can potentially extend that subsequence.</p>
+        </div>
+        
+        <div class="animation-container">
+            <div class="array-container" id="array-display"></div>
+            <div class="dp-container" id="dp-display"></div>
+            <div class="status" id="status-display"></div>
+            <div class="subsequence" id="subsequence-display"></div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        // Array data
+        const array = [1, 3, 2, 4, 5, 3];
+        
+        // Animation states
+        const states = [];
+        
+        // Initial state
+        states.push({
+            currentIndex: -1,
+            dp: {},
+            status: "Welcome to the LIS visualization. We'll process each element of the array [1, 3, 2, 4, 5, 3] one by one.",
+            subsequence: []
+        });
+        
+        // Generate all states
+        let dpMap = {};
+        let maxLength = 0;
+        let maxEndingElement = null;
+        
+        // For each element in the array
+        for (let i = 0; i < array.length; i++) {
+            // Default LIS length for current element is 1
+            let currentMax = 1;
+            let prevElement = null;
+            
+            // Compare with all previous elements
+            for (let j = 0; j < i; j++) {
+                // If current element is greater than previous element
+                if (array[i] > array[j]) {
+                    // If extending the subsequence gives a longer length
+                    if (dpMap[array[j]] + 1 > currentMax) {
+                        currentMax = dpMap[array[j]] + 1;
+                        prevElement = array[j];
+                    }
+                }
+            }
+            
+            // Update dp map
+            dpMap[array[i]] = currentMax;
+            
+            // Update max length if needed
+            if (currentMax > maxLength) {
+                maxLength = currentMax;
+                maxEndingElement = array[i];
+            }
+            
+            // Create a state for comparing with previous elements
+            for (let j = 0; j < i; j++) {
+                if (array[i] > array[j]) {
+                    states.push({
+                        currentIndex: i,
+                        compareIndex: j,
+                        dp: {...dpMap},
+                        dpHighlight: [array[j]],
+                        status: `Comparing ${array[i]} with ${array[j]}. Since ${array[i]} > ${array[j]}, we can extend the subsequence. Current LIS ending at ${array[j]} has length ${dpMap[array[j]]}.`,
+                        subsequence: []
+                    });
+                }
+            }
+            
+            // Create a state for after processing the current element
+            const dpCopy = {...dpMap};
+            states.push({
+                currentIndex: i,
+                dp: dpCopy,
+                dpHighlight: [array[i]],
+                status: `After processing ${array[i]}, the longest increasing subsequence ending at ${array[i]} has length ${dpCopy[array[i]]}.`,
+                subsequence: []
+            });
+        }
+        
+        // Final state showing the entire DP map and the longest subsequence
+        // Reconstruct the longest subsequence
+        let longestSubsequence = [];
+        let currentLength = maxLength;
+        
+        // Find elements that form the longest subsequence
+        for (let i = array.length - 1; i >= 0; i--) {
+            if (dpMap[array[i]] === currentLength) {
+                longestSubsequence.unshift(array[i]);
+                currentLength--;
+            }
+        }
+        
+        states.push({
+            currentIndex: array.length,
+            dp: {...dpMap},
+            status: `The longest increasing subsequence has length ${maxLength}.`,
+            subsequence: longestSubsequence
+        });
+        
+        // Current state index
+        let currentStateIndex = 0;
+        
+        // DOM elements
+        const arrayDisplay = document.getElementById('array-display');
+        const dpDisplay = document.getElementById('dp-display');
+        const statusDisplay = document.getElementById('status-display');
+        const subsequenceDisplay = document.getElementById('subsequence-display');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        
+        // Initialize the array display
+        function initializeArray() {
+            arrayDisplay.innerHTML = '';
+            for (let i = 0; i < array.length; i++) {
+                const item = document.createElement('div');
+                item.className = 'array-item';
+                item.id = `array-item-${i}`;
+                
+                const index = document.createElement('div');
+                index.className = 'array-index';
+                index.textContent = i;
+                
+                item.appendChild(index);
+                item.appendChild(document.createTextNode(array[i]));
+                arrayDisplay.appendChild(item);
+            }
+        }
+        
+        // Update the display based on current state
+        function updateDisplay() {
+            const state = states[currentStateIndex];
+            
+            // Update array display
+            for (let i = 0; i < array.length; i++) {
+                const item = document.getElementById(`array-item-${i}`);
+                if (i === state.currentIndex) {
+                    item.className = 'array-item current';
+                } else if (i === state.compareIndex) {
+                    item.className = 'array-item processed';
+                } else if (i < state.currentIndex) {
+                    item.className = 'array-item processed';
+                } else {
+                    item.className = 'array-item';
+                }
+            }
+            
+            // Update DP display
+            dpDisplay.innerHTML = '';
+            const dpEntries = Object.entries(state.dp);
+            for (const [key, value] of dpEntries) {
+                const item = document.createElement('div');
+                item.className = 'dp-item';
+                if (state.dpHighlight && state.dpHighlight.includes(parseInt(key))) {
+                    item.className += ' highlight';
+                }
+                
+                const keyElem = document.createElement('div');
+                keyElem.className = 'dp-key';
+                keyElem.textContent = `Element: ${key}`;
+                
+                const valueElem = document.createElement('div');
+                valueElem.className = 'dp-value';
+                valueElem.textContent = value;
+                
+                item.appendChild(keyElem);
+                item.appendChild(valueElem);
+                dpDisplay.appendChild(item);
+            }
+            
+            // Update status display
+            statusDisplay.textContent = state.status;
+            
+            // Update subsequence display
+            subsequenceDisplay.innerHTML = '';
+            if (state.subsequence && state.subsequence.length > 0) {
+                for (const elem of state.subsequence) {
+                    const item = document.createElement('div');
+                    item.className = 'subsequence-item';
+                    item.textContent = elem;
+                    subsequenceDisplay.appendChild(item);
+                }
+            }
+            
+            // Update buttons
+            prevBtn.disabled = currentStateIndex === 0;
+            nextBtn.disabled = currentStateIndex === states.length - 1;
+        }
+        
+        // Event listeners for buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStateIndex > 0) {
+                currentStateIndex--;
+                updateDisplay();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStateIndex < states.length - 1) {
+                currentStateIndex++;
+                updateDisplay();
+            }
+        });
+        
+        // Initialize and update display
+        initializeArray();
+        updateDisplay();
+    </script>
+</body>
+</html>
