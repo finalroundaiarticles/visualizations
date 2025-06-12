@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greedy Selection Process</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .explanation {
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .canvas-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            margin-bottom: 20px;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+        }
+        #timeline {
+            height: 100%;
+            position: relative;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+            color: #FF4800;
+        }
+        .interval {
+            position: absolute;
+            height: 30px;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.5s ease;
+            color: #000000;
+        }
+        .selected {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            font-weight: bold;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 0 10px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            border-radius: 3px;
+        }
+        .timeline-scale {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .timeline-mark {
+            position: absolute;
+            width: 1px;
+            height: 10px;
+            background-color: #000000;
+            bottom: 0;
+        }
+        .timeline-label {
+            position: absolute;
+            bottom: -20px;
+            transform: translateX(-50%);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Greedy Selection Process Visualization</h1>
+        
+        <div class="explanation">
+            <p>The Greedy Selection Process is a technique used to select the maximum number of non-overlapping intervals. This visualization shows how the algorithm works on a set of intervals by first sorting them by end times and then selecting compatible intervals.</p>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FD9F78; border: 2px solid #FF4800;"></div>
+                <span>Unselected Interval</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FF4800;"></div>
+                <span>Selected Interval</span>
+            </div>
+        </div>
+
+        <div class="step-indicator" id="step-text">Step 1: Original Intervals</div>
+
+        <div class="canvas-container">
+            <div id="timeline"></div>
+        </div>
+
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // The visualization data
+        const steps = [
+            {
+                title: "Step 1: Original Intervals",
+                intervals: [
+                    { start: 1, end: 5, selected: false, id: 1 },
+                    { start: 2, end: 3, selected: false, id: 2 },
+                    { start: 4, end: 7, selected: false, id: 3 },
+                    { start: 6, end: 8, selected: false, id: 4 },
+                    { start: 9, end: 10, selected: false, id: 5 }
+                ],
+                description: "We start with the original set of intervals: [(1, 5), (2, 3), (4, 7), (6, 8), (9, 10)]."
+            },
+            {
+                title: "Step 2: Sort by End Times",
+                intervals: [
+                    { start: 2, end: 3, selected: false, id: 2 },
+                    { start: 1, end: 5, selected: false, id: 1 },
+                    { start: 4, end: 7, selected: false, id: 3 },
+                    { start: 6, end: 8, selected: false, id: 4 },
+                    { start: 9, end: 10, selected: false, id: 5 }
+                ],
+                description: "Sort the intervals by their end times to get: [(2, 3), (1, 5), (4, 7), (6, 8), (9, 10)]."
+            },
+            {
+                title: "Step 3: Select First Interval",
+                intervals: [
+                    { start: 2, end: 3, selected: true, id: 2 },
+                    { start: 1, end: 5, selected: false, id: 1 },
+                    { start: 4, end: 7, selected: false, id: 3 },
+                    { start: 6, end: 8, selected: false, id: 4 },
+                    { start: 9, end: 10, selected: false, id: 5 }
+                ],
+                description: "Select the interval with the earliest end time: (2, 3). Current end time is now 3."
+            },
+            {
+                title: "Step 4: Find Next Compatible Interval",
+                intervals: [
+                    { start: 2, end: 3, selected: true, id: 2 },
+                    { start: 1, end: 5, selected: false, id: 1, conflict: true },
+                    { start: 4, end: 7, selected: true, id: 3 },
+                    { start: 6, end: 8, selected: false, id: 4 },
+                    { start: 9, end: 10, selected: false, id: 5 }
+                ],
+                description: "(1, 5) overlaps with our selected interval, so we skip it. Select (4, 7) since it starts after our last end time (3). Current end time is now 7."
+            },
+            {
+                title: "Step 5: Find Next Compatible Interval",
+                intervals: [
+                    { start: 2, end: 3, selected: true, id: 2 },
+                    { start: 1, end: 5, selected: false, id: 1, conflict: true },
+                    { start: 4, end: 7, selected: true, id: 3 },
+                    { start: 6, end: 8, selected: false, id: 4, conflict: true },
+                    { start: 9, end: 10, selected: true, id: 5 }
+                ],
+                description: "(6, 8) overlaps with our last selected interval (4, 7), so we skip it. Select (9, 10) since it starts after our last end time (7)."
+            },
+            {
+                title: "Step 6: Final Result",
+                intervals: [
+                    { start: 2, end: 3, selected: true, id: 2 },
+                    { start: 1, end: 5, selected: false, id: 1, conflict: true },
+                    { start: 4, end: 7, selected: true, id: 3 },
+                    { start: 6, end: 8, selected: false, id: 4, conflict: true },
+                    { start: 9, end: 10, selected: true, id: 5 }
+                ],
+                description: "The greedy algorithm has selected 3 non-overlapping intervals: [(2, 3), (4, 7), (9, 10)]."
+            }
+        ];
+
+        let currentStep = 0;
+        const timeline = document.getElementById('timeline');
+        const stepText = document.getElementById('step-text');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        // Initialize the visualization
+        function initVisualization() {
+            renderStep();
+        }
+
+        // Render the current step
+        function renderStep() {
+            const step = steps[currentStep];
+            stepText.textContent = step.title;
+            
+            // Clear the timeline
+            timeline.innerHTML = '';
+            
+            // Add explanation
+            const explanation = document.createElement('div');
+            explanation.className = 'explanation';
+            explanation.style.position = 'absolute';
+            explanation.style.top = '10px';
+            explanation.style.left = '10px';
+            explanation.style.right = '10px';
+            explanation.textContent = step.description;
+            timeline.appendChild(explanation);
+
+            // Create timeline scale
+            createTimelineScale();
+            
+            // Draw the intervals
+            drawIntervals(step.intervals);
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+
+        // Create timeline scale
+        function createTimelineScale() {
+            const scaleContainer = document.createElement('div');
+            scaleContainer.className = 'timeline-scale';
+            
+            for (let i = 1; i <= 10; i++) {
+                const mark = document.createElement('div');
+                mark.className = 'timeline-mark';
+                mark.style.left = `${(i - 1) * 10}%`;
+                
+                const label = document.createElement('div');
+                label.className = 'timeline-label';
+                label.style.left = `${(i - 1) * 10}%`;
+                label.textContent = i;
+                
+                scaleContainer.appendChild(mark);
+                scaleContainer.appendChild(label);
+            }
+            
+            timeline.appendChild(scaleContainer);
+        }
+
+        // Draw intervals on the timeline
+        function drawIntervals(intervals) {
+            const timelineWidth = timeline.clientWidth;
+            const totalDuration = 10; // 1 to 10
+            
+            intervals.forEach((interval, index) => {
+                const intervalElem = document.createElement('div');
+                intervalElem.className = 'interval';
+                if (interval.selected) {
+                    intervalElem.classList.add('selected');
+                }
+                if (interval.conflict) {
+                    intervalElem.style.opacity = '0.5';
+                }
+                
+                const left = ((interval.start - 1) / totalDuration) * 100;
+                const width = ((interval.end - interval.start) / totalDuration) * 100;
+                
+                intervalElem.style.left = `${left}%`;
+                intervalElem.style.width = `${width}%`;
+                intervalElem.style.top = `${100 + index * 40}px`;
+                
+                intervalElem.textContent = `(${interval.start}, ${interval.end})`;
+                
+                timeline.appendChild(intervalElem);
+            });
+        }
+
+        // Event listeners for buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                renderStep();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                renderStep();
+            }
+        });
+
+        // Initialize the visualization when the page loads
+        window.addEventListener('load', initVisualization);
+    </script>
+</body>
+</html>
