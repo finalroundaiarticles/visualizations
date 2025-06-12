@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Matrix Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+
+        .matrix-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px 0;
+        }
+
+        .matrix {
+            display: grid;
+            grid-template-columns: repeat(5, 60px);
+            grid-gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .cell {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            border: 2px solid #000000;
+            transition: all 0.3s ease;
+            background-color: #FFFFFF;
+        }
+
+        .one {
+            background-color: #FD9F78;
+        }
+
+        .highlighted {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+
+        .explanation {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        .navigation {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #FD9F78;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Matrix Visualization</h1>
+        
+        <div id="slide-content">
+            <!-- Content will be populated by JavaScript -->
+        </div>
+        
+        <div class="navigation">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const slides = [
+            {
+                title: "Introduction to Binary Matrix",
+                content: `
+                    <div class="explanation">
+                        <p>A binary matrix is a grid of numbers where each cell contains either a 0 or a 1.</p>
+                        <p>In many problems, we need to find patterns within these matrices, such as finding the largest square of 1s.</p>
+                    </div>
+                    <div class="matrix-container">
+                        <div class="matrix">
+                            <div class="cell">1</div>
+                            <div class="cell">0</div>
+                            <div class="cell">1</div>
+                            <div class="cell">0</div>
+                            <div class="cell">0</div>
+                            
+                            <div class="cell">1</div>
+                            <div class="cell">0</div>
+                            <div class="cell">1</div>
+                            <div class="cell">1</div>
+                            <div class="cell">1</div>
+                            
+                            <div class="cell">1</div>
+                            <div class="cell">1</div>
+                            <div class="cell">1</div>
+                            <div class="cell">1</div>
+                            <div class="cell">1</div>
+                            
+                            <div class="cell">1</div>
+                            <div class="cell">0</div>
+                            <div class="cell">0</div>
+                            <div class="cell">1</div>
+                            <div class="cell">0</div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Identifying 1s in the Matrix",
+                content: `
+                    <div class="explanation">
+                        <p>First, let's identify all the 1s in our binary matrix by highlighting them.</p>
+                        <p>The 1s are the cells where we might find a square pattern.</p>
+                    </div>
+                    <div class="matrix-container">
+                        <div class="matrix">
+                            <div class="cell one">1</div>
+                            <div class="cell">0</div>
+                            <div class="cell one">1</div>
+                            <div class="cell">0</div>
+                            <div class="cell">0</div>
+                            
+                            <div class="cell one">1</div>
+                            <div class="cell">0</div>
+                            <div class="cell one">1</div>
+                            <div class="cell one">1</div>
+                            <div class="cell one">1</div>
+                            
+                            <div class="cell one">1</div>
+                            <div class="cell one">1</div>
+                            <div class="cell one">1</div>
+                            <div class="cell one">1</div>
+                            <div class="cell one">1</div>
+                            
+                            <div class="cell one">1</div>
+                            <div class="cell">0</div>
+                            <div class="cell">0</div>
+                            <div class="cell one">1</div>
+                            <div class="cell">0</div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Looking for 2x2 Squares",
+                content: `
+                    <div class="explanation">
+                        <p>Let's look for 2x2 squares of 1s within our matrix.</p>
+                        <p>We can identify several 2x2 squares in this matrix.</p>
+                    </div>
+                    <div class="matrix-container">
+                        <div class="matrix" id="matrix-2x2">
+                            <div class="cell one">1</div>
+                            <div class="cell">0</div>
+                            <div class="cell one">1</div>
+                            <div class="cell">0</div>
+                            <div class="cell">0</div>
+                            
+                            <div class="cell one">1</div>
+                            <div class="cell">0</div>
+                            <div class="cell one">1</div>
+                            <div class="cell one">1</div>
+                            <div class="cell one">1</div>
+                            
+                            <div class="cell one">1</div>
+                            <div class="cell one">1</div>
+                            <div class="cell one">1</div>
+                            <div class="cell one">1</div>
+                            <div class="cell one">1</div>
+                            
+                            <div class="cell one">1</div>
+                            <div class="cell">0</div>
+                            <div class="cell">0</div>
+                            <div class="cell one">1</div>
+                            <div class="cell">0</div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Finding the Largest Square - 3x3",
+                content: `
+                    <div class="explanation">
+                        <p>The largest square of 1s in this matrix is a 3x3 square.</p>
+                        <p>It's located in the bottom-left portion of the matrix.</p>
+                    </div>
+                    <div class="matrix-container">
+                        <div class="matrix">
+                            <div class="cell one">1</div>
+                            <div class="cell">0</div>
+                            <div class="cell one">1</div>
+                            <div class="cell">0</div>
+                            <div class="cell">0</div>
+                            
+                            <div class="cell one">1</div>
+                            <div class="cell">0</div>
+                            <div class="cell highlighted">1</div>
+                            <div class="cell highlighted">1</div>
+                            <div class="cell highlighted">1</div>
+                            
+                            <div class="cell one">1</div>
+                            <div class="cell highlighted">1</div>
+                            <div class="cell highlighted">1</div>
+                            <div class="cell highlighted">1</div>
+                            <div class="cell one">1</div>
+                            
+                            <div class="cell one">1</div>
+                            <div class="cell highlighted">1</div>
+                            <div class="cell highlighted">1</div>
+                            <div class="cell highlighted">1</div>
+                            <div class="cell">0</div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Final Visualization",
+                content: `
+                    <div class="explanation">
+                        <p>The largest square of 1s is a 3x3 square highlighted in orange.</p>
+                        <p>Finding such patterns is useful in many applications, such as image processing, pattern recognition, and computer vision.</p>
+                    </div>
+                    <div class="matrix-container">
+                        <div class="matrix">
+                            <div class="cell one">1</div>
+                            <div class="cell">0</div>
+                            <div class="cell one">1</div>
+                            <div class="cell">0</div>
+                            <div class="cell">0</div>
+                            
+                            <div class="cell one">1</div>
+                            <div class="cell">0</div>
+                            <div class="cell highlighted">1</div>
+                            <div class="cell highlighted">1</div>
+                            <div class="cell highlighted">1</div>
+                            
+                            <div class="cell one">1</div>
+                            <div class="cell highlighted">1</div>
+                            <div class="cell highlighted">1</div>
+                            <div class="cell highlighted">1</div>
+                            <div class="cell one">1</div>
+                            
+                            <div class="cell one">1</div>
+                            <div class="cell highlighted">1</div>
+                            <div class="cell highlighted">1</div>
+                            <div class="cell highlighted">1</div>
+                            <div class="cell">0</div>
+                        </div>
+                    </div>
+                `
+            }
+        ];
+
+        let currentSlideIndex = 0;
+        const slideContent = document.getElementById('slide-content');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        function updateSlide() {
+            const slide = slides[currentSlideIndex];
+            slideContent.innerHTML = `
+                <h2 style="color: #FF4800;">${slide.title}</h2>
+                ${slide.content}
+            `;
+
+            prevBtn.disabled = currentSlideIndex === 0;
+            nextBtn.disabled = currentSlideIndex === slides.length - 1;
+
+            // Add animations for 2x2 squares slide
+            if (currentSlideIndex === 2) {
+                setTimeout(() => {
+                    const matrix = document.getElementById('matrix-2x2');
+                    if (matrix) {
+                        const squares = [
+                            [7, 8, 12, 13],   // Top-left 2x2
+                            [8, 9, 13, 14],   // Top-right 2x2
+                            [12, 13, 17, 18], // Bottom-left 2x2
+                            [13, 14, 18, 19]  // Bottom-right 2x2
+                        ];
+
+                        let squareIndex = 0;
+                        const interval = setInterval(() => {
+                            if (squareIndex > 0) {
+                                // Reset previous square
+                                squares[squareIndex - 1].forEach(idx => {
+                                    const cell = matrix.children[idx];
+                                    cell.classList.remove('highlighted');
+                                    cell.classList.add('one');
+                                });
+                            }
+
+                            if (squareIndex < squares.length) {
+                                // Highlight current square
+                                squares[squareIndex].forEach(idx => {
+                                    const cell = matrix.children[idx];
+                                    cell.classList.remove('one');
+                                    cell.classList.add('highlighted');
+                                });
+                                squareIndex++;
+                            } else {
+                                clearInterval(interval);
+                                // Reset all to normal state
+                                squares.flat().forEach(idx => {
+                                    const cell = matrix.children[idx];
+                                    cell.classList.remove('highlighted');
+                                    cell.classList.add('one');
+                                });
+                            }
+                        }, 1000);
+                    }
+                }, 500);
+            }
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentSlideIndex > 0) {
+                currentSlideIndex--;
+                updateSlide();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentSlideIndex < slides.length - 1) {
+                currentSlideIndex++;
+                updateSlide();
+            }
+        });
+
+        // Initialize first slide
+        updateSlide();
+    </script>
+</body>
+</html>
