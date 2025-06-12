@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subsequence Extraction Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .explanation {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin: 40px 0;
+        }
+        
+        .array-element {
+            width: 50px;
+            height: 50px;
+            margin: 0 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #000000;
+            border-radius: 5px;
+            font-size: 20px;
+            font-weight: bold;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+        
+        .array-element.highlighted {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: translateY(-10px);
+        }
+        
+        .subsequence-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 60px;
+        }
+        
+        .subsequence-element {
+            width: 50px;
+            height: 50px;
+            margin: 0 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            font-size: 20px;
+            font-weight: bold;
+            background-color: #FD9F78;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .subsequence-element.visible {
+            opacity: 1;
+        }
+        
+        .array-label, .subsequence-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .connection-line {
+            position: absolute;
+            background-color: #FF4800;
+            transform-origin: top left;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .connection-line.visible {
+            opacity: 1;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 40px;
+            gap: 20px;
+        }
+        
+        .nav-button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        
+        .title-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .title-container h2 {
+            color: #FF4800;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Subsequence Extraction Example</h1>
+        
+        <div class="explanation">
+            A subsequence is a sequence that can be derived from another sequence by deleting some or no elements without changing the order of the remaining elements. Unlike subarrays, subsequence elements don't need to be consecutive in the original array.
+        </div>
+        
+        <div class="title-container">
+            <h2 id="current-example">Example 1: Extracting [1, 3, 4] from [1, 3, 2, 4, 5, 3]</h2>
+        </div>
+        
+        <div class="array-container" id="original-array">
+            <div class="array-label">Original Array:</div>
+        </div>
+        
+        <div class="subsequence-container">
+            <div class="subsequence-label">Subsequence:</div>
+            <div id="subsequence"></div>
+        </div>
+        
+        <div class="step-indicator" id="step-indicator">Step 1: Identifying the first element</div>
+        
+        <div class="navigation">
+            <button id="prev-btn" class="nav-button" disabled>Previous</button>
+            <button id="next-btn" class="nav-button">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const examples = [
+            {
+                title: "Example 1: Extracting [1, 3, 4] from [1, 3, 2, 4, 5, 3]",
+                array: [1, 3, 2, 4, 5, 3],
+                subsequence: [1, 3, 4],
+                indices: [0, 1, 3]
+            },
+            {
+                title: "Example 2: Extracting [3, 2, 3, 4] from [1, 3, 2, 4, 5, 3]",
+                array: [1, 3, 2, 4, 5, 3],
+                subsequence: [3, 2, 3, 4],
+                indices: [1, 2, 5, 3]
+            }
+        ];
+        
+        let currentExampleIndex = 0;
+        let currentStep = 0;
+        let lines = [];
+        
+        function initializeArrays() {
+            // Clear previous content
+            document.getElementById('original-array').innerHTML = '<div class="array-label">Original Array:</div>';
+            document.getElementById('subsequence').innerHTML = '';
+            
+            // Remove previous connection lines
+            lines.forEach(line => {
+                if (line && line.parentNode) {
+                    line.parentNode.removeChild(line);
+                }
+            });
+            lines = [];
+            
+            const currentExample = examples[currentExampleIndex];
+            document.getElementById('current-example').textContent = currentExample.title;
+            
+            // Create original array elements
+            const arrayContainer = document.getElementById('original-array');
+            const arrayElementsContainer = document.createElement('div');
+            arrayElementsContainer.style.display = 'flex';
+            arrayContainer.appendChild(arrayElementsContainer);
+            
+            currentExample.array.forEach((num, index) => {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.textContent = num;
+                element.id = `array-${index}`;
+                arrayElementsContainer.appendChild(element);
+            });
+            
+            // Create subsequence elements
+            const subsequenceContainer = document.getElementById('subsequence');
+            currentExample.subsequence.forEach((num, index) => {
+                const element = document.createElement('div');
+                element.className = 'subsequence-element';
+                element.textContent = num;
+                element.id = `subseq-${index}`;
+                subsequenceContainer.appendChild(element);
+            });
+            
+            // Reset step indicator
+            document.getElementById('step-indicator').textContent = "Step 1: Identifying the first element";
+        }
+        
+        function updateStep() {
+            const currentExample = examples[currentExampleIndex];
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            // Reset all elements
+            document.querySelectorAll('.array-element').forEach(el => {
+                el.classList.remove('highlighted');
+            });
+            
+            document.querySelectorAll('.subsequence-element').forEach(el => {
+                el.classList.remove('visible');
+            });
+            
+            lines.forEach(line => {
+                line.classList.remove('visible');
+            });
+            
+            // Enable/disable navigation buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === currentExample.subsequence.length;
+            
+            if (currentStep === 0) {
+                document.getElementById('step-indicator').textContent = "Step 1: Identifying the first element";
+                return;
+            }
+            
+            // Show the relevant elements based on current step
+            for (let i = 0; i < currentStep; i++) {
+                const arrayIndex = currentExample.indices[i];
+                const arrayElement = document.getElementById(`array-${arrayIndex}`);
+                const subseqElement = document.getElementById(`subseq-${i}`);
+                
+                arrayElement.classList.add('highlighted');
+                subseqElement.classList.add('visible');
+                
+                // Create connection line if not already created
+                if (!lines[i]) {
+                    const line = document.createElement('div');
+                    line.className = 'connection-line';
+                    document.body.appendChild(line);
+                    lines[i] = line;
+                    
+                    // Calculate line position and dimensions
+                    const arrayRect = arrayElement.getBoundingClientRect();
+                    const subseqRect = subseqElement.getBoundingClientRect();
+                    
+                    const x1 = arrayRect.left + arrayRect.width / 2;
+                    const y1 = arrayRect.bottom;
+                    const x2 = subseqRect.left + subseqRect.width / 2;
+                    const y2 = subseqRect.top;
+                    
+                    const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+                    const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+                    
+                    line.style.height = '2px';
+                    line.style.width = `${length}px`;
+                    line.style.left = `${x1}px`;
+                    line.style.top = `${y1}px`;
+                    line.style.transform = `rotate(${angle}deg)`;
+                }
+                
+                lines[i].classList.add('visible');
+            }
+            
+            document.getElementById('step-indicator').textContent = `Step ${currentStep}: Element ${currentExample.subsequence[currentStep-1]} at index ${currentExample.indices[currentStep-1]} added to subsequence`;
+            
+            if (currentStep === currentExample.subsequence.length) {
+                document.getElementById('step-indicator').textContent = "Subsequence extraction complete";
+            }
+        }
+        
+        function nextStep() {
+            if (currentStep < examples[currentExampleIndex].subsequence.length) {
+                currentStep++;
+                updateStep();
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        }
+        
+        function nextExample() {
+            currentExampleIndex = (currentExampleIndex + 1) % examples.length;
+            currentStep = 0;
+            initializeArrays();
+            updateStep();
+        }
+        
+        function prevExample() {
+            currentExampleIndex = (currentExampleIndex - 1 + examples.length) % examples.length;
+            currentStep = 0;
+            initializeArrays();
+            updateStep();
+        }
+        
+        // Initialize the visualization
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeArrays();
+            updateStep();
+            
+            document.getElementById('next-btn').addEventListener('click', () => {
+                if (currentStep < examples[currentExampleIndex].subsequence.length) {
+                    nextStep();
+                } else {
+                    nextExample();
+                }
+            });
+            
+            document.getElementById('prev-btn').addEventListener('click', () => {
+                if (currentStep > 0) {
+                    prevStep();
+                } else {
+                    prevExample();
+                }
+            });
+            
+            // Redraw lines when window is resized
+            window.addEventListener('resize', () => {
+                // Clear previous lines
+                lines.forEach(line => {
+                    if (line && line.parentNode) {
+                        line.parentNode.removeChild(line);
+                    }
+                });
+                lines = [];
+                
+                // Redraw if we're on a step that shows lines
+                if (currentStep > 0) {
+                    updateStep();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
