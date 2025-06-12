@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary String Transformation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            text-align: center;
+        }
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        .animation-container {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+            position: relative;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .explanation {
+            margin: 20px 0;
+            text-align: left;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #FFF;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #FF4800;
+        }
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .binary-cell, .transformed-cell, .sum-cell {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            text-align: center;
+            margin: 5px;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        .binary-cell {
+            background-color: #FD9F78;
+            color: #000000;
+        }
+        .transformed-cell {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .sum-cell {
+            background-color: #000000;
+            color: #FFFFFF;
+        }
+        .highlight {
+            transform: scale(1.2);
+            box-shadow: 0 0 10px rgba(255, 72, 0, 0.7);
+        }
+        .arrow {
+            font-size: 24px;
+            margin: 10px;
+        }
+        .step-text {
+            margin: 20px 0;
+            font-size: 18px;
+            color: #000000;
+        }
+        .binary-container, .transformed-container, .sum-container {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary String Transformation</h1>
+        
+        <div class="animation-container" id="animationContainer">
+            <!-- Animation will be drawn here -->
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <!-- Explanation will be updated here -->
+        </div>
+        
+        <div class="btn-container">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const steps = [
+            {
+                content: `
+                    <div class="binary-container">
+                        <div class="step-text">Starting with binary string: "0011"</div>
+                        <div class="binary-cell">0</div>
+                        <div class="binary-cell">0</div>
+                        <div class="binary-cell">1</div>
+                        <div class="binary-cell">1</div>
+                    </div>
+                `,
+                explanation: "We start with the binary string '0011'. We'll transform this string to find the maximum subarray sum."
+            },
+            {
+                content: `
+                    <div class="binary-container">
+                        <div class="step-text">Step 1: Transform each digit</div>
+                        <div class="binary-cell highlight">0</div>
+                        <div class="binary-cell">0</div>
+                        <div class="binary-cell">1</div>
+                        <div class="binary-cell">1</div>
+                    </div>
+                    <div class="arrow">↓</div>
+                    <div class="transformed-container">
+                        <div class="transformed-cell">1</div>
+                        <div class="binary-cell" style="visibility: hidden;">0</div>
+                        <div class="binary-cell" style="visibility: hidden;">0</div>
+                        <div class="binary-cell" style="visibility: hidden;">0</div>
+                    </div>
+                `,
+                explanation: "In the transformation, we convert each digit '0' to 1 and each digit '1' to -1. Starting with the first digit: '0' becomes 1."
+            },
+            {
+                content: `
+                    <div class="binary-container">
+                        <div class="step-text">Step 1: Transform each digit</div>
+                        <div class="binary-cell">0</div>
+                        <div class="binary-cell highlight">0</div>
+                        <div class="binary-cell">1</div>
+                        <div class="binary-cell">1</div>
+                    </div>
+                    <div class="arrow">↓</div>
+                    <div class="transformed-container">
+                        <div class="transformed-cell">1</div>
+                        <div class="transformed-cell">1</div>
+                        <div class="binary-cell" style="visibility: hidden;">0</div>
+                        <div class="binary-cell" style="visibility: hidden;">0</div>
+                    </div>
+                `,
+                explanation: "Continuing the transformation: the second '0' also becomes 1."
+            },
+            {
+                content: `
+                    <div class="binary-container">
+                        <div class="step-text">Step 1: Transform each digit</div>
+                        <div class="binary-cell">0</div>
+                        <div class="binary-cell">0</div>
+                        <div class="binary-cell highlight">1</div>
+                        <div class="binary-cell">1</div>
+                    </div>
+                    <div class="arrow">↓</div>
+                    <div class="transformed-container">
+                        <div class="transformed-cell">1</div>
+                        <div class="transformed-cell">1</div>
+                        <div class="transformed-cell">-1</div>
+                        <div class="binary-cell" style="visibility: hidden;">0</div>
+                    </div>
+                `,
+                explanation: "For the digit '1', we transform it to -1 according to our rule."
+            },
+            {
+                content: `
+                    <div class="binary-container">
+                        <div class="step-text">Step 1: Transform each digit</div>
+                        <div class="binary-cell">0</div>
+                        <div class="binary-cell">0</div>
+                        <div class="binary-cell">1</div>
+                        <div class="binary-cell highlight">1</div>
+                    </div>
+                    <div class="arrow">↓</div>
+                    <div class="transformed-container">
+                        <div class="transformed-cell">1</div>
+                        <div class="transformed-cell">1</div>
+                        <div class="transformed-cell">-1</div>
+                        <div class="transformed-cell">-1</div>
+                    </div>
+                `,
+                explanation: "Completing the transformation: the last digit '1' also becomes -1. Now we have the transformed array [1, 1, -1, -1]."
+            },
+            {
+                content: `
+                    <div class="binary-container">
+                        <div class="step-text">Step 2: Find maximum subarray sum</div>
+                        <div class="binary-cell">0</div>
+                        <div class="binary-cell">0</div>
+                        <div class="binary-cell">1</div>
+                        <div class="binary-cell">1</div>
+                    </div>
+                    <div class="arrow">↓</div>
+                    <div class="transformed-container">
+                        <div class="transformed-cell">1</div>
+                        <div class="transformed-cell">1</div>
+                        <div class="transformed-cell">-1</div>
+                        <div class="transformed-cell">-1</div>
+                    </div>
+                `,
+                explanation: "Now we need to find the maximum subarray sum from the transformed array [1, 1, -1, -1]. We'll use Kadane's algorithm to find this."
+            },
+            {
+                content: `
+                    <div class="binary-container">
+                        <div class="step-text">Checking subarrays for maximum sum</div>
+                        <div class="transformed-cell highlight">1</div>
+                        <div class="transformed-cell">1</div>
+                        <div class="transformed-cell">-1</div>
+                        <div class="transformed-cell">-1</div>
+                    </div>
+                    <div class="sum-container">
+                        <div class="step-text">Current sum: 1, Maximum sum: 1</div>
+                    </div>
+                `,
+                explanation: "We start by considering the first element. The current sum is 1, and the maximum sum so far is also 1."
+            },
+            {
+                content: `
+                    <div class="binary-container">
+                        <div class="step-text">Checking subarrays for maximum sum</div>
+                        <div class="transformed-cell highlight">1</div>
+                        <div class="transformed-cell highlight">1</div>
+                        <div class="transformed-cell">-1</div>
+                        <div class="transformed-cell">-1</div>
+                    </div>
+                    <div class="sum-container">
+                        <div class="step-text">Current sum: 2, Maximum sum: 2</div>
+                    </div>
+                `,
+                explanation: "Adding the second element, our current sum becomes 1 + 1 = 2, and the maximum sum is updated to 2."
+            },
+            {
+                content: `
+                    <div class="binary-container">
+                        <div class="step-text">Checking subarrays for maximum sum</div>
+                        <div class="transformed-cell highlight">1</div>
+                        <div class="transformed-cell highlight">1</div>
+                        <div class="transformed-cell highlight">-1</div>
+                        <div class="transformed-cell">-1</div>
+                    </div>
+                    <div class="sum-container">
+                        <div class="step-text">Current sum: 1, Maximum sum: 2</div>
+                    </div>
+                `,
+                explanation: "Adding the third element, our current sum becomes 2 + (-1) = 1. The maximum sum remains 2."
+            },
+            {
+                content: `
+                    <div class="binary-container">
+                        <div class="step-text">Checking subarrays for maximum sum</div>
+                        <div class="transformed-cell highlight">1</div>
+                        <div class="transformed-cell highlight">1</div>
+                        <div class="transformed-cell highlight">-1</div>
+                        <div class="transformed-cell highlight">-1</div>
+                    </div>
+                    <div class="sum-container">
+                        <div class="step-text">Current sum: 0, Maximum sum: 2</div>
+                    </div>
+                `,
+                explanation: "Adding the fourth element, our current sum becomes 1 + (-1) = 0. The maximum sum still remains 2."
+            },
+            {
+                content: `
+                    <div class="binary-container">
+                        <div class="step-text">Final Result</div>
+                        <div class="binary-cell highlight">0</div>
+                        <div class="binary-cell highlight">0</div>
+                        <div class="binary-cell">1</div>
+                        <div class="binary-cell">1</div>
+                    </div>
+                    <div class="arrow">↓</div>
+                    <div class="transformed-container">
+                        <div class="transformed-cell highlight">1</div>
+                        <div class="transformed-cell highlight">1</div>
+                        <div class="transformed-cell">-1</div>
+                        <div class="transformed-cell">-1</div>
+                    </div>
+                    <div class="sum-container">
+                        <div class="step-text">Maximum sum: 2 (from substring "00")</div>
+                    </div>
+                `,
+                explanation: "The maximum subarray sum is 2, which corresponds to the substring '00' in the original binary string. This transformation allows us to find the substring with the maximum difference between zeros and ones."
+            }
+        ];
+
+        let currentStep = 0;
+        const animationContainer = document.getElementById('animationContainer');
+        const explanationDiv = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        function updateStep() {
+            animationContainer.innerHTML = steps[currentStep].content;
+            explanationDiv.innerHTML = steps[currentStep].explanation;
+            
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateStep();
+            }
+        });
+
+        // Initialize the first step
+        updateStep();
+    </script>
+</body>
+</html>
