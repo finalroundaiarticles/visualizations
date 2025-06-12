@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valid Pairs Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .explanation {
+            margin-bottom: 30px;
+            text-align: center;
+            max-width: 600px;
+        }
+        
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 50px;
+            position: relative;
+            height: 200px;
+        }
+        
+        .array-element {
+            width: 60px;
+            height: 60px;
+            margin: 0 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #000000;
+            border-radius: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            position: relative;
+            background-color: #FFFFFF;
+            transition: all 0.5s ease;
+        }
+        
+        .array-index {
+            position: absolute;
+            bottom: -25px;
+            font-size: 14px;
+            color: #000000;
+        }
+        
+        .arrow {
+            position: absolute;
+            height: 2px;
+            background-color: #FF4800;
+            transform-origin: left center;
+            top: 30px;
+            display: none;
+        }
+        
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid #FF4800;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        
+        .difference {
+            position: absolute;
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-counter {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Valid Pairs Visualization</h1>
+        
+        <div class="explanation" id="explanation">
+            We're looking for pairs of elements in the array where the difference between them is exactly 2.
+        </div>
+        
+        <div class="array-container" id="array-container">
+            <div class="array-element" id="elem0">1<div class="array-index">Index 0</div></div>
+            <div class="array-element" id="elem1">3<div class="array-index">Index 1</div></div>
+            <div class="array-element" id="elem2">3<div class="array-index">Index 2</div></div>
+            <div class="array-element" id="elem3">5<div class="array-index">Index 3</div></div>
+            <div class="array-element" id="elem4">4<div class="array-index">Index 4</div></div>
+            
+            <div class="arrow" id="arrow1"></div>
+            <div class="arrow" id="arrow2"></div>
+            
+            <div class="difference" id="diff1">Difference: 2</div>
+            <div class="difference" id="diff2">Difference: 2</div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prevBtn" disabled>Previous</button>
+            <button class="nav-button" id="nextBtn">Next</button>
+        </div>
+        
+        <div class="step-counter" id="stepCounter">Step 1 of 5</div>
+    </div>
+
+    <script>
+        const steps = [
+            {
+                explanation: "We're looking for pairs of elements in the array where the difference between them is exactly 2.",
+                highlight: [],
+                arrows: [],
+                differences: []
+            },
+            {
+                explanation: "Let's check the first element: 1. We need to find if there's another element that is exactly 2 more than 1, which would be 3.",
+                highlight: [0],
+                arrows: [],
+                differences: []
+            },
+            {
+                explanation: "We find that the element at index 1 is 3, which is exactly 2 more than 1. So (1,3) forms a valid pair!",
+                highlight: [0, 1],
+                arrows: [
+                    {from: 0, to: 1}
+                ],
+                differences: [
+                    {from: 0, to: 1}
+                ]
+            },
+            {
+                explanation: "Next, we check the element at index 2, which is 3. We need to find an element that is exactly 2 more than 3, which would be 5.",
+                highlight: [2],
+                arrows: [
+                    {from: 0, to: 1}
+                ],
+                differences: [
+                    {from: 0, to: 1}
+                ]
+            },
+            {
+                explanation: "We find that the element at index 3 is 5, which is exactly 2 more than 3. So (3,5) forms a valid pair! In our array [1, 3, 3, 5, 4], we've found two valid pairs: (1,3) and (3,5), each with a difference of exactly 2.",
+                highlight: [0, 1, 2, 3],
+                arrows: [
+                    {from: 0, to: 1},
+                    {from: 2, to: 3}
+                ],
+                differences: [
+                    {from: 0, to: 1},
+                    {from: 2, to: 3}
+                ]
+            }
+        ];
+
+        let currentStep = 0;
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepCounter = document.getElementById('stepCounter');
+        const explanation = document.getElementById('explanation');
+        const elements = document.querySelectorAll('.array-element');
+        const arrow1 = document.getElementById('arrow1');
+        const arrow2 = document.getElementById('arrow2');
+        const diff1 = document.getElementById('diff1');
+        const diff2 = document.getElementById('diff2');
+
+        function updateStep() {
+            // Update explanation
+            explanation.textContent = steps[currentStep].explanation;
+            
+            // Reset all elements
+            elements.forEach((element, index) => {
+                element.style.backgroundColor = '#FFFFFF';
+                element.style.color = '#000000';
+            });
+            
+            // Apply highlights
+            steps[currentStep].highlight.forEach(index => {
+                elements[index].style.backgroundColor = '#FD9F78';
+            });
+            
+            // Handle arrows
+            arrow1.style.display = 'none';
+            arrow2.style.display = 'none';
+            diff1.style.opacity = '0';
+            diff2.style.opacity = '0';
+            
+            if (steps[currentStep].arrows.length > 0) {
+                steps[currentStep].arrows.forEach((arrow, idx) => {
+                    const fromElement = document.getElementById(`elem${arrow.from}`);
+                    const toElement = document.getElementById(`elem${arrow.to}`);
+                    const arrowElement = idx === 0 ? arrow1 : arrow2;
+                    const diffElement = idx === 0 ? diff1 : diff2;
+                    
+                    const fromRect = fromElement.getBoundingClientRect();
+                    const toRect = toElement.getBoundingClientRect();
+                    
+                    const fromX = fromRect.left + fromRect.width / 2;
+                    const fromY = fromRect.top + fromRect.height / 2;
+                    const toX = toRect.left + toRect.width / 2;
+                    const toY = toRect.top + toRect.height / 2;
+                    
+                    const containerRect = document.getElementById('array-container').getBoundingClientRect();
+                    const containerX = containerRect.left;
+                    const containerY = containerRect.top;
+                    
+                    const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+                    const angle = Math.atan2(toY - fromY, toX - fromX);
+                    
+                    arrowElement.style.width = `${length - 20}px`;
+                    arrowElement.style.transform = `rotate(${angle}rad)`;
+                    arrowElement.style.left = `${fromX - containerX}px`;
+                    arrowElement.style.top = `${fromY - containerY}px`;
+                    arrowElement.style.display = 'block';
+                    
+                    diffElement.style.left = `${(fromX + toX) / 2 - containerX - 40}px`;
+                    diffElement.style.top = `${fromY - containerY - 40}px`;
+                    diffElement.style.opacity = '1';
+                });
+            }
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+            
+            // Update step counter
+            stepCounter.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateStep();
+            }
+        });
+
+        // Initialize
+        updateStep();
+    </script>
+</body>
+</html>
