@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greedy Algorithm Execution Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+        .array-element {
+            width: 50px;
+            height: 50px;
+            margin: 0 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #000000;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 18px;
+            position: relative;
+        }
+        .array-element.current {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .array-element.reachable {
+            background-color: #FD9F78;
+        }
+        .array-index {
+            position: absolute;
+            bottom: -25px;
+            font-size: 14px;
+            color: #000000;
+        }
+        .info-container {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .info-box {
+            background-color: #FFFFFF;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px;
+            min-width: 180px;
+            text-align: center;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #FF4800;
+        }
+        .info-box p {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0 0 0;
+        }
+        .explanation {
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .jumps-visual {
+            height: 100px;
+            position: relative;
+            margin: 50px 0 30px 0;
+        }
+        .jump-arrow {
+            position: absolute;
+            height: 30px;
+            bottom: 0;
+            transform-origin: bottom left;
+            border-left: 3px solid #FF4800;
+            border-top: 3px solid #FF4800;
+            border-top-left-radius: 5px;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 0 15px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            border-radius: 3px;
+            border: 1px solid #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Greedy Algorithm for Jump Game</h1>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FF4800;"></div>
+                <span>Current Position</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FD9F78;"></div>
+                <span>Reachable Positions</span>
+            </div>
+        </div>
+
+        <div class="array-container" id="arrayContainer"></div>
+        
+        <div class="jumps-visual" id="jumpsVisual"></div>
+
+        <div class="info-container">
+            <div class="info-box">
+                <h3>Current Position</h3>
+                <p id="currentPosition">0</p>
+            </div>
+            <div class="info-box">
+                <h3>Current End</h3>
+                <p id="currentEnd">0</p>
+            </div>
+            <div class="info-box">
+                <h3>Farthest</h3>
+                <p id="farthest">0</p>
+            </div>
+            <div class="info-box">
+                <h3>Jumps</h3>
+                <p id="jumps">0</p>
+            </div>
+        </div>
+
+        <div class="explanation" id="explanation">
+            Starting at index 0 with value 2. We can reach positions 1 and 2.
+        </div>
+
+        <div class="navigation">
+            <button class="nav-button" id="prevBtn" disabled>Previous</button>
+            <button class="nav-button" id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Array for visualization
+        const array = [2, 3, 1, 1, 4];
+        
+        // Steps of the algorithm
+        const steps = [
+            {
+                position: 0,
+                currentEnd: 0,
+                farthest: 2,
+                jumps: 0,
+                explanation: "Starting at index 0 with value 2. We can reach positions 1 and 2. Current end is 0, so we need to jump.",
+                reachable: [1, 2]
+            },
+            {
+                position: 0,
+                currentEnd: 0,
+                farthest: 2,
+                jumps: 1,
+                explanation: "We've reached the end of our current jump (position 0), so we make a jump. Our new end becomes the farthest we can reach (position 2).",
+                reachable: [1, 2]
+            },
+            {
+                position: 1,
+                currentEnd: 2,
+                farthest: 4,
+                jumps: 1,
+                explanation: "Now at position 1 with value 3. We can reach positions 2, 3, and 4. Our farthest possible reach is now 4 (position 1 + value 3).",
+                reachable: [2, 3, 4]
+            },
+            {
+                position: 2,
+                currentEnd: 2,
+                farthest: 4,
+                jumps: 1,
+                explanation: "Now at position 2 with value 1. We can reach position 3. Farthest remains 4 from our previous calculations.",
+                reachable: [3]
+            },
+            {
+                position: 2,
+                currentEnd: 2,
+                farthest: 4,
+                jumps: 2,
+                explanation: "We've reached the end of our current jump (position 2), so we make another jump. Our new end becomes the farthest we can reach (position 4).",
+                reachable: [3]
+            },
+            {
+                position: 3,
+                currentEnd: 4,
+                farthest: 4,
+                jumps: 2,
+                explanation: "Now at position 3 with value 1. We can reach position 4. Farthest remains 4.",
+                reachable: [4]
+            },
+            {
+                position: 4,
+                currentEnd: 4,
+                farthest: 8,
+                jumps: 2,
+                explanation: "We've reached position 4 (last element) with value 4. We've completed the array with 2 jumps!",
+                reachable: [5, 6, 7, 8]
+            }
+        ];
+
+        let currentStep = 0;
+        const jumps = [];
+        
+        // Initialize visualization
+        function initializeVisualization() {
+            const arrayContainer = document.getElementById('arrayContainer');
+            
+            // Create array elements
+            for (let i = 0; i < array.length; i++) {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.id = `element-${i}`;
+                element.textContent = array[i];
+                
+                const indexSpan = document.createElement('span');
+                indexSpan.className = 'array-index';
+                indexSpan.textContent = i;
+                
+                element.appendChild(indexSpan);
+                arrayContainer.appendChild(element);
+            }
+            
+            updateVisualization();
+        }
+        
+        // Update visualization based on current step
+        function updateVisualization() {
+            const step = steps[currentStep];
+            
+            // Update array visualization
+            for (let i = 0; i < array.length; i++) {
+                const element = document.getElementById(`element-${i}`);
+                element.className = 'array-element';
+                
+                if (i === step.position) {
+                    element.classList.add('current');
+                } else if (step.reachable.includes(i)) {
+                    element.classList.add('reachable');
+                }
+            }
+            
+            // Update info boxes
+            document.getElementById('currentPosition').textContent = step.position;
+            document.getElementById('currentEnd').textContent = step.currentEnd;
+            document.getElementById('farthest').textContent = step.farthest;
+            document.getElementById('jumps').textContent = step.jumps;
+            
+            // Update explanation
+            document.getElementById('explanation').textContent = step.explanation;
+            
+            // Update jump visualization
+            updateJumpsVisualization();
+            
+            // Update navigation buttons
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === steps.length - 1;
+        }
+        
+        // Update jumps visualization
+        function updateJumpsVisualization() {
+            const jumpsVisual = document.getElementById('jumpsVisual');
+            jumpsVisual.innerHTML = '';
+            
+            // Check if we made a jump at this step
+            if (currentStep > 0) {
+                const prevStep = steps[currentStep - 1];
+                const currentStep = steps[currentStep];
+                
+                // If jumps count increased, we made a jump
+                if (currentStep.jumps > prevStep.jumps) {
+                    jumps.push({
+                        from: prevStep.position,
+                        to: currentStep.position,
+                        length: currentStep.position - prevStep.position
+                    });
+                }
+            }
+            
+            // Draw all jumps
+            for (let jump of jumps) {
+                const jumpWidth = jump.length * 60; // 60 = element width + margin
+                const jumpHeight = 20 + (jump.length * 10); // Make higher jumps taller
+                
+                const arrow = document.createElement('div');
+                arrow.className = 'jump-arrow';
+                arrow.style.left = `${jump.from * 60 + 30}px`; // Center of starting element
+                arrow.style.width = `${jumpWidth}px`;
+                arrow.style.height = `${jumpHeight}px`;
+                
+                jumpsVisual.appendChild(arrow);
+            }
+        }
+        
+        // Navigation event handlers
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        });
+        
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+        
+        // Initialize visualization when page loads
+        window.onload = initializeVisualization;
+    </script>
+</body>
+</html>
