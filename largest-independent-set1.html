@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Independent Sets Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        #visualization {
+            width: 400px;
+            height: 400px;
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        .vertex {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            font-weight: bold;
+            color: #000000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .edge {
+            position: absolute;
+            height: 3px;
+            background-color: #000000;
+            transform-origin: 0 0;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            max-width: 600px;
+            color: #000000;
+        }
+        
+        .highlighted {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.2);
+            box-shadow: 0 0 10px rgba(255, 72, 0, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Independent Sets in Graphs</h1>
+        
+        <div id="visualization"></div>
+        
+        <div class="explanation" id="explanation">
+            <p>An independent set is a set of vertices in a graph where no two vertices are adjacent (connected by an edge).</p>
+            <p>In this example, we have a graph with 4 vertices where vertex 1 connects to vertex 2, and vertex 3 connects to vertex 4.</p>
+            <p>The possible independent sets are: {1, 3}, {1, 4}, {2, 3}, and {2, 4}.</p>
+            <p id="current-set">Currently showing: Base graph</p>
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const visualization = document.getElementById('visualization');
+            const currentSet = document.getElementById('current-set');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            // Define vertex positions
+            const vertices = [
+                { id: 1, x: 100, y: 100 },
+                { id: 2, x: 300, y: 100 },
+                { id: 3, x: 100, y: 300 },
+                { id: 4, x: 300, y: 300 }
+            ];
+            
+            // Define edges
+            const edges = [
+                { from: 0, to: 1 }, // 1 to 2
+                { from: 2, to: 3 }  // 3 to 4
+            ];
+            
+            // Define independent sets
+            const independentSets = [
+                { name: "Base graph", vertices: [] },
+                { name: "Independent Set: {1, 3}", vertices: [0, 2] },
+                { name: "Independent Set: {1, 4}", vertices: [0, 3] },
+                { name: "Independent Set: {2, 3}", vertices: [1, 2] },
+                { name: "Independent Set: {2, 4}", vertices: [1, 3] }
+            ];
+            
+            let currentStep = 0;
+            
+            // Draw vertices
+            vertices.forEach((vertex, index) => {
+                const vertexElem = document.createElement('div');
+                vertexElem.className = 'vertex';
+                vertexElem.id = `vertex-${index}`;
+                vertexElem.style.left = `${vertex.x}px`;
+                vertexElem.style.top = `${vertex.y}px`;
+                vertexElem.textContent = vertex.id;
+                visualization.appendChild(vertexElem);
+            });
+            
+            // Draw edges
+            edges.forEach(edge => {
+                const from = vertices[edge.from];
+                const to = vertices[edge.to];
+                
+                const edgeElem = document.createElement('div');
+                edgeElem.className = 'edge';
+                
+                // Calculate edge length and angle
+                const dx = to.x - from.x;
+                const dy = to.y - from.y;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                // Position and rotate the edge
+                edgeElem.style.width = `${length}px`;
+                edgeElem.style.left = `${from.x + 20}px`;
+                edgeElem.style.top = `${from.y + 20}px`;
+                edgeElem.style.transform = `rotate(${angle}deg)`;
+                
+                visualization.appendChild(edgeElem);
+            });
+            
+            function updateVisualization() {
+                // Reset all vertices
+                vertices.forEach((_, index) => {
+                    const vertexElem = document.getElementById(`vertex-${index}`);
+                    vertexElem.classList.remove('highlighted');
+                });
+                
+                // Highlight current independent set
+                const currentIndependentSet = independentSets[currentStep];
+                currentIndependentSet.vertices.forEach(vertexIndex => {
+                    const vertexElem = document.getElementById(`vertex-${vertexIndex}`);
+                    vertexElem.classList.add('highlighted');
+                });
+                
+                // Update explanation
+                currentSet.textContent = `Currently showing: ${currentIndependentSet.name}`;
+                
+                // Update buttons
+                prevBtn.disabled = currentStep === 0;
+                nextBtn.disabled = currentStep === independentSets.length - 1;
+            }
+            
+            prevBtn.addEventListener('click', function() {
+                if (currentStep > 0) {
+                    currentStep--;
+                    updateVisualization();
+                }
+            });
+            
+            nextBtn.addEventListener('click', function() {
+                if (currentStep < independentSets.length - 1) {
+                    currentStep++;
+                    updateVisualization();
+                }
+            });
+            
+            // Initialize
+            updateVisualization();
+        });
+    </script>
+</body>
+</html>
