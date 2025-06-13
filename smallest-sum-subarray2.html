@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modified Kadane's Algorithm Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            margin-bottom: 20px;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .array-element {
+            width: 50px;
+            height: 50px;
+            margin: 0 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #000000;
+            font-weight: bold;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+        .current {
+            background-color: #FF4800;
+            color: white;
+        }
+        .table-container {
+            margin: 20px auto;
+            max-width: 600px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #000000;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #FF4800;
+            color: white;
+        }
+        .explanation {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .navigation {
+            margin-top: 30px;
+        }
+        button {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .min-value {
+            color: #FF4800;
+            font-weight: bold;
+        }
+        .highlight-row {
+            background-color: #FD9F78;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Modified Kadane's Algorithm Animation</h1>
+        <p>Finding the minimum subarray sum in the array:</p>
+        
+        <div class="array-container" id="array-display">
+            <!-- Array elements will be populated here -->
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <!-- Explanation will be updated here -->
+        </div>
+        
+        <div class="table-container">
+            <table id="kadane-table">
+                <thead>
+                    <tr>
+                        <th>Step</th>
+                        <th>Current Element</th>
+                        <th>min_ending_here</th>
+                        <th>min_so_far</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <!-- Table rows will be populated here -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="navigation">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Array for the algorithm
+        const array = [3, -4, 2, -3, -1, 7, -5];
+        
+        // Animation state
+        let currentStep = -1;
+        const totalSteps = array.length;
+        
+        // Execution trace (pre-computed)
+        const executionTrace = [
+            { element: 3, minEndingHere: 3, minSoFar: 3, explanation: "Starting with the first element (3). min_ending_here = 3 and min_so_far = 3." },
+            { element: -4, minEndingHere: -1, minSoFar: -1, explanation: "For element -4, min_ending_here = min(previous min_ending_here + current, current) = min(3 + (-4), -4) = -1. This is less than previous min_so_far, so min_so_far = -1." },
+            { element: 2, minEndingHere: 1, minSoFar: -1, explanation: "For element 2, min_ending_here = min(previous min_ending_here + current, current) = min(-1 + 2, 2) = 1. min_so_far remains -1." },
+            { element: -3, minEndingHere: -2, minSoFar: -2, explanation: "For element -3, min_ending_here = min(previous min_ending_here + current, current) = min(1 + (-3), -3) = -2. This is less than previous min_so_far, so min_so_far = -2." },
+            { element: -1, minEndingHere: -3, minSoFar: -3, explanation: "For element -1, min_ending_here = min(previous min_ending_here + current, current) = min(-2 + (-1), -1) = -3. This is less than previous min_so_far, so min_so_far = -3." },
+            { element: 7, minEndingHere: 4, minSoFar: -3, explanation: "For element 7, min_ending_here = min(previous min_ending_here + current, current) = min(-3 + 7, 7) = 4. min_so_far remains -3." },
+            { element: -5, minEndingHere: -1, minSoFar: -3, explanation: "For element -5, min_ending_here = min(previous min_ending_here + current, current) = min(4 + (-5), -5) = -1. min_so_far remains -3." }
+        ];
+        
+        // DOM elements
+        const arrayDisplay = document.getElementById('array-display');
+        const explanationDiv = document.getElementById('explanation');
+        const tableBody = document.getElementById('table-body');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        
+        // Initialize array display
+        function initializeArrayDisplay() {
+            arrayDisplay.innerHTML = '';
+            for (let i = 0; i < array.length; i++) {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.id = `element-${i}`;
+                element.textContent = array[i];
+                arrayDisplay.appendChild(element);
+            }
+        }
+        
+        // Update display based on current step
+        function updateDisplay() {
+            // Reset all array elements
+            for (let i = 0; i < array.length; i++) {
+                document.getElementById(`element-${i}`).className = 'array-element';
+            }
+            
+            // Update explanation
+            if (currentStep === -1) {
+                explanationDiv.innerHTML = "<strong>Modified Kadane's Algorithm</strong> finds the minimum sum subarray. It tracks two variables: <span class='min-value'>min_ending_here</span> (minimum sum ending at current position) and <span class='min-value'>min_so_far</span> (minimum sum found so far). Click 'Next' to start.";
+            } else {
+                // Highlight current element
+                document.getElementById(`element-${currentStep}`).className = 'array-element current';
+                explanationDiv.innerHTML = executionTrace[currentStep].explanation;
+            }
+            
+            // Update table
+            updateTable();
+            
+            // Update buttons
+            prevBtn.disabled = currentStep <= -1;
+            nextBtn.disabled = currentStep >= totalSteps - 1;
+        }
+        
+        // Update table based on current step
+        function updateTable() {
+            tableBody.innerHTML = '';
+            
+            for (let i = 0; i <= currentStep; i++) {
+                const row = document.createElement('tr');
+                if (i === currentStep) {
+                    row.className = 'highlight-row';
+                }
+                
+                const data = executionTrace[i];
+                
+                row.innerHTML = `
+                    <td>${i + 1}</td>
+                    <td>${data.element}</td>
+                    <td>${data.minEndingHere}</td>
+                    <td>${data.minSoFar}</td>
+                `;
+                
+                tableBody.appendChild(row);
+            }
+        }
+        
+        // Event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > -1) {
+                currentStep--;
+                updateDisplay();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateDisplay();
+            }
+        });
+        
+        // Initialize
+        initializeArrayDisplay();
+        updateDisplay();
+    </script>
+</body>
+</html>
