@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Item Combinations for Target Weight</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .info-section {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .animation-container {
+            position: relative;
+            height: 400px;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .slide.active {
+            opacity: 1;
+        }
+        
+        .item {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+        }
+        
+        .weight-box {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 5px;
+            border-radius: 5px;
+        }
+        
+        .weight-2 {
+            background-color: #FD9F78;
+        }
+        
+        .weight-3 {
+            background-color: #FF4800;
+            color: white;
+        }
+        
+        .weight-5 {
+            background-color: #000000;
+            color: white;
+        }
+        
+        .combination {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        
+        .result {
+            font-size: 18px;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        
+        .cost {
+            color: #FF4800;
+        }
+        
+        .min-cost {
+            background-color: #FF4800;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: inline-block;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            text-align: center;
+        }
+
+        .scale {
+            width: 200px;
+            height: 10px;
+            background-color: #FF4800;
+            margin: 10px auto;
+            position: relative;
+        }
+
+        .scale-marker {
+            position: absolute;
+            top: -20px;
+            transform: translateX(-50%);
+        }
+
+        .scale-marker::after {
+            content: "";
+            display: block;
+            width: 2px;
+            height: 15px;
+            background-color: #000000;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Item Combinations to Achieve Target Weight (10kg)</h1>
+        
+        <div class="info-section">
+            <p><strong>Available Items:</strong></p>
+            <ul>
+                <li>Item 1: 2kg - Cost: $3</li>
+                <li>Item 2: 3kg - Cost: $4</li>
+                <li>Item 3: 5kg - Cost: $7</li>
+            </ul>
+            <p><strong>Target Weight:</strong> 10kg</p>
+        </div>
+        
+        <div class="animation-container" id="animation">
+            <!-- Slides will be added here by JavaScript -->
+        </div>
+        
+        <div class="nav-buttons">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const combinations = [
+            {
+                items: [
+                    { weight: 2, count: 5 }, 
+                    { weight: 3, count: 0 }, 
+                    { weight: 5, count: 0 }
+                ],
+                totalWeight: 10,
+                totalCost: 15,
+                explanation: "Using 5 items of 2kg each (5 × 2kg = 10kg)",
+                isMinCost: false
+            },
+            {
+                items: [
+                    { weight: 2, count: 2 }, 
+                    { weight: 3, count: 2 }, 
+                    { weight: 5, count: 0 }
+                ],
+                totalWeight: 10,
+                totalCost: 14,
+                explanation: "Using 2 items of 2kg and 2 items of 3kg (2 × 2kg + 2 × 3kg = 10kg)",
+                isMinCost: false
+            },
+            {
+                items: [
+                    { weight: 2, count: 0 }, 
+                    { weight: 3, count: 0 }, 
+                    { weight: 5, count: 2 }
+                ],
+                totalWeight: 10,
+                totalCost: 14,
+                explanation: "Using 2 items of 5kg each (2 × 5kg = 10kg)",
+                isMinCost: true
+            },
+            {
+                items: [
+                    { weight: 2, count: 1 }, 
+                    { weight: 3, count: 0 }, 
+                    { weight: 5, count: 1 }
+                ],
+                totalWeight: 7,
+                totalCost: 10,
+                explanation: "Using 1 item of 2kg and 1 item of 5kg (1 × 2kg + 1 × 5kg = 7kg). This doesn't reach our target weight!",
+                isMinCost: false,
+                isInvalid: true
+            },
+            {
+                items: [
+                    { weight: 2, count: 1 }, 
+                    { weight: 3, count: 1 }, 
+                    { weight: 5, count: 1 }
+                ],
+                totalWeight: 10,
+                totalCost: 14,
+                explanation: "Using 1 item of 2kg, 1 item of 3kg, and 1 item of 5kg (1 × 2kg + 1 × 3kg + 1 × 5kg = 10kg)",
+                isMinCost: false
+            },
+            {
+                items: [
+                    { weight: 2, count: 0 }, 
+                    { weight: 3, count: 0 }, 
+                    { weight: 5, count: 2 }
+                ],
+                totalWeight: 10,
+                totalCost: 14,
+                explanation: "The minimum cost solution is using 2 items of 5kg for a total cost of $14",
+                isMinCost: true,
+                isFinal: true
+            }
+        ];
+
+        let currentSlide = 0;
+        const animation = document.getElementById('animation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        // Create slides
+        combinations.forEach((combo, index) => {
+            const slide = document.createElement('div');
+            slide.className = 'slide';
+            if (index === 0) slide.classList.add('active');
+
+            let content = '';
+            
+            // Add weight boxes visualization
+            content += '<div class="combination">';
+            
+            combo.items.forEach(item => {
+                for (let i = 0; i < item.count; i++) {
+                    content += `
+                        <div class="item">
+                            <div class="weight-box weight-${item.weight}">${item.weight}kg</div>
+                            <div>$${item.weight === 2 ? 3 : (item.weight === 3 ? 4 : 7)}</div>
+                        </div>
+                    `;
+                }
+            });
+            
+            content += '</div>';
+
+            // Add scale visualization
+            if (!combo.isInvalid) {
+                content += `
+                    <div class="scale">
+                        <div class="scale-marker" style="left: 0%;">0kg</div>
+                        <div class="scale-marker" style="left: 100%;">10kg</div>
+                        <div class="scale-marker" style="left: ${combo.totalWeight/10*100}%;">${combo.totalWeight}kg</div>
+                    </div>
+                `;
+            }
+
+            // Add result calculation
+            content += `
+                <div class="result">
+                    Total Weight: ${combo.totalWeight}kg
+                    ${combo.isInvalid ? ' <span style="color: red;">(Does not meet target!)</span>' : ''}
+                    <br>
+                    Total Cost: <span class="cost">$${combo.totalCost}</span>
+                </div>
+            `;
+
+            if (combo.isMinCost) {
+                if (combo.isFinal) {
+                    content += '<div class="min-cost">This is the minimum cost solution!</div>';
+                }
+            }
+
+            content += `<p class="explanation">${combo.explanation}</p>`;
+            
+            slide.innerHTML = content;
+            animation.appendChild(slide);
+        });
+
+        // Navigation functions
+        function showSlide(n) {
+            const slides = document.querySelectorAll('.slide');
+            slides[currentSlide].classList.remove('active');
+            currentSlide = n;
+            slides[currentSlide].classList.add('active');
+            
+            // Update button states
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === slides.length - 1;
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentSlide > 0) {
+                showSlide(currentSlide - 1);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < combinations.length - 1) {
+                showSlide(currentSlide + 1);
+            }
+        });
+    </script>
+</body>
+</html>
