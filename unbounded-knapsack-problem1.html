@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brute Force Recursion Tree Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #FD9F78;
+            border-radius: 8px;
+            color: #000000;
+            line-height: 1.6;
+        }
+        #canvas-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        canvas {
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .legend {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Brute Force Recursion Tree Visualization</h1>
+        
+        <div class="explanation" id="explanation">
+            Welcome to the Brute Force Recursion Tree visualization for the Knapsack Problem. We'll explore how recursion works to find the optimal solution.
+        </div>
+        
+        <div id="canvas-container">
+            <canvas id="treeCanvas" width="850" height="500"></canvas>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FF4800;"></div>
+                <span>Selected Item</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FD9F78;"></div>
+                <span>Not Selected Item</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #000000;"></div>
+                <span>Current Step</span>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const explanationDiv = document.getElementById('explanation');
+        
+        // Knapsack problem parameters
+        const W = 5; // Maximum weight
+        const weights = [1, 2, 3];
+        const values = [10, 15, 20];
+        
+        // Define the steps of visualization
+        const steps = [
+            {
+                text: "In the Knapsack problem, we have a knapsack with capacity W=5 and items with weights=[1,2,3] and values=[10,15,20]. The goal is to maximize value without exceeding weight capacity.",
+                render: () => {
+                    drawInitialState();
+                }
+            },
+            {
+                text: "The recursion tree represents all possible combinations of items. At each node, we decide whether to include an item or not.",
+                render: () => {
+                    drawInitialState();
+                    drawRootNode();
+                }
+            },
+            {
+                text: "Let's start with item 1 (weight=1, value=10). We have two choices: include it or exclude it.",
+                render: () => {
+                    drawInitialState();
+                    drawRootNode();
+                    drawFirstLevelNodes();
+                }
+            },
+            {
+                text: "If we include item 1, we have W=4 remaining capacity and value=10 so far.",
+                render: () => {
+                    drawInitialState();
+                    drawRootNode();
+                    drawFirstLevelNodes();
+                    highlightNode(350, 150, "#000000");
+                }
+            },
+            {
+                text: "If we exclude item 1, we still have W=5 remaining capacity and value=0 so far.",
+                render: () => {
+                    drawInitialState();
+                    drawRootNode();
+                    drawFirstLevelNodes();
+                    highlightNode(550, 150, "#000000");
+                }
+            },
+            {
+                text: "Now for the left branch (where item 1 was included), we consider item 2 (weight=2, value=15).",
+                render: () => {
+                    drawInitialState();
+                    drawRootNode();
+                    drawFirstLevelNodes();
+                    drawSecondLevelNodes();
+                    highlightNode(350, 150, "#000000");
+                }
+            },
+            {
+                text: "If we include item 2, we have W=2 remaining capacity and value=25 so far.",
+                render: () => {
+                    drawInitialState();
+                    drawRootNode();
+                    drawFirstLevelNodes();
+                    drawSecondLevelNodes();
+                    highlightNode(250, 250, "#000000");
+                }
+            },
+            {
+                text: "If we exclude item 2, we still have W=4 remaining capacity and value=10 so far.",
+                render: () => {
+                    drawInitialState();
+                    drawRootNode();
+                    drawFirstLevelNodes();
+                    drawSecondLevelNodes();
+                    highlightNode(450, 250, "#000000");
+                }
+            },
+            {
+                text: "Similarly, for the right branch (where item 1 was excluded), we consider item 2.",
+                render: () => {
+                    drawInitialState();
+                    drawRootNode();
+                    drawFirstLevelNodes();
+                    drawSecondLevelNodes();
+                    highlightNode(550, 150, "#000000");
+                }
+            },
+            {
+                text: "If we include item 2, we have W=3 remaining capacity and value=15 so far.",
+                render: () => {
+                    drawInitialState();
+                    drawRootNode();
+                    drawFirstLevelNodes();
+                    drawSecondLevelNodes();
+                    highlightNode(650, 250, "#000000");
+                }
+            },
+            {
+                text: "If we exclude item 2, we still have W=5 remaining capacity and value=0 so far.",
+                render: () => {
+                    drawInitialState();
+                    drawRootNode();
+                    drawFirstLevelNodes();
+                    drawSecondLevelNodes();
+                    highlightNode(450, 250, "#000000");
+                }
+            },
+            {
+                text: "Now let's continue with item 3 (weight=3, value=20) for all branches.",
+                render: () => {
+                    drawInitialState();
+                    drawRootNode();
+                    drawFirstLevelNodes();
+                    drawSecondLevelNodes();
+                    drawThirdLevelNodes();
+                }
+            },
+            {
+                text: "For the left-most branch (item 1 included, item 2 included), we have W=2 remaining. Item 3 weighs 3, so we can't include it.",
+                render: () => {
+                    drawInitialState();
+                    drawRootNode();
+                    drawFirstLevelNodes();
+                    drawSecondLevelNodes();
+                    drawThirdLevelNodes();
+                    highlightNode(250, 250, "#000000");
+                    highlightNode(200, 350, "#000000");
+                }
+            },
+            {
+                text: "For the branch (item 1 included, item 2 excluded), we have W=4 remaining. We can include item 3.",
+                render: () => {
+                    drawInitialState();
+                    drawRootNode();
+                    drawFirstLevelNodes();
+                    drawSecondLevelNodes();
+                    drawThirdLevelNodes();
+                    highlightNode(450, 250, "#000000");
+                    highlightNode(400, 350, "#000000");
+                }
+            },
+            {
+                text: "For the branch (item 1 excluded, item 2 included), we have W=3 remaining. We can include item 3.",
+                render: () => {
+                    drawInitialState();
+                    drawRootNode();
+                    drawFirstLevelNodes();
+                    drawSecondLevelNodes();
+                    drawThirdLevelNodes();
+                    highlightNode(650, 250, "#000000");
+                    highlightNode(600, 350, "#000000");
+                }
+            },
+            {
+                text: "For the right-most branch (item 1 excluded, item 2 excluded), we have W=5 remaining. We can include item 3.",
+                render: () => {
+                    drawInitialState();
+                    drawRootNode();
+                    drawFirstLevelNodes();
+                    drawSecondLevelNodes();
+                    drawThirdLevelNodes();
+                    highlightNode(450, 250, "#000000");
+                    highlightNode(500, 350, "#000000");
+                }
+            },
+            {
+                text: "Now, we calculate the total value for each leaf node. The highest value is 30 (from the combination where we take item 1 and item 3).",
+                render: () => {
+                    drawInitialState();
+                    drawRootNode();
+                    drawFirstLevelNodes();
+                    drawSecondLevelNodes();
+                    drawThirdLevelNodes();
+                    drawFinalValues();
+                    highlightBestPath();
+                }
+            },
+            {
+                text: "The optimal solution is to select item 1 and item 3, giving a total value of 30 without exceeding the knapsack capacity of 5.",
+                render: () => {
+                    drawInitialState();
+                    drawRootNode();
+                    drawFirstLevelNodes();
+                    drawSecondLevelNodes();
+                    drawThirdLevelNodes();
+                    drawFinalValues();
+                    highlightBestPath();
+                }
+            }
+        ];
+        
+        let currentStep = 0;
+        
+        // Initialize the visualization
+        updateView();
+        
+        // Event listeners for navigation
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateView();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateView();
+            }
+        });
+        
+        // Update the view based on the current step
+        function updateView() {
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Update explanation text
+            explanationDiv.textContent = steps[currentStep].text;
+            
+            // Render the current step
+            steps[currentStep].render();
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        // Drawing functions
+        function drawInitialState() {
+            ctx.fillStyle = "#000000";
+            ctx.font = "18px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("Knapsack Problem: W = 5, weights = [1, 2, 3], values = [10, 15, 20]", canvas.width / 2, 30);
+        }
+        
+        function drawNode(x, y, color, text) {
+            // Draw circle
+            ctx.beginPath();
+            ctx.arc(x, y, 25, 0, 2 * Math.PI);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw text
+            ctx.fillStyle = "#FFFFFF";
+            ctx.font = "12px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            const lines = text.split('\n');
+            let lineHeight = 14;
+            lines.forEach((line, i) => {
+                const offset = (lines.length - 1) * lineHeight / 2;
+                ctx.fillText(line, x, y - offset + i * lineHeight);
+            });
+        }
+        
+        function drawLine(x1, y1, x2, y2) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        function highlightNode(x, y, color) {
+            ctx.beginPath();
+            ctx.arc(x, y, 30, 0, 2 * Math.PI);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+        
+        function drawRootNode() {
+            drawNode(450, 80, "#FF4800", "Start\nW=5, V=0");
+        }
+        
+        function drawFirstLevelNodes() {
+            // Draw lines to first level nodes
+            drawLine(450, 105, 350, 125);
+            drawLine(450, 105, 550, 125);
+            
+            // Draw first level nodes
+            drawNode(350, 150, "#FF4800", "Item 1 Yes\nW=4, V=10");
+            drawNode(550, 150, "#FD9F78", "Item 1 No\nW=5, V=0");
+        }
+        
+        function drawSecondLevelNodes() {
+            // Draw lines to second level nodes
+            drawLine(350, 175, 250, 225);
+            drawLine(350, 175, 450, 225);
+            drawLine(550, 175, 650, 225);
+            drawLine(550, 175, 450, 225);
+            
+            // Draw second level nodes
+            drawNode(250, 250, "#FF4800", "Item 2 Yes\nW=2, V=25");
+            drawNode(450, 250, "#FD9F78", "Item 2 No\nW=4, V=10");
+            drawNode(650, 250, "#FF4800", "Item 2 Yes\nW=3, V=15");
+            drawNode(450, 250, "#FD9F78", "Item 2 No\nW=5, V=0");
+        }
+        
+        function drawThirdLevelNodes() {
+            // Draw lines to third level nodes
+            drawLine(250, 275, 200, 325);
+            drawLine(250, 275, 300, 325);
+            drawLine(450, 275, 400, 325);
+            drawLine(450, 275, 500, 325);
+            drawLine(650, 275, 600, 325);
+            drawLine(650, 275, 700, 325);
+            
+            // Draw third level nodes
+            drawNode(200, 350, "#FD9F78", "Item 3 No\nW=2, V=25");
+            drawNode(300, 350, "#FD9F78", "Item 3 No\nW=2, V=25");
+            drawNode(400, 350, "#FF4800", "Item 3 Yes\nW=1, V=30");
+            drawNode(500, 350, "#FD9F78", "Item 3 No\nW=4, V=10");
+            drawNode(600, 350, "#FF4800", "Item 3 Yes\nW=0, V=35");
+            drawNode(700, 350, "#FD9F78", "Item 3 No\nW=3, V=15");
+        }
+        
+        function drawFinalValues() {
+            ctx.fillStyle = "#000000";
+            ctx.font = "16px Arial";
+            ctx.textAlign = "center";
+            
+            ctx.fillText("Value: 25", 200, 400);
+            ctx.fillText("Value: 25", 300, 400);
+            ctx.fillText("Value: 30", 400, 400);
+            ctx.fillText("Value: 10", 500, 400);
+            ctx.fillText("Value: 35", 600, 400);
+            ctx.fillText("Value: 15", 700, 400);
+            
+            ctx.fillText("The highest value that fits in the knapsack (W≤5) is 35", canvas.width / 2, 450);
+        }
+        
+        function highlightBestPath() {
+            // Highlight the path to the optimal solution
+            ctx.beginPath();
+            ctx.moveTo(450, 80);
+            ctx.lineTo(550, 150);
+            ctx.lineTo(650, 250);
+            ctx.lineTo(600, 350);
+            ctx.strokeStyle = "#FF4800";
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            
+            // Highlight the optimal solution node
+            ctx.beginPath();
+            ctx.arc(600, 350, 30, 0, 2 * Math.PI);
+            ctx.strokeStyle = "#FF4800";
+            ctx.lineWidth = 4;
+            ctx.stroke();
+        }
+    </script>
+</body>
+</html>
