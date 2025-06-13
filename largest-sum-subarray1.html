@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brute Force Iteration Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background-color: #FFFFFF;
+            color: #000000;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #FF4800;
+            margin-bottom: 20px;
+        }
+        .description {
+            text-align: center;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        .array-element {
+            width: 50px;
+            height: 50px;
+            margin: 0 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #FD9F78;
+            border-radius: 5px;
+            font-weight: bold;
+            position: relative;
+        }
+        .index {
+            position: absolute;
+            bottom: -25px;
+            font-size: 12px;
+            color: #000000;
+        }
+        .highlighted {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: translateY(-5px);
+            transition: all 0.3s ease;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #FD9F78;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .max-sum {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .iteration-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #FD9F78;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Brute Force Iteration Visualization</h1>
+        <div class="description">
+            <p>This visualization demonstrates how the brute force algorithm examines all possible subarrays to find the maximum subarray sum.</p>
+            <p>We'll use the example array: [-2, 1, -3, 4, -1, 2, 1, -5, 4]</p>
+        </div>
+
+        <div class="array-container" id="array-container"></div>
+
+        <div class="iteration-info" id="iteration-info">
+            Click "Next" to start the visualization.
+        </div>
+
+        <div class="controls">
+            <button id="prev" disabled>Previous</button>
+            <button id="next">Next</button>
+        </div>
+
+        <div class="status" id="status">
+            Status: Ready to start
+        </div>
+
+        <div class="max-sum" id="max-sum">
+            Current Maximum Sum: 0
+        </div>
+    </div>
+
+    <script>
+        // Original array
+        const array = [-2, 1, -3, 4, -1, 2, 1, -5, 4];
+        
+        // Generate iterations (we'll show a subset for clarity)
+        const iterations = [];
+        
+        // Helper function to calculate sum of a subarray
+        function calculateSum(start, end) {
+            let sum = 0;
+            for (let i = start; i <= end; i++) {
+                sum += array[i];
+            }
+            return sum;
+        }
+
+        // Generate a selected set of iterations to visualize
+        // First few iterations
+        iterations.push({
+            start: 0,
+            end: 0,
+            sum: array[0],
+            maxSoFar: array[0],
+            description: "Starting with the first element. Current subarray is [-2] with sum -2."
+        });
+        
+        iterations.push({
+            start: 0,
+            end: 1,
+            sum: array[0] + array[1],
+            maxSoFar: Math.max(array[0], array[0] + array[1]),
+            description: "Trying subarray [-2, 1] with sum -1. Current maximum sum is -1."
+        });
+        
+        iterations.push({
+            start: 1,
+            end: 1,
+            sum: array[1],
+            maxSoFar: 1,
+            description: "Trying subarray [1] with sum 1. This is better than previous, so current maximum sum is 1."
+        });
+        
+        // Middle significant iterations
+        iterations.push({
+            start: 3,
+            end: 3,
+            sum: array[3],
+            maxSoFar: 4,
+            description: "Trying subarray [4] with sum 4. This is better than previous, so current maximum sum is 4."
+        });
+        
+        iterations.push({
+            start: 3,
+            end: 5,
+            sum: calculateSum(3, 5),
+            maxSoFar: 5,
+            description: "Trying subarray [4, -1, 2] with sum 5. This is better than previous, so current maximum sum is 5."
+        });
+        
+        iterations.push({
+            start: 3,
+            end: 6,
+            sum: calculateSum(3, 6),
+            maxSoFar: 6,
+            description: "Trying subarray [4, -1, 2, 1] with sum 6. This is better than previous, so current maximum sum is 6."
+        });
+        
+        // Final significant iterations
+        iterations.push({
+            start: 3,
+            end: 8,
+            sum: calculateSum(3, 8),
+            maxSoFar: 6,
+            description: "Trying subarray [4, -1, 2, 1, -5, 4] with sum 5. Not better than current maximum."
+        });
+        
+        iterations.push({
+            start: 0,
+            end: 8,
+            sum: calculateSum(0, 8),
+            maxSoFar: 6,
+            description: "Final result after checking all subarrays: Maximum sum is 6 for subarray [4, -1, 2, 1]."
+        });
+        
+        // Initialize UI elements
+        const arrayContainer = document.getElementById('array-container');
+        const prevBtn = document.getElementById('prev');
+        const nextBtn = document.getElementById('next');
+        const status = document.getElementById('status');
+        const maxSum = document.getElementById('max-sum');
+        const iterationInfo = document.getElementById('iteration-info');
+        
+        // Create array elements
+        array.forEach((value, index) => {
+            const element = document.createElement('div');
+            element.className = 'array-element';
+            element.textContent = value;
+            
+            const indexSpan = document.createElement('span');
+            indexSpan.className = 'index';
+            indexSpan.textContent = index;
+            
+            element.appendChild(indexSpan);
+            arrayContainer.appendChild(element);
+        });
+        
+        let currentIteration = -1;
+        
+        // Update UI based on current iteration
+        function updateUI() {
+            // Reset highlighting
+            const arrayElements = document.querySelectorAll('.array-element');
+            arrayElements.forEach(element => {
+                element.classList.remove('highlighted');
+            });
+            
+            if (currentIteration >= 0) {
+                const iteration = iterations[currentIteration];
+                
+                // Highlight current subarray
+                for (let i = iteration.start; i <= iteration.end; i++) {
+                    arrayElements[i].classList.add('highlighted');
+                }
+                
+                // Update status and max sum
+                status.textContent = `Status: Examining subarray from index ${iteration.start} to ${iteration.end}`;
+                maxSum.textContent = `Current Maximum Sum: ${iteration.maxSoFar}`;
+                iterationInfo.textContent = iteration.description;
+            } else {
+                status.textContent = 'Status: Ready to start';
+                maxSum.textContent = 'Current Maximum Sum: 0';
+                iterationInfo.textContent = 'Click "Next" to start the visualization.';
+            }
+            
+            // Update button states
+            prevBtn.disabled = currentIteration <= 0;
+            nextBtn.disabled = currentIteration >= iterations.length - 1;
+        }
+        
+        // Button event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentIteration > 0) {
+                currentIteration--;
+                updateUI();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentIteration < iterations.length - 1) {
+                currentIteration++;
+                updateUI();
+            }
+        });
+        
+        // Initialize UI
+        updateUI();
+    </script>
+</body>
+</html>
