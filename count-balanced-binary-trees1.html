@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balanced Binary Trees</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        
+        .tree-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+            height: 400px;
+        }
+        
+        svg {
+            margin-top: 20px;
+        }
+        
+        .node {
+            fill: #FD9F78;
+            stroke: #FF4800;
+            stroke-width: 2;
+        }
+        
+        .link {
+            stroke: #FF4800;
+            stroke-width: 2;
+        }
+        
+        .node-text {
+            font-size: 12px;
+            text-anchor: middle;
+            dominant-baseline: central;
+            fill: #000000;
+            font-weight: bold;
+        }
+        
+        .title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #000000;
+        }
+        
+        .explanation {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            color: #000000;
+            text-align: left;
+        }
+        
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+            width: 300px;
+            margin: 20px auto;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .btn:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Examples of Balanced Binary Trees for Different Heights</h1>
+        
+        <div class="explanation" id="explanation"></div>
+        
+        <div class="title" id="title"></div>
+        
+        <div class="tree-container" id="treeContainer"></div>
+        
+        <div class="btn-container">
+            <button class="btn" id="prevBtn">Previous</button>
+            <button class="btn" id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const trees = [
+            {
+                title: "Height 0: A Single Node Tree",
+                explanation: "A tree with height 0 consists of a single node (the root). This is the simplest form of a balanced binary tree.",
+                nodes: [
+                    { id: 1, value: "A", x: 400, y: 50 }
+                ],
+                links: []
+            },
+            {
+                title: "Height 1: Root with Two Leaf Children",
+                explanation: "A balanced binary tree with height 1 has a root node and two child nodes. Both children are at the same level, making the tree balanced.",
+                nodes: [
+                    { id: 1, value: "A", x: 400, y: 50 },
+                    { id: 2, value: "B", x: 300, y: 150 },
+                    { id: 3, value: "C", x: 500, y: 150 }
+                ],
+                links: [
+                    { source: 1, target: 2 },
+                    { source: 1, target: 3 }
+                ]
+            },
+            {
+                title: "Height 2: First Configuration",
+                explanation: "This is one possible configuration for a balanced binary tree with height 2. Each node at height 1 has two children, creating a perfectly balanced tree.",
+                nodes: [
+                    { id: 1, value: "A", x: 400, y: 50 },
+                    { id: 2, value: "B", x: 300, y: 150 },
+                    { id: 3, value: "C", x: 500, y: 150 },
+                    { id: 4, value: "D", x: 200, y: 250 },
+                    { id: 5, value: "E", x: 300, y: 250 },
+                    { id: 6, value: "F", x: 450, y: 250 },
+                    { id: 7, value: "G", x: 550, y: 250 }
+                ],
+                links: [
+                    { source: 1, target: 2 },
+                    { source: 1, target: 3 },
+                    { source: 2, target: 4 },
+                    { source: 2, target: 5 },
+                    { source: 3, target: 6 },
+                    { source: 3, target: 7 }
+                ]
+            },
+            {
+                title: "Height 2: Second Configuration",
+                explanation: "Another valid balanced binary tree with height 2. The left child of the root has two children, while the right child has only one. The tree is still balanced because the difference in heights of any two subtrees is at most 1.",
+                nodes: [
+                    { id: 1, value: "A", x: 400, y: 50 },
+                    { id: 2, value: "B", x: 300, y: 150 },
+                    { id: 3, value: "C", x: 500, y: 150 },
+                    { id: 4, value: "D", x: 200, y: 250 },
+                    { id: 5, value: "E", x: 300, y: 250 },
+                    { id: 6, value: "F", x: 500, y: 250 }
+                ],
+                links: [
+                    { source: 1, target: 2 },
+                    { source: 1, target: 3 },
+                    { source: 2, target: 4 },
+                    { source: 2, target: 5 },
+                    { source: 3, target: 6 }
+                ]
+            },
+            {
+                title: "Height 2: Third Configuration",
+                explanation: "A third configuration of a balanced binary tree with height 2. In this case, the left child of the root has one child, and the right child has two children. The tree remains balanced because the height difference between any two subtrees is not more than 1.",
+                nodes: [
+                    { id: 1, value: "A", x: 400, y: 50 },
+                    { id: 2, value: "B", x: 300, y: 150 },
+                    { id: 3, value: "C", x: 500, y: 150 },
+                    { id: 4, value: "D", x: 300, y: 250 },
+                    { id: 5, value: "E", x: 450, y: 250 },
+                    { id: 6, value: "F", x: 550, y: 250 }
+                ],
+                links: [
+                    { source: 1, target: 2 },
+                    { source: 1, target: 3 },
+                    { source: 2, target: 4 },
+                    { source: 3, target: 5 },
+                    { source: 3, target: 6 }
+                ]
+            }
+        ];
+
+        let currentIndex = 0;
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const title = document.getElementById('title');
+        const explanation = document.getElementById('explanation');
+        const treeContainer = document.getElementById('treeContainer');
+
+        function updateButtons() {
+            prevBtn.disabled = currentIndex === 0;
+            nextBtn.disabled = currentIndex === trees.length - 1;
+        }
+
+        function renderTree(treeData) {
+            treeContainer.innerHTML = '';
+            title.textContent = treeData.title;
+            explanation.textContent = treeData.explanation;
+
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", "800");
+            svg.setAttribute("height", "300");
+            treeContainer.appendChild(svg);
+
+            // Draw links first so they appear behind nodes
+            treeData.links.forEach(link => {
+                const sourceNode = treeData.nodes.find(node => node.id === link.source);
+                const targetNode = treeData.nodes.find(node => node.id === link.target);
+                
+                const lineElement = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                lineElement.setAttribute("x1", sourceNode.x);
+                lineElement.setAttribute("y1", sourceNode.y);
+                lineElement.setAttribute("x2", targetNode.x);
+                lineElement.setAttribute("y2", targetNode.y);
+                lineElement.setAttribute("class", "link");
+                svg.appendChild(lineElement);
+            });
+
+            // Draw nodes
+            treeData.nodes.forEach(node => {
+                const circleElement = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circleElement.setAttribute("cx", node.x);
+                circleElement.setAttribute("cy", node.y);
+                circleElement.setAttribute("r", 25);
+                circleElement.setAttribute("class", "node");
+                
+                const textElement = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                textElement.setAttribute("x", node.x);
+                textElement.setAttribute("y", node.y);
+                textElement.setAttribute("class", "node-text");
+                textElement.textContent = node.value;
+                
+                svg.appendChild(circleElement);
+                svg.appendChild(textElement);
+            });
+        }
+
+        function showCurrentTree() {
+            renderTree(trees[currentIndex]);
+            updateButtons();
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                showCurrentTree();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentIndex < trees.length - 1) {
+                currentIndex++;
+                showCurrentTree();
+            }
+        });
+
+        // Initial render
+        showCurrentTree();
+    </script>
+</body>
+</html>
