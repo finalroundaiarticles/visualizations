@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Programming Table Evolution</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .dp-container {
+            margin: 30px 0;
+        }
+        .string-display {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .char-box {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 5px;
+            font-weight: bold;
+        }
+        .index-box {
+            width: 40px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 5px;
+            font-size: 12px;
+        }
+        .dp-table {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .dp-cell {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 5px;
+            font-weight: bold;
+            transition: background-color 0.5s;
+        }
+        .true {
+            background-color: #FD9F78;
+        }
+        .current {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #FD9F78;
+        }
+        .word-dict {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .word {
+            padding: 5px 10px;
+            background-color: #FD9F78;
+            margin-right: 10px;
+            border-radius: 3px;
+        }
+        .animation-highlight {
+            animation: pulse 1s;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dynamic Programming Table Evolution</h1>
+        <p>Word Break problem for string "leetcode" with wordDict = ["leet", "code"]</p>
+        
+        <div class="word-dict">
+            <div class="word">leet</div>
+            <div class="word">code</div>
+        </div>
+        
+        <div class="dp-container">
+            <div class="string-display" id="string-display"></div>
+            <div class="index-display" id="index-display"></div>
+            <div class="dp-table" id="dp-table"></div>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <p>DP array initialization: dp[0] is set to true as an empty string can always be segmented.</p>
+        </div>
+        
+        <div class="controls">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const string = "leetcode";
+        const wordDict = ["leet", "code"];
+        let step = 0;
+        
+        // Create steps for the animation
+        const steps = [
+            {
+                description: "DP array initialization: dp[0] is set to true as an empty string can always be segmented.",
+                dpState: [true, false, false, false, false, false, false, false, false],
+                current: null
+            },
+            {
+                description: "Checking dp[1] for substring 'l': No word in the dictionary matches, so dp[1] remains false.",
+                dpState: [true, false, false, false, false, false, false, false, false],
+                current: 1
+            },
+            {
+                description: "Checking dp[2] for substring 'le': No word in the dictionary matches, so dp[2] remains false.",
+                dpState: [true, false, false, false, false, false, false, false, false],
+                current: 2
+            },
+            {
+                description: "Checking dp[3] for substring 'lee': No word in the dictionary matches, so dp[3] remains false.",
+                dpState: [true, false, false, false, false, false, false, false, false],
+                current: 3
+            },
+            {
+                description: "Checking dp[4] for substring 'leet': Found 'leet' in the dictionary! We check dp[0] which is true, so dp[4] becomes true.",
+                dpState: [true, false, false, false, true, false, false, false, false],
+                current: 4
+            },
+            {
+                description: "Checking dp[5] for substring 'leetc': No word in the dictionary matches starting from dp[4], so dp[5] remains false.",
+                dpState: [true, false, false, false, true, false, false, false, false],
+                current: 5
+            },
+            {
+                description: "Checking dp[6] for substring 'leetco': No word in the dictionary matches starting from dp[4], so dp[6] remains false.",
+                dpState: [true, false, false, false, true, false, false, false, false],
+                current: 6
+            },
+            {
+                description: "Checking dp[7] for substring 'leetcod': No word in the dictionary matches starting from dp[4], so dp[7] remains false.",
+                dpState: [true, false, false, false, true, false, false, false, false],
+                current: 7
+            },
+            {
+                description: "Checking dp[8] for substring 'leetcode': Found 'code' in the dictionary! We check dp[4] which is true, so dp[8] becomes true.",
+                dpState: [true, false, false, false, true, false, false, false, true],
+                current: 8
+            },
+            {
+                description: "Final DP array: dp[8] is true, which means the string 'leetcode' can be segmented into words from the dictionary.",
+                dpState: [true, false, false, false, true, false, false, false, true],
+                current: null
+            }
+        ];
+        
+        // Initialize the display
+        function initDisplay() {
+            const stringDisplay = document.getElementById('string-display');
+            const indexDisplay = document.getElementById('index-display');
+            const dpTable = document.getElementById('dp-table');
+            
+            // Create string display
+            stringDisplay.innerHTML = '';
+            for (let i = 0; i < string.length; i++) {
+                const charBox = document.createElement('div');
+                charBox.className = 'char-box';
+                charBox.textContent = string[i];
+                stringDisplay.appendChild(charBox);
+            }
+            
+            // Create index display
+            indexDisplay.innerHTML = '';
+            for (let i = 0; i < string.length; i++) {
+                const indexBox = document.createElement('div');
+                indexBox.className = 'index-box';
+                indexBox.textContent = i + 1;
+                indexDisplay.appendChild(indexBox);
+            }
+            
+            // Create DP table
+            dpTable.innerHTML = '';
+            for (let i = 0; i <= string.length; i++) {
+                const dpCell = document.createElement('div');
+                dpCell.className = 'dp-cell';
+                dpCell.id = `dp-${i}`;
+                dpCell.textContent = 'F';
+                dpTable.appendChild(dpCell);
+            }
+            
+            updateDisplay();
+        }
+        
+        // Update the display based on the current step
+        function updateDisplay() {
+            const currentStep = steps[step];
+            const explanation = document.getElementById('explanation');
+            
+            // Update explanation
+            explanation.innerHTML = `<p>${currentStep.description}</p>`;
+            
+            // Update DP cells
+            for (let i = 0; i <= string.length; i++) {
+                const dpCell = document.getElementById(`dp-${i}`);
+                dpCell.textContent = currentStep.dpState[i] ? 'T' : 'F';
+                dpCell.className = 'dp-cell';
+                
+                if (currentStep.dpState[i]) {
+                    dpCell.classList.add('true');
+                }
+                
+                if (i === currentStep.current) {
+                    dpCell.classList.add('current');
+                    dpCell.classList.add('animation-highlight');
+                }
+            }
+            
+            // Update buttons
+            document.getElementById('prev-btn').disabled = step === 0;
+            document.getElementById('next-btn').disabled = step === steps.length - 1;
+        }
+        
+        // Event listeners for buttons
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (step > 0) {
+                step--;
+                updateDisplay();
+            }
+        });
+        
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (step < steps.length - 1) {
+                step++;
+                updateDisplay();
+            }
+        });
+        
+        // Initialize the visualization
+        initDisplay();
+    </script>
+</body>
+</html>
