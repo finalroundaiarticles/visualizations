@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Programming Recurrence Relation Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .formula {
+            font-size: 24px;
+            margin: 20px 0;
+            padding: 10px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            background-color: #FFFFFF;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        canvas {
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            background-color: #FFFFFF;
+        }
+        
+        .explanation {
+            background-color: #FFFFFF;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .speed-control {
+            margin: 0 15px;
+        }
+
+        .step-counter {
+            font-size: 18px;
+            color: #FF4800;
+            font-weight: bold;
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dynamic Programming Recurrence Relation Visualization</h1>
+        
+        <div class="formula">
+            f(h) = f(h-1)² + 2 × f(h-1) × f(h-2)
+        </div>
+        
+        <div class="controls">
+            <div class="step-counter">Step <span id="currentStep">1</span> of <span id="totalSteps">5</span></div>
+            <div class="speed-control">
+                <label for="speed">Animation Speed:</label>
+                <input type="range" id="speed" min="1" max="5" value="3">
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="dpCanvas" width="900" height="500"></canvas>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <p>This visualization demonstrates how we can build trees of height h using combinations of smaller subtrees.</p>
+            <p>The formula f(h) = f(h-1)² + 2 × f(h-1) × f(h-2) counts the number of distinct binary trees of height h.</p>
+            <p>Let's understand how this recurrence relation works through animation.</p>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" class="btn" disabled>Previous</button>
+            <button id="nextBtn" class="btn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('dpCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Step handling
+        let currentStep = 1;
+        const totalSteps = 5;
+        document.getElementById('currentStep').textContent = currentStep;
+        document.getElementById('totalSteps').textContent = totalSteps;
+        
+        // Node and tree properties
+        const nodeRadius = 20;
+        const levelHeight = 80;
+        const nodeColor = "#FF4800";
+        const nodeOutlineColor = "#000000";
+        const highlightColor = "#FD9F78";
+        
+        // Animation properties
+        let animationSpeed = 3;
+        let animationFrameId;
+        let isAnimating = false;
+        
+        // Explanations for each step
+        const explanations = [
+            // Step 1
+            "<p>Let's understand the recurrence relation: f(h) = f(h-1)² + 2 × f(h-1) × f(h-2)</p>" +
+            "<p>This formula counts the number of structurally unique binary trees of height h.</p>" +
+            "<p>We start with simple examples: f(0) = 1 (a single node tree) and f(1) = 1 (a root with one child).</p>",
+            
+            // Step 2
+            "<p>First term: f(h-1)²</p>" +
+            "<p>This represents placing trees of height h-1 as both left and right subtrees of the root.</p>" +
+            "<p>The root node plus these two subtrees creates a tree of height h.</p>",
+            
+            // Step 3
+            "<p>Second term: 2 × f(h-1) × f(h-2)</p>" +
+            "<p>This represents two scenarios:</p>" +
+            "<p>1. A tree of height h-1 on the left and height h-2 on the right</p>" +
+            "<p>2. A tree of height h-2 on the left and height h-1 on the right</p>" +
+            "<p>The factor of 2 accounts for these two possibilities.</p>",
+            
+            // Step 4
+            "<p>Let's see the computation in action for f(3):</p>" +
+            "<p>We know f(0) = 1, f(1) = 1, and f(2) = 3</p>" +
+            "<p>f(3) = f(2)² + 2 × f(2) × f(1)</p>" +
+            "<p>f(3) = 3² + 2 × 3 × 1 = 9 + 6 = 15</p>",
+            
+            // Step 5
+            "<p>The beauty of this recurrence relation is that it breaks down a complex counting problem into smaller subproblems.</p>" +
+            "<p>This is the essence of dynamic programming!</p>" +
+            "<p>By storing and reusing the solutions to f(0), f(1), f(2), etc., we can efficiently compute f(h) for larger values of h.</p>"
+        ];
+        
+        // Update explanation based on current step
+        function updateExplanation() {
+            document.getElementById('explanation').innerHTML = explanations[currentStep - 1];
+        }
+        
+        // Navigation buttons event listeners
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentStep > 1 && !isAnimating) {
+                currentStep--;
+                updateStep();
+            }
+        });
+        
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentStep < totalSteps && !isAnimating) {
+                currentStep++;
+                updateStep();
+            }
+        });
+        
+        // Speed control
+        document.getElementById('speed').addEventListener('input', (e) => {
+            animationSpeed = parseInt(e.target.value);
+        });
+        
+        function updateStep() {
+            document.getElementById('currentStep').textContent = currentStep;
+            document.getElementById('prevBtn').disabled = currentStep === 1 || isAnimating;
+            document.getElementById('nextBtn').disabled = currentStep === totalSteps || isAnimating;
+            updateExplanation();
+            draw();
+        }
+        
+        // Drawing functions
+        function draw() {
+            cancelAnimationFrame(animationFrameId);
+            isAnimating = true;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            switch(currentStep) {
+                case 1:
+                    drawStep1();
+                    break;
+                case 2:
+                    drawStep2();
+                    break;
+                case 3:
+                    drawStep3();
+                    break;
+                case 4:
+                    drawStep4();
+                    break;
+                case 5:
+                    drawStep5();
+                    break;
+            }
+        }
+        
+        function drawNode(x, y, label, color = nodeColor, outline = nodeOutlineColor) {
+            ctx.beginPath();
+            ctx.arc(x, y, nodeRadius, 0, 2 * Math.PI);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = outline;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, x, y);
+        }
+        
+        function drawEdge(x1, y1, x2, y2, color = nodeOutlineColor) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        function drawText(text, x, y, color = "#000000", fontSize = 16) {
+            ctx.fillStyle = color;
+            ctx.font = `bold ${fontSize}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, x, y);
+        }
+        
+        // Step 1: Basic introduction with simple trees
+        function drawStep1() {
+            // Draw f(0) = 1 (single node)
+            drawText("f(0) = 1", 150, 50, "#FF4800", 22);
+            drawNode(150, 100, "0");
+            
+            // Draw f(1) = 1 (root with one child)
+            drawText("f(1) = 1", 450, 50, "#FF4800", 22);
+            drawNode(450, 100, "0");
+            drawNode(450, 180, "1");
+            drawEdge(450, 120, 450, 160);
+            
+            // Draw f(2) = 3 (multiple configurations)
+            drawText("f(2) = 3", 750, 50, "#FF4800", 22);
+            
+            // First config of f(2)
+            drawNode(650, 100, "0");
+            drawNode(600, 180, "1");
+            drawNode(600, 260, "2");
+            drawEdge(650, 120, 600, 160);
+            drawEdge(600, 200, 600, 240);
+            
+            // Second config of f(2)
+            drawNode(750, 100, "0");
+            drawNode(750, 180, "1");
+            drawNode(750, 260, "2");
+            drawEdge(750, 120, 750, 160);
+            drawEdge(750, 200, 750, 240);
+            
+            // Third config of f(2)
+            drawNode(850, 100, "0");
+            drawNode(900, 180, "1");
+            drawNode(900, 260, "2");
+            drawEdge(850, 120, 900, 160);
+            drawEdge(900, 200, 900, 240);
+            
+            setTimeout(() => {
+                isAnimating = false;
+                document.getElementById('prevBtn').disabled = currentStep === 1;
+                document.getElementById('nextBtn').disabled = currentStep === totalSteps;
+            }, 1000);
+        }
+        
+        // Step 2: First term of recurrence relation
+        function drawStep2() {
+            const startAnimation = performance.now();
+            const animationDuration = 6000 / animationSpeed;
+            
+            function animate(timestamp) {
+                const elapsed = timestamp - startAnimation;
+                const progress = Math.min(elapsed / animationDuration, 1);
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw the recurrence relation
+                drawText("f(h) = f(h-1)² + 2 × f(h-1) × f(h-2)", 450, 40, "#FF4800", 22);
+                
+                // Highlight the first term
+                const termWidth = ctx.measureText("f(h-1)²").width;
+                ctx.fillStyle = highlightColor;
+                ctx.fillRect(250, 28, termWidth + 10, 24);
+                ctx.fillStyle = "#FFFFFF";
+                drawText("f(h-1)²", 255 + termWidth/2, 40, "#FFFFFF", 22);
+                
+                // Draw the root tree
+                drawNode(450, 100, "h");
+                
+                // Left subtree
+                if (progress > 0.3) {
+                    const opacity = Math.min((progress - 0.3) / 0.2, 1);
+                    ctx.globalAlpha = opacity;
+                    drawEdge(450, 120, 350, 160);
+                    drawNode(350, 180, "h-1", nodeColor);
+                    drawText("f(h-1)", 350, 220, "#FF4800", 18);
+                    ctx.globalAlpha = 1;
+                }
+                
+                // Right subtree
+                if (progress > 0.6) {
+                    const opacity = Math.min((progress - 0.6) / 0.2, 1);
+                    ctx.globalAlpha = opacity;
+                    drawEdge(450, 120, 550, 160);
+                    drawNode(550, 180, "h-1", nodeColor);
+                    drawText("f(h-1)", 550, 220, "#FF4800", 18);
+                    ctx.globalAlpha = 1;
+                }
+                
+                // Final annotation
+                if (progress > 0.8) {
+                    const opacity = Math.min((progress - 0.8) / 0.2, 1);
+                    ctx.globalAlpha = opacity;
+                    drawText("f(h-1)² combinations", 450, 300, "#FF4800", 24);
+                    ctx.globalAlpha = 1;
+                }
+                
+                if (progress < 1) {
+                    animationFrameId = requestAnimationFrame(animate);
+                } else {
+                    isAnimating = false;
+                    document.getElementById('prevBtn').disabled = currentStep === 1;
+                    document.getElementById('nextBtn').disabled = currentStep === totalSteps;
+                }
+            }
+            
+            animationFrameId = requestAnimationFrame(animate);
+        }
+        
+        // Step 3: Second term of recurrence relation
+        function drawStep3() {
+            const startAnimation = performance.now();
+            const animationDuration = 6000 / animationSpeed;
+            
+            function animate(timestamp) {
+                const elapsed = timestamp - startAnimation;
+                const progress = Math.min(elapsed / animationDuration, 1);
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw the recurrence relation
+                drawText("f(h) = f(h-1)² + 2 × f(h-1) × f(h-2)", 450, 40, "#FF4800", 22);
+                
+                // Highlight the second term
+                const termWidth = ctx.measureText("2 × f(h-1) × f(h-2)").width;
+                ctx.fillStyle = highlightColor;
+                ctx.fillRect(450, 28, termWidth + 10, 24);
+                ctx.fillStyle = "#FFFFFF";
+                drawText("2 × f(h-1) × f(h-2)", 455 + termWidth/2, 40, "#FFFFFF", 22);
+                
+                // First configuration (h-1 on left, h-2 on right)
+                if (progress > 0.2) {
+                    const opacity = Math.min((progress - 0.2) / 0.2, 1);
+                    ctx.globalAlpha = opacity;
+                    
+                    drawNode(250, 100, "h");
+                    drawEdge(250, 120, 200, 160);
+                    drawEdge(250, 120, 300, 160);
+                    drawNode(200, 180, "h-1", nodeColor);
+                    drawNode(300, 180, "h-2", highlightColor);
+                    drawText("f(h-1)", 200, 220, "#FF4800", 18);
+                    drawText("f(h-2)", 300, 220, "#FD9F78", 18);
+                    
+                    ctx.globalAlpha = 1;
+                }
+                
+                // Second configuration (h-2 on left, h-1 on right)
+                if (progress > 0.5) {
+                    const opacity = Math.min((progress - 0.5) / 0.2, 1);
+                    ctx.globalAlpha = opacity;
+                    
+                    drawNode(650, 100, "h");
+                    drawEdge(650, 120, 600, 160);
+                    drawEdge(650, 120, 700, 160);
+                    drawNode(600, 180, "h-2", highlightColor);
+                    drawNode(700, 180, "h-1", nodeColor);
+                    drawText("f(h-2)", 600, 220, "#FD9F78", 18);
+                    drawText("f(h-1)", 700, 220, "#FF4800", 18);
+                    
+                    ctx.globalAlpha = 1;
+                }
+                
+                // Final annotation
+                if (progress > 0.8) {
+                    const opacity = Math.min((progress - 0.8) / 0.2, 1);
+                    ctx.globalAlpha = opacity;
+                    drawText("2 × f(h-1) × f(h-2) combinations", 450, 300, "#FF4800", 24);
+                    ctx.globalAlpha = 1;
+                }
+                
+                if (progress < 1) {
+                    animationFrameId = requestAnimationFrame(animate);
+                } else {
+                    isAnimating = false;
+                    document.getElementById('prevBtn').disabled = currentStep === 1;
+                    document.getElementById('nextBtn').disabled = currentStep === totalSteps;
+                }
+            }
+            
+            animationFrameId = requestAnimationFrame(animate);
+        }
+        
+        // Step 4: Example calculation for f(3)
+        function drawStep4() {
+            const startAnimation = performance.now();
+            const animationDuration = 6000 / animationSpeed;
+            
+            function animate(timestamp) {
+                const elapsed = timestamp - startAnimation;
+                const progress = Math.min(elapsed / animationDuration, 1);
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw example for f(3)
+                drawText("Example: Computing f(3)", 450, 40, "#FF4800", 24);
+                
+                // Draw the values we know
+                if (progress > 0.1) {
+                    const opacity = Math.min((progress - 0.1) / 0.2, 1);
+                    ctx.globalAlpha = opacity;
+                    drawText("f(0) = 1     f(1) = 1     f(2) = 3", 450, 80, "#000000", 20);
+                    ctx.globalAlpha = 1;
+                }
+                
+                // Draw the formula
+                if (progress > 0.3) {
+                    const opacity = Math.min((progress - 0.3) / 0.2, 1);
+                    ctx.globalAlpha = opacity;
+                    drawText("f(3) = f(2)² + 2 × f(2) × f(1)", 450, 120, "#000000", 20);
+                    ctx.globalAlpha = 1;
+                }
+                
+                // Substitute values
+                if (progress > 0.5) {
+                    const opacity = Math.min((progress - 0.5) / 0.2, 1);
+                    ctx.globalAlpha = opacity;
+                    drawText("f(3) = 3² + 2 × 3 × 1", 450, 160, "#000000", 20);
+                    ctx.globalAlpha = 1;
+                }
+                
+                // Calculate
+                if (progress > 0.7) {
+                    const opacity = Math.min((progress - 0.7) / 0.2, 1);
+                    ctx.globalAlpha = opacity;
+                    drawText("f(3) = 9 + 6 = 15", 450, 200, "#FF4800", 22);
+                    ctx.globalAlpha = 1;
+                }
+                
+                // Draw some tree configurations as visual confirmation
+                if (progress > 0.8) {
+                    const opacity = Math.min((progress - 0.8) / 0.2, 1);
+                    ctx.globalAlpha = opacity;
+                    
+                    // First term visualization (f(h-1)²)
+                    drawText("f(2)² = 9 configurations", 225, 240, "#000000", 18);
+                    
+                    // Second term visualization (2 × f(h-1) × f(h-2))
+                    drawText("2 × f(2) × f(1) = 6 configurations", 675, 240, "#000000", 18);
+                    
+                    // Visual representation of the total
+                    drawText("Total: 15 unique binary trees of height 3", 450, 280, "#FF4800", 22);
+                    
+                    ctx.globalAlpha = 1;
+                }
+                
+                if (progress < 1) {
+                    animationFrameId = requestAnimationFrame(animate);
+                } else {
+                    isAnimating = false;
+                    document.getElementById('prevBtn').disabled = currentStep === 1;
+                    document.getElementById('nextBtn').disabled = currentStep === totalSteps;
+                }
+            }
+            
+            animationFrameId = requestAnimationFrame(animate);
+        }
+        
+        // Step 5: Dynamic Programming approach
+        function drawStep5() {
+            const startAnimation = performance.now();
+            const animationDuration = 6000 / animationSpeed;
+            
+            function animate(timestamp) {
+                const elapsed = timestamp - startAnimation;
+                const progress = Math.min(elapsed / animationDuration, 1);
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw DP table illustration
+                drawText("Dynamic Programming Approach", 450, 40, "#FF4800", 24);
+                
+                // Create a DP table
+                if (progress > 0.2) {
+                    const opacity = Math.min((progress - 0.2) / 0.2, 1);
+                    ctx.globalAlpha = opacity;
+                    
+                    // Table header
+                    ctx.fillStyle = "#FF4800";
+                    ctx.fillRect(250, 80, 400, 40);
+                    ctx.fillStyle = "#FFFFFF";
+                    drawText("h", 300, 100, "#FFFFFF", 20);
+                    drawText("f(h)", 400, 100, "#FFFFFF", 20);
+                    drawText("Calculation", 550, 100, "#FFFFFF", 20);
+                    
+                    // Table rows
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.fillRect(250, 120, 400, 200);
+                    ctx.strokeStyle = "#000000";
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(250, 80, 400, 240);
+                    
+                    // Horizontal lines
+                    for (let i = 1; i <= 5; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(250, 80 + i * 40);
+                        ctx.lineTo(650, 80 + i * 40);
+                        ctx.stroke();
+                    }
+                    
+                    // Vertical lines
+                    ctx.beginPath();
+                    ctx.moveTo(350, 80);
+                    ctx.lineTo(350, 320);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(450, 80);
+                    ctx.lineTo(450, 320);
+                    ctx.stroke();
+                    
+                    ctx.globalAlpha = 1;
+                }
+                
+                // Fill in the table values
+                if (progress > 0.4) {
+                    const opacity = Math.min((progress - 0.4) / 0.6, 1);
+                    ctx.globalAlpha = opacity;
+                    
+                    // h = 0
+                    drawText("0", 300, 140, "#000000", 18);
+                    drawText("1", 400, 140, "#000000", 18);
+                    drawText("Base case", 550, 140, "#000000", 18);
+                    
+                    // h = 1
+                    drawText("1", 300, 180, "#000000", 18);
+                    drawText("1", 400, 180, "#000000", 18);
+                    drawText("Base case", 550, 180, "#000000", 18);
+                    
+                    if (progress > 0.5) {
+                        // h = 2
+                        drawText("2", 300, 220, "#000000", 18);
+                        drawText("3", 400, 220, "#000000", 18);
+                        drawText("1² + 2×1×1 = 3", 550, 220, "#000000", 18);
+                    }
+                    
+                    if (progress > 0.6) {
+                        // h = 3
+                        drawText("3", 300, 260, "#000000", 18);
+                        drawText("15", 400, 260, "#000000", 18);
+                        drawText("3² + 2×3×1 = 15", 550, 260, "#000000", 18);
+                    }
+                    
+                    if (progress > 0.7) {
+                        // h = 4
+                        drawText("4", 300, 300, "#000000", 18);
+                        drawText("255", 400, 300, "#000000", 18);
+                        drawText("15² + 2×15×3 = 315", 550, 300, "#000000", 18);
+                    }
+                    
+                    ctx.globalAlpha = 1;
+                }
+                
+                if (progress < 1) {
+                    animationFrameId = requestAnimationFrame(animate);
+                } else {
+                    isAnimating = false;
+                    document.getElementById('prevBtn').disabled = currentStep === 1;
+                    document.getElementById('nextBtn').disabled = currentStep === totalSteps;
+                }
+            }
+            
+            animationFrameId = requestAnimationFrame(animate);
+        }
+        
+        // Initialize
+        updateExplanation();
+        draw();
+    </script>
+</body>
+</html>
