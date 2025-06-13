@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kadane's Algorithm Execution Trace</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .explanation {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        .array-cell {
+            width: 50px;
+            height: 50px;
+            border: 1px solid #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .current {
+            background-color: #FF4800;
+            color: white;
+        }
+        .best-subarray {
+            background-color: #FD9F78;
+        }
+        .trace-container {
+            margin: 30px 0;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #000000;
+            padding: 12px;
+            text-align: center;
+        }
+        th {
+            background-color: #FF4800;
+            color: white;
+        }
+        .highlighted-row {
+            background-color: #FD9F78;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .nav-btn {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-counter {
+            font-size: 18px;
+            margin: 0 15px;
+            line-height: 40px;
+            font-weight: bold;
+        }
+        .values-box {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .value-item {
+            border: 2px solid #FF4800;
+            padding: 10px 15px;
+            margin: 0 10px;
+            border-radius: 5px;
+            min-width: 150px;
+            text-align: center;
+        }
+        .value-label {
+            font-weight: bold;
+            color: #FF4800;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Kadane's Algorithm Execution Trace</h1>
+        
+        <div class="explanation">
+            <p>Kadane's algorithm finds the maximum subarray sum in a given array. It's an efficient algorithm that solves the problem in linear time by scanning the array once and keeping track of the current sum and the maximum sum found so far.</p>
+            <p>Let's visualize how Kadane's algorithm processes the array [-2, 1, -3, 4, -1, 2, 1, -5, 4] step by step.</p>
+        </div>
+        
+        <div class="array-container" id="array-display">
+            <!-- Array cells will be inserted here by JavaScript -->
+        </div>
+        
+        <div class="values-box">
+            <div class="value-item">
+                <div class="value-label">Current Element</div>
+                <div id="current-element">-</div>
+            </div>
+            <div class="value-item">
+                <div class="value-label">Max Ending Here</div>
+                <div id="max-ending-here">0</div>
+            </div>
+            <div class="value-item">
+                <div class="value-label">Max So Far</div>
+                <div id="max-so-far">0</div>
+            </div>
+        </div>
+        
+        <div class="trace-container">
+            <table id="trace-table">
+                <thead>
+                    <tr>
+                        <th>Step</th>
+                        <th>Current Element</th>
+                        <th>Max Ending Here</th>
+                        <th>Max So Far</th>
+                        <th>Current Best Subarray</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Table rows will be inserted here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
+            <div class="step-counter" id="step-counter">Step 0 of 9</div>
+            <button class="nav-btn" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const array = [-2, 1, -3, 4, -1, 2, 1, -5, 4];
+        let currentStep = 0;
+        const totalSteps = array.length;
+        
+        // Execution trace data
+        const trace = [
+            { step: 0, element: -2, maxEndingHere: -2, maxSoFar: -2, bestSubarray: [-2], start: 0, end: 0 },
+            { step: 1, element: 1, maxEndingHere: 1, maxSoFar: 1, bestSubarray: [1], start: 1, end: 1 },
+            { step: 2, element: -3, maxEndingHere: -2, maxSoFar: 1, bestSubarray: [1], start: 1, end: 1 },
+            { step: 3, element: 4, maxEndingHere: 4, maxSoFar: 4, bestSubarray: [4], start: 3, end: 3 },
+            { step: 4, element: -1, maxEndingHere: 3, maxSoFar: 4, bestSubarray: [4], start: 3, end: 3 },
+            { step: 5, element: 2, maxEndingHere: 5, maxSoFar: 5, bestSubarray: [4, -1, 2], start: 3, end: 5 },
+            { step: 6, element: 1, maxEndingHere: 6, maxSoFar: 6, bestSubarray: [4, -1, 2, 1], start: 3, end: 6 },
+            { step: 7, element: -5, maxEndingHere: 1, maxSoFar: 6, bestSubarray: [4, -1, 2, 1], start: 3, end: 6 },
+            { step: 8, element: 4, maxEndingHere: 5, maxSoFar: 6, bestSubarray: [4, -1, 2, 1], start: 3, end: 6 }
+        ];
+        
+        // Initialize the array display
+        function initializeArrayDisplay() {
+            const arrayDisplay = document.getElementById('array-display');
+            arrayDisplay.innerHTML = '';
+            
+            for (let i = 0; i < array.length; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'array-cell';
+                cell.id = `cell-${i}`;
+                cell.textContent = array[i];
+                arrayDisplay.appendChild(cell);
+            }
+        }
+        
+        // Initialize the trace table
+        function initializeTraceTable() {
+            const tableBody = document.querySelector('#trace-table tbody');
+            tableBody.innerHTML = '';
+            
+            trace.forEach((entry, index) => {
+                const row = document.createElement('tr');
+                row.id = `row-${index}`;
+                
+                // Format the best subarray as a string
+                const subarrayStr = entry.bestSubarray.join(', ');
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${entry.element}</td>
+                    <td>${entry.maxEndingHere}</td>
+                    <td>${entry.maxSoFar}</td>
+                    <td>[${subarrayStr}]</td>
+                `;
+                
+                tableBody.appendChild(row);
+                
+                // Hide all rows initially
+                row.style.display = 'none';
+            });
+        }
+        
+        // Update the display for the current step
+        function updateDisplay() {
+            // Update step counter
+            document.getElementById('step-counter').textContent = `Step ${currentStep + 1} of ${totalSteps}`;
+            
+            // Update navigation buttons
+            document.getElementById('prev-btn').disabled = currentStep === 0;
+            document.getElementById('next-btn').disabled = currentStep === totalSteps - 1;
+            
+            // Reset all array cells
+            for (let i = 0; i < array.length; i++) {
+                const cell = document.getElementById(`cell-${i}`);
+                cell.className = 'array-cell';
+            }
+            
+            // Highlight current element
+            const currentCell = document.getElementById(`cell-${currentStep}`);
+            currentCell.classList.add('current');
+            
+            // Highlight best subarray
+            const currentTrace = trace[currentStep];
+            for (let i = currentTrace.start; i <= currentTrace.end; i++) {
+                const cell = document.getElementById(`cell-${i}`);
+                if (i !== currentStep) {  // Don't override the 'current' class
+                    cell.classList.add('best-subarray');
+                }
+            }
+            
+            // Update values display
+            document.getElementById('current-element').textContent = currentTrace.element;
+            document.getElementById('max-ending-here').textContent = currentTrace.maxEndingHere;
+            document.getElementById('max-so-far').textContent = currentTrace.maxSoFar;
+            
+            // Update trace table
+            const tableRows = document.querySelectorAll('#trace-table tbody tr');
+            tableRows.forEach((row, index) => {
+                if (index <= currentStep) {
+                    row.style.display = 'table-row';
+                    row.className = index === currentStep ? 'highlighted-row' : '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        // Navigation functions
+        function goToNextStep() {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateDisplay();
+            }
+        }
+        
+        function goToPrevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateDisplay();
+            }
+        }
+        
+        // Initialize the visualization
+        function initialize() {
+            initializeArrayDisplay();
+            initializeTraceTable();
+            currentStep = 0;
+            updateDisplay();
+            
+            // Add event listeners to navigation buttons
+            document.getElementById('next-btn').addEventListener('click', goToNextStep);
+            document.getElementById('prev-btn').addEventListener('click', goToPrevStep);
+        }
+        
+        // Start the visualization when the page loads
+        window.onload = initialize;
+    </script>
+</body>
+</html>
