@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remove Elements to Satisfy Max-Min Condition</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .explanation {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .visualization {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px 0;
+            position: relative;
+            height: 300px;
+        }
+        
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+        
+        .array-element {
+            width: 50px;
+            height: 50px;
+            margin: 0 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #FD9F78;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        
+        .array-element.highlight {
+            background-color: #FF4800;
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .array-element.removed {
+            opacity: 0.3;
+            text-decoration: line-through;
+        }
+        
+        .status {
+            margin-top: 20px;
+            font-size: 18px;
+            text-align: center;
+            height: 60px;
+        }
+        
+        .max-min {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        
+        .max-min span {
+            margin: 0 10px;
+        }
+        
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .k-value {
+            text-align: center;
+            font-size: 20px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #FF4800;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Remove Elements to Satisfy Max-Min Condition</h1>
+        
+        <div class="explanation">
+            In this problem, we need to remove elements from an array so that the difference between the maximum and minimum elements is less than or equal to a given value K.
+        </div>
+        
+        <div class="k-value">K = 5</div>
+        
+        <div class="visualization">
+            <div class="array-container" id="array-container"></div>
+            <div class="max-min" id="max-min"></div>
+            <div class="status" id="status"></div>
+        </div>
+        
+        <div class="step-indicator" id="step-indicator">Step 0 of 4</div>
+        
+        <div class="button-container">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Initial array
+        const array = [1, 3, 6, 9, 15];
+        const K = 5;
+        
+        // Define the steps of the animation
+        const steps = [
+            {
+                text: "Initial array with elements [1, 3, 6, 9, 15]. We need to find max-min ≤ 5.",
+                highlight: [],
+                removed: [],
+                showMaxMin: true
+            },
+            {
+                text: "First, we remove 1 (the smallest element) to try to reduce the difference.",
+                highlight: [0],
+                removed: [0],
+                showMaxMin: true
+            },
+            {
+                text: "Next, we remove 15 (the largest element) to further reduce the difference.",
+                highlight: [4],
+                removed: [0, 4],
+                showMaxMin: true
+            },
+            {
+                text: "Finally, we remove 9 to get the array [3, 6] where max-min = 3 ≤ 5.",
+                highlight: [3],
+                removed: [0, 3, 4],
+                showMaxMin: true
+            },
+            {
+                text: "Final result: [3, 6] with max-min = 3, which is ≤ K (5). We removed 3 elements.",
+                highlight: [],
+                removed: [0, 3, 4],
+                showMaxMin: true
+            }
+        ];
+        
+        let currentStep = 0;
+        const arrayContainer = document.getElementById('array-container');
+        const statusElement = document.getElementById('status');
+        const maxMinElement = document.getElementById('max-min');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepIndicator = document.getElementById('step-indicator');
+        
+        // Initialize the visualization
+        function initializeArray() {
+            arrayContainer.innerHTML = '';
+            for (let i = 0; i < array.length; i++) {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.textContent = array[i];
+                element.id = `element-${i}`;
+                arrayContainer.appendChild(element);
+            }
+        }
+        
+        // Update the visualization based on the current step
+        function updateVisualization() {
+            // Reset all elements
+            for (let i = 0; i < array.length; i++) {
+                const element = document.getElementById(`element-${i}`);
+                element.className = 'array-element';
+            }
+            
+            // Apply highlighting
+            steps[currentStep].highlight.forEach(index => {
+                const element = document.getElementById(`element-${index}`);
+                element.classList.add('highlight');
+            });
+            
+            // Apply removed status
+            steps[currentStep].removed.forEach(index => {
+                const element = document.getElementById(`element-${index}`);
+                element.classList.add('removed');
+            });
+            
+            // Update status text
+            statusElement.textContent = steps[currentStep].text;
+            
+            // Update max-min calculation
+            if (steps[currentStep].showMaxMin) {
+                let visibleElements = [];
+                for (let i = 0; i < array.length; i++) {
+                    if (!steps[currentStep].removed.includes(i)) {
+                        visibleElements.push(array[i]);
+                    }
+                }
+                
+                if (visibleElements.length > 0) {
+                    const min = Math.min(...visibleElements);
+                    const max = Math.max(...visibleElements);
+                    const diff = max - min;
+                    maxMinElement.innerHTML = `
+                        <span>Max: ${max}</span>
+                        <span>Min: ${min}</span>
+                        <span>Difference: ${diff}</span>
+                        <span>${diff <= K ? '✓ ≤ K' : '✗ > K'}</span>
+                    `;
+                } else {
+                    maxMinElement.innerHTML = 'No elements left';
+                }
+            } else {
+                maxMinElement.innerHTML = '';
+            }
+            
+            // Update step indicator
+            stepIndicator.textContent = `Step ${currentStep} of ${steps.length - 1}`;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        // Event listeners for buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+        
+        // Initialize the visualization
+        initializeArray();
+        updateVisualization();
+    </script>
+</body>
+</html>
