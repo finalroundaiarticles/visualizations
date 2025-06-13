@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimum Sum Subarray Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .explanation {
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        
+        .array-element {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 5px;
+            border: 2px solid #000000;
+            font-weight: bold;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+        
+        .highlighted {
+            background-color: #FD9F78;
+            border-color: #FF4800;
+        }
+        
+        .sum-display {
+            text-align: center;
+            font-size: 24px;
+            margin: 20px 0;
+            font-weight: bold;
+            height: 40px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-info {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 18px;
+            min-height: 50px;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Minimum Sum Subarray Visualization</h1>
+        
+        <div class="explanation">
+            <p>This animation demonstrates how to find a subarray with the minimum sum in a given array. For the array [3, -4, 2, -3, -1, 7, -5], we'll identify the contiguous sequence of elements that adds up to the smallest sum.</p>
+        </div>
+        
+        <div class="array-container" id="arrayContainer"></div>
+        
+        <div class="step-info" id="stepInfo"></div>
+        
+        <div class="sum-display" id="sumDisplay"></div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="navigation">
+            <button id="restartBtn">Restart</button>
+        </div>
+    </div>
+
+    <script>
+        // The array to visualize
+        const array = [3, -4, 2, -3, -1, 7, -5];
+        
+        // Animation steps
+        const steps = [
+            { 
+                message: "We start with the array [3, -4, 2, -3, -1, 7, -5] and need to find the subarray with the minimum sum.",
+                highlights: [],
+                sum: null
+            },
+            { 
+                message: "We'll use Kadane's algorithm to find the minimum sum subarray.",
+                highlights: [],
+                sum: null
+            },
+            { 
+                message: "Let's first look at the first element: 3",
+                highlights: [0],
+                sum: "Current sum: 3"
+            },
+            { 
+                message: "Now we add the second element: -4",
+                highlights: [0, 1],
+                sum: "Current sum: 3 + (-4) = -1"
+            },
+            { 
+                message: "Since we're looking for the minimum sum, we note that -4 by itself is smaller.",
+                highlights: [1],
+                sum: "Current minimum sum: -4"
+            },
+            { 
+                message: "Now we add the next element: 2",
+                highlights: [1, 2],
+                sum: "Current sum: -4 + 2 = -2"
+            },
+            { 
+                message: "Now we add the next element: -3",
+                highlights: [1, 2, 3],
+                sum: "Current sum: -4 + 2 + (-3) = -5"
+            },
+            { 
+                message: "Now we add the next element: -1",
+                highlights: [1, 2, 3, 4],
+                sum: "Current sum: -4 + 2 + (-3) + (-1) = -6"
+            },
+            { 
+                message: "This gives us a new minimum sum of -6 with the subarray [-4, 2, -3, -1].",
+                highlights: [1, 2, 3, 4],
+                sum: "Current minimum sum: -6"
+            },
+            { 
+                message: "Next, we add element: 7",
+                highlights: [1, 2, 3, 4, 5],
+                sum: "Current sum: -4 + 2 + (-3) + (-1) + 7 = 1"
+            },
+            { 
+                message: "Finally, we add the last element: -5",
+                highlights: [1, 2, 3, 4, 5, 6],
+                sum: "Current sum: -4 + 2 + (-3) + (-1) + 7 + (-5) = -4"
+            },
+            { 
+                message: "After checking all subarrays, we found that the subarray [-4, 2, -3, -1] has the minimum sum of -6.",
+                highlights: [1, 2, 3, 4],
+                sum: "Minimum sum: -6"
+            }
+        ];
+        
+        // Current step index
+        let currentStep = 0;
+        
+        // DOM elements
+        const arrayContainer = document.getElementById('arrayContainer');
+        const stepInfo = document.getElementById('stepInfo');
+        const sumDisplay = document.getElementById('sumDisplay');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        
+        // Initialize the array display
+        function initializeArray() {
+            arrayContainer.innerHTML = '';
+            array.forEach((num, index) => {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.id = `element-${index}`;
+                element.textContent = num;
+                arrayContainer.appendChild(element);
+            });
+        }
+        
+        // Update the display based on the current step
+        function updateDisplay() {
+            // Clear previous highlights
+            document.querySelectorAll('.array-element').forEach(el => {
+                el.classList.remove('highlighted');
+            });
+            
+            // Apply new highlights
+            steps[currentStep].highlights.forEach(index => {
+                document.getElementById(`element-${index}`).classList.add('highlighted');
+            });
+            
+            // Update step info and sum display
+            stepInfo.textContent = steps[currentStep].message;
+            sumDisplay.textContent = steps[currentStep].sum || '';
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        // Event listeners for buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateDisplay();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateDisplay();
+            }
+        });
+        
+        restartBtn.addEventListener('click', () => {
+            currentStep = 0;
+            updateDisplay();
+        });
+        
+        // Initialize
+        initializeArray();
+        updateDisplay();
+    </script>
+</body>
+</html>
