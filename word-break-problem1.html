@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recursive Call Tree for Word Break</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .description {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        #animation-container {
+            width: 100%;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .node {
+            position: absolute;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000000;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+        .edge {
+            position: absolute;
+            background-color: #FF4800;
+            transform-origin: 0 100%;
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .nav-button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .explanation {
+            background-color: #FFF;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .word-dict {
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .word-dict span {
+            background-color: #FD9F78;
+            padding: 5px 10px;
+            margin: 0 5px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Recursive Call Tree for Word Break</h1>
+        <div class="word-dict">
+            String: "leetcode" | Dictionary: <span>"leet"</span> <span>"code"</span>
+        </div>
+        <div class="description">
+            This animation demonstrates the recursive call tree for the Word Break problem, 
+            showing how we check if the string "leetcode" can be segmented into dictionary words.
+        </div>
+        
+        <div id="animation-container"></div>
+        
+        <div class="explanation" id="explanation">
+            We start by checking if the entire string "leetcode" can be broken into words from our dictionary.
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prev-button" disabled>Previous</button>
+            <button class="nav-button" id="next-button">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="step-indicator">Step 1 of 10</div>
+    </div>
+    
+    <script>
+        const container = document.getElementById('animation-container');
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+        const stepIndicator = document.getElementById('step-indicator');
+        const explanationBox = document.getElementById('explanation');
+        
+        // Clear any existing elements
+        function clearContainer() {
+            container.innerHTML = '';
+        }
+        
+        // Create node
+        function createNode(x, y, size, label, isSuccess = false, isFailure = false) {
+            const node = document.createElement('div');
+            node.className = 'node';
+            node.style.left = `${x}px`;
+            node.style.top = `${y}px`;
+            node.style.width = `${size}px`;
+            node.style.height = `${size}px`;
+            node.style.backgroundColor = isSuccess ? '#00FF00' : isFailure ? '#FF0000' : '#FD9F78';
+            node.innerHTML = label;
+            container.appendChild(node);
+            return node;
+        }
+        
+        // Create edge between nodes
+        function createEdge(x1, y1, x2, y2) {
+            const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+            
+            const edge = document.createElement('div');
+            edge.className = 'edge';
+            edge.style.width = `${length}px`;
+            edge.style.height = '2px';
+            edge.style.left = `${x1}px`;
+            edge.style.top = `${y1}px`;
+            edge.style.transform = `rotate(${angle}deg)`;
+            container.appendChild(edge);
+            return edge;
+        }
+        
+        // Animation steps
+        const steps = [
+            // Step 1: Initialize
+            function() {
+                clearContainer();
+                const rootNode = createNode(450, 50, 60, "leetcode");
+                setTimeout(() => {
+                    rootNode.style.opacity = 1;
+                }, 100);
+                return "We start by checking if the string 'leetcode' can be segmented into dictionary words.";
+            },
+            
+            // Step 2: First branching
+            function() {
+                const childNode1 = createNode(250, 150, 50, "eetcode");
+                const childNode2 = createNode(650, 150, 50, "code");
+                
+                const edge1 = createEdge(450, 80, 250, 150);
+                const edge2 = createEdge(450, 80, 650, 150);
+                
+                setTimeout(() => {
+                    document.querySelectorAll('.node')[1].style.opacity = 1;
+                    document.querySelectorAll('.edge')[0].style.opacity = 1;
+                }, 100);
+                
+                setTimeout(() => {
+                    document.querySelectorAll('.node')[2].style.opacity = 1;
+                    document.querySelectorAll('.edge')[1].style.opacity = 1;
+                }, 600);
+                
+                return "We have two choices: either take 'l' alone (not a dictionary word) or check if 'leet' is in our dictionary. Since 'leet' is in our dictionary, we continue with the remaining 'code'.";
+            },
+            
+            // Step 3: Expand left branch
+            function() {
+                const childNode3 = createNode(150, 250, 50, "etcode");
+                const childNode4 = createNode(350, 250, 50, "");
+                
+                const edge3 = createEdge(250, 175, 150, 250);
+                const edge4 = createEdge(250, 175, 350, 250);
+                
+                setTimeout(() => {
+                    document.querySelectorAll('.node')[3].style.opacity = 1;
+                    document.querySelectorAll('.edge')[2].style.opacity = 1;
+                }, 100);
+                
+                setTimeout(() => {
+                    document.querySelectorAll('.node')[4].style.opacity = 1;
+                    document.querySelectorAll('.edge')[3].style.opacity = 1;
+                }, 600);
+                
+                return "For 'eetcode', we check if 'e' is in our dictionary (not found) or if any prefix is in the dictionary.";
+            },
+            
+            // Step 4: Mark failure for left branch
+            function() {
+                document.querySelectorAll('.node')[1].style.backgroundColor = '#FF0000';
+                document.querySelectorAll('.node')[3].style.backgroundColor = '#FF0000';
+                document.querySelectorAll('.node')[4].style.backgroundColor = '#FF0000';
+                
+                return "Since we can't find valid dictionary words for the left branch, we mark it as a failure and backtrack.";
+            },
+            
+            // Step 5: Expand right branch
+            function() {
+                const childNode5 = createNode(550, 250, 50, "ode");
+                const childNode6 = createNode(750, 250, 50, "");
+                
+                const edge5 = createEdge(650, 175, 550, 250);
+                const edge6 = createEdge(650, 175, 750, 250);
+                
+                setTimeout(() => {
+                    document.querySelectorAll('.node')[5].style.opacity = 1;
+                    document.querySelectorAll('.edge')[4].style.opacity = 1;
+                }, 100);
+                
+                setTimeout(() => {
+                    document.querySelectorAll('.node')[6].style.opacity = 1;
+                    document.querySelectorAll('.edge')[5].style.opacity = 1;
+                }, 600);
+                
+                return "For 'code', we check if 'c' is in our dictionary (not found) or if any prefix is in the dictionary.";
+            },
+            
+            // Step 6: Continue with right branch
+            function() {
+                const childNode7 = createNode(450, 350, 50, "de");
+                const childNode8 = createNode(650, 350, 50, "");
+                
+                const edge7 = createEdge(550, 275, 450, 350);
+                const edge8 = createEdge(550, 275, 650, 350);
+                
+                setTimeout(() => {
+                    document.querySelectorAll('.node')[7].style.opacity = 1;
+                    document.querySelectorAll('.edge')[6].style.opacity = 1;
+                }, 100);
+                
+                setTimeout(() => {
+                    document.querySelectorAll('.node')[8].style.opacity = 1;
+                    document.querySelectorAll('.edge')[7].style.opacity = 1;
+                }, 600);
+                
+                document.querySelectorAll('.node')[5].style.backgroundColor = '#FF0000';
+                document.querySelectorAll('.node')[7].style.backgroundColor = '#FF0000';
+                document.querySelectorAll('.node')[8].style.backgroundColor = '#FF0000';
+                
+                return "We continue checking, but we can't find valid words for these substrings either.";
+            },
+            
+            // Step 7: Check the full match of 'code'
+            function() {
+                document.querySelectorAll('.node')[6].innerHTML = "Empty";
+                document.querySelectorAll('.node')[6].style.backgroundColor = '#00FF00';
+                
+                return "However, 'code' itself is in our dictionary! Since we've consumed the entire string, this branch leads to a successful solution.";
+            },
+            
+            // Step 8: Show successful path
+            function() {
+                document.querySelectorAll('.node')[0].style.backgroundColor = '#00FF00';
+                document.querySelectorAll('.node')[2].style.backgroundColor = '#00FF00';
+                
+                return "We've found a valid segmentation: 'leet' + 'code'. This means the string 'leetcode' can be broken into words from our dictionary.";
+            },
+            
+            // Step 9: Highlight the successful decomposition
+            function() {
+                clearContainer();
+                
+                const rootNode = createNode(450, 50, 60, "leetcode");
+                const childNode = createNode(450, 150, 60, "leet | code");
+                const edge = createEdge(450, 80, 450, 150);
+                
+                rootNode.style.opacity = 1;
+                childNode.style.opacity = 1;
+                edge.style.opacity = 1;
+                
+                rootNode.style.backgroundColor = '#00FF00';
+                childNode.style.backgroundColor = '#00FF00';
+                
+                return "The final solution: 'leetcode' can be segmented as 'leet' + 'code', both of which are in our dictionary.";
+            },
+            
+            // Step 10: Conclusion
+            function() {
+                clearContainer();
+                
+                const rootNode = createNode(450, 100, 80, "leetcode");
+                const childNode1 = createNode(300, 250, 70, "leet");
+                const childNode2 = createNode(600, 250, 70, "code");
+                
+                const edge1 = createEdge(450, 140, 300, 250);
+                const edge2 = createEdge(450, 140, 600, 250);
+                
+                rootNode.style.opacity = 1;
+                childNode1.style.opacity = 1;
+                childNode2.style.opacity = 1;
+                edge1.style.opacity = 1;
+                edge2.style.opacity = 1;
+                
+                rootNode.style.backgroundColor = '#00FF00';
+                childNode1.style.backgroundColor = '#00FF00';
+                childNode2.style.backgroundColor = '#00FF00';
+                
+                return "The Word Break problem recursively explores all possible ways to break a string into dictionary words. When at least one valid segmentation is found, the result is true. For 'leetcode', we found that it can be segmented as 'leet' + 'code'.";
+            }
+        ];
+        
+        let currentStep = 0;
+        
+        // Initialize first step
+        explanationBox.textContent = steps[currentStep]();
+        stepIndicator.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+        
+        // Handle next button click
+        nextButton.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                explanationBox.textContent = steps[currentStep]();
+                stepIndicator.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+                prevButton.disabled = false;
+                
+                if (currentStep === steps.length - 1) {
+                    nextButton.disabled = true;
+                }
+            }
+        });
+        
+        // Handle previous button click
+        prevButton.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                explanationBox.textContent = steps[currentStep]();
+                stepIndicator.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+                nextButton.disabled = false;
+                
+                if (currentStep === 0) {
+                    prevButton.disabled = true;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
