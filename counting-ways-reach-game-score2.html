@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DP Table Progression</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .explanation {
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        
+        .dp-table {
+            border-collapse: collapse;
+            margin: 30px auto;
+            width: 100%;
+        }
+        
+        .dp-table th, .dp-table td {
+            border: 2px solid #000000;
+            padding: 12px;
+            text-align: center;
+            font-size: 18px;
+            position: relative;
+        }
+        
+        .dp-table th {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            font-weight: bold;
+        }
+        
+        .dp-table th.index-header {
+            background-color: #FD9F78;
+            color: #000000;
+        }
+        
+        .row-label {
+            background-color: #FD9F78;
+            color: #000000;
+            font-weight: bold;
+        }
+        
+        .highlight {
+            background-color: #FD9F78;
+            transition: background-color 0.5s ease;
+        }
+        
+        .active-cell {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transition: all 0.5s ease;
+        }
+        
+        .buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #FF4800;
+            font-weight: bold;
+        }
+        
+        .animation-container {
+            position: relative;
+            margin: 20px auto;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DP Table Progression - Counting Ways to Score</h1>
+        
+        <div class="explanation">
+            This animation shows how dynamic programming solves the problem:<br>
+            "In how many ways can we achieve a target score of 8 using only moves of value 3 and 5?"
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">Step 0: Initial State</div>
+        
+        <div class="animation-container">
+            <table class="dp-table" id="dpTable">
+                <thead>
+                    <tr>
+                        <th class="index-header">Score →<br>State ↓</th>
+                        <th>0</th>
+                        <th>1</th>
+                        <th>2</th>
+                        <th>3</th>
+                        <th>4</th>
+                        <th>5</th>
+                        <th>6</th>
+                        <th>7</th>
+                        <th>8</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr id="initialRow">
+                        <td class="row-label">Initial</td>
+                        <td>1</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr id="afterMove3Row">
+                        <td class="row-label">After Move 3</td>
+                        <td>1</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr id="afterMove5Row">
+                        <td class="row-label">After Move 5</td>
+                        <td>1</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="explanation" id="currentExplanation">
+            We start with dp[0] = 1 (there's 1 way to make a score of 0 - by doing nothing).
+            All other cells are initialized to 0 (no ways to achieve those scores yet).
+        </div>
+        
+        <div class="buttons">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const moves = [3, 5];
+        const target = 8;
+        
+        // Initialize DP table for visualization
+        const dpStateSequence = [
+            // Initial state
+            [1, 0, 0, 0, 0, 0, 0, 0, 0],
+            
+            // States after processing move=3
+            [1, 0, 0, 1, 0, 0, 1, 0, 0],
+            [1, 0, 0, 1, 0, 0, 1, 0, 0],
+            [1, 0, 0, 1, 0, 0, 1, 0, 1],
+            
+            // States after processing move=5
+            [1, 0, 0, 1, 0, 1, 1, 0, 1],
+            [1, 0, 0, 1, 0, 1, 1, 0, 1],
+            [1, 0, 0, 1, 0, 1, 1, 0, 2],
+        ];
+        
+        const explanations = [
+            "We start with dp[0] = 1 (there's 1 way to make a score of 0 - by doing nothing). All other cells are initialized to 0 (no ways to achieve those scores yet).",
+            
+            "Processing move=3: We can use the value of dp[0]=1 to update dp[3]=1, meaning there is 1 way to make a score of 3.",
+            
+            "Processing move=3: We can use the value of dp[3]=1 to update dp[6]=1, meaning there is 1 way to make a score of 6.",
+            
+            "Processing move=3: We can use the value of dp[5]=0 to update dp[8]=0, but we also need to add dp[5]=0 to it, so dp[8] becomes 0.",
+            
+            "Processing move=5: We can use the value of dp[0]=1 to update dp[5]=1, meaning there is 1 way to make a score of 5.",
+            
+            "Processing move=5: We can use the value of dp[3]=1 to update dp[8]=1, meaning there is 1 way to make a score of 8 (using 3+5).",
+            
+            "Final state: We now have dp[8]=2, which means there are 2 ways to make a score of 8 using moves of 3 and 5. These are: 3+5 and 3+3+3+3-3-3 (or 3×3 - 1×5)."
+        ];
+        
+        // Highlight the active cells in the animation
+        const highlightCells = [
+            [],
+            [[0, 0], [0, 3]],
+            [[0, 3], [0, 6]],
+            [[0, 5], [0, 8]],
+            [[1, 0], [1, 5]],
+            [[1, 3], [1, 8]],
+            [[1, 8]]
+        ];
+        
+        let currentStep = 0;
+        const totalSteps = dpStateSequence.length;
+        
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        const currentExplanation = document.getElementById('currentExplanation');
+        
+        // Function to update the DP table display
+        function updateTable() {
+            // Remove all highlights
+            const cells = document.querySelectorAll('.dp-table td');
+            cells.forEach(cell => {
+                cell.classList.remove('highlight');
+                cell.classList.remove('active-cell');
+            });
+            
+            // Update the table values based on current step
+            const initialRow = document.getElementById('initialRow');
+            const afterMove3Row = document.getElementById('afterMove3Row');
+            const afterMove5Row = document.getElementById('afterMove5Row');
+            
+            // Update content based on current step
+            for (let i = 0; i < 9; i++) {
+                const currentState = dpStateSequence[currentStep];
+                
+                // Always show the initial row
+                initialRow.children[i+1].textContent = dpStateSequence[0][i];
+                
+                // Show the after move 3 row values if we're at the appropriate step
+                if (currentStep >= 3) {
+                    afterMove3Row.children[i+1].textContent = dpStateSequence[3][i];
+                } else if (currentStep >= 1) {
+                    afterMove3Row.children[i+1].textContent = dpStateSequence[currentStep][i];
+                } else {
+                    afterMove3Row.children[i+1].textContent = dpStateSequence[0][i];
+                }
+                
+                // Show the after move 5 row values if we're at the appropriate step
+                if (currentStep >= 6) {
+                    afterMove5Row.children[i+1].textContent = dpStateSequence[6][i];
+                } else if (currentStep >= 4) {
+                    afterMove5Row.children[i+1].textContent = dpStateSequence[currentStep][i];
+                } else {
+                    afterMove5Row.children[i+1].textContent = dpStateSequence[0][i];
+                }
+            }
+            
+            // Add highlights for the current step
+            if (highlightCells[currentStep]) {
+                highlightCells[currentStep].forEach(([row, col]) => {
+                    let tableRow;
+                    if (row === 0) tableRow = initialRow;
+                    else if (row === 1) tableRow = afterMove3Row;
+                    else tableRow = afterMove5Row;
+                    
+                    tableRow.children[col+1].classList.add('highlight');
+                });
+            }
+            
+            // Update active cell
+            if (currentStep >= 1 && currentStep <= 3) {
+                afterMove3Row.children[highlightCells[currentStep][1][1]+1].classList.add('active-cell');
+            } else if (currentStep >= 4 && currentStep <= 5) {
+                afterMove5Row.children[highlightCells[currentStep][1][1]+1].classList.add('active-cell');
+            } else if (currentStep === 6) {
+                afterMove5Row.children[8+1].classList.add('active-cell');
+            }
+            
+            // Update step indicators
+            if (currentStep === 0) {
+                stepIndicator.textContent = "Step 0: Initial State";
+            } else if (currentStep >= 1 && currentStep <= 3) {
+                stepIndicator.textContent = `Step ${currentStep}: Processing Move = 3`;
+            } else {
+                stepIndicator.textContent = `Step ${currentStep}: Processing Move = 5`;
+            }
+            
+            // Update explanation
+            currentExplanation.textContent = explanations[currentStep];
+            
+            // Enable/disable buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+        }
+        
+        // Event listeners for buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateTable();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateTable();
+            }
+        });
+        
+        // Initialize the table
+        updateTable();
+    </script>
+</body>
+</html>
