@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Programming Table Visualization</title>
+    <title>LCS Visualization</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #FFFFFF;
             margin: 0;
             padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: white;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -17,359 +17,277 @@
         
         .container {
             max-width: 800px;
-            margin: 0 auto;
+            width: 100%;
         }
         
-        h1 {
-            color: #000000;
-            text-align: center;
-        }
-        
-        .explanation {
+        .controls {
             margin-bottom: 20px;
-            color: #000000;
-        }
-        
-        .dp-table-container {
             display: flex;
+            gap: 10px;
             justify-content: center;
-            margin-bottom: 30px;
-        }
-        
-        .dp-table {
-            border-collapse: collapse;
-        }
-        
-        .dp-table td, .dp-table th {
-            border: 1px solid #000000;
-            width: 50px;
-            height: 50px;
-            text-align: center;
-            position: relative;
-            transition: background-color 0.3s;
-        }
-        
-        .dp-table th {
-            background-color: #FD9F78;
-            color: #000000;
-            font-weight: bold;
-        }
-        
-        .highlight {
-            background-color: #FF4800;
-            color: #FFFFFF;
-        }
-        
-        .match {
-            background-color: #FD9F78;
-        }
-        
-        .max-value {
-            background-color: #FF4800;
-            color: #FFFFFF;
-            font-weight: bold;
-        }
-        
-        .nav-buttons {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
         }
         
         button {
-            background-color: #FF4800;
+            background-color: #ff4800;
             color: white;
             border: none;
             padding: 10px 20px;
-            margin: 0 10px;
-            cursor: pointer;
             border-radius: 5px;
-            font-size: 16px;
-            transition: background-color 0.3s;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
         }
         
         button:hover {
-            background-color: #FD9F78;
+            background-color: #e63f00;
         }
         
         button:disabled {
-            background-color: #FD9F78;
-            opacity: 0.5;
+            background-color: #1c1d20;
             cursor: not-allowed;
         }
         
-        .step-info {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #FD9F78;
-            border-radius: 5px;
-            color: #000000;
-            max-width: 600px;
+        .strings {
+            margin-bottom: 20px;
             text-align: center;
+        }
+        
+        .string-display {
+            margin: 10px 0;
+            font-size: 18px;
+            color: #1c1d20;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            display: flex;
+            justify-content: center;
+        }
+        
+        table {
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        td, th {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            vertical-align: middle;
+            border: 1px solid #1c1d20;
+            font-family: Arial, sans-serif;
+        }
+        
+        th {
+            background-color: #1c1d20;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .header-cell {
+            background-color: #1c1d20;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .current-cell {
+            background-color: #ff4800;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .filled-cell {
+            background-color: #ffccb3;
+            color: #1c1d20;
+        }
+        
+        .max-cell {
+            background-color: #ff4800;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .info {
+            text-align: center;
+            margin-top: 20px;
+            color: #1c1d20;
+            font-size: 16px;
+        }
+        
+        .step-info {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            color: #1c1d20;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Longest Common Substring - DP Table Visualization</h1>
-        
-        <div class="explanation">
-            <p>This visualization shows how to find the longest common substring between "GEEKS" and "QUIZ" using Dynamic Programming. We'll fill a 2D table where each cell dp[i][j] represents the length of the common substring ending at positions i and j in the respective strings.</p>
+        <div class="controls">
+            <button id="prevBtn" onclick="previousStep()">Previous</button>
+            <button id="nextBtn" onclick="nextStep()">Next</button>
         </div>
         
-        <div class="dp-table-container">
-            <table class="dp-table" id="dpTable">
-                <!-- Table will be generated by JavaScript -->
-            </table>
+        <div class="strings">
+            <div class="string-display">String 1: <strong>ABABC</strong></div>
+            <div class="string-display">String 2: <strong>BABCA</strong></div>
         </div>
         
-        <div class="step-info" id="stepInfo">
-            Click "Next" to start the visualization
+        <div class="table-container">
+            <table id="dpTable"></table>
         </div>
         
-        <div class="nav-buttons">
-            <button id="prevBtn" disabled>Previous</button>
-            <button id="nextBtn">Next</button>
+        <div class="step-info" id="stepInfo"></div>
+        
+        <div class="info">
+            <div id="maxLength">Max Length: 0</div>
         </div>
     </div>
 
     <script>
-        const string1 = "GEEKS";
-        const string2 = "QUIZ";
-        
-        // Steps for the animation
-        const steps = [
-            { 
-                title: "Initialization", 
-                description: "We start with a table where rows represent string 'GEEKS' and columns represent string 'QUIZ'. We initialize the first row and column with 0.",
-                highlightCells: []
-            },
-            { 
-                title: "Comparing G with Q", 
-                description: "Compare 'G' with 'Q'. They are different, so dp[1][1] = 0.",
-                highlightCells: [[1, 1]]
-            },
-            { 
-                title: "Comparing G with U", 
-                description: "Compare 'G' with 'U'. They are different, so dp[1][2] = 0.",
-                highlightCells: [[1, 2]]
-            },
-            { 
-                title: "Comparing G with I", 
-                description: "Compare 'G' with 'I'. They are different, so dp[1][3] = 0.",
-                highlightCells: [[1, 3]]
-            },
-            { 
-                title: "Comparing G with Z", 
-                description: "Compare 'G' with 'Z'. They are different, so dp[1][4] = 0.",
-                highlightCells: [[1, 4]]
-            },
-            { 
-                title: "Comparing E with Q", 
-                description: "Compare 'E' with 'Q'. They are different, so dp[2][1] = 0.",
-                highlightCells: [[2, 1]]
-            },
-            { 
-                title: "Comparing E with U", 
-                description: "Compare 'E' with 'U'. They are different, so dp[2][2] = 0.",
-                highlightCells: [[2, 2]]
-            },
-            { 
-                title: "Comparing E with I", 
-                description: "Compare 'E' with 'I'. They are different, so dp[2][3] = 0.",
-                highlightCells: [[2, 3]]
-            },
-            { 
-                title: "Comparing E with Z", 
-                description: "Compare 'E' with 'Z'. They are different, so dp[2][4] = 0.",
-                highlightCells: [[2, 4]]
-            },
-            { 
-                title: "Comparing E with Q", 
-                description: "Compare 'E' with 'Q'. They are different, so dp[3][1] = 0.",
-                highlightCells: [[3, 1]]
-            },
-            { 
-                title: "Comparing E with U", 
-                description: "Compare 'E' with 'U'. They are different, so dp[3][2] = 0.",
-                highlightCells: [[3, 2]]
-            },
-            { 
-                title: "Comparing E with I", 
-                description: "Compare 'E' with 'I'. They are different, so dp[3][3] = 0.",
-                highlightCells: [[3, 3]]
-            },
-            { 
-                title: "Comparing E with Z", 
-                description: "Compare 'E' with 'Z'. They are different, so dp[3][4] = 0.",
-                highlightCells: [[3, 4]]
-            },
-            { 
-                title: "Comparing K with Q", 
-                description: "Compare 'K' with 'Q'. They are different, so dp[4][1] = 0.",
-                highlightCells: [[4, 1]]
-            },
-            { 
-                title: "Comparing K with U", 
-                description: "Compare 'K' with 'U'. They are different, so dp[4][2] = 0.",
-                highlightCells: [[4, 2]]
-            },
-            { 
-                title: "Comparing K with I", 
-                description: "Compare 'K' with 'I'. They are different, so dp[4][3] = 0.",
-                highlightCells: [[4, 3]]
-            },
-            { 
-                title: "Comparing K with Z", 
-                description: "Compare 'K' with 'Z'. They are different, so dp[4][4] = 0.",
-                highlightCells: [[4, 4]]
-            },
-            { 
-                title: "Comparing S with Q", 
-                description: "Compare 'S' with 'Q'. They are different, so dp[5][1] = 0.",
-                highlightCells: [[5, 1]]
-            },
-            { 
-                title: "Comparing S with U", 
-                description: "Compare 'S' with 'U'. They are different, so dp[5][2] = 0.",
-                highlightCells: [[5, 2]]
-            },
-            { 
-                title: "Comparing S with I", 
-                description: "Compare 'S' with 'I'. They are different, so dp[5][3] = 0.",
-                highlightCells: [[5, 3]]
-            },
-            { 
-                title: "Comparing S with Z", 
-                description: "Compare 'S' with 'Z'. They are different, so dp[5][4] = 0.",
-                highlightCells: [[5, 4]]
-            },
-            { 
-                title: "Final Result", 
-                description: "We've filled the entire table. The length of the longest common substring is 0 because 'GEEKS' and 'QUIZ' have no common characters. In a real scenario with common characters, the maximum value would indicate the length of the longest common substring.",
-                highlightCells: [],
-                finalStep: true
-            }
-        ];
+        const str1 = "ABABC";
+        const str2 = "BABCA";
+        const n = str1.length;
+        const m = str2.length;
         
         let currentStep = 0;
-        const dpTable = document.getElementById('dpTable');
-        const stepInfo = document.getElementById('stepInfo');
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
+        let dp = Array(n + 1).fill().map(() => Array(m + 1).fill(0));
+        let maxLength = 0;
+        let steps = [];
         
-        // Create the DP table
-        function createTable() {
-            dpTable.innerHTML = '';
+        function initializeSteps() {
+            steps = [];
             
-            // Create header row
-            const headerRow = document.createElement('tr');
-            const emptyCell = document.createElement('th');
-            emptyCell.textContent = '';
-            headerRow.appendChild(emptyCell);
+            // Initial step
+            steps.push({
+                i: 0, j: 0, 
+                action: "Initialize DP table with zeros",
+                maxLength: 0,
+                dp: dp.map(row => [...row])
+            });
             
-            const emptyCell2 = document.createElement('th');
-            emptyCell2.textContent = '';
-            headerRow.appendChild(emptyCell2);
-            
-            for (let j = 0; j < string2.length; j++) {
-                const th = document.createElement('th');
-                th.textContent = string2[j];
-                headerRow.appendChild(th);
-            }
-            dpTable.appendChild(headerRow);
-            
-            // Create first row (all zeros)
-            const firstRow = document.createElement('tr');
-            const firstRowHeader = document.createElement('th');
-            firstRowHeader.textContent = '';
-            firstRow.appendChild(firstRowHeader);
-            
-            const firstRowHeader2 = document.createElement('th');
-            firstRowHeader2.textContent = '';
-            firstRow.appendChild(firstRowHeader2);
-            
-            for (let j = 0; j < string2.length; j++) {
-                const td = document.createElement('td');
-                td.textContent = '0';
-                td.id = `cell-0-${j+1}`;
-                firstRow.appendChild(td);
-            }
-            dpTable.appendChild(firstRow);
-            
-            // Create rest of the rows
-            for (let i = 0; i < string1.length; i++) {
-                const row = document.createElement('tr');
-                
-                const rowHeader = document.createElement('th');
-                rowHeader.textContent = string1[i];
-                row.appendChild(rowHeader);
-                
-                // First column (all zeros)
-                const firstCol = document.createElement('td');
-                firstCol.textContent = '0';
-                firstCol.id = `cell-${i+1}-0`;
-                row.appendChild(firstCol);
-                
-                // Rest of the cells
-                for (let j = 0; j < string2.length; j++) {
-                    const td = document.createElement('td');
-                    td.textContent = '0'; // Initialize with 0
-                    td.id = `cell-${i+1}-${j+1}`;
-                    row.appendChild(td);
+            // Generate all steps
+            for (let i = 1; i <= n; i++) {
+                for (let j = 1; j <= m; j++) {
+                    if (str1[i - 1] === str2[j - 1]) {
+                        dp[i][j] = dp[i - 1][j - 1] + 1;
+                        maxLength = Math.max(maxLength, dp[i][j]);
+                        steps.push({
+                            i: i, j: j,
+                            action: `Characters match: '${str1[i-1]}' == '${str2[j-1]}'. dp[${i}][${j}] = dp[${i-1}][${j-1}] + 1 = ${dp[i][j]}`,
+                            maxLength: maxLength,
+                            dp: dp.map(row => [...row])
+                        });
+                    } else {
+                        dp[i][j] = 0;
+                        steps.push({
+                            i: i, j: j,
+                            action: `Characters don't match: '${str1[i-1]}' != '${str2[j-1]}'. dp[${i}][${j}] = 0`,
+                            maxLength: maxLength,
+                            dp: dp.map(row => [...row])
+                        });
+                    }
                 }
-                dpTable.appendChild(row);
             }
         }
         
-        // Update the table based on the current step
-        function updateTable() {
-            // Reset all cells
-            const cells = document.querySelectorAll('.dp-table td');
-            cells.forEach(cell => {
-                cell.classList.remove('highlight', 'match', 'max-value');
-            });
+        function createTable() {
+            const table = document.getElementById('dpTable');
+            table.innerHTML = '';
             
+            // Header row
+            const headerRow = table.insertRow();
+            headerRow.insertCell().innerHTML = '';
+            headerRow.insertCell().innerHTML = '';
+            for (let j = 0; j < m; j++) {
+                const cell = headerRow.insertCell();
+                cell.innerHTML = str2[j];
+                cell.className = 'header-cell';
+            }
+            
+            // Data rows
+            for (let i = 0; i <= n; i++) {
+                const row = table.insertRow();
+                
+                // Row header
+                const headerCell = row.insertCell();
+                if (i === 0) {
+                    headerCell.innerHTML = '';
+                } else {
+                    headerCell.innerHTML = str1[i - 1];
+                    headerCell.className = 'header-cell';
+                }
+                
+                // Data cells
+                for (let j = 0; j <= m; j++) {
+                    const cell = row.insertCell();
+                    cell.id = `cell-${i}-${j}`;
+                    cell.innerHTML = '0';
+                }
+            }
+        }
+        
+        function updateTable() {
             const step = steps[currentStep];
             
-            // Update step info
-            stepInfo.textContent = `${step.title}: ${step.description}`;
-            
-            // Highlight cells for this step
-            step.highlightCells.forEach(([row, col]) => {
-                const cell = document.getElementById(`cell-${row}-${col}`);
-                if (cell) {
-                    cell.classList.add('highlight');
+            // Clear all cell styles
+            for (let i = 0; i <= n; i++) {
+                for (let j = 0; j <= m; j++) {
+                    const cell = document.getElementById(`cell-${i}-${j}`);
+                    if (cell) {
+                        cell.className = '';
+                        cell.innerHTML = step.dp[i][j];
+                    }
                 }
-            });
-            
-            // For the final step, highlight the maximum value
-            if (step.finalStep) {
-                // In a real scenario, we would highlight the max value
-                // But since our example has no common substrings, we don't highlight anything
             }
             
-            // Update navigation buttons
-            prevBtn.disabled = currentStep === 0;
-            nextBtn.disabled = currentStep === steps.length - 1;
+            // Highlight current cell
+            if (step.i > 0 && step.j > 0) {
+                const currentCell = document.getElementById(`cell-${step.i}-${step.j}`);
+                if (currentCell) {
+                    currentCell.className = 'current-cell';
+                }
+            }
+            
+            // Highlight cells with max value
+            for (let i = 0; i <= n; i++) {
+                for (let j = 0; j <= m; j++) {
+                    const cell = document.getElementById(`cell-${i}-${j}`);
+                    if (cell && step.dp[i][j] > 0 && step.dp[i][j] === step.maxLength && !(i === step.i && j === step.j)) {
+                        cell.className = 'max-cell';
+                    } else if (cell && step.dp[i][j] > 0 && !(i === step.i && j === step.j)) {
+                        cell.className = 'filled-cell';
+                    }
+                }
+            }
+            
+            // Update info
+            document.getElementById('stepInfo').innerHTML = step.action;
+            document.getElementById('maxLength').innerHTML = `Max Length: ${step.maxLength}`;
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === steps.length - 1;
         }
         
-        // Event listeners for navigation buttons
-        prevBtn.addEventListener('click', () => {
-            if (currentStep > 0) {
-                currentStep--;
-                updateTable();
-            }
-        });
-        
-        nextBtn.addEventListener('click', () => {
+        function nextStep() {
             if (currentStep < steps.length - 1) {
                 currentStep++;
                 updateTable();
             }
-        });
+        }
         
-        // Initialize the visualization
+        function previousStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateTable();
+            }
+        }
+        
+        // Initialize
+        initializeSteps();
         createTable();
         updateTable();
     </script>
