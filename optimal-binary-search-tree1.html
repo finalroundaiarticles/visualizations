@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimal BST Structure Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .visualization-container {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        .tree-container {
+            width: 48%;
+            min-width: 400px;
+            margin-bottom: 20px;
+        }
+        .tree-title {
+            text-align: center;
+            color: #FF4800;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        .tree {
+            width: 100%;
+            height: 400px;
+            position: relative;
+        }
+        .node {
+            width: 70px;
+            height: 70px;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            transition: all 0.5s ease;
+            color: #000000;
+            font-weight: bold;
+        }
+        .node .key {
+            font-size: 18px;
+        }
+        .node .freq {
+            font-size: 14px;
+        }
+        .edge {
+            position: absolute;
+            background-color: #FF4800;
+            height: 2px;
+            transform-origin: 0 0;
+            transition: all 0.5s ease;
+        }
+        .explanation {
+            background-color: #FFF;
+            padding: 20px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .explanation-title {
+            color: #FF4800;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        .calculation {
+            background-color: #FFF;
+            padding: 15px;
+            border-left: 5px solid #FF4800;
+            margin: 10px 0;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .highlight {
+            animation: pulse 1.5s infinite;
+        }
+        .hide {
+            display: none;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Optimal BST Structure Visualization</h1>
+        
+        <div id="slide1">
+            <div class="explanation">
+                <div class="explanation-title">What is an Optimal Binary Search Tree?</div>
+                <p>A Binary Search Tree (BST) is a tree data structure where each node has at most two children, and for any node:</p>
+                <ul>
+                    <li>All keys in the left subtree are less than the node's key</li>
+                    <li>All keys in the right subtree are greater than the node's key</li>
+                </ul>
+                <p>When keys have different access frequencies, an <strong>Optimal BST</strong> minimizes the total weighted path length, making frequently accessed keys easier to reach.</p>
+            </div>
+            
+            <div class="explanation">
+                <div class="explanation-title">Our Example</div>
+                <p>We'll compare two BSTs for keys [10, 12, 20] with frequencies [34, 8, 50]:</p>
+                <ul>
+                    <li>A suboptimal tree with 10 as the root</li>
+                    <li>The optimal tree with 20 as the root</li>
+                </ul>
+                <p>The frequency of a key represents how often it's accessed. Our goal is to minimize the weighted path length.</p>
+            </div>
+        </div>
+        
+        <div id="slide2" class="hide">
+            <div class="explanation">
+                <div class="explanation-title">Weighted Path Length</div>
+                <p>The weighted path length is calculated as:</p>
+                <p><strong>Weighted Path Length = Sum of (frequency × depth) for each key</strong></p>
+                <p>Where <strong>depth</strong> is the number of edges from the root to the node.</p>
+            </div>
+            
+            <div class="visualization-container">
+                <div class="tree-container">
+                    <div class="tree-title">Suboptimal BST (Root: 10)</div>
+                    <div class="tree" id="suboptimal-tree"></div>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <div class="calculation">
+                    <p><strong>Weighted Path Length Calculation:</strong></p>
+                    <p>10 (root): 34 × 0 = 0</p>
+                    <p>12 (depth 1): 8 × 1 = 8</p>
+                    <p>20 (depth 2): 50 × 2 = 100</p>
+                    <p><strong>Total Weighted Path Length = 0 + 8 + 100 = 108</strong></p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="slide3" class="hide">
+            <div class="visualization-container">
+                <div class="tree-container">
+                    <div class="tree-title">Optimal BST (Root: 20)</div>
+                    <div class="tree" id="optimal-tree"></div>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <div class="calculation">
+                    <p><strong>Weighted Path Length Calculation:</strong></p>
+                    <p>20 (root): 50 × 0 = 0</p>
+                    <p>10 (depth 1): 34 × 1 = 34</p>
+                    <p>12 (depth 2): 8 × 2 = 16</p>
+                    <p><strong>Total Weighted Path Length = 0 + 34 + 16 = 50</strong></p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="slide4" class="hide">
+            <div class="visualization-container">
+                <div class="tree-container">
+                    <div class="tree-title">Suboptimal BST (Root: 10)</div>
+                    <div class="tree" id="suboptimal-tree-comparison"></div>
+                </div>
+                <div class="tree-container">
+                    <div class="tree-title">Optimal BST (Root: 20)</div>
+                    <div class="tree" id="optimal-tree-comparison"></div>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <div class="explanation-title">Comparison</div>
+                <p>The suboptimal tree has a weighted path length of <strong>108</strong>, while the optimal tree has a weighted path length of <strong>50</strong>.</p>
+                <p>By choosing 20 (the most frequently accessed key) as the root, we reduce the total weighted path length by more than 50%!</p>
+                <p>This demonstrates why selecting the proper structure for a BST based on access frequencies is crucial for performance optimization.</p>
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button id="prevBtn" class="nav-button" disabled>Previous</button>
+            <button id="nextBtn" class="nav-button">Next</button>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 4;
+        
+        function updateSlideVisibility() {
+            // Hide all slides
+            for (let i = 1; i <= totalSlides; i++) {
+                document.getElementById(`slide${i}`).classList.add('hide');
+            }
+            
+            // Show current slide
+            document.getElementById(`slide${currentSlide}`).classList.remove('hide');
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = (currentSlide === 1);
+            document.getElementById('nextBtn').disabled = (currentSlide === totalSlides);
+            
+            // Draw trees based on current slide
+            if (currentSlide >= 2) {
+                drawSuboptimalTree('suboptimal-tree');
+            }
+            if (currentSlide >= 3) {
+                drawOptimalTree('optimal-tree');
+            }
+            if (currentSlide >= 4) {
+                drawSuboptimalTree('suboptimal-tree-comparison');
+                drawOptimalTree('optimal-tree-comparison');
+            }
+        }
+        
+        function drawSuboptimalTree(containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            // Create nodes
+            const rootNode = createNode(10, 34, container, 50, 25);
+            const rightChild = createNode(12, 8, container, 50, 150);
+            const rightRightChild = createNode(20, 50, container, 200, 275);
+            
+            // Create edges
+            createEdge(rootNode, rightChild, container);
+            createEdge(rightChild, rightRightChild, container);
+        }
+        
+        function drawOptimalTree(containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            // Create nodes
+            const rootNode = createNode(20, 50, container, 50, 25);
+            const leftChild = createNode(10, 34, container, 50, 150);
+            const rightChild = createNode(12, 8, container, 200, 150);
+            
+            // Create edges
+            createEdge(rootNode, leftChild, container);
+            createEdge(leftChild, rightChild, container);
+        }
+        
+        function createNode(key, freq, container, left, top) {
+            const node = document.createElement('div');
+            node.className = 'node';
+            node.innerHTML = `
+                <div class="key">${key}</div>
+                <div class="freq">f: ${freq}</div>
+            `;
+            node.style.left = `${left}%`;
+            node.style.top = `${top}px`;
+            
+            container.appendChild(node);
+            return node;
+        }
+        
+        function createEdge(fromNode, toNode, container) {
+            const fromRect = fromNode.getBoundingClientRect();
+            const toRect = toNode.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            
+            // Calculate positions relative to the container
+            const fromX = fromRect.left + fromRect.width / 2 - containerRect.left;
+            const fromY = fromRect.top + fromRect.height / 2 - containerRect.top;
+            const toX = toRect.left + toRect.width / 2 - containerRect.left;
+            const toY = toRect.top + toRect.height / 2 - containerRect.top;
+            
+            const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+            const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
+            
+            const edge = document.createElement('div');
+            edge.className = 'edge';
+            edge.style.width = `${length}px`;
+            edge.style.left = `${fromX}px`;
+            edge.style.top = `${fromY}px`;
+            edge.style.transform = `rotate(${angle}deg)`;
+            
+            container.appendChild(edge);
+            return edge;
+        }
+        
+        // Initialize
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                updateSlideVisibility();
+            }
+        });
+        
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentSlide > 1) {
+                currentSlide--;
+                updateSlideVisibility();
+            }
+        });
+        
+        // Initial setup
+        updateSlideVisibility();
+        
+        // Ensure proper rendering on window resize
+        window.addEventListener('resize', () => {
+            if (currentSlide >= 2) {
+                drawSuboptimalTree('suboptimal-tree');
+            }
+            if (currentSlide >= 3) {
+                drawOptimalTree('optimal-tree');
+            }
+            if (currentSlide >= 4) {
+                drawSuboptimalTree('suboptimal-tree-comparison');
+                drawOptimalTree('optimal-tree-comparison');
+            }
+        });
+    </script>
+</body>
+</html>
