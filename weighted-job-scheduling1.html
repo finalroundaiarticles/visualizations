@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Scheduling Timeline</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .timeline-container {
+            position: relative;
+            height: 400px;
+            margin-top: 50px;
+            margin-bottom: 100px;
+        }
+        
+        .x-axis {
+            position: absolute;
+            bottom: 0;
+            left: 50px;
+            right: 50px;
+            height: 2px;
+            background-color: #000000;
+        }
+        
+        .y-axis {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50px;
+            width: 2px;
+            background-color: #000000;
+        }
+        
+        .x-label {
+            position: absolute;
+            bottom: -30px;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+        
+        .y-label {
+            position: absolute;
+            left: 10px;
+            transform: translateY(50%);
+            text-align: right;
+        }
+        
+        .job {
+            position: absolute;
+            bottom: 0;
+            border: 2px solid #000000;
+            transition: all 0.5s ease-in-out;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #FFFFFF;
+        }
+        
+        .job-selected {
+            background-color: #FF4800;
+            border-color: #FF4800;
+        }
+        
+        .job-unselected {
+            background-color: #FD9F78;
+        }
+        
+        .explanation {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+            line-height: 1.5;
+        }
+        
+        .profit-display {
+            font-size: 24px;
+            text-align: center;
+            margin-top: 20px;
+            color: #FF4800;
+            font-weight: bold;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Job Scheduling Timeline</h1>
+        
+        <div class="timeline-container" id="timeline">
+            <div class="x-axis"></div>
+            <div class="y-axis"></div>
+            <!-- Time markers will be added dynamically -->
+            <!-- Jobs will be added dynamically -->
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FF4800;"></div>
+                <span>Selected Jobs</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FD9F78;"></div>
+                <span>Unselected Jobs</span>
+            </div>
+        </div>
+        
+        <div class="profit-display" id="profit-display">
+            Total Profit: 0
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <p>This is a job scheduling visualization. Each rectangle represents a job with:</p>
+            <ul>
+                <li>Start time and end time shown on the x-axis</li>
+                <li>Height representing the profit of each job</li>
+            </ul>
+            <p>The goal is to select jobs that maximize total profit without overlapping. Use the navigation buttons to go through the animation steps.</p>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prev-btn" disabled>Previous</button>
+            <button class="nav-button" id="next-btn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        // Job data: [job number, start time, end time, profit]
+        const jobs = [
+            [1, 1, 3, 50],
+            [2, 2, 5, 20],
+            [3, 4, 6, 30],
+            [4, 6, 7, 40]
+        ];
+        
+        // The optimal selection (jobs 1 and 4)
+        const optimalJobs = [0, 3]; // indices of the optimal jobs
+        
+        const timeline = document.getElementById('timeline');
+        const profitDisplay = document.getElementById('profit-display');
+        const explanation = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        
+        // Define animation steps
+        const steps = [
+            {
+                title: "Initial Job Setup",
+                desc: "Here are all the available jobs. Each rectangle represents a job with start and end times on the x-axis. The height of each rectangle represents the profit of that job.",
+                action: () => {
+                    // Show all jobs unselected
+                    document.querySelectorAll('.job').forEach(job => {
+                        job.classList.remove('job-selected');
+                        job.classList.add('job-unselected');
+                    });
+                    updateProfitDisplay(0);
+                }
+            },
+            {
+                title: "Examining Job 1",
+                desc: "Let's examine Job 1: Start time = 1, End time = 3, Profit = 50. This job offers a high profit of 50 units.",
+                action: () => {
+                    highlightJob(0);
+                }
+            },
+            {
+                title: "Examining Job 2",
+                desc: "Now let's look at Job 2: Start time = 2, End time = 5, Profit = 20. This job overlaps with Job 1 but offers less profit.",
+                action: () => {
+                    resetHighlights();
+                    highlightJob(1);
+                }
+            },
+            {
+                title: "Examining Job 3",
+                desc: "Next, Job 3: Start time = 4, End time = 6, Profit = 30. This job also overlaps with Job 1.",
+                action: () => {
+                    resetHighlights();
+                    highlightJob(2);
+                }
+            },
+            {
+                title: "Examining Job 4",
+                desc: "Finally, Job 4: Start time = 6, End time = 7, Profit = 40. This job doesn't overlap with Job 1 and offers good profit.",
+                action: () => {
+                    resetHighlights();
+                    highlightJob(3);
+                }
+            },
+            {
+                title: "Optimal Selection",
+                desc: "The optimal selection is Job 1 and Job 4, which don't overlap and give a maximum total profit of 90 (50 + 40).",
+                action: () => {
+                    resetHighlights();
+                    // Select optimal jobs
+                    optimalJobs.forEach(jobIndex => {
+                        const jobElement = document.querySelector(`.job[data-index="${jobIndex}"]`);
+                        jobElement.classList.remove('job-unselected');
+                        jobElement.classList.add('job-selected');
+                    });
+                    updateProfitDisplay(90);
+                }
+            }
+        ];
+        
+        let currentStep = 0;
+        
+        // Initialize the timeline
+        function initTimeline() {
+            // Create time markers on x-axis
+            const maxTime = 8;
+            const axisWidth = timeline.querySelector('.x-axis').offsetWidth;
+            const timeUnit = axisWidth / maxTime;
+            
+            for (let i = 0; i <= maxTime; i++) {
+                const marker = document.createElement('div');
+                marker.className = 'x-label';
+                marker.style.left = `${50 + i * timeUnit}px`;
+                marker.textContent = i;
+                timeline.appendChild(marker);
+            }
+            
+            // Create profit markers on y-axis
+            const maxProfit = 60;
+            const axisHeight = timeline.querySelector('.y-axis').offsetHeight;
+            const profitUnit = axisHeight / maxProfit;
+            
+            for (let i = 0; i <= maxProfit; i += 10) {
+                const marker = document.createElement('div');
+                marker.className = 'y-label';
+                marker.style.bottom = `${i * profitUnit}px`;
+                marker.textContent = i;
+                timeline.appendChild(marker);
+            }
+            
+            // Create job rectangles
+            jobs.forEach((job, index) => {
+                const [jobNum, start, end, profit] = job;
+                
+                const jobElement = document.createElement('div');
+                jobElement.className = 'job job-unselected';
+                jobElement.setAttribute('data-index', index);
+                
+                const jobWidth = (end - start) * timeUnit;
+                const jobHeight = profit * profitUnit;
+                
+                jobElement.style.left = `${50 + start * timeUnit}px`;
+                jobElement.style.width = `${jobWidth}px`;
+                jobElement.style.height = `${jobHeight}px`;
+                
+                jobElement.textContent = `Job ${jobNum} (${profit})`;
+                
+                timeline.appendChild(jobElement);
+            });
+            
+            // Execute first step
+            executeStep();
+        }
+        
+        function executeStep() {
+            // Update UI based on current step
+            const step = steps[currentStep];
+            explanation.innerHTML = `<h3>${step.title}</h3><p>${step.desc}</p>`;
+            step.action();
+            
+            // Update buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                executeStep();
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                executeStep();
+            }
+        }
+        
+        function highlightJob(index) {
+            const jobElement = document.querySelector(`.job[data-index="${index}"]`);
+            document.querySelectorAll('.job').forEach(job => {
+                job.classList.remove('job-selected');
+                job.classList.add('job-unselected');
+            });
+            jobElement.classList.remove('job-unselected');
+            jobElement.classList.add('job-selected');
+            
+            const profit = jobs[index][3];
+            updateProfitDisplay(profit);
+        }
+        
+        function resetHighlights() {
+            document.querySelectorAll('.job').forEach(job => {
+                job.classList.remove('job-selected');
+                job.classList.add('job-unselected');
+            });
+            updateProfitDisplay(0);
+        }
+        
+        function updateProfitDisplay(profit) {
+            profitDisplay.textContent = `Total Profit: ${profit}`;
+        }
+        
+        // Event listeners
+        nextBtn.addEventListener('click', nextStep);
+        prevBtn.addEventListener('click', prevStep);
+        
+        // Initialize on load
+        window.addEventListener('load', initTimeline);
+    </script>
+</body>
+</html>
