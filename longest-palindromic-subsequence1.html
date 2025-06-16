@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DP Table Visualization for 'bbbab'</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .dp-table-container {
+            margin: 30px auto;
+            width: fit-content;
+        }
+        
+        .dp-table {
+            border-collapse: collapse;
+            margin: 20px auto;
+        }
+        
+        .dp-table td {
+            width: 60px;
+            height: 60px;
+            text-align: center;
+            font-size: 18px;
+            border: 1px solid #000000;
+            position: relative;
+        }
+        
+        .dp-table th {
+            width: 60px;
+            height: 60px;
+            background-color: #FD9F78;
+            color: #000000;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .highlighted {
+            background-color: #FD9F78;
+            transition: background-color 0.5s ease;
+        }
+        
+        .arrow {
+            position: absolute;
+            font-size: 12px;
+            color: #FF4800;
+        }
+        
+        .arrow-diagonal {
+            bottom: 5px;
+            right: 5px;
+        }
+        
+        .arrow-left {
+            bottom: 50%;
+            right: 5px;
+        }
+        
+        .arrow-up {
+            bottom: 5px;
+            right: 50%;
+        }
+        
+        .explanation {
+            margin: 20px auto;
+            padding: 15px;
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+            background-color: #FFFFFF;
+            max-width: 600px;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DP Table Visualization for Longest Palindromic Subsequence</h1>
+        <div class="dp-table-container">
+            <table class="dp-table" id="dp-table">
+                <tr>
+                    <th></th>
+                    <th>b</th>
+                    <th>b</th>
+                    <th>b</th>
+                    <th>a</th>
+                    <th>b</th>
+                </tr>
+                <tr>
+                    <th>b</th>
+                    <td id="cell-0-0">1</td>
+                    <td id="cell-0-1">2</td>
+                    <td id="cell-0-2">3</td>
+                    <td id="cell-0-3">3</td>
+                    <td id="cell-0-4">4</td>
+                </tr>
+                <tr>
+                    <th>b</th>
+                    <td id="cell-1-0">0</td>
+                    <td id="cell-1-1">1</td>
+                    <td id="cell-1-2">2</td>
+                    <td id="cell-1-3">2</td>
+                    <td id="cell-1-4">3</td>
+                </tr>
+                <tr>
+                    <th>b</th>
+                    <td id="cell-2-0">0</td>
+                    <td id="cell-2-1">0</td>
+                    <td id="cell-2-2">1</td>
+                    <td id="cell-2-3">1</td>
+                    <td id="cell-2-4">2</td>
+                </tr>
+                <tr>
+                    <th>a</th>
+                    <td id="cell-3-0">0</td>
+                    <td id="cell-3-1">0</td>
+                    <td id="cell-3-2">0</td>
+                    <td id="cell-3-3">1</td>
+                    <td id="cell-3-4">1</td>
+                </tr>
+                <tr>
+                    <th>b</th>
+                    <td id="cell-4-0">0</td>
+                    <td id="cell-4-1">0</td>
+                    <td id="cell-4-2">0</td>
+                    <td id="cell-4-3">0</td>
+                    <td id="cell-4-4">1</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="step-indicator" id="step-indicator">Step 1 of 10</div>
+        
+        <div class="explanation" id="explanation">
+            <p>Welcome to the DP Table Visualization for finding the Longest Palindromic Subsequence in the string "bbbab".</p>
+            <p>The table shows the length of the longest palindromic subsequence for each substring. The final answer is at dp[0][4] = 4, which means the longest palindromic subsequence has length 4 (it's "bbbb").</p>
+            <p>Let's step through how this table is filled.</p>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
+            <button class="nav-btn" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const steps = [
+            {
+                title: "Initial State",
+                cells: [],
+                explanation: "We're looking at the Longest Palindromic Subsequence (LPS) for 'bbbab'. The DP table shows LPS lengths for all substrings. The diagonal is filled with 1s because any single character is a palindrome of length 1."
+            },
+            {
+                title: "Fill Diagonal",
+                cells: ["cell-0-0", "cell-1-1", "cell-2-2", "cell-3-3", "cell-4-4"],
+                explanation: "First, we initialize the diagonal with 1s because any single character is a palindrome of length 1."
+            },
+            {
+                title: "Compare First Two Characters",
+                cells: ["cell-0-1"],
+                arrows: [{ from: "cell-0-0", to: "cell-0-1", type: "diagonal" }],
+                explanation: "Looking at 'bb' (positions 0-1): Since the characters match, dp[0][1] = dp[1][1] + 1 = 1 + 1 = 2. This means the LPS of 'bb' is 2 ('bb' itself)."
+            },
+            {
+                title: "Compare First Three Characters",
+                cells: ["cell-0-2"],
+                arrows: [{ from: "cell-0-1", to: "cell-0-2", type: "diagonal" }],
+                explanation: "Looking at 'bbb' (positions 0-2): Since the characters at positions 0 and 2 match, dp[0][2] = dp[1][1] + 2 = 1 + 2 = 3. The LPS of 'bbb' is 3 ('bbb' itself)."
+            },
+            {
+                title: "Compare First Four Characters",
+                cells: ["cell-0-3"],
+                explanation: "Looking at 'bbba' (positions 0-3): The characters at positions 0 and 3 don't match ('b' vs 'a'). We take the maximum of dp[0][2] and dp[1][3], which is max(3, 2) = 3. The LPS of 'bbba' is 3 ('bbb')."
+            },
+            {
+                title: "Calculate Final Result",
+                cells: ["cell-0-4"],
+                arrows: [{ from: "cell-0-3", to: "cell-0-4", type: "diagonal" }],
+                explanation: "Looking at 'bbbab' (positions 0-4): Since the characters at positions 0 and 4 match ('b' and 'b'), dp[0][4] = dp[1][3] + 2 = 2 + 2 = 4. The LPS of 'bbbab' is 4 ('bbbb')."
+            },
+            {
+                title: "Second Row Calculation",
+                cells: ["cell-1-2", "cell-1-3", "cell-1-4"],
+                explanation: "For the second row, we're looking at substrings starting from position 1. For 'bba', the LPS is 'bb' with length 2. For 'bbab', the LPS is 'bbb' with length 3."
+            },
+            {
+                title: "Third Row Calculation",
+                cells: ["cell-2-3", "cell-2-4"],
+                explanation: "For the third row, we're looking at substrings starting from position 2. For 'ba', the LPS is 'b' or 'a' with length 1. For 'bab', the LPS is 'bab' with length 3, but since we're only starting from position 2, it's 'b' with length 1."
+            },
+            {
+                title: "Fourth Row Calculation",
+                cells: ["cell-3-4"],
+                explanation: "For the fourth row, we're looking at substrings starting from position 3. For 'ab', the LPS is 'a' or 'b' with length 1."
+            },
+            {
+                title: "Final Result",
+                cells: ["cell-0-0", "cell-0-1", "cell-0-2", "cell-0-3", "cell-0-4"],
+                explanation: "The final answer is at dp[0][4] = 4, which means the longest palindromic subsequence in 'bbbab' has length 4. This subsequence is 'bbbb', formed by taking all the 'b's from the string."
+            }
+        ];
+
+        let currentStep = 0;
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepIndicator = document.getElementById('step-indicator');
+        const explanation = document.getElementById('explanation');
+
+        function updateStep() {
+            // Clear all highlights and arrows
+            const cells = document.querySelectorAll('.dp-table td');
+            cells.forEach(cell => {
+                cell.classList.remove('highlighted');
+                const arrows = cell.querySelectorAll('.arrow');
+                arrows.forEach(arrow => arrow.remove());
+            });
+
+            // Set new highlights
+            const step = steps[currentStep];
+            step.cells.forEach(cellId => {
+                const cell = document.getElementById(cellId);
+                if (cell) {
+                    cell.classList.add('highlighted');
+                }
+            });
+
+            // Add arrows if any
+            if (step.arrows) {
+                step.arrows.forEach(arrow => {
+                    const fromCell = document.getElementById(arrow.from);
+                    const toCell = document.getElementById(arrow.to);
+                    
+                    if (fromCell && toCell) {
+                        const arrowElement = document.createElement('div');
+                        arrowElement.classList.add('arrow');
+                        
+                        if (arrow.type === 'diagonal') {
+                            arrowElement.classList.add('arrow-diagonal');
+                            arrowElement.innerHTML = '↗';
+                        } else if (arrow.type === 'left') {
+                            arrowElement.classList.add('arrow-left');
+                            arrowElement.innerHTML = '→';
+                        } else if (arrow.type === 'up') {
+                            arrowElement.classList.add('arrow-up');
+                            arrowElement.innerHTML = '↑';
+                        }
+                        
+                        toCell.appendChild(arrowElement);
+                    }
+                });
+            }
+
+            // Update explanation
+            explanation.innerHTML = `<p>${step.explanation}</p>`;
+            
+            // Update step indicator
+            stepIndicator.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateStep();
+            }
+        });
+
+        // Initialize first step
+        updateStep();
+    </script>
+</body>
+</html>
