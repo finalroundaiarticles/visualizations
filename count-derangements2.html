@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Derangement Recurrence Relation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .animation-container {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+            position: relative;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .formula {
+            text-align: center;
+            font-size: 22px;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #FD9F78;
+            border-radius: 5px;
+            color: #000000;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .calculation {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .calculation.active {
+            opacity: 1;
+        }
+        
+        .step {
+            margin: 5px 0;
+            font-size: 20px;
+            text-align: center;
+        }
+        
+        .highlight {
+            color: #FF4800;
+            font-weight: bold;
+        }
+        
+        .derangement-box {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            background-color: #FD9F78;
+            border-radius: 5px;
+            margin: 0 5px;
+            font-weight: bold;
+            color: #000000;
+            transition: transform 0.3s, background-color 0.3s;
+        }
+        
+        .derangement-array {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+            text-align: center;
+            max-width: 90%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Derangement Recurrence Relation</h1>
+        
+        <div class="formula">
+            D(n) = (n-1) × [D(n-1) + D(n-2)]
+        </div>
+        
+        <div class="animation-container" id="animation-container">
+            <div class="calculation" id="slide-0">
+                <div class="step">Starting with the base cases:</div>
+                <div class="derangement-array">
+                    <div class="derangement-box">D(0)</div>
+                    <div class="derangement-box">D(1)</div>
+                </div>
+                <div class="step">D(0) = 1</div>
+                <div class="step">D(1) = 0</div>
+                <div class="explanation">
+                    A derangement is a permutation where no element appears in its original position.
+                    <br>
+                    For n=0 (empty set), there is 1 way to arrange it.
+                    <br>
+                    For n=1 (one element), there is no way to move it from its original position.
+                </div>
+            </div>
+            
+            <div class="calculation" id="slide-1">
+                <div class="step">Let's calculate D(2):</div>
+                <div class="step">D(2) = (2-1) × [D(1) + D(0)]</div>
+                <div class="step">D(2) = 1 × [0 + 1]</div>
+                <div class="step">D(2) = 1 × 1 = <span class="highlight">1</span></div>
+                <div class="derangement-array">
+                    <div class="derangement-box">D(0)</div>
+                    <div class="derangement-box">D(1)</div>
+                    <div class="derangement-box highlight" id="d2-box">D(2)</div>
+                </div>
+                <div class="explanation">
+                    For n=2 (two elements, say [1,2]), there is exactly 1 derangement: [2,1].
+                    <br>
+                    Each element is placed in a position different from its original position.
+                </div>
+            </div>
+            
+            <div class="calculation" id="slide-2">
+                <div class="step">Now, let's calculate D(3):</div>
+                <div class="step">D(3) = (3-1) × [D(2) + D(1)]</div>
+                <div class="step">D(3) = 2 × [1 + 0]</div>
+                <div class="step">D(3) = 2 × 1 = <span class="highlight">2</span></div>
+                <div class="derangement-array">
+                    <div class="derangement-box">D(0)</div>
+                    <div class="derangement-box">D(1)</div>
+                    <div class="derangement-box">D(2)</div>
+                    <div class="derangement-box highlight" id="d3-box">D(3)</div>
+                </div>
+                <div class="explanation">
+                    For n=3 (three elements, say [1,2,3]), there are 2 derangements:
+                    <br>
+                    [2,3,1] and [3,1,2]
+                    <br>
+                    In each derangement, no element is in its original position.
+                </div>
+            </div>
+            
+            <div class="calculation" id="slide-3">
+                <div class="step">Finally, let's calculate D(4):</div>
+                <div class="step">D(4) = (4-1) × [D(3) + D(2)]</div>
+                <div class="step">D(4) = 3 × [2 + 1]</div>
+                <div class="step">D(4) = 3 × 3 = <span class="highlight">9</span></div>
+                <div class="derangement-array">
+                    <div class="derangement-box">D(0)</div>
+                    <div class="derangement-box">D(1)</div>
+                    <div class="derangement-box">D(2)</div>
+                    <div class="derangement-box">D(3)</div>
+                    <div class="derangement-box highlight" id="d4-box">D(4)</div>
+                </div>
+                <div class="explanation">
+                    For n=4 (four elements), there are 9 different derangements where no element appears in its original position.
+                    <br>
+                    The number of derangements grows rapidly as n increases.
+                </div>
+            </div>
+            
+            <div class="calculation" id="slide-4">
+                <div class="step">Summary of Derangement Values:</div>
+                <div class="derangement-array">
+                    <div class="derangement-box" id="summary-d0">D(0)=1</div>
+                    <div class="derangement-box" id="summary-d1">D(1)=0</div>
+                    <div class="derangement-box" id="summary-d2">D(2)=1</div>
+                    <div class="derangement-box" id="summary-d3">D(3)=2</div>
+                    <div class="derangement-box" id="summary-d4">D(4)=9</div>
+                </div>
+                <div class="explanation">
+                    The derangement numbers follow the recurrence relation:
+                    <br>
+                    D(n) = (n-1) × [D(n-1) + D(n-2)]
+                    <br>
+                    This pattern continues for higher values of n, with the number of derangements growing rapidly.
+                </div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        let currentSlide = 0;
+        const totalSlides = 5;
+        const slides = document.querySelectorAll('.calculation');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        
+        function showSlide(index) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[index].classList.add('active');
+            
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === totalSlides - 1;
+            
+            // Add animation effects for specific slides
+            if (index === 1) {
+                animateElement('d2-box');
+            } else if (index === 2) {
+                animateElement('d3-box');
+            } else if (index === 3) {
+                animateElement('d4-box');
+            } else if (index === 4) {
+                sequentialAnimation();
+            }
+        }
+        
+        function animateElement(id) {
+            const element = document.getElementById(id);
+            element.style.transform = 'scale(1.2)';
+            element.style.backgroundColor = '#FF4800';
+            
+            setTimeout(() => {
+                element.style.transform = 'scale(1)';
+                element.style.backgroundColor = '#FD9F78';
+            }, 1000);
+        }
+        
+        function sequentialAnimation() {
+            const ids = ['summary-d0', 'summary-d1', 'summary-d2', 'summary-d3', 'summary-d4'];
+            ids.forEach((id, index) => {
+                setTimeout(() => {
+                    const element = document.getElementById(id);
+                    element.style.transform = 'scale(1.2)';
+                    element.style.backgroundColor = '#FF4800';
+                    
+                    setTimeout(() => {
+                        element.style.transform = 'scale(1)';
+                        element.style.backgroundColor = '#FD9F78';
+                    }, 500);
+                }, index * 600);
+            });
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        });
+        
+        // Initialize first slide
+        showSlide(currentSlide);
+    </script>
+</body>
+</html>
