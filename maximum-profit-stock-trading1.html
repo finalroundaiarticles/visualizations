@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Price Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            margin-bottom: 30px;
+            border: 1px solid #FD9F78;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .explanation {
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .highlight {
+            color: #FF4800;
+            font-weight: bold;
+        }
+        .profit-display {
+            font-size: 1.2em;
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #FD9F78;
+            color: #FFFFFF;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Stock Price Visualization</h1>
+        <div class="chart-container">
+            <canvas id="stockChart"></canvas>
+        </div>
+        <div class="profit-display" id="profitDisplay">Total Profit: $0</div>
+        <div class="explanation" id="explanation">
+            <p>This visualization shows a stock price array: [3, 3, 5, 0, 0, 3, 1, 4]</p>
+            <p>We'll animate how to maximize profit by buying and selling at optimal times.</p>
+            <p>Click "Next" to start the animation.</p>
+        </div>
+        <div class="buttons">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Stock prices data
+        const stockPrices = [3, 3, 5, 0, 0, 3, 1, 4];
+        const days = Array.from({length: stockPrices.length}, (_, i) => `Day ${i+1}`);
+        
+        // Animation states
+        const states = [
+            {
+                explanation: "This is our stock price array: [3, 3, 5, 0, 0, 3, 1, 4]. Each number represents the price of a stock on a specific day.",
+                buyPoints: [],
+                sellPoints: [],
+                profit: 0,
+                highlight: null
+            },
+            {
+                explanation: "Let's find opportunities to buy low and sell high to maximize our profit.",
+                buyPoints: [],
+                sellPoints: [],
+                profit: 0,
+                highlight: null
+            },
+            {
+                explanation: "Looking at the prices, we notice a dip at Day 4 (price $0). This could be a good buying opportunity.",
+                buyPoints: [3],  // Index 3 corresponds to Day 4 (price 0)
+                sellPoints: [],
+                profit: 0,
+                highlight: 3
+            },
+            {
+                explanation: "After buying at $0 on Day 4, we can sell when the price rises again. On Day 6, the price is $3.",
+                buyPoints: [3],
+                sellPoints: [5],  // Index 5 corresponds to Day 6 (price 3)
+                profit: 3,
+                highlight: 5
+            },
+            {
+                explanation: "Our first transaction gives us a profit of $3 (bought at $0, sold at $3).",
+                buyPoints: [3],
+                sellPoints: [5],
+                profit: 3,
+                highlight: null
+            },
+            {
+                explanation: "Looking further, we see another dip at Day 7 (price $1). This is another buying opportunity.",
+                buyPoints: [3, 6],  // Index 6 corresponds to Day 7 (price 1)
+                sellPoints: [5],
+                profit: 3,
+                highlight: 6
+            },
+            {
+                explanation: "We can sell this stock on Day 8, where the price is $4.",
+                buyPoints: [3, 6],
+                sellPoints: [5, 7],  // Index 7 corresponds to Day 8 (price 4)
+                profit: 6,
+                highlight: 7
+            },
+            {
+                explanation: "Our second transaction gives us a profit of $3 (bought at $1, sold at $4).",
+                buyPoints: [3, 6],
+                sellPoints: [5, 7],
+                profit: 6,
+                highlight: null
+            },
+            {
+                explanation: "In total, we made a profit of $6 ($3 from the first transaction + $3 from the second transaction).",
+                buyPoints: [3, 6],
+                sellPoints: [5, 7],
+                profit: 6,
+                highlight: null
+            }
+        ];
+        
+        let currentState = 0;
+        let chart;
+        
+        // Initialize the chart
+        function initChart() {
+            const ctx = document.getElementById('stockChart').getContext('2d');
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: days,
+                    datasets: [{
+                        label: 'Stock Price',
+                        data: stockPrices,
+                        borderColor: '#FF4800',
+                        backgroundColor: 'rgba(253, 159, 120, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.1,
+                        fill: true,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#FF4800'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Price ($)',
+                                color: '#000000',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Trading Days',
+                                color: '#000000',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Price: $${context.parsed.y}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Update chart based on current state
+        function updateChart() {
+            const state = states[currentState];
+            
+            // Reset all point styles
+            chart.data.datasets[0].pointBackgroundColor = stockPrices.map(() => '#FF4800');
+            chart.data.datasets[0].pointBorderColor = stockPrices.map(() => '#FF4800');
+            chart.data.datasets[0].pointRadius = stockPrices.map(() => 6);
+            
+            // Set buy points
+            state.buyPoints.forEach(idx => {
+                chart.data.datasets[0].pointBackgroundColor[idx] = '#00AA00';
+                chart.data.datasets[0].pointBorderColor[idx] = '#00AA00';
+                chart.data.datasets[0].pointRadius[idx] = 10;
+            });
+            
+            // Set sell points
+            state.sellPoints.forEach(idx => {
+                chart.data.datasets[0].pointBackgroundColor[idx] = '#AA0000';
+                chart.data.datasets[0].pointBorderColor[idx] = '#AA0000';
+                chart.data.datasets[0].pointRadius[idx] = 10;
+            });
+            
+            // Highlight specific point if needed
+            if (state.highlight !== null) {
+                chart.data.datasets[0].pointRadius[state.highlight] = 12;
+                chart.data.datasets[0].pointBorderWidth = 3;
+            }
+            
+            // Update explanation
+            document.getElementById('explanation').innerHTML = `<p>${state.explanation}</p>`;
+            
+            // Update profit display
+            document.getElementById('profitDisplay').textContent = `Total Profit: $${state.profit}`;
+            
+            // Update buttons
+            document.getElementById('prevBtn').disabled = currentState === 0;
+            document.getElementById('nextBtn').disabled = currentState === states.length - 1;
+            
+            chart.update();
+        }
+        
+        // Next button handler
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentState < states.length - 1) {
+                currentState++;
+                updateChart();
+            }
+        });
+        
+        // Previous button handler
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentState > 0) {
+                currentState--;
+                updateChart();
+            }
+        });
+        
+        // Initialize chart on page load
+        window.onload = function() {
+            initChart();
+            updateChart();
+        };
+    </script>
+</body>
+</html>
