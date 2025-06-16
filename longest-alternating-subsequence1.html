@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alternating Subsequence Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        .visualization-container {
+            position: relative;
+            height: 400px;
+            margin: 40px 0;
+            overflow: hidden;
+        }
+        .element {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            transition: all 0.5s ease;
+        }
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .arrow-up {
+            border-bottom: 20px solid #FF4800;
+        }
+        .arrow-down {
+            border-top: 20px solid #FF4800;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 300px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            border-left: 5px solid #FF4800;
+        }
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Visualizing an Alternating Subsequence</h1>
+        
+        <div class="visualization-container" id="visualization">
+            <!-- Elements will be added here dynamically -->
+        </div>
+        
+        <div class="step-indicator">
+            Step <span id="currentStep">1</span> of <span id="totalSteps">5</span>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <!-- Explanation will be added here dynamically -->
+        </div>
+        
+        <div class="nav-buttons">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const sequence = [1, 17, 5, 10, 8];
+        const positions = [
+            { x: 75, y: 300 },
+            { x: 225, y: 50 },
+            { x: 375, y: 250 },
+            { x: 525, y: 150 },
+            { x: 675, y: 200 }
+        ];
+        
+        const explanations = [
+            "Here's our sequence [1, 17, 5, 10, 8]. An alternating subsequence is one where elements alternate between increasing and decreasing.",
+            "From 1 to 17: The sequence is increasing (1 < 17). This forms the start of our alternating pattern.",
+            "From 17 to 5: The sequence is decreasing (17 > 5). The alternating pattern continues.",
+            "From 5 to 10: The sequence is increasing again (5 < 10). The alternation between increasing and decreasing continues.",
+            "From 10 to 8: The sequence is decreasing (10 > 8). This completes our alternating subsequence with all five elements."
+        ];
+        
+        let currentStep = 1;
+        const totalSteps = sequence.length;
+        
+        const visualization = document.getElementById('visualization');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const explanationElement = document.getElementById('explanation');
+        const currentStepElement = document.getElementById('currentStep');
+        
+        // Initialize the visualization
+        function initVisualization() {
+            // Clear previous elements
+            visualization.innerHTML = '';
+            
+            // Create circles for each number
+            sequence.forEach((num, index) => {
+                const element = document.createElement('div');
+                element.className = 'element';
+                element.id = `element-${index}`;
+                element.textContent = num;
+                element.style.left = `${positions[index].x}px`;
+                element.style.top = `${positions[index].y}px`;
+                
+                if (index >= currentStep) {
+                    element.style.opacity = '0.3';
+                }
+                
+                visualization.appendChild(element);
+                
+                // Add arrows between elements
+                if (index < sequence.length - 1) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'arrow';
+                    arrow.id = `arrow-${index}`;
+                    
+                    // Determine if increasing or decreasing
+                    const isIncreasing = sequence[index] < sequence[index + 1];
+                    arrow.classList.add(isIncreasing ? 'arrow-up' : 'arrow-down');
+                    
+                    // Position the arrow between the two elements
+                    const startX = positions[index].x + 25;
+                    const startY = positions[index].y + 25;
+                    const endX = positions[index + 1].x + 25;
+                    const endY = positions[index + 1].y + 25;
+                    
+                    const midX = startX + (endX - startX) / 2;
+                    const midY = startY + (endY - startY) / 2;
+                    
+                    arrow.style.left = `${midX - 12}px`;
+                    arrow.style.top = `${midY - 10}px`;
+                    
+                    // Calculate rotation angle
+                    const angle = Math.atan2(endY - startY, endX - startX) * (180 / Math.PI);
+                    arrow.style.transform = `rotate(${angle + 90}deg)`;
+                    
+                    if (index < currentStep - 1) {
+                        arrow.style.opacity = '1';
+                    }
+                    
+                    visualization.appendChild(arrow);
+                }
+            });
+            
+            // Update explanation
+            explanationElement.textContent = explanations[currentStep - 1];
+            
+            // Update step indicator
+            currentStepElement.textContent = currentStep;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === totalSteps;
+        }
+        
+        // Handle next button click
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+        
+        // Handle previous button click
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateVisualization();
+            }
+        });
+        
+        // Update the visualization for the current step
+        function updateVisualization() {
+            // Update element opacities
+            for (let i = 0; i < sequence.length; i++) {
+                const element = document.getElementById(`element-${i}`);
+                if (i >= currentStep) {
+                    element.style.opacity = '0.3';
+                } else {
+                    element.style.opacity = '1';
+                }
+            }
+            
+            // Update arrow opacities
+            for (let i = 0; i < sequence.length - 1; i++) {
+                const arrow = document.getElementById(`arrow-${i}`);
+                if (i < currentStep - 1) {
+                    arrow.style.opacity = '1';
+                } else {
+                    arrow.style.opacity = '0';
+                }
+            }
+            
+            // Update explanation
+            explanationElement.textContent = explanations[currentStep - 1];
+            
+            // Update step indicator
+            currentStepElement.textContent = currentStep;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === totalSteps;
+        }
+        
+        // Initialize the visualization
+        initVisualization();
+    </script>
+</body>
+</html>
