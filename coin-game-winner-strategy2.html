@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memoization Table Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            color: #FF4800;
+            margin-bottom: 20px;
+        }
+        .explanation {
+            text-align: left;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .table-container {
+            margin: 30px auto;
+            overflow-x: auto;
+        }
+        table {
+            border-collapse: collapse;
+            margin: 0 auto;
+        }
+        th, td {
+            border: 1px solid #000000;
+            padding: 12px;
+            text-align: center;
+            min-width: 50px;
+            position: relative;
+        }
+        th {
+            background-color: #FD9F78;
+            color: #000000;
+            font-weight: bold;
+        }
+        .highlight {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .index-cell {
+            background-color: #FD9F78;
+            font-weight: bold;
+        }
+        .navigation {
+            margin-top: 30px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .step-display {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .cell-value {
+            transition: all 0.5s ease-in-out;
+        }
+        .flash {
+            animation: flash-animation 1s;
+        }
+        @keyframes flash-animation {
+            0%, 100% { background-color: transparent; }
+            50% { background-color: #FF4800; color: white; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Memoization Table Visualization</h1>
+        
+        <div class="explanation">
+            <p>This visualization shows a 2D memoization table for the array [3, 7, 2, 3]. Each cell (i,j) represents the maximum score difference a player can achieve when playing optimally with the subarray from index i to index j.</p>
+            <p>The table is filled diagonally, starting from the main diagonal (where i=j) and moving outward. When i=j, the value is simply the array element itself, as there's only one choice.</p>
+        </div>
+        
+        <div class="table-container">
+            <table id="memo-table">
+                <thead>
+                    <tr>
+                        <th>(i,j)</th>
+                        <th>0</th>
+                        <th>1</th>
+                        <th>2</th>
+                        <th>3</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="index-cell">0</td>
+                        <td id="cell-0-0">3</td>
+                        <td id="cell-0-1">4</td>
+                        <td id="cell-0-2">2</td>
+                        <td id="cell-0-3">5</td>
+                    </tr>
+                    <tr>
+                        <td class="index-cell">1</td>
+                        <td id="cell-1-0">-</td>
+                        <td id="cell-1-1">7</td>
+                        <td id="cell-1-2">5</td>
+                        <td id="cell-1-3">4</td>
+                    </tr>
+                    <tr>
+                        <td class="index-cell">2</td>
+                        <td id="cell-2-0">-</td>
+                        <td id="cell-2-1">-</td>
+                        <td id="cell-2-2">2</td>
+                        <td id="cell-2-3">1</td>
+                    </tr>
+                    <tr>
+                        <td class="index-cell">3</td>
+                        <td id="cell-3-0">-</td>
+                        <td id="cell-3-1">-</td>
+                        <td id="cell-3-2">-</td>
+                        <td id="cell-3-3">3</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="step-display">
+            <p id="step-text">Table filled with max score differences</p>
+        </div>
+        
+        <div class="navigation">
+            <button id="prev-btn">Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const array = [3, 7, 2, 3];
+        const steps = [
+            { 
+                title: "Initial Table - Diagonal (Length 1 Subarrays)",
+                description: "For single elements (where left=right), the value is the element itself because there's only one choice.",
+                cells: [
+                    { i: 0, j: 0, value: 3 },
+                    { i: 1, j: 1, value: 7 },
+                    { i: 2, j: 2, value: 2 },
+                    { i: 3, j: 3, value: 3 }
+                ]
+            },
+            { 
+                title: "Filling Length 2 Subarrays",
+                description: "For each subarray of length 2, we calculate max(A[i] - memo[i+1][j], A[j] - memo[i][j-1])",
+                cells: [
+                    { i: 0, j: 1, value: 4 },
+                    { i: 1, j: 2, value: 5 },
+                    { i: 2, j: 3, value: 1 }
+                ]
+            },
+            { 
+                title: "Filling Length 3 Subarrays",
+                description: "For each subarray of length 3, we apply the same formula using previously computed values.",
+                cells: [
+                    { i: 0, j: 2, value: 2 },
+                    { i: 1, j: 3, value: 4 }
+                ]
+            },
+            { 
+                title: "Filling Length 4 Subarray (Complete Table)",
+                description: "Finally, we calculate the value for the entire array [3,7,2,3], which gives us the maximum score difference.",
+                cells: [
+                    { i: 0, j: 3, value: 5 }
+                ]
+            }
+        ];
+
+        let currentStep = steps.length - 1; // Start with the completed table
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepText = document.getElementById('step-text');
+
+        function updateButtons() {
+            prevBtn.disabled = currentStep <= 0;
+            nextBtn.disabled = currentStep >= steps.length - 1;
+        }
+
+        function clearTable() {
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    if (i > j) continue; // Skip lower triangle
+                    const cell = document.getElementById(`cell-${i}-${j}`);
+                    cell.textContent = "-";
+                    cell.classList.remove("highlight");
+                    cell.classList.remove("flash");
+                }
+            }
+        }
+
+        function renderStep(stepIndex) {
+            clearTable();
+            
+            // Fill in all cells up to the current step
+            for (let s = 0; s <= stepIndex; s++) {
+                const step = steps[s];
+                step.cells.forEach(cell => {
+                    const cellElement = document.getElementById(`cell-${cell.i}-${cell.j}`);
+                    cellElement.textContent = cell.value;
+                    
+                    // Flash the cells of the current step
+                    if (s === stepIndex) {
+                        cellElement.classList.add("flash");
+                    }
+                });
+            }
+            
+            stepText.textContent = steps[stepIndex].title + ": " + steps[stepIndex].description;
+            updateButtons();
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                renderStep(currentStep);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                renderStep(currentStep);
+            }
+        });
+
+        // Initialize
+        renderStep(currentStep);
+    </script>
+</body>
+</html>
