@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recursive Game Tree Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+        
+        .tree-container {
+            overflow: auto;
+            width: 100%;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        #game-tree {
+            min-width: 800px;
+        }
+        
+        .node {
+            fill: #FD9F78;
+            stroke: #FF4800;
+            stroke-width: 2px;
+        }
+        
+        .node.winning {
+            fill: #8AFF8A;
+            stroke: #00AA00;
+        }
+        
+        .node.losing {
+            fill: #FF8A8A;
+            stroke: #AA0000;
+        }
+        
+        .link {
+            fill: none;
+            stroke: #000000;
+            stroke-width: 1.5px;
+        }
+        
+        .node-text {
+            font-size: 12px;
+            font-weight: bold;
+            text-anchor: middle;
+            fill: #000000;
+        }
+        
+        .node-value {
+            font-size: 10px;
+            text-anchor: middle;
+            fill: #000000;
+        }
+        
+        .edge-label {
+            font-size: 10px;
+            fill: #FF4800;
+            font-weight: bold;
+        }
+        
+        .explanation {
+            background-color: #FD9F78;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #000000;
+            margin-right: 8px;
+        }
+        
+        .winning-color {
+            background-color: #8AFF8A;
+        }
+        
+        .losing-color {
+            background-color: #FF8A8A;
+        }
+        
+        .neutral-color {
+            background-color: #FD9F78;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Recursive Game Tree Visualization</h1>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color winning-color"></div>
+                <span>Winning Position</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color losing-color"></div>
+                <span>Losing Position</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color neutral-color"></div>
+                <span>Unexplored Position</span>
+            </div>
+        </div>
+        
+        <div class="explanation" id="current-explanation">
+            <h3>Game Rules:</h3>
+            <p>We have 5 coins initially. Two players take turns removing either 1, 3, or 4 coins. The player who takes the last coin wins.</p>
+            <p>In this visualization, each node represents the number of coins remaining. Green nodes are winning positions, and red nodes are losing positions.</p>
+        </div>
+        
+        <div class="tree-container">
+            <svg id="game-tree"></svg>
+        </div>
+        
+        <div class="nav-buttons">
+            <button id="prev-btn" class="nav-button" disabled>Previous</button>
+            <button id="next-btn" class="nav-button">Next</button>
+        </div>
+    </div>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        const explanations = [
+            {
+                title: "Game Rules",
+                content: `<h3>Game Rules:</h3>
+                <p>We have 5 coins initially. Two players take turns removing either 1, 3, or 4 coins. The player who takes the last coin wins.</p>
+                <p>In this visualization, each node represents the number of coins remaining. Green nodes are winning positions, and red nodes are losing positions.</p>`
+            },
+            {
+                title: "Initial State",
+                content: `<h3>Initial State:</h3>
+                <p>We start with 5 coins (root node). From here, a player can make 3 possible moves: take 1, 3, or 4 coins.</p>
+                <p>Let's explore the game tree to find the winning strategy!</p>`
+            },
+            {
+                title: "Exploring First Move",
+                content: `<h3>Exploring First Move:</h3>
+                <p>If the first player takes 1 coin, 4 coins remain.</p>
+                <p>If the first player takes 3 coins, 2 coins remain.</p>
+                <p>If the first player takes 4 coins, 1 coin remains.</p>
+                <p>Let's explore each of these paths to determine if they lead to a win or loss.</p>`
+            },
+            {
+                title: "Exploring Leaf Nodes",
+                content: `<h3>Exploring Leaf Nodes:</h3>
+                <p>When 0 coins remain, the previous player has won (took the last coin).</p>
+                <p>A position is a "winning position" if a player can make a move that forces the opponent into a "losing position".</p>
+                <p>A position is a "losing position" if all possible moves lead to "winning positions" for the opponent.</p>`
+            },
+            {
+                title: "Determining Winning Strategy",
+                content: `<h3>Determining Winning Strategy:</h3>
+                <p>Now we can see which initial moves lead to a win.</p>
+                <p>The root node (5 coins) is colored based on whether it's a winning or losing position for the first player.</p>
+                <p>If it's green (winning), the first player has a winning strategy. If it's red (losing), the second player has a winning strategy.</p>`
+            },
+            {
+                title: "Final Game Tree",
+                content: `<h3>Final Game Tree:</h3>
+                <p>We can see that 5 coins is a winning position for the first player.</p>
+                <p>Winning strategy: The first player should take 4 coins, leaving 1 coin for the second player.</p>
+                <p>This forces the second player to take the last coin, making the first player the winner.</p>`
+            }
+        ];
+
+        let currentStep = 0;
+        const totalSteps = explanations.length;
+        
+        // Update explanation
+        function updateExplanation() {
+            document.getElementById('current-explanation').innerHTML = explanations[currentStep].content;
+            document.getElementById('prev-btn').disabled = currentStep === 0;
+            document.getElementById('next-btn').disabled = currentStep === totalSteps - 1;
+        }
+        
+        // Navigation event listeners
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateExplanation();
+                updateTree();
+            }
+        });
+        
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateExplanation();
+                updateTree();
+            }
+        });
+        
+        // Game tree data
+        function createGameTree() {
+            const tree = {
+                id: "5",
+                name: "5 coins",
+                value: "Winning",
+                children: [
+                    {
+                        id: "5-4",
+                        name: "4 coins",
+                        value: "Losing",
+                        moveLabel: "Take 1",
+                        children: [
+                            {
+                                id: "4-3",
+                                name: "3 coins",
+                                value: "Winning",
+                                moveLabel: "Take 1",
+                                children: [
+                                    {
+                                        id: "3-2",
+                                        name: "2 coins",
+                                        value: "Losing",
+                                        moveLabel: "Take 1",
+                                        children: [
+                                            {
+                                                id: "2-1",
+                                                name: "1 coin",
+                                                value: "Winning",
+                                                moveLabel: "Take 1",
+                                                children: [
+                                                    {
+                                                        id: "1-0",
+                                                        name: "0 coins",
+                                                        value: "Losing",
+                                                        moveLabel: "Take 1"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        id: "3-0",
+                                        name: "0 coins",
+                                        value: "Losing",
+                                        moveLabel: "Take 3"
+                                    }
+                                ]
+                            },
+                            {
+                                id: "4-1",
+                                name: "1 coin",
+                                value: "Winning",
+                                moveLabel: "Take 3",
+                                children: [
+                                    {
+                                        id: "1-0-2",
+                                        name: "0 coins",
+                                        value: "Losing",
+                                        moveLabel: "Take 1"
+                                    }
+                                ]
+                            },
+                            {
+                                id: "4-0",
+                                name: "0 coins",
+                                value: "Losing",
+                                moveLabel: "Take 4"
+                            }
+                        ]
+                    },
+                    {
+                        id: "5-2",
+                        name: "2 coins",
+                        value: "Losing",
+                        moveLabel: "Take 3",
+                        children: [
+                            {
+                                id: "2-1-2",
+                                name: "1 coin",
+                                value: "Winning",
+                                moveLabel: "Take 1",
+                                children: [
+                                    {
+                                        id: "1-0-3",
+                                        name: "0 coins",
+                                        value: "Losing",
+                                        moveLabel: "Take 1"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: "5-1",
+                        name: "1 coin",
+                        value: "Winning",
+                        moveLabel: "Take 4",
+                        children: [
+                            {
+                                id: "1-0-4",
+                                name: "0 coins",
+                                value: "Losing",
+                                moveLabel: "Take 1"
+                            }
+                        ]
+                    }
+                ]
+            };
+            return tree;
+        }
+        
+        // Set up the SVG and visualization
+        const width = 1100;
+        const height = 600;
+        
+        const svg = d3.select("#game-tree")
+            .attr("width", width)
+            .attr("height", height);
+        
+        function updateTree() {
+            svg.selectAll("*").remove();
+            
+            const g = svg.append("g")
+                .attr("transform", `translate(${width / 2}, 50)`);
+            
+            const tree = createGameTree();
+            
+            // Create hierarchical layout
+            const root = d3.hierarchy(tree);
+            const treeLayout = d3.tree().size([width - 100, height - 100]);
+            treeLayout(root);
+            
+            // Function to determine node visibility based on current step
+            function isNodeVisible(node) {
+                if (currentStep <= 1 && node.depth === 0) return true;
+                if (currentStep >= 2 && node.depth <= 1) return true;
+                if (currentStep >= 3 && node.depth <= 2) return true;
+                if (currentStep >= 4 && node.depth <= 3) return true;
+                if (currentStep >= 5) return true;
+                return false;
+            }
+            
+            // Function to determine if node should show winning/losing status
+            function shouldShowNodeStatus(node) {
+                if (currentStep >= 5) return true;
+                if (currentStep >= 4 && node.depth <= 2) return true;
+                if (currentStep >= 3 && node.depth === 3) return true;
+                return false;
+            }
+            
+            // Draw links
+            g.selectAll(".link")
+                .data(root.links().filter(d => isNodeVisible(d.source) && isNodeVisible(d.target)))
+                .enter()
+                .append("path")
+                .attr("class", "link")
+                .attr("d", d => {
+                    return `M${d.source.x},${d.source.y}
+                            C${d.source.x},${(d.source.y + d.target.y) / 2}
+                            ${d.target.x},${(d.source.y + d.target.y) / 2}
+                            ${d.target.x},${d.target.y}`;
+                });
+            
+            // Draw edge labels
+            g.selectAll(".edge-label")
+                .data(root.links().filter(d => isNodeVisible(d.source) && isNodeVisible(d.target)))
+                .enter()
+                .append("text")
+                .attr("class", "edge-label")
+                .attr("x", d => (d.source.x + d.target.x) / 2)
+                .attr("y", d => (d.source.y + d.target.y) / 2 - 5)
+                .text(d => d.target.data.moveLabel);
+                
+            // Draw nodes
+            const nodes = g.selectAll(".node")
+                .data(root.descendants().filter(d => isNodeVisible(d)))
+                .enter()
+                .append("g")
+                .attr("transform", d => `translate(${d.x}, ${d.y})`);
+            
+            nodes.append("circle")
+                .attr("class", d => {
+                    if (!shouldShowNodeStatus(d)) return "node";
+                    return d.data.value === "Winning" ? "node winning" : "node losing";
+                })
+                .attr("r", 25)
+                .attr("id", d => `node-${d.data.id}`);
+            
+            // Add node text
+            nodes.append("text")
+                .attr("class", "node-text")
+                .attr("dy", "0.3em")
+                .text(d => d.data.name.split(" ")[0]);
+            
+            // Add animation
+            if (currentStep >= 2) {
+                nodes.selectAll("circle")
+                    .filter(d => d.depth === 1)
+                    .each(function(d) {
+                        d3.select(this)
+                            .transition()
+                            .duration(500)
+                            .attr("r", 25);
+                    });
+            }
+            
+            if (currentStep >= 4) {
+                nodes.selectAll("circle")
+                    .filter(d => shouldShowNodeStatus(d))
+                    .each(function(d) {
+                        const isWinning = d.data.value === "Winning";
+                        d3.select(this)
+                            .transition()
+                            .duration(800)
+                            .attr("class", isWinning ? "node winning" : "node losing");
+                    });
+            }
+        }
+        
+        // Initialize
+        updateExplanation();
+        updateTree();
+    </script>
+</body>
+</html>
