@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DP Solution for Weighted Job Scheduling</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .animation-container {
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 500px;
+        }
+        .timeline {
+            position: relative;
+            height: 80px;
+            margin: 30px 0;
+            border-bottom: 2px solid #000000;
+        }
+        .job {
+            position: absolute;
+            height: 40px;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000000;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        .job.highlight {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.05);
+        }
+        .dp-table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+        }
+        .dp-table th, .dp-table td {
+            padding: 10px;
+            border: 1px solid #FD9F78;
+            text-align: center;
+        }
+        .dp-table th {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .dp-table td.current {
+            background-color: #FD9F78;
+            font-weight: bold;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #FFF;
+            border-left: 5px solid #FF4800;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .binary-search-illustration {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+        }
+        .binary-search-row {
+            display: flex;
+            margin: 5px 0;
+        }
+        .binary-search-cell {
+            padding: 8px;
+            margin: 0 5px;
+            border: 1px solid #FD9F78;
+            text-align: center;
+            min-width: 40px;
+        }
+        .binary-search-cell.low {
+            background-color: rgba(253, 159, 120, 0.3);
+        }
+        .binary-search-cell.mid {
+            background-color: rgba(255, 72, 0, 0.3);
+        }
+        .binary-search-cell.high {
+            background-color: rgba(253, 159, 120, 0.3);
+        }
+        .binary-search-cell.found {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dynamic Programming Solution for Weighted Job Scheduling</h1>
+        
+        <div class="animation-container">
+            <div id="timeline" class="timeline"></div>
+            
+            <div id="dp-table-container">
+                <h3>DP Table (Maximum profit up to job i)</h3>
+                <table class="dp-table">
+                    <thead>
+                        <tr id="dp-table-header">
+                            <th>i</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="dp-table-values">
+                            <td>DP[i]</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="binary-search" class="binary-search-illustration" style="display: none;">
+                <h3>Binary Search for Latest Non-Overlapping Job</h3>
+                <div id="binary-search-content"></div>
+            </div>
+            
+            <div id="explanation" class="explanation">
+                Welcome to the Dynamic Programming solution for Weighted Job Scheduling. Click 'Next' to start the visualization.
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prev-btn" class="nav-btn" disabled>Previous</button>
+            <button id="next-btn" class="nav-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Sample job data: [start time, end time, profit]
+        const jobs = [
+            [1, 3, 5],    // Job 1: Start at 1, end at 3, profit 5
+            [2, 5, 6],    // Job 2: Start at 2, end at 5, profit 6
+            [4, 6, 5],    // Job 3: Start at 4, end at 6, profit 5
+            [6, 7, 4],    // Job 4: Start at 6, end at 7, profit 4
+            [5, 8, 11],   // Job 5: Start at 5, end at 8, profit 11
+            [7, 9, 2]     // Job 6: Start at 7, end at 9, profit 2
+        ];
+        
+        // Sort jobs by end time (already sorted in this example)
+        const sortedJobs = [...jobs].sort((a, b) => a[1] - b[1]);
+        
+        // Initialize animation state
+        let currentStep = 0;
+        const maxStep = sortedJobs.length * 2 + 1; // For each job: DP calculation + binary search + final
+        
+        // Setup the timeline initially
+        const timelineWidth = document.getElementById('timeline').offsetWidth;
+        const maxEndTime = Math.max(...sortedJobs.map(job => job[1]));
+        const timeScale = (timelineWidth - 80) / maxEndTime;
+        
+        // Initialize DP array (will be calculated during animation)
+        const dp = Array(sortedJobs.length).fill(0);
+        
+        // Draw jobs on timeline
+        function drawJobs() {
+            const timeline = document.getElementById('timeline');
+            timeline.innerHTML = '';
+            
+            // Add time markers
+            for (let i = 0; i <= maxEndTime; i++) {
+                const marker = document.createElement('div');
+                marker.style.position = 'absolute';
+                marker.style.bottom = '-20px';
+                marker.style.left = `${i * timeScale}px`;
+                marker.style.width = '2px';
+                marker.style.height = '10px';
+                marker.style.backgroundColor = '#000000';
+                
+                const label = document.createElement('div');
+                label.style.position = 'absolute';
+                label.style.bottom = '-35px';
+                label.style.left = `${i * timeScale - 5}px`;
+                label.textContent = i;
+                label.style.fontSize = '12px';
+                
+                timeline.appendChild(marker);
+                timeline.appendChild(label);
+            }
+            
+            // Draw jobs
+            sortedJobs.forEach((job, index) => {
+                const jobElement = document.createElement('div');
+                jobElement.className = 'job';
+                jobElement.id = `job-${index}`;
+                jobElement.style.left = `${job[0] * timeScale}px`;
+                jobElement.style.width = `${(job[1] - job[0]) * timeScale}px`;
+                jobElement.style.top = '10px';
+                jobElement.textContent = `J${index+1}: $${job[2]}`;
+                
+                timeline.appendChild(jobElement);
+            });
+        }
+        
+        // Initialize DP table
+        function initDPTable() {
+            const header = document.getElementById('dp-table-header');
+            const values = document.getElementById('dp-table-values');
+            
+            header.innerHTML = '<th>i</th>';
+            values.innerHTML = '<td>DP[i]</td>';
+            
+            for (let i = 0; i < sortedJobs.length; i++) {
+                const th = document.createElement('th');
+                th.textContent = i + 1;
+                header.appendChild(th);
+                
+                const td = document.createElement('td');
+                td.id = `dp-${i}`;
+                td.textContent = '?';
+                values.appendChild(td);
+            }
+        }
+        
+        // Find the latest job that doesn't overlap with job i
+        function findLatestNonOverlappingJob(i) {
+            const currentJob = sortedJobs[i];
+            let result = -1;
+            
+            // Binary search visualization
+            let low = 0;
+            let high = i - 1;
+            
+            const binarySearchSteps = [];
+            
+            while (low <= high) {
+                const mid = Math.floor((low + high) / 2);
+                
+                binarySearchSteps.push({
+                    low,
+                    mid,
+                    high,
+                    found: false
+                });
+                
+                if (sortedJobs[mid][1] <= currentJob[0]) {
+                    result = mid;
+                    low = mid + 1;
+                } else {
+                    high = mid - 1;
+                }
+            }
+            
+            if (result !== -1) {
+                binarySearchSteps.push({
+                    low: -1,
+                    mid: -1,
+                    high: -1,
+                    found: true,
+                    index: result
+                });
+            }
+            
+            return { result, binarySearchSteps };
+        }
+        
+        // Update animation based on current step
+        function updateAnimation() {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === maxStep;
+            
+            // Reset all highlights
+            document.querySelectorAll('.job').forEach(job => {
+                job.classList.remove('highlight');
+            });
+            
+            document.querySelectorAll('.dp-table td').forEach(cell => {
+                cell.classList.remove('current');
+            });
+            
+            document.getElementById('binary-search').style.display = 'none';
+            
+            if (currentStep === 0) {
+                document.getElementById('explanation').textContent = 'We start with jobs sorted by their end times. The DP solution will fill the table from left to right.';
+                return;
+            }
+            
+            const jobIndex = Math.floor((currentStep - 1) / 2);
+            const isCalculationStep = (currentStep - 1) % 2 === 0;
+            
+            if (jobIndex < sortedJobs.length) {
+                const currentJob = sortedJobs[jobIndex];
+                const jobElement = document.getElementById(`job-${jobIndex}`);
+                jobElement.classList.add('highlight');
+                
+                if (isCalculationStep) {
+                    // DP calculation step
+                    const { result, binarySearchSteps } = findLatestNonOverlappingJob(jobIndex);
+                    
+                    // Calculate DP value
+                    dp[jobIndex] = Math.max(
+                        jobIndex > 0 ? dp[jobIndex - 1] : 0,
+                        currentJob[2] + (result !== -1 ? dp[result] : 0)
+                    );
+                    
+                    // Update DP table
+                    const dpCell = document.getElementById(`dp-${jobIndex}`);
+                    dpCell.textContent = dp[jobIndex];
+                    dpCell.classList.add('current');
+                    
+                    document.getElementById('explanation').innerHTML = `
+                        <strong>Job ${jobIndex + 1}</strong> (Start: ${currentJob[0]}, End: ${currentJob[1]}, Profit: $${currentJob[2]})<br><br>
+                        <strong>DP[${jobIndex + 1}]</strong> = Max of:<br>
+                        1. DP[${jobIndex}] (if we don't take this job): ${jobIndex > 0 ? dp[jobIndex - 1] : 0}<br>
+                        2. Profit of current job + DP[j] where j is the latest non-overlapping job: 
+                        $${currentJob[2]} + ${result !== -1 ? `DP[${result + 1}] = $${dp[result]}` : '$0'}<br><br>
+                        <strong>Result:</strong> DP[${jobIndex + 1}] = $${dp[jobIndex]}
+                    `;
+                } else {
+                    // Binary search step
+                    const { result, binarySearchSteps } = findLatestNonOverlappingJob(jobIndex);
+                    
+                    document.getElementById('binary-search').style.display = 'block';
+                    const binarySearchContent = document.getElementById('binary-search-content');
+                    binarySearchContent.innerHTML = '';
+                    
+                    // Show indices
+                    const indexRow = document.createElement('div');
+                    indexRow.className = 'binary-search-row';
+                    
+                    for (let i = 0; i < jobIndex; i++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'binary-search-cell';
+                        cell.textContent = i + 1;
+                        indexRow.appendChild(cell);
+                    }
+                    
+                    binarySearchContent.appendChild(indexRow);
+                    
+                    // Show end times
+                    const endTimeRow = document.createElement('div');
+                    endTimeRow.className = 'binary-search-row';
+                    
+                    for (let i = 0; i < jobIndex; i++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'binary-search-cell';
+                        cell.textContent = sortedJobs[i][1];
+                        endTimeRow.appendChild(cell);
+                    }
+                    
+                    binarySearchContent.appendChild(endTimeRow);
+                    
+                    // Show binary search steps
+                    let stepIndex = 0;
+                    for (const step of binarySearchSteps) {
+                        const stepRow = document.createElement('div');
+                        stepRow.className = 'binary-search-row';
+                        
+                        for (let i = 0; i < jobIndex; i++) {
+                            const cell = document.createElement('div');
+                            cell.className = 'binary-search-cell';
+                            
+                            if (step.found && i === step.index) {
+                                cell.classList.add('found');
+                                cell.textContent = '✓';
+                            } else if (i === step.low && !step.found) {
+                                cell.classList.add('low');
+                                cell.textContent = 'L';
+                            } else if (i === step.mid && !step.found) {
+                                cell.classList.add('mid');
+                                cell.textContent = 'M';
+                            } else if (i === step.high && !step.found) {
+                                cell.classList.add('high');
+                                cell.textContent = 'H';
+                            } else {
+                                cell.textContent = '';
+                            }
+                            
+                            stepRow.appendChild(cell);
+                        }
+                        
+                        const stepLabel = document.createElement('div');
+                        stepLabel.style.marginLeft = '10px';
+                        
+                        if (step.found) {
+                            stepLabel.textContent = `Found at job ${step.index + 1}`;
+                        } else {
+                            stepLabel.textContent = `Step ${stepIndex + 1}: Low=${step.low + 1}, Mid=${step.mid + 1}, High=${step.high + 1}`;
+                        }
+                        
+                        stepRow.appendChild(stepLabel);
+                        binarySearchContent.appendChild(stepRow);
+                        
+                        stepIndex++;
+                    }
+                    
+                    document.getElementById('explanation').innerHTML = `
+                        <strong>Binary Search for Job ${jobIndex + 1}</strong><br>
+                        Looking for the latest job that ends before job ${jobIndex + 1} starts (start time: ${currentJob[0]}).<br>
+                        ${result !== -1 ? 
+                            `Found: Job ${result + 1} (ends at ${sortedJobs[result][1]})` : 
+                            'No compatible job found.'}
+                    `;
+                }
+            } else {
+                // Final step - show the optimal solution
+                document.getElementById('explanation').innerHTML = `
+                    <strong>Final DP Table Complete!</strong><br>
+                    The maximum profit we can achieve is $${dp[dp.length - 1]}.<br><br>
+                    The DP approach allows us to find the optimal solution by considering all possible job combinations and building up the solution incrementally.
+                `;
+            }
+        }
+        
+        // Navigation event handlers
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (currentStep < maxStep) {
+                currentStep++;
+                updateAnimation();
+            }
+        });
+        
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateAnimation();
+            }
+        });
+        
+        // Initialize animation
+        drawJobs();
+        initDPTable();
+        updateAnimation();
+    </script>
+</body>
+</html>
