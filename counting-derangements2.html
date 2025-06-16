@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Derangement Recurrence Relation Animation</title>
+    <style>
+        :root {
+            --primary: #FF4800;
+            --secondary: #FD9F78;
+            --black: #000000;
+            --white: #FFFFFF;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--white);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .tree-container {
+            height: 450px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--black);
+            border: 2px solid var(--primary);
+            transition: all 0.5s;
+            opacity: 0;
+            font-size: 16px;
+        }
+        
+        .formula {
+            position: absolute;
+            background-color: var(--white);
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: 2px solid var(--primary);
+            font-size: 14px;
+            color: var(--black);
+            transition: all 0.5s;
+            opacity: 0;
+        }
+        
+        .edge {
+            position: absolute;
+            background-color: var(--primary);
+            height: 2px;
+            transform-origin: 0 0;
+            transition: all 0.5s;
+            opacity: 0;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            border: 2px solid var(--primary);
+            border-radius: 5px;
+            background-color: var(--white);
+            color: var(--black);
+            font-size: 16px;
+            width: 90%;
+            min-height: 100px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: var(--primary);
+            color: var(--white);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: var(--secondary);
+            color: var(--black);
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .recurrence-formula {
+            font-size: 18px;
+            margin: 20px 0;
+            padding: 10px;
+            border: 2px solid var(--primary);
+            border-radius: 5px;
+            color: var(--black);
+            background-color: var(--white);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Derangement Recurrence Relation</h1>
+    
+    <div class="recurrence-formula">
+        <strong>Recurrence Relation:</strong> D(n) = (n-1) × [D(n-1) + D(n-2)]
+    </div>
+    
+    <div class="container">
+        <div class="tree-container" id="tree-container"></div>
+    </div>
+    
+    <div class="explanation" id="explanation">
+        Welcome to the Derangement Recurrence Relation visualization! 
+        
+        A derangement is a permutation where no element appears in its original position. 
+        
+        The recurrence relation D(n) = (n-1) × [D(n-1) + D(n-2)] helps us calculate the number of possible derangements.
+        
+        Click "Next" to start the visualization.
+    </div>
+    
+    <div class="nav-buttons">
+        <button id="prev" disabled>Previous</button>
+        <button id="next">Next</button>
+    </div>
+
+    <script>
+        const treeContainer = document.getElementById('tree-container');
+        const explanation = document.getElementById('explanation');
+        const prevButton = document.getElementById('prev');
+        const nextButton = document.getElementById('next');
+        
+        let currentStep = 0;
+        const totalSteps = 7;
+        
+        // Create nodes
+        const nodes = [
+            { id: 'D4', value: 'D(4)', x: 500, y: 50 },
+            { id: 'D3', value: 'D(3)', x: 350, y: 150 },
+            { id: 'D2', value: 'D(2)', x: 650, y: 150 },
+            { id: 'D2_left', value: 'D(2)', x: 250, y: 250 },
+            { id: 'D1', value: 'D(1)', x: 450, y: 250 },
+            { id: 'D1_left', value: 'D(1)', x: 150, y: 350 },
+            { id: 'D0', value: 'D(0)', x: 350, y: 350 },
+            { id: 'D0_result', value: 'D(0)=1', x: 350, y: 400 },
+            { id: 'D1_result', value: 'D(1)=0', x: 150, y: 400 },
+            { id: 'D1_result_right', value: 'D(1)=0', x: 450, y: 300 },
+            { id: 'D2_result_left', value: 'D(2)=1', x: 250, y: 300 },
+            { id: 'D2_result', value: 'D(2)=1', x: 650, y: 200 },
+            { id: 'D3_result', value: 'D(3)=2', x: 350, y: 200 },
+            { id: 'D4_result', value: 'D(4)=9', x: 500, y: 100 }
+        ];
+        
+        // Create formulas
+        const formulas = [
+            { id: 'f1', text: '3×[D(3)+D(2)]', x: 500, y: 80 },
+            { id: 'f2', text: '2×[D(2)+D(1)]', x: 350, y: 180 },
+            { id: 'f3', text: '1×[D(1)+D(0)]', x: 250, y: 280 }
+        ];
+        
+        // Create edges
+        const edges = [
+            { from: 'D4', to: 'D3', length: 170 },
+            { from: 'D4', to: 'D2', length: 170 },
+            { from: 'D3', to: 'D2_left', length: 150 },
+            { from: 'D3', to: 'D1', length: 150 },
+            { from: 'D2_left', to: 'D1_left', length: 150 },
+            { from: 'D2_left', to: 'D0', length: 150 }
+        ];
+        
+        // Create DOM elements
+        nodes.forEach(node => {
+            const nodeElement = document.createElement('div');
+            nodeElement.className = 'node';
+            nodeElement.id = node.id;
+            nodeElement.style.left = `${node.x}px`;
+            nodeElement.style.top = `${node.y}px`;
+            nodeElement.textContent = node.value;
+            treeContainer.appendChild(nodeElement);
+        });
+        
+        formulas.forEach(formula => {
+            const formulaElement = document.createElement('div');
+            formulaElement.className = 'formula';
+            formulaElement.id = formula.id;
+            formulaElement.style.left = `${formula.x}px`;
+            formulaElement.style.top = `${formula.y}px`;
+            formulaElement.textContent = formula.text;
+            treeContainer.appendChild(formulaElement);
+        });
+        
+        edges.forEach((edge, index) => {
+            const fromNode = nodes.find(n => n.id === edge.from);
+            const toNode = nodes.find(n => n.id === edge.to);
+            
+            const edgeElement = document.createElement('div');
+            edgeElement.className = 'edge';
+            edgeElement.id = `edge-${index}`;
+            
+            const dx = toNode.x - fromNode.x;
+            const dy = toNode.y - fromNode.y;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            
+            edgeElement.style.width = `${length}px`;
+            edgeElement.style.transform = `translate(${fromNode.x + 30}px, ${fromNode.y + 30}px) rotate(${angle}deg)`;
+            
+            treeContainer.appendChild(edgeElement);
+        });
+        
+        const steps = [
+            {
+                show: ['D0', 'D0_result'],
+                text: "Let's start with the base cases. D(0) is the number of ways to derange 0 elements. By convention, this is defined as 1."
+            },
+            {
+                show: ['D1', 'D1_result', 'D1_left', 'D1_result_right'],
+                text: "D(1) is the number of ways to derange 1 element. Since we can't place the element in its original position, there are 0 derangements."
+            },
+            {
+                show: ['D2_left', 'edge-4', 'edge-5', 'f3'],
+                text: "Now we can use our recurrence relation. For D(2), we use D(n) = (n-1) × [D(n-1) + D(n-2)]. With n=2, we get D(2) = 1 × [D(1) + D(0)] = 1 × [0 + 1] = 1."
+            },
+            {
+                show: ['D2_result_left', 'D2', 'D2_result'],
+                text: "So D(2) = 1, which means there is exactly 1 way to derange 2 elements (swap them)."
+            },
+            {
+                show: ['D3', 'edge-1', 'edge-2', 'edge-3', 'f2'],
+                text: "For D(3), we apply the recurrence relation: D(3) = (3-1) × [D(2) + D(1)] = 2 × [1 + 0] = 2."
+            },
+            {
+                show: ['D3_result'],
+                text: "So D(3) = 2, meaning there are 2 different ways to arrange 3 elements so that none appear in their original positions."
+            },
+            {
+                show: ['D4', 'edge-0', 'f1'],
+                text: "Finally, for D(4), we use the recurrence relation: D(4) = (4-1) × [D(3) + D(2)] = 3 × [2 + 1] = 3 × 3 = 9."
+            },
+            {
+                show: ['D4_result'],
+                text: "Therefore, D(4) = 9. There are 9 different ways to arrange 4 elements so that none appear in their original positions. This visualization shows how we build up to this result using the recurrence relation D(n) = (n-1) × [D(n-1) + D(n-2)]."
+            }
+        ];
+        
+        function updateStep() {
+            // Hide all elements
+            document.querySelectorAll('.node, .edge, .formula').forEach(el => {
+                el.style.opacity = '0';
+            });
+            
+            // Show elements for current step
+            if (currentStep > 0) {
+                let elementsToShow = [];
+                for (let i = 0; i < currentStep; i++) {
+                    elementsToShow = [...elementsToShow, ...steps[i].show];
+                }
+                
+                elementsToShow.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.opacity = '1';
+                });
+                
+                explanation.textContent = steps[currentStep - 1].text;
+            }
+            
+            // Update button states
+            prevButton.disabled = currentStep === 0;
+            nextButton.disabled = currentStep === totalSteps;
+        }
+        
+        prevButton.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        });
+        
+        nextButton.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateStep();
+            }
+        });
+        
+        // Initialize
+        updateStep();
+    </script>
+</body>
+</html>
