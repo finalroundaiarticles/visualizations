@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Programming Table Evolution</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .explanation {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .dp-container {
+            overflow-x: auto;
+            margin-bottom: 30px;
+        }
+        .dp-table {
+            border-collapse: collapse;
+            margin: 20px auto;
+        }
+        .dp-table th, .dp-table td {
+            border: 1px solid #ccc;
+            padding: 12px;
+            text-align: center;
+            min-width: 40px;
+        }
+        .dp-table th {
+            background-color: #FF4800;
+            color: white;
+        }
+        .true {
+            background-color: #FD9F78;
+            font-weight: bold;
+        }
+        .current {
+            background-color: #FF4800;
+            color: white;
+            font-weight: bold;
+        }
+        .current-num {
+            color: #FF4800;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+        .array-element {
+            width: 40px;
+            height: 40px;
+            background-color: #FD9F78;
+            color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .active-element {
+            background-color: #FF4800;
+            color: white;
+        }
+        .step-description {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #FF4800;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dynamic Programming: Subset Sum Visualization</h1>
+        
+        <div class="explanation">
+            <p>This visualization demonstrates how dynamic programming can be used to solve the Subset Sum problem. We have an array [1, 5, 11, 5] and want to determine if there's a subset that sums to 11.</p>
+            <p>We use a boolean DP table where dp[j] = true if a subset can sum to j, false otherwise. Initially, only dp[0] = true (empty subset sums to 0).</p>
+        </div>
+        
+        <div class="array-container" id="array-display">
+            <!-- Array elements will be populated by JavaScript -->
+        </div>
+        
+        <div class="step-description" id="step-description">
+            <!-- Step description will be populated by JavaScript -->
+        </div>
+        
+        <div class="dp-container">
+            <table class="dp-table" id="dp-table">
+                <!-- DP table will be populated by JavaScript -->
+            </table>
+        </div>
+        
+        <div class="step-indicator" id="step-indicator">Step 0 of 4</div>
+        
+        <div class="buttons">
+            <button id="prevBtn">Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Array and target sum
+        const array = [1, 5, 11, 5];
+        const targetSum = 11;
+        
+        // Initialize DP table states for each step
+        const dpStates = [];
+        
+        // Initialize first state (base case: dp[0] = true)
+        const initialState = Array(targetSum + 1).fill(false);
+        initialState[0] = true;
+        dpStates.push({
+            dp: [...initialState],
+            currentNum: null,
+            description: "Initial state: Only dp[0] = true, meaning we can always form a sum of 0 (empty subset).",
+            highlightCells: [0],
+            activeArrayIdx: -1
+        });
+        
+        // Function to update DP table for each number in the array
+        function computeDPStates() {
+            let currentDP = [...initialState];
+            
+            // For each number in the array
+            for (let i = 0; i < array.length; i++) {
+                const num = array[i];
+                const newDP = [...currentDP];
+                const updatedCells = [];
+                
+                // For each possible sum j from targetSum down to num
+                for (let j = targetSum; j >= num; j--) {
+                    // If we can form sum (j - num), then we can form sum j by adding num
+                    if (currentDP[j - num]) {
+                        newDP[j] = true;
+                        updatedCells.push(j);
+                    }
+                }
+                
+                // Store the state after processing this number
+                dpStates.push({
+                    dp: [...newDP],
+                    currentNum: num,
+                    description: `Processing ${num}: For each possible sum j, if dp[j-${num}] is true, then dp[j] becomes true.`,
+                    highlightCells: updatedCells,
+                    activeArrayIdx: i
+                });
+                
+                // Update current DP for next iteration
+                currentDP = [...newDP];
+            }
+        }
+        
+        // Compute all DP states
+        computeDPStates();
+        
+        // UI variables
+        let currentStep = 0;
+        const totalSteps = dpStates.length;
+        
+        // DOM elements
+        const dpTable = document.getElementById('dp-table');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('step-indicator');
+        const stepDescription = document.getElementById('step-description');
+        const arrayDisplay = document.getElementById('array-display');
+        
+        // Render array elements
+        function renderArray() {
+            arrayDisplay.innerHTML = '';
+            array.forEach((num, idx) => {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                if (currentStep > 0 && idx === dpStates[currentStep].activeArrayIdx) {
+                    element.classList.add('active-element');
+                }
+                element.textContent = num;
+                arrayDisplay.appendChild(element);
+            });
+        }
+        
+        // Render DP table for the current step
+        function renderDPTable() {
+            const state = dpStates[currentStep];
+            
+            // Clear existing table
+            dpTable.innerHTML = '';
+            
+            // Create header row
+            const headerRow = document.createElement('tr');
+            const indexHeader = document.createElement('th');
+            indexHeader.textContent = 'dp[j]';
+            headerRow.appendChild(indexHeader);
+            
+            for (let j = 0; j <= targetSum; j++) {
+                const th = document.createElement('th');
+                th.textContent = j;
+                headerRow.appendChild(th);
+            }
+            dpTable.appendChild(headerRow);
+            
+            // Create data row
+            const dataRow = document.createElement('tr');
+            const label = document.createElement('td');
+            label.textContent = 'Value';
+            dataRow.appendChild(label);
+            
+            for (let j = 0; j <= targetSum; j++) {
+                const td = document.createElement('td');
+                td.textContent = state.dp[j] ? 'true' : 'false';
+                
+                if (state.dp[j]) {
+                    td.classList.add('true');
+                }
+                
+                if (state.highlightCells && state.highlightCells.includes(j)) {
+                    td.classList.add('current');
+                }
+                
+                dataRow.appendChild(td);
+            }
+            dpTable.appendChild(dataRow);
+            
+            // Update step indicator and description
+            stepIndicator.textContent = `Step ${currentStep} of ${totalSteps - 1}`;
+            
+            let description = state.description;
+            if (currentStep === totalSteps - 1) {
+                const canFormTargetSum = state.dp[targetSum];
+                description += `<br><br><strong>Final result:</strong> ${canFormTargetSum ? 'Yes, we can form a subset with sum ' + targetSum : 'No, we cannot form a subset with sum ' + targetSum}.`;
+            }
+            
+            stepDescription.innerHTML = description;
+            
+            // Update array display
+            renderArray();
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+        }
+        
+        // Event listeners for buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                renderDPTable();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                renderDPTable();
+            }
+        });
+        
+        // Initial render
+        renderDPTable();
+    </script>
+</body>
+</html>
