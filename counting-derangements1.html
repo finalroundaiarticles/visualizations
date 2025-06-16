@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Derangement vs. Non-Derangement</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        .animation-container {
+            position: relative;
+            height: 450px;
+            margin: 20px auto;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 20px;
+            overflow: hidden;
+        }
+        .permutation-box {
+            width: 120px;
+            height: 120px;
+            margin: 15px;
+            display: inline-block;
+            border: 2px solid #000000;
+            border-radius: 8px;
+            padding: 10px;
+            position: relative;
+            transition: all 0.5s ease;
+            background-color: #FFFFFF;
+        }
+        .permutation-box.derangement {
+            background-color: #FD9F78;
+            border-color: #FF4800;
+            transform: scale(1.05);
+        }
+        .permutation-box.non-derangement {
+            opacity: 0.7;
+        }
+        .cross {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .cross.show {
+            opacity: 1;
+        }
+        .cross:before, .cross:after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 10%;
+            width: 80%;
+            height: 4px;
+            background-color: #FF4800;
+        }
+        .cross:before {
+            transform: rotate(45deg);
+        }
+        .cross:after {
+            transform: rotate(-45deg);
+        }
+        .position-marker {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            line-height: 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border-radius: 50%;
+            margin: 2px;
+            font-weight: bold;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .position-marker.show {
+            opacity: 1;
+        }
+        .original-position {
+            display: block;
+            font-size: 14px;
+            margin-top: 5px;
+            color: #000000;
+            font-weight: bold;
+        }
+        .permutation {
+            font-size: 24px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .element {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            background-color: #FD9F78;
+            color: #000000;
+            border-radius: 50%;
+            margin: 2px;
+            font-weight: bold;
+        }
+        .fixed-element {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.1);
+            transition: all 0.5s ease;
+        }
+        .nav-buttons {
+            margin-top: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #FD9F78;
+            border-radius: 10px;
+            color: #000000;
+            text-align: left;
+        }
+        .slide {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .slide.active {
+            display: block;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Derangement vs. Non-Derangement</h1>
+        
+        <div class="animation-container">
+            <div class="slide active" id="slide1">
+                <h2>What is a Permutation?</h2>
+                <p>A permutation is a rearrangement of elements in a set.</p>
+                <p>For the set [1, 2, 3], there are 6 possible permutations:</p>
+                <div class="permutation-container">
+                    <div class="permutation-box">
+                        <div class="permutation">[1, 2, 3]</div>
+                        <div class="element">1</div>
+                        <div class="element">2</div>
+                        <div class="element">3</div>
+                    </div>
+                    <div class="permutation-box">
+                        <div class="permutation">[1, 3, 2]</div>
+                        <div class="element">1</div>
+                        <div class="element">3</div>
+                        <div class="element">2</div>
+                    </div>
+                    <div class="permutation-box">
+                        <div class="permutation">[2, 1, 3]</div>
+                        <div class="element">2</div>
+                        <div class="element">1</div>
+                        <div class="element">3</div>
+                    </div>
+                    <div class="permutation-box">
+                        <div class="permutation">[2, 3, 1]</div>
+                        <div class="element">2</div>
+                        <div class="element">3</div>
+                        <div class="element">1</div>
+                    </div>
+                    <div class="permutation-box">
+                        <div class="permutation">[3, 1, 2]</div>
+                        <div class="element">3</div>
+                        <div class="element">1</div>
+                        <div class="element">2</div>
+                    </div>
+                    <div class="permutation-box">
+                        <div class="permutation">[3, 2, 1]</div>
+                        <div class="element">3</div>
+                        <div class="element">2</div>
+                        <div class="element">1</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide2">
+                <h2>What is a Derangement?</h2>
+                <p>A derangement is a permutation where <strong>no element</strong> appears in its original position.</p>
+                <div class="explanation">
+                    For the set [1, 2, 3]:
+                    <ul>
+                        <li>1 should not be in position 1</li>
+                        <li>2 should not be in position 2</li>
+                        <li>3 should not be in position 3</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="slide" id="slide3">
+                <h2>Finding Non-Derangements</h2>
+                <p>Let's identify which permutations are <strong>not</strong> derangements:</p>
+                <div class="permutation-container">
+                    <div class="permutation-box non-derangement" id="perm1">
+                        <div class="permutation">[1, 2, 3]</div>
+                        <div class="element fixed-element">1</div>
+                        <div class="element fixed-element">2</div>
+                        <div class="element fixed-element">3</div>
+                        <div class="original-position">Fixed: 1, 2, 3</div>
+                        <div class="cross"></div>
+                    </div>
+                    <div class="permutation-box non-derangement" id="perm2">
+                        <div class="permutation">[1, 3, 2]</div>
+                        <div class="element fixed-element">1</div>
+                        <div class="element">3</div>
+                        <div class="element">2</div>
+                        <div class="original-position">Fixed: 1</div>
+                        <div class="cross"></div>
+                    </div>
+                    <div class="permutation-box non-derangement" id="perm3">
+                        <div class="permutation">[2, 1, 3]</div>
+                        <div class="element">2</div>
+                        <div class="element">1</div>
+                        <div class="element fixed-element">3</div>
+                        <div class="original-position">Fixed: 3</div>
+                        <div class="cross"></div>
+                    </div>
+                    <div class="permutation-box" id="perm4">
+                        <div class="permutation">[2, 3, 1]</div>
+                        <div class="element">2</div>
+                        <div class="element">3</div>
+                        <div class="element">1</div>
+                        <div class="original-position">No fixed elements</div>
+                    </div>
+                    <div class="permutation-box" id="perm5">
+                        <div class="permutation">[3, 1, 2]</div>
+                        <div class="element">3</div>
+                        <div class="element">1</div>
+                        <div class="element">2</div>
+                        <div class="original-position">No fixed elements</div>
+                    </div>
+                    <div class="permutation-box non-derangement" id="perm6">
+                        <div class="permutation">[3, 2, 1]</div>
+                        <div class="element">3</div>
+                        <div class="element fixed-element">2</div>
+                        <div class="element">1</div>
+                        <div class="original-position">Fixed: 2</div>
+                        <div class="cross"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide4">
+                <h2>Highlighting Derangements</h2>
+                <p>These are the permutations where <strong>no element</strong> is in its original position:</p>
+                <div class="permutation-container">
+                    <div class="permutation-box non-derangement">
+                        <div class="permutation">[1, 2, 3]</div>
+                        <div class="element fixed-element">1</div>
+                        <div class="element fixed-element">2</div>
+                        <div class="element fixed-element">3</div>
+                        <div class="original-position">Fixed: 1, 2, 3</div>
+                        <div class="cross show"></div>
+                    </div>
+                    <div class="permutation-box non-derangement">
+                        <div class="permutation">[1, 3, 2]</div>
+                        <div class="element fixed-element">1</div>
+                        <div class="element">3</div>
+                        <div class="element">2</div>
+                        <div class="original-position">Fixed: 1</div>
+                        <div class="cross show"></div>
+                    </div>
+                    <div class="permutation-box non-derangement">
+                        <div class="permutation">[2, 1, 3]</div>
+                        <div class="element">2</div>
+                        <div class="element">1</div>
+                        <div class="element fixed-element">3</div>
+                        <div class="original-position">Fixed: 3</div>
+                        <div class="cross show"></div>
+                    </div>
+                    <div class="permutation-box derangement">
+                        <div class="permutation">[2, 3, 1]</div>
+                        <div class="element">2</div>
+                        <div class="element">3</div>
+                        <div class="element">1</div>
+                        <div class="original-position">DERANGEMENT!</div>
+                    </div>
+                    <div class="permutation-box derangement">
+                        <div class="permutation">[3, 1, 2]</div>
+                        <div class="element">3</div>
+                        <div class="element">1</div>
+                        <div class="element">2</div>
+                        <div class="original-position">DERANGEMENT!</div>
+                    </div>
+                    <div class="permutation-box non-derangement">
+                        <div class="permutation">[3, 2, 1]</div>
+                        <div class="element">3</div>
+                        <div class="element fixed-element">2</div>
+                        <div class="element">1</div>
+                        <div class="original-position">Fixed: 2</div>
+                        <div class="cross show"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide5">
+                <h2>Summary</h2>
+                <p>For the set [1, 2, 3]:</p>
+                <div class="explanation">
+                    <ul>
+                        <li>Total permutations: 6</li>
+                        <li>Derangements (no fixed points): 2</li>
+                        <li>Non-derangements (at least one fixed point): 4</li>
+                    </ul>
+                    <p>The derangements are:</p>
+                    <ul>
+                        <li>[2, 3, 1]</li>
+                        <li>[3, 1, 2]</li>
+                    </ul>
+                </div>
+                <p>A derangement is a permutation with no fixed points, meaning no element appears in its original position.</p>
+            </div>
+        </div>
+
+        <div class="nav-buttons">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 5;
+
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        function showSlide(slideNumber) {
+            // Hide all slides
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            // Show the current slide
+            document.getElementById('slide' + slideNumber).classList.add('active');
+            
+            // Update button states
+            prevBtn.disabled = (slideNumber === 1);
+            nextBtn.disabled = (slideNumber === totalSlides);
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentSlide > 1) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        });
+
+        // Initialize
+        showSlide(currentSlide);
+    </script>
+</body>
+</html>
