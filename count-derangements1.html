@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Derangement Visualization for n=3</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .explanation {
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .visualization {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 40px 0;
+            position: relative;
+            height: 300px;
+        }
+        
+        .arrangement {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 50px;
+            width: 100%;
+            position: absolute;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        
+        .arrangement.active {
+            opacity: 1;
+        }
+        
+        .element {
+            width: 60px;
+            height: 60px;
+            margin: 0 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            font-size: 24px;
+            font-weight: bold;
+            position: relative;
+        }
+        
+        .original {
+            background-color: #FD9F78;
+            color: #000000;
+        }
+        
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        
+        .arrow.active {
+            opacity: 1;
+        }
+        
+        .title {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-weight: bold;
+            color: #FF4800;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Derangement Visualization for n=3</h1>
+        
+        <div class="explanation">
+            <p>A derangement is a permutation where no element appears in its original position. For n=3, we start with the original arrangement [1,2,3] and want to rearrange it so that 1 is not in position 1, 2 is not in position 2, and 3 is not in position 3.</p>
+            <p>For n=3, there are exactly 2 valid derangements: [2,3,1] and [3,1,2]. The animation below shows the original arrangement and these two derangements, with arrows indicating how each element moves from its original position.</p>
+        </div>
+        
+        <div class="step-indicator">
+            Step <span id="current-step">1</span> of <span id="total-steps">3</span>
+        </div>
+        
+        <div class="visualization">
+            <!-- Original Arrangement -->
+            <div class="arrangement" id="arrangement-0">
+                <div class="title">Original Arrangement</div>
+                <div class="element original" id="orig-1">1</div>
+                <div class="element original" id="orig-2">2</div>
+                <div class="element original" id="orig-3">3</div>
+            </div>
+            
+            <!-- First Derangement [2,3,1] -->
+            <div class="arrangement" id="arrangement-1">
+                <div class="title">Derangement 1: [2,3,1]</div>
+                <div class="element" id="derange1-1">2</div>
+                <div class="element" id="derange1-2">3</div>
+                <div class="element" id="derange1-3">1</div>
+                
+                <!-- Arrows for the first derangement -->
+                <svg id="arrows-1" class="arrow" width="100%" height="100%" style="position: absolute; top: 0; left: 0;">
+                    <!-- Will be drawn with JavaScript -->
+                </svg>
+            </div>
+            
+            <!-- Second Derangement [3,1,2] -->
+            <div class="arrangement" id="arrangement-2">
+                <div class="title">Derangement 2: [3,1,2]</div>
+                <div class="element" id="derange2-1">3</div>
+                <div class="element" id="derange2-2">1</div>
+                <div class="element" id="derange2-3">2</div>
+                
+                <!-- Arrows for the second derangement -->
+                <svg id="arrows-2" class="arrow" width="100%" height="100%" style="position: absolute; top: 0; left: 0;">
+                    <!-- Will be drawn with JavaScript -->
+                </svg>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prev-btn" class="nav-btn" disabled>Previous</button>
+            <button id="next-btn" class="nav-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Animation controller
+        let currentStep = 0;
+        const totalSteps = 3;
+        const arrangements = document.querySelectorAll('.arrangement');
+        const arrows = document.querySelectorAll('.arrow');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        
+        // Draw arrows for derangement 1: [2,3,1]
+        const svg1 = document.getElementById('arrows-1');
+        
+        // Draw arrows for derangement 2: [3,1,2]
+        const svg2 = document.getElementById('arrows-2');
+        
+        // Function to draw curved arrows
+        function drawCurvedArrow(svg, startElement, endElement, color, curvature) {
+            // Get positions of the elements
+            const start = startElement.getBoundingClientRect();
+            const end = endElement.getBoundingClientRect();
+            
+            // Calculate start and end points relative to the SVG
+            const svgRect = svg.getBoundingClientRect();
+            const startX = start.left + start.width/2 - svgRect.left;
+            const startY = start.top + start.height/2 - svgRect.top;
+            const endX = end.left + end.width/2 - svgRect.left;
+            const endY = end.top + end.height/2 - svgRect.top;
+            
+            // Create path element
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            
+            // Calculate control point for the curve
+            const midX = (startX + endX) / 2;
+            const midY = (startY + endY) / 2 - curvature;
+            
+            // Create path data for a quadratic curve
+            const pathData = `M ${startX},${startY} Q ${midX},${midY} ${endX},${endY}`;
+            
+            path.setAttribute("d", pathData);
+            path.setAttribute("fill", "none");
+            path.setAttribute("stroke", color);
+            path.setAttribute("stroke-width", "2");
+            path.setAttribute("marker-end", "url(#arrowhead)");
+            
+            // Create arrowhead marker
+            const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+            const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+            marker.setAttribute("id", "arrowhead");
+            marker.setAttribute("markerWidth", "10");
+            marker.setAttribute("markerHeight", "7");
+            marker.setAttribute("refX", "9");
+            marker.setAttribute("refY", "3.5");
+            marker.setAttribute("orient", "auto");
+            
+            const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+            polygon.setAttribute("points", "0 0, 10 3.5, 0 7");
+            polygon.setAttribute("fill", color);
+            
+            marker.appendChild(polygon);
+            defs.appendChild(marker);
+            
+            // Add defs and path to the SVG
+            svg.appendChild(defs);
+            svg.appendChild(path);
+        }
+        
+        // Function to update the display
+        function updateDisplay() {
+            // Update step indicator
+            document.getElementById('current-step').textContent = currentStep + 1;
+            
+            // Hide all arrangements and arrows
+            arrangements.forEach(arr => arr.classList.remove('active'));
+            arrows.forEach(arrow => arrow.classList.remove('active'));
+            
+            // Show current arrangement
+            arrangements[currentStep].classList.add('active');
+            
+            // Show arrows for derangements
+            if (currentStep > 0) {
+                arrows[currentStep - 1].classList.add('active');
+            }
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+        }
+        
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateDisplay();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateDisplay();
+            }
+        });
+        
+        // Draw the arrows when the page loads
+        window.addEventListener('load', () => {
+            // Initialize the display
+            arrangements[0].classList.add('active');
+            
+            // Wait for elements to be positioned
+            setTimeout(() => {
+                // Draw arrows for derangement 1: [2,3,1]
+                // Original 1 -> Derangement 1, position 3
+                drawCurvedArrow(svg1, 
+                                document.getElementById('orig-1'), 
+                                document.getElementById('derange1-3'), 
+                                '#FF4800', 70);
+                
+                // Original 2 -> Derangement 1, position 1
+                drawCurvedArrow(svg1, 
+                                document.getElementById('orig-2'), 
+                                document.getElementById('derange1-1'), 
+                                '#FF4800', 70);
+                
+                // Original 3 -> Derangement 1, position 2
+                drawCurvedArrow(svg1, 
+                                document.getElementById('orig-3'), 
+                                document.getElementById('derange1-2'), 
+                                '#FF4800', 70);
+                
+                // Draw arrows for derangement 2: [3,1,2]
+                // Original 1 -> Derangement 2, position 2
+                drawCurvedArrow(svg2, 
+                                document.getElementById('orig-1'), 
+                                document.getElementById('derange2-2'), 
+                                '#FF4800', 70);
+                
+                // Original 2 -> Derangement 2, position 3
+                drawCurvedArrow(svg2, 
+                                document.getElementById('orig-2'), 
+                                document.getElementById('derange2-3'), 
+                                '#FF4800', 70);
+                
+                // Original 3 -> Derangement 2, position 1
+                drawCurvedArrow(svg2, 
+                                document.getElementById('orig-3'), 
+                                document.getElementById('derange2-1'), 
+                                '#FF4800', 70);
+            }, 500);
+        });
+    </script>
+</body>
+</html>
