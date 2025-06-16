@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coin Game Decision Tree</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .slide {
+            display: none;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        .tree-container {
+            width: 100%;
+            height: 400px;
+            margin: 30px auto;
+            position: relative;
+        }
+        
+        .node {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.5s ease;
+            opacity: 0;
+            transform: scale(0);
+        }
+        
+        .node.player1 {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .node.player2 {
+            background-color: #FD9F78;
+            color: #000000;
+        }
+        
+        .edge {
+            position: absolute;
+            height: 2px;
+            background-color: #000000;
+            transform-origin: 0 0;
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+        
+        .edge-label {
+            position: absolute;
+            background-color: #FFFFFF;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 12px;
+            color: #000000;
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .explanation {
+            background-color: #f9f9f9;
+            border-left: 5px solid #FF4800;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Coin Game Decision Tree (n=4)</h1>
+        
+        <div class="slides-container">
+            <div class="slide active" id="slide1">
+                <div class="explanation">
+                    <p>In this coin game, we start with 4 coins. Players take turns removing 1, 2, or 3 coins. The player who takes the last coin wins!</p>
+                    <p>Let's see why Player 2 always wins with optimal play when starting with 4 coins.</p>
+                </div>
+                <div class="tree-container" id="tree1"></div>
+            </div>
+            
+            <div class="slide" id="slide2">
+                <div class="explanation">
+                    <p>Player 1 has three possible first moves: take 1, 2, or 3 coins.</p>
+                    <p>Let's examine what happens in each case when Player 2 plays optimally.</p>
+                </div>
+                <div class="tree-container" id="tree2"></div>
+            </div>
+            
+            <div class="slide" id="slide3">
+                <div class="explanation">
+                    <p><strong>Case 1:</strong> If Player 1 takes 1 coin, leaving 3 coins.</p>
+                    <p>Player 2 can take 3 coins and win immediately!</p>
+                </div>
+                <div class="tree-container" id="tree3"></div>
+            </div>
+            
+            <div class="slide" id="slide4">
+                <div class="explanation">
+                    <p><strong>Case 2:</strong> If Player 1 takes 2 coins, leaving 2 coins.</p>
+                    <p>Player 2 can take 2 coins and win immediately!</p>
+                </div>
+                <div class="tree-container" id="tree4"></div>
+            </div>
+            
+            <div class="slide" id="slide5">
+                <div class="explanation">
+                    <p><strong>Case 3:</strong> If Player 1 takes 3 coins, leaving 1 coin.</p>
+                    <p>Player 2 can take the last coin and win immediately!</p>
+                </div>
+                <div class="tree-container" id="tree5"></div>
+            </div>
+            
+            <div class="slide" id="slide6">
+                <div class="explanation">
+                    <p><strong>Conclusion:</strong> No matter what Player 1 does, Player 2 always has a winning move!</p>
+                    <p>This is because 4 is one more than the maximum number of coins (3) a player can take in one turn.</p>
+                    <p>In general, when the total number of coins is n = (m+1), where m is the maximum allowed to take, the second player will always win with optimal play.</p>
+                </div>
+                <div class="tree-container" id="tree6"></div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prevBtn" disabled>Previous</button>
+            <button class="nav-button" id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 6;
+        
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        // Initialize trees for each slide
+        createTree1();
+        createTree2();
+        createTree3();
+        createTree4();
+        createTree5();
+        createTree6();
+        
+        function updateNavButtons() {
+            prevBtn.disabled = currentSlide === 1;
+            nextBtn.disabled = currentSlide === totalSlides;
+        }
+        
+        function showSlide(slideNumber) {
+            // Hide all slides
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            // Show the current slide
+            document.getElementById(`slide${slideNumber}`).classList.add('active');
+            
+            // Reset animations for the current slide
+            resetAndAnimateTree(slideNumber);
+            
+            // Update nav buttons
+            updateNavButtons();
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentSlide > 1) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        });
+        
+        function createNode(container, id, className, text, x, y) {
+            const node = document.createElement('div');
+            node.id = id;
+            node.className = `node ${className}`;
+            node.textContent = text;
+            node.style.left = `${x}px`;
+            node.style.top = `${y}px`;
+            container.appendChild(node);
+            return node;
+        }
+        
+        function createEdge(container, id, x1, y1, x2, y2) {
+            const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+            
+            const edge = document.createElement('div');
+            edge.id = id;
+            edge.className = 'edge';
+            edge.style.width = `${length}px`;
+            edge.style.left = `${x1 + 35}px`;
+            edge.style.top = `${y1 + 35}px`;
+            edge.style.transform = `rotate(${angle}deg)`;
+            
+            container.appendChild(edge);
+            return edge;
+        }
+        
+        function createEdgeLabel(container, id, text, x, y) {
+            const label = document.createElement('div');
+            label.id = id;
+            label.className = 'edge-label';
+            label.textContent = text;
+            label.style.left = `${x}px`;
+            label.style.top = `${y}px`;
+            
+            container.appendChild(label);
+            return label;
+        }
+        
+        function createTree1() {
+            const container = document.getElementById('tree1');
+            createNode(container, 'root1', 'player1', '4', 365, 50);
+        }
+        
+        function createTree2() {
+            const container = document.getElementById('tree2');
+            
+            // Create nodes
+            createNode(container, 'root2', 'player1', '4', 365, 50);
+            createNode(container, 'node2-1', 'player2', '3', 200, 150);
+            createNode(container, 'node2-2', 'player2', '2', 365, 150);
+            createNode(container, 'node2-3', 'player2', '1', 530, 150);
+            
+            // Create edges
+            createEdge(container, 'edge2-1', 365, 50, 200, 150);
+            createEdge(container, 'edge2-2', 365, 50, 365, 150);
+            createEdge(container, 'edge2-3', 365, 50, 530, 150);
+            
+            // Create edge labels
+            createEdgeLabel(container, 'label2-1', 'Take 1', 270, 90);
+            createEdgeLabel(container, 'label2-2', 'Take 2', 385, 90);
+            createEdgeLabel(container, 'label2-3', 'Take 3', 460, 90);
+        }
+        
+        function createTree3() {
+            const container = document.getElementById('tree3');
+            
+            // Create nodes
+            createNode(container, 'root3', 'player1', '4', 365, 50);
+            createNode(container, 'node3-1', 'player2', '3', 200, 150);
+            createNode(container, 'node3-2', 'player2', '2', 365, 150);
+            createNode(container, 'node3-3', 'player2', '1', 530, 150);
+            createNode(container, 'node3-4', 'player1', '0', 200, 250);
+            
+            // Create edges
+            createEdge(container, 'edge3-1', 365, 50, 200, 150);
+            createEdge(container, 'edge3-2', 365, 50, 365, 150);
+            createEdge(container, 'edge3-3', 365, 50, 530, 150);
+            createEdge(container, 'edge3-4', 200, 150, 200, 250);
+            
+            // Create edge labels
+            createEdgeLabel(container, 'label3-1', 'Take 1', 270, 90);
+            createEdgeLabel(container, 'label3-2', 'Take 2', 385, 90);
+            createEdgeLabel(container, 'label3-3', 'Take 3', 460, 90);
+            createEdgeLabel(container, 'label3-4', 'Take 3', 160, 200);
+            
+            // Add win indicator
+            const win = document.createElement('div');
+            win.id = 'win3';
+            win.style.position = 'absolute';
+            win.style.left = '250px';
+            win.style.top = '250px';
+            win.style.color = '#FF4800';
+            win.style.fontWeight = 'bold';
+            win.textContent = 'Player 2 Wins!';
+            win.style.opacity = '0';
+            win.style.transition = 'opacity 0.5s ease';
+            container.appendChild(win);
+        }
+        
+        function createTree4() {
+            const container = document.getElementById('tree4');
+            
+            // Create nodes
+            createNode(container, 'root4', 'player1', '4', 365, 50);
+            createNode(container, 'node4-1', 'player2', '3', 200, 150);
+            createNode(container, 'node4-2', 'player2', '2', 365, 150);
+            createNode(container, 'node4-3', 'player2', '1', 530, 150);
+            createNode(container, 'node4-5', 'player1', '0', 365, 250);
+            
+            // Create edges
+            createEdge(container, 'edge4-1', 365, 50, 200, 150);
+            createEdge(container, 'edge4-2', 365, 50, 365, 150);
+            createEdge(container, 'edge4-3', 365, 50, 530, 150);
+            createEdge(container, 'edge4-5', 365, 150, 365, 250);
+            
+            // Create edge labels
+            createEdgeLabel(container, 'label4-1', 'Take 1', 270, 90);
+            createEdgeLabel(container, 'label4-2', 'Take 2', 385, 90);
+            createEdgeLabel(container, 'label4-3', 'Take 3', 460, 90);
+            createEdgeLabel(container, 'label4-5', 'Take 2', 385, 200);
+            
+            // Add win indicator
+            const win = document.createElement('div');
+            win.id = 'win4';
+            win.style.position = 'absolute';
+            win.style.left = '415px';
+            win.style.top = '250px';
+            win.style.color = '#FF4800';
+            win.style.fontWeight = 'bold';
+            win.textContent = 'Player 2 Wins!';
+            win.style.opacity = '0';
+            win.style.transition = 'opacity 0.5s ease';
+            container.appendChild(win);
+        }
+        
+        function createTree5() {
+            const container = document.getElementById('tree5');
+            
+            // Create nodes
+            createNode(container, 'root5', 'player1', '4', 365, 50);
+            createNode(container, 'node5-1', 'player2', '3', 200, 150);
+            createNode(container, 'node5-2', 'player2', '2', 365, 150);
+            createNode(container, 'node5-3', 'player2', '1', 530, 150);
+            createNode(container, 'node5-6', 'player1', '0', 530, 250);
+            
+            // Create edges
+            createEdge(container, 'edge5-1', 365, 50, 200, 150);
+            createEdge(container, 'edge5-2', 365, 50, 365, 150);
+            createEdge(container, 'edge5-3', 365, 50, 530, 150);
+            createEdge(container, 'edge5-6', 530, 150, 530, 250);
+            
+            // Create edge labels
+            createEdgeLabel(container, 'label5-1', 'Take 1', 270, 90);
+            createEdgeLabel(container, 'label5-2', 'Take 2', 385, 90);
+            createEdgeLabel(container, 'label5-3', 'Take 3', 460, 90);
+            createEdgeLabel(container, 'label5-6', 'Take 1', 550, 200);
+            
+            // Add win indicator
+            const win = document.createElement('div');
+            win.id = 'win5';
+            win.style.position = 'absolute';
+            win.style.left = '580px';
+            win.style.top = '250px';
+            win.style.color = '#FF4800';
+            win.style.fontWeight = 'bold';
+            win.textContent = 'Player 2 Wins!';
+            win.style.opacity = '0';
+            win.style.transition = 'opacity 0.5s ease';
+            container.appendChild(win);
+        }
+        
+        function createTree6() {
+            const container = document.getElementById('tree6');
+            
+            // Create nodes
+            createNode(container, 'root6', 'player1', '4', 365, 50);
+            createNode(container, 'node6-1', 'player2', '3', 200, 150);
+            createNode(container, 'node6-2', 'player2', '2', 365, 150);
+            createNode(container, 'node6-3', 'player2', '1', 530, 150);
+            createNode(container, 'node6-4', 'player1', '0', 200, 250);
+            createNode(container, 'node6-5', 'player1', '0', 365, 250);
+            createNode(container, 'node6-6', 'player1', '0', 530, 250);
+            
+            // Create edges
+            createEdge(container, 'edge6-1', 365, 50, 200, 150);
+            createEdge(container, 'edge6-2', 365, 50, 365, 150);
+            createEdge(container, 'edge6-3', 365, 50, 530, 150);
+            createEdge(container, 'edge6-4', 200, 150, 200, 250);
+            createEdge(container, 'edge6-5', 365, 150, 365, 250);
+            createEdge(container, 'edge6-6', 530, 150, 530, 250);
+            
+            // Create edge labels
+            createEdgeLabel(container, 'label6-1', 'Take 1', 270, 90);
+            createEdgeLabel(container, 'label6-2', 'Take 2', 385, 90);
+            createEdgeLabel(container, 'label6-3', 'Take 3', 460, 90);
+            createEdgeLabel(container, 'label6-4', 'Take 3', 160, 200);
+            createEdgeLabel(container, 'label6-5', 'Take 2', 385, 200);
+            createEdgeLabel(container, 'label6-6', 'Take 1', 550, 200);
+            
+            // Add win indicators
+            const win1 = document.createElement('div');
+            win1.id = 'win6-1';
+            win1.style.position = 'absolute';
+            win1.style.left = '250px';
+            win1.style.top = '250px';
+            win1.style.color = '#FF4800';
+            win1.style.fontWeight = 'bold';
+            win1.textContent = 'P2 Wins!';
+            win1.style.opacity = '0';
+            win1.style.transition = 'opacity 0.5s ease';
+            container.appendChild(win1);
+            
+            const win2 = document.createElement('div');
+            win2.id = 'win6-2';
+            win2.style.position = 'absolute';
+            win2.style.left = '415px';
+            win2.style.top = '250px';
+            win2.style.color = '#FF4800';
+            win2.style.fontWeight = 'bold';
+            win2.textContent = 'P2 Wins!';
+            win2.style.opacity = '0';
+            win2.style.transition = 'opacity 0.5s ease';
+            container.appendChild(win2);
+            
+            const win3 = document.createElement('div');
+            win3.id = 'win6-3';
+            win3.style.position = 'absolute';
+            win3.style.left = '580px';
+            win3.style.top = '250px';
+            win3.style.color = '#FF4800';
+            win3.style.fontWeight = 'bold';
+            win3.textContent = 'P2 Wins!';
+            win3.style.opacity = '0';
+            win3.style.transition = 'opacity 0.5s ease';
+            container.appendChild(win3);
+        }
+        
+        function resetAndAnimateTree(slideNumber) {
+            const container = document.getElementById(`tree${slideNumber}`);
+            
+            // Reset all animations
+            container.querySelectorAll('.node, .edge, .edge-label').forEach(element => {
+                element.style.opacity = '0';
+                if (element.classList.contains('node')) {
+                    element.style.transform = 'scale(0)';
+                }
+            });
+            
+            if (slideNumber === 3) {
+                document.getElementById('win3').style.opacity = '0';
+            } else if (slideNumber === 4) {
+                document.getElementById('win4').style.opacity = '0';
+            } else if (slideNumber === 5) {
+                document.getElementById('win5').style.opacity = '0';
+            } else if (slideNumber === 6) {
+                document.getElementById('win6-1').style.opacity = '0';
+                document.getElementById('win6-2').style.opacity = '0';
+                document.getElementById('win6-3').style.opacity = '0';
+            }
+            
+            // Animate elements with delay
+            setTimeout(() => {
+                animateTree(slideNumber);
+            }, 300);
+        }
+        
+        function animateTree(slideNumber) {
+            const elements = document.getElementById(`tree${slideNumber}`).querySelectorAll('.node, .edge, .edge-label');
+            
+            elements.forEach((element, index) => {
+                setTimeout(() => {
+                    element.style.opacity = '1';
+                    if (element.classList.contains('node')) {
+                        element.style.transform = 'scale(1)';
+                    }
+                    
+                    // Show win indicators last
+                    if (index === elements.length - 1) {
+                        if (slideNumber === 3) {
+                            setTimeout(() => {
+                                document.getElementById('win3').style.opacity = '1';
+                            }, 500);
+                        } else if (slideNumber === 4) {
+                            setTimeout(() => {
+                                document.getElementById('win4').style.opacity = '1';
+                            }, 500);
+                        } else if (slideNumber === 5) {
+                            setTimeout(() => {
+                                document.getElementById('win5').style.opacity = '1';
+                            }, 500);
+                        } else if (slideNumber === 6) {
+                            setTimeout(() => {
+                                document.getElementById('win6-1').style.opacity = '1';
+                                document.getElementById('win6-2').style.opacity = '1';
+                                document.getElementById('win6-3').style.opacity = '1';
+                            }, 500);
+                        }
+                    }
+                }, index * 150); // Stagger the animations
+            });
+        }
+        
+        // Initialize the first slide animations
+        resetAndAnimateTree(1);
+    </script>
+</body>
+</html>
