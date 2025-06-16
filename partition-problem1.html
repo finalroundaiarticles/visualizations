@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brute Force Recursion Tree Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .explanation {
+            margin-bottom: 20px;
+            color: #000000;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #FD9F78;
+            line-height: 1.6;
+        }
+        
+        canvas {
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-counter {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Brute Force Recursion Tree for Equal Subset Sum</h1>
+    
+    <div class="container">
+        <div class="explanation" id="explanation">
+            Welcome to the visualization of a brute force recursion tree for the "Equal Subset Sum Partition" problem. We'll see how recursion explores all possible ways to divide the array [1, 5, 11, 5] into two subsets with equal sums.
+        </div>
+        
+        <canvas id="treeCanvas" width="950" height="600"></canvas>
+        
+        <div class="step-counter">Step <span id="currentStep">1</span> of <span id="totalSteps">8</span></div>
+        
+        <div class="nav-buttons">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const currentStepEl = document.getElementById('currentStep');
+        const explanationEl = document.getElementById('explanation');
+        
+        // Colors
+        const PRIMARY_COLOR = '#FF4800';
+        const SECONDARY_COLOR = '#FD9F78';
+        const BLACK = '#000000';
+        const WHITE = '#FFFFFF';
+        const SUCCESS_COLOR = '#4CAF50';
+        const FAILURE_COLOR = '#F44336';
+        
+        // Array to work with
+        const arr = [1, 5, 11, 5];
+        const sum = arr.reduce((a, b) => a + b, 0);
+        const targetSum = sum / 2;
+        
+        let currentStep = 1;
+        const totalSteps = 8;
+        document.getElementById('totalSteps').textContent = totalSteps;
+        
+        // Node class for the tree
+        class Node {
+            constructor(index, includedSum, excludedSum, included, parent = null, decision = null) {
+                this.index = index;
+                this.includedSum = includedSum;
+                this.excludedSum = excludedSum;
+                this.included = [...included];
+                this.parent = parent;
+                this.decision = decision; // 'include' or 'exclude'
+                this.left = null;
+                this.right = null;
+                this.x = 0;
+                this.y = 0;
+                this.highlighted = false;
+                this.success = false;
+                this.explored = false;
+            }
+        }
+        
+        // Create the tree
+        function createTree() {
+            const root = new Node(0, 0, 0, []);
+            
+            function buildTree(node) {
+                if (node.index >= arr.length) {
+                    // Check if we found a valid partition
+                    if (node.includedSum === targetSum) {
+                        node.success = true;
+                    }
+                    return;
+                }
+                
+                // Include current element
+                const leftIncluded = [...node.included, arr[node.index]];
+                node.left = new Node(
+                    node.index + 1,
+                    node.includedSum + arr[node.index],
+                    node.excludedSum,
+                    leftIncluded,
+                    node,
+                    'include'
+                );
+                buildTree(node.left);
+                
+                // Exclude current element
+                node.right = new Node(
+                    node.index + 1,
+                    node.includedSum,
+                    node.excludedSum + arr[node.index],
+                    node.included,
+                    node,
+                    'exclude'
+                );
+                buildTree(node.right);
+            }
+            
+            buildTree(root);
+            return root;
+        }
+        
+        const tree = createTree();
+        
+        // Position nodes for visualization
+        function positionNodes(node, depth = 0, x = canvas.width / 2, width = canvas.width) {
+            if (!node) return;
+            
+            node.x = x;
+            node.y = 80 + depth * 100;
+            
+            if (node.left) {
+                positionNodes(node.left, depth + 1, x - width / Math.pow(2, depth + 2), width);
+            }
+            
+            if (node.right) {
+                positionNodes(node.right, depth + 1, x + width / Math.pow(2, depth + 2), width);
+            }
+        }
+        
+        positionNodes(tree);
+        
+        // Find successful paths (paths that lead to equal subset sums)
+        let successPaths = [];
+        
+        function findSuccessPaths(node, path = []) {
+            if (!node) return;
+            
+            const currentPath = [...path, node];
+            
+            if (node.success) {
+                successPaths.push(currentPath);
+                return;
+            }
+            
+            findSuccessPaths(node.left, currentPath);
+            findSuccessPaths(node.right, currentPath);
+        }
+        
+        findSuccessPaths(tree);
+        
+        // Explanation for each step
+        const explanations = [
+            "Welcome to the visualization of a brute force recursion tree for the 'Equal Subset Sum Partition' problem. We'll see how recursion explores all possible ways to divide the array [1, 5, 11, 5] into two subsets with equal sums.",
+            
+            "We start at the root node with no elements chosen yet. At each level, we make a binary decision for each element: include it in our subset or exclude it. Our goal is to find a subset that sums to 11 (half of the array's total sum of 22).",
+            
+            "For the first element (1), we have two choices: include it in our subset (left branch) or exclude it (right branch). When we include it, our running sum becomes 1.",
+            
+            "For the second element (5), we again have two choices for each previous decision. This creates 4 possible combinations so far, with sums of 6, 1, 5, and 0.",
+            
+            "For the third element (11), we make the same decisions again. Some branches are getting closer to our target sum of 11.",
+            
+            "Finally, for the last element (5), we complete all possible combinations. The tree has 16 leaf nodes representing all possible ways to partition the array.",
+            
+            "Let's highlight the successful path where we found a subset that sums to exactly 11. We can see we included elements 1, 5, and 5, totaling 11. The remaining element 11 forms the other subset, also summing to 11.",
+            
+            "This brute force approach explores all 2^n possible combinations (16 for our 4-element array). While it guarantees finding a solution if one exists, it becomes inefficient for larger arrays. Dynamic programming can optimize this process significantly."
+        ];
+        
+        // Draw tree animation based on current step
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Update explanation
+            explanationEl.textContent = explanations[currentStep - 1];
+            
+            if (currentStep >= 1) {
+                // Draw root
+                drawNode(tree, 1);
+            }
+            
+            if (currentStep >= 3) {
+                // Draw level 1
+                drawNode(tree.left, 2);
+                drawNode(tree.right, 2);
+                drawEdge(tree, tree.left);
+                drawEdge(tree, tree.right);
+            }
+            
+            if (currentStep >= 4) {
+                // Draw level 2
+                if (tree.left) {
+                    drawNode(tree.left.left, 3);
+                    drawNode(tree.left.right, 3);
+                    drawEdge(tree.left, tree.left.left);
+                    drawEdge(tree.left, tree.left.right);
+                }
+                if (tree.right) {
+                    drawNode(tree.right.left, 3);
+                    drawNode(tree.right.right, 3);
+                    drawEdge(tree.right, tree.right.left);
+                    drawEdge(tree.right, tree.right.right);
+                }
+            }
+            
+            if (currentStep >= 5) {
+                // Draw level 3
+                drawLevel(3);
+            }
+            
+            if (currentStep >= 6) {
+                // Draw level 4 (leaf nodes)
+                drawLevel(4);
+            }
+            
+            if (currentStep >= 7) {
+                // Highlight successful path
+                highlightSuccessPath();
+            }
+            
+            // Draw array at the top
+            drawArray();
+        }
+        
+        function drawLevel(level) {
+            function traverseAndDraw(node, currentLevel) {
+                if (!node) return;
+                if (currentLevel === level) {
+                    if (node.left) {
+                        drawNode(node.left, level + 1);
+                        drawEdge(node, node.left);
+                    }
+                    if (node.right) {
+                        drawNode(node.right, level + 1);
+                        drawEdge(node, node.right);
+                    }
+                } else if (currentLevel < level) {
+                    traverseAndDraw(node.left, currentLevel + 1);
+                    traverseAndDraw(node.right, currentLevel + 1);
+                }
+            }
+            
+            traverseAndDraw(tree, 1);
+        }
+        
+        function highlightSuccessPath() {
+            if (successPaths.length > 0) {
+                const path = successPaths[0];
+                for (let i = 0; i < path.length; i++) {
+                    path[i].highlighted = true;
+                    if (i < path.length - 1) {
+                        drawEdge(path[i], path[i + 1], true);
+                    }
+                    drawNode(path[i], null, true);
+                }
+            }
+        }
+        
+        function drawNode(node, level, highlight = false) {
+            const radius = 25;
+            
+            // Skip if we shouldn't draw this level yet
+            if (level && currentStep < level + 1) return;
+            
+            if (node.success && currentStep >= 7) {
+                ctx.fillStyle = SUCCESS_COLOR;
+            } else if (highlight || node.highlighted) {
+                ctx.fillStyle = SECONDARY_COLOR;
+            } else {
+                ctx.fillStyle = PRIMARY_COLOR;
+            }
+            
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.fillStyle = WHITE;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = '12px Arial';
+            
+            // Display subset sum in the node
+            if (node.index === 0) {
+                ctx.fillText("Start", node.x, node.y);
+            } else {
+                ctx.fillText(`Sum: ${node.includedSum}`, node.x, node.y - 5);
+                if (node.index === arr.length && currentStep >= 6) {
+                    if (node.includedSum === targetSum) {
+                        ctx.fillText("✓", node.x, node.y + 10);
+                    } else {
+                        ctx.fillText("✗", node.x, node.y + 10);
+                    }
+                }
+            }
+            
+            // Draw the decision label on the edge
+            if (node.decision && node.parent) {
+                const midX = (node.x + node.parent.x) / 2;
+                const midY = (node.y + node.parent.y) / 2;
+                
+                ctx.fillStyle = BLACK;
+                ctx.font = 'bold 12px Arial';
+                
+                if (node.decision === 'include') {
+                    ctx.fillText(`+${arr[node.index - 1]}`, midX - 20, midY);
+                } else {
+                    ctx.fillText(`Skip ${arr[node.index - 1]}`, midX + 20, midY);
+                }
+            }
+        }
+        
+        function drawEdge(parent, child, highlight = false) {
+            if (highlight || (parent.highlighted && child.highlighted)) {
+                ctx.strokeStyle = SECONDARY_COLOR;
+                ctx.lineWidth = 3;
+            } else {
+                ctx.strokeStyle = PRIMARY_COLOR;
+                ctx.lineWidth = 2;
+            }
+            
+            ctx.beginPath();
+            ctx.moveTo(parent.x, parent.y + 25);
+            ctx.lineTo(child.x, child.y - 25);
+            ctx.stroke();
+        }
+        
+        function drawArray() {
+            const boxWidth = 40;
+            const boxHeight = 40;
+            const startX = canvas.width / 2 - (arr.length * boxWidth) / 2;
+            const startY = 20;
+            
+            ctx.font = 'bold 16px Arial';
+            ctx.fillStyle = BLACK;
+            ctx.textAlign = 'center';
+            ctx.fillText("Array: ", startX - 50, startY + boxHeight / 2 + 5);
+            
+            for (let i = 0; i < arr.length; i++) {
+                const x = startX + i * boxWidth;
+                
+                // Box
+                ctx.fillStyle = PRIMARY_COLOR;
+                ctx.fillRect(x, startY, boxWidth, boxHeight);
+                
+                // Text
+                ctx.fillStyle = WHITE;
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(arr[i], x + boxWidth / 2, startY + boxHeight / 2);
+                
+                // Index
+                ctx.fillStyle = BLACK;
+                ctx.font = '12px Arial';
+                ctx.fillText(i, x + boxWidth / 2, startY + boxHeight + 15);
+            }
+            
+            // Display target sum
+            ctx.fillStyle = BLACK;
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(`Target Sum: ${targetSum}`, canvas.width - 150, startY + boxHeight / 2 + 5);
+        }
+        
+        // Navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateUI();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateUI();
+            }
+        });
+        
+        function updateUI() {
+            currentStepEl.textContent = currentStep;
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === totalSteps;
+            drawTree();
+        }
+        
+        // Initialize
+        drawTree();
+    </script>
+</body>
+</html>
