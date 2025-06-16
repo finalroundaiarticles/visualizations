@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palindrome Examples Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #000000;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .example-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        .example-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #FF4800;
+        }
+        .string-display {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+        .char {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            margin: 5px;
+            border-radius: 5px;
+            background-color: #FFFFFF;
+            border: 2px solid #000000;
+            transition: all 0.3s ease;
+        }
+        .highlight {
+            background-color: #FD9F78;
+            border-color: #FF4800;
+            color: #000000;
+            transform: scale(1.1);
+            font-weight: bold;
+        }
+        .explanation {
+            margin: 20px 0;
+            text-align: center;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            gap: 20px;
+        }
+        .nav-btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Palindrome Examples Visualization</h1>
+        
+        <div id="example1" class="example-container">
+            <div class="example-title">Example 1: "babad"</div>
+            <div class="string-display" id="display1">
+                <div class="char">b</div>
+                <div class="char">a</div>
+                <div class="char">b</div>
+                <div class="char">a</div>
+                <div class="char">d</div>
+            </div>
+            <div class="explanation" id="explanation1">
+                The string "babad" has two palindromic substrings of length 3: "bab" and "aba". 
+                Either one can be the answer. Let's highlight "bab".
+            </div>
+        </div>
+        
+        <div id="example2" class="example-container">
+            <div class="example-title">Example 2: "cbbd"</div>
+            <div class="string-display" id="display2">
+                <div class="char">c</div>
+                <div class="char">b</div>
+                <div class="char">b</div>
+                <div class="char">d</div>
+            </div>
+            <div class="explanation" id="explanation2">
+                The string "cbbd" has a palindromic substring "bb" of length 2.
+                This is the longest palindromic substring in this example.
+            </div>
+        </div>
+        
+        <div id="example3" class="example-container">
+            <div class="example-title">Example 3: "racecar"</div>
+            <div class="string-display" id="display3">
+                <div class="char">r</div>
+                <div class="char">a</div>
+                <div class="char">c</div>
+                <div class="char">e</div>
+                <div class="char">c</div>
+                <div class="char">a</div>
+                <div class="char">r</div>
+            </div>
+            <div class="explanation" id="explanation3">
+                The entire string "racecar" is a palindrome, making it the longest palindromic substring.
+                A palindrome reads the same forwards and backwards.
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button id="prevBtn" class="nav-btn">Previous</button>
+            <button id="nextBtn" class="nav-btn">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">Example 1 of 3</div>
+    </div>
+
+    <script>
+        const examples = ["example1", "example2", "example3"];
+        const highlights = [
+            [0, 1, 2], // "bab" in "babad"
+            [1, 2],    // "bb" in "cbbd"
+            [0, 1, 2, 3, 4, 5, 6]  // "racecar" in "racecar"
+        ];
+        
+        let currentExample = 0;
+        
+        function showExample(index) {
+            // Hide all examples
+            examples.forEach(ex => {
+                document.getElementById(ex).style.display = "none";
+            });
+            
+            // Show current example
+            document.getElementById(examples[index]).style.display = "flex";
+            
+            // Update step indicator
+            document.getElementById("stepIndicator").textContent = `Example ${index + 1} of ${examples.length}`;
+            
+            // Enable/disable navigation buttons
+            document.getElementById("prevBtn").disabled = index === 0;
+            document.getElementById("nextBtn").disabled = index === examples.length - 1;
+            
+            // Reset all highlights
+            document.querySelectorAll(".char").forEach(char => {
+                char.classList.remove("highlight");
+            });
+            
+            // Apply animations with a delay
+            setTimeout(() => {
+                const chars = document.querySelectorAll(`#display${index + 1} .char`);
+                highlights[index].forEach((pos, i) => {
+                    setTimeout(() => {
+                        chars[pos].classList.add("highlight");
+                    }, i * 300);
+                });
+            }, 500);
+        }
+        
+        document.getElementById("prevBtn").addEventListener("click", () => {
+            if (currentExample > 0) {
+                currentExample--;
+                showExample(currentExample);
+            }
+        });
+        
+        document.getElementById("nextBtn").addEventListener("click", () => {
+            if (currentExample < examples.length - 1) {
+                currentExample++;
+                showExample(currentExample);
+            }
+        });
+        
+        // Initialize with the first example
+        showExample(currentExample);
+    </script>
+</body>
+</html>
