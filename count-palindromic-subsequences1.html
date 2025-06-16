@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palindromic Subsequences of 'bccb'</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #000000;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .animation-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .original-string {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+        .char-box {
+            width: 50px;
+            height: 50px;
+            margin: 0 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            border: 2px solid #000000;
+            border-radius: 8px;
+            position: relative;
+        }
+        .char-position {
+            position: absolute;
+            bottom: -25px;
+            font-size: 12px;
+            color: #FF4800;
+        }
+        .subsequence-display {
+            text-align: center;
+            margin-top: 60px;
+            font-size: 24px;
+        }
+        .subsequence-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #FF4800;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 300px;
+            margin-top: 20px;
+        }
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .highlight {
+            background-color: #FD9F78;
+            border-color: #FF4800;
+            animation: pulse 1s infinite;
+        }
+        .explanation {
+            margin-top: 30px;
+            padding: 15px;
+            border-left: 4px solid #FF4800;
+            background-color: rgba(253, 159, 120, 0.1);
+        }
+        .step-count {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #FF4800;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Palindromic Subsequences of 'bccb'</h1>
+        
+        <div class="animation-container">
+            <div class="step-count">Step <span id="step-number">1</span> of 6</div>
+            
+            <div class="original-string">
+                <div class="char-box" id="char0">b<div class="char-position">Position 0</div></div>
+                <div class="char-box" id="char1">c<div class="char-position">Position 1</div></div>
+                <div class="char-box" id="char2">c<div class="char-position">Position 2</div></div>
+                <div class="char-box" id="char3">b<div class="char-position">Position 3</div></div>
+            </div>
+            
+            <div class="subsequence-display">
+                <div class="subsequence-title">Palindromic Subsequence:</div>
+                <div id="current-subsequence"></div>
+            </div>
+            
+            <div class="explanation" id="explanation"></div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prev-btn" disabled>Previous</button>
+            <button class="nav-button" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const subsequences = [
+                { 
+                    subsequence: 'b', 
+                    positions: [0],
+                    explanation: "This is a single character 'b' from position 0. Any single character is a palindrome by itself."
+                },
+                { 
+                    subsequence: 'c', 
+                    positions: [1],
+                    explanation: "This is a single character 'c' from position 1. Any single character is a palindrome by itself."
+                },
+                { 
+                    subsequence: 'c', 
+                    positions: [2],
+                    explanation: "This is a single character 'c' from position 2. Any single character is a palindrome by itself."
+                },
+                { 
+                    subsequence: 'cc', 
+                    positions: [1, 2],
+                    explanation: "This subsequence takes 'c' from positions 1 and 2. 'cc' reads the same forwards and backwards, making it a palindrome."
+                },
+                { 
+                    subsequence: 'bcb', 
+                    positions: [0, 2, 3],
+                    explanation: "This subsequence takes 'b' from position 0, 'c' from position 2, and 'b' from position 3. 'bcb' reads the same forwards and backwards."
+                },
+                { 
+                    subsequence: 'bccb', 
+                    positions: [0, 1, 2, 3],
+                    explanation: "This is the complete string 'bccb'. It reads the same forwards and backwards, making it a palindrome."
+                }
+            ];
+            
+            let currentStep = 0;
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const stepNumber = document.getElementById('step-number');
+            const currentSubsequence = document.getElementById('current-subsequence');
+            const explanation = document.getElementById('explanation');
+            
+            function updateDisplay() {
+                // Reset all highlights
+                for (let i = 0; i < 4; i++) {
+                    document.getElementById(`char${i}`).classList.remove('highlight');
+                }
+                
+                // Update step number
+                stepNumber.textContent = currentStep + 1;
+                
+                // Set current subsequence
+                currentSubsequence.textContent = subsequences[currentStep].subsequence;
+                
+                // Set explanation
+                explanation.textContent = subsequences[currentStep].explanation;
+                
+                // Highlight relevant positions
+                subsequences[currentStep].positions.forEach(pos => {
+                    document.getElementById(`char${pos}`).classList.add('highlight');
+                });
+                
+                // Update button states
+                prevBtn.disabled = currentStep === 0;
+                nextBtn.disabled = currentStep === subsequences.length - 1;
+            }
+            
+            prevBtn.addEventListener('click', function() {
+                if (currentStep > 0) {
+                    currentStep--;
+                    updateDisplay();
+                }
+            });
+            
+            nextBtn.addEventListener('click', function() {
+                if (currentStep < subsequences.length - 1) {
+                    currentStep++;
+                    updateDisplay();
+                }
+            });
+            
+            // Initial display
+            updateDisplay();
+        });
+    </script>
+</body>
+</html>
