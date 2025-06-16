@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expand Around Center Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        
+        .description {
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        
+        .visualization-container {
+            margin: 30px 0;
+            position: relative;
+            height: 280px;
+        }
+        
+        .string-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 50px;
+        }
+        
+        .char {
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            margin: 5px;
+            border: 2px solid #000000;
+            border-radius: 5px;
+            font-size: 20px;
+            font-weight: bold;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+        
+        .active {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.1);
+        }
+        
+        .highlight {
+            background-color: #FD9F78;
+            transform: scale(1.05);
+        }
+        
+        .message {
+            margin-top: 20px;
+            font-size: 18px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .arrow {
+            position: absolute;
+            height: 40px;
+            top: 70px;
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-counter {
+            margin: 0 20px;
+            font-size: 18px;
+            line-height: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Expand Around Center Visualization</h1>
+        
+        <div class="description">
+            <p>This visualization demonstrates the "Expand Around Center" technique for finding palindromes. A palindrome is a string that reads the same backward as forward. We'll use the example string "racecar".</p>
+            <p>The algorithm starts from a center position and expands outward, checking if characters on both sides match. If they do, we continue expanding until we find the full palindrome.</p>
+        </div>
+        
+        <div class="visualization-container">
+            <div class="string-container" id="string-container">
+                <!-- Characters will be added by JavaScript -->
+            </div>
+            
+            <div class="message" id="message"></div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" class="nav-btn" disabled>Previous</button>
+            <div class="step-counter">Step <span id="currentStep">1</span> of <span id="totalSteps">7</span></div>
+            <button id="nextBtn" class="nav-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const word = "racecar";
+        const stringContainer = document.getElementById('string-container');
+        const message = document.getElementById('message');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const currentStepEl = document.getElementById('currentStep');
+        const totalStepsEl = document.getElementById('totalSteps');
+        
+        let currentStep = 1;
+        const totalSteps = 7;
+        
+        // Initialize the visualization
+        function init() {
+            // Clear previous content
+            stringContainer.innerHTML = '';
+            
+            // Create character elements
+            for (let i = 0; i < word.length; i++) {
+                const charEl = document.createElement('div');
+                charEl.className = 'char';
+                charEl.textContent = word[i];
+                charEl.id = `char-${i}`;
+                stringContainer.appendChild(charEl);
+            }
+            
+            // Set total steps
+            totalStepsEl.textContent = totalSteps;
+            
+            // Show first step
+            showStep(1);
+        }
+        
+        // Show a specific step
+        function showStep(step) {
+            // Reset all characters
+            for (let i = 0; i < word.length; i++) {
+                document.getElementById(`char-${i}`).className = 'char';
+            }
+            
+            // Remove any arrows
+            const arrows = document.querySelectorAll('.arrow');
+            arrows.forEach(arrow => arrow.remove());
+            
+            // Show step based on step number
+            switch(step) {
+                case 1:
+                    document.getElementById('char-3').classList.add('active');
+                    message.textContent = "Step 1: Start with the center character 'c' at position 3.";
+                    break;
+                    
+                case 2:
+                    document.getElementById('char-3').classList.add('active');
+                    document.getElementById('char-2').classList.add('highlight');
+                    document.getElementById('char-4').classList.add('highlight');
+                    message.textContent = "Step 2: Expand outward and check if 'e' = 'e'.";
+                    
+                    // Add arrows
+                    createArrow(3, 2, '←');
+                    createArrow(3, 4, '→');
+                    break;
+                    
+                case 3:
+                    document.getElementById('char-3').classList.add('active');
+                    document.getElementById('char-2').classList.add('active');
+                    document.getElementById('char-4').classList.add('active');
+                    document.getElementById('char-1').classList.add('highlight');
+                    document.getElementById('char-5').classList.add('highlight');
+                    message.textContent = "Step 3: Characters match! Expand further and check if 'a' = 'a'.";
+                    
+                    // Add arrows
+                    createArrow(2, 1, '←');
+                    createArrow(4, 5, '→');
+                    break;
+                    
+                case 4:
+                    document.getElementById('char-3').classList.add('active');
+                    document.getElementById('char-2').classList.add('active');
+                    document.getElementById('char-4').classList.add('active');
+                    document.getElementById('char-1').classList.add('active');
+                    document.getElementById('char-5').classList.add('active');
+                    document.getElementById('char-0').classList.add('highlight');
+                    document.getElementById('char-6').classList.add('highlight');
+                    message.textContent = "Step 4: Characters match! Expand further and check if 'r' = 'r'.";
+                    
+                    // Add arrows
+                    createArrow(1, 0, '←');
+                    createArrow(5, 6, '→');
+                    break;
+                    
+                case 5:
+                    for (let i = 0; i < word.length; i++) {
+                        document.getElementById(`char-${i}`).classList.add('active');
+                    }
+                    message.textContent = "Step 5: Characters match! We've found the full palindrome 'racecar'.";
+                    break;
+                    
+                case 6:
+                    for (let i = 0; i < word.length; i++) {
+                        document.getElementById(`char-${i}`).classList.add('active');
+                    }
+                    message.innerHTML = "Step 6: The algorithm successfully identified 'racecar' as a palindrome.<br>It reads the same forward and backward!";
+                    break;
+                    
+                case 7:
+                    for (let i = 0; i < word.length; i++) {
+                        document.getElementById(`char-${i}`).classList.add('active');
+                    }
+                    message.innerHTML = "Step 7: The 'Expand Around Center' technique is efficient for finding palindromes.<br>Time complexity: O(n²), Space complexity: O(1)";
+                    break;
+            }
+            
+            // Update current step
+            currentStep = step;
+            currentStepEl.textContent = currentStep;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === totalSteps;
+            
+            // Animate arrows
+            setTimeout(() => {
+                const arrows = document.querySelectorAll('.arrow');
+                arrows.forEach(arrow => {
+                    arrow.style.opacity = 1;
+                });
+            }, 100);
+        }
+        
+        // Create an arrow element
+        function createArrow(fromIndex, toIndex, symbol) {
+            const arrow = document.createElement('div');
+            arrow.className = 'arrow';
+            arrow.textContent = symbol;
+            arrow.style.fontSize = '24px';
+            arrow.style.fontWeight = 'bold';
+            arrow.style.color = '#FF4800';
+            
+            const fromChar = document.getElementById(`char-${fromIndex}`);
+            const toChar = document.getElementById(`char-${toIndex}`);
+            
+            // Position the arrow
+            const fromRect = fromChar.getBoundingClientRect();
+            const toRect = toChar.getBoundingClientRect();
+            const containerRect = stringContainer.getBoundingClientRect();
+            
+            if (toIndex > fromIndex) {
+                // Right arrow
+                arrow.style.left = (fromRect.right - containerRect.left + 5) + 'px';
+            } else {
+                // Left arrow
+                arrow.style.left = (toRect.right - containerRect.left + 5) + 'px';
+            }
+            
+            stringContainer.appendChild(arrow);
+            return arrow;
+        }
+        
+        // Event listeners for navigation
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                showStep(currentStep - 1);
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                showStep(currentStep + 1);
+            }
+        });
+        
+        // Initialize the visualization
+        init();
+    </script>
+</body>
+</html>
