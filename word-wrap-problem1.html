@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Wrap Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 800px;
+            max-width: 90%;
+        }
+        
+        .visualization-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .word-array {
+            display: flex;
+            margin-bottom: 20px;
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 8px;
+            justify-content: center;
+        }
+        
+        .word {
+            margin: 0 10px;
+            padding: 8px;
+            background-color: #FD9F78;
+            border-radius: 5px;
+            color: #000000;
+            font-weight: bold;
+        }
+        
+        .line-container {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .line {
+            display: flex;
+            align-items: center;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 5px;
+            position: relative;
+        }
+        
+        .line-number {
+            position: absolute;
+            left: -30px;
+            background-color: #FF4800;
+            color: white;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .line-words {
+            display: flex;
+        }
+        
+        .line-word {
+            padding: 5px;
+            margin-right: 5px;
+        }
+        
+        .space {
+            width: 10px;
+            height: 20px;
+            margin-right: 5px;
+            background-color: transparent;
+        }
+        
+        .highlight-space {
+            background-color: rgba(255, 72, 0, 0.3);
+        }
+        
+        .line-info {
+            margin-left: 15px;
+            color: #000000;
+            font-weight: bold;
+        }
+        
+        .cost {
+            color: #FF4800;
+        }
+        
+        .total-cost {
+            font-size: 18px;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #f8f8f8;
+            border-radius: 8px;
+            border-left: 4px solid #FF4800;
+        }
+        
+        .explanation {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f8f8;
+            border-radius: 8px;
+            line-height: 1.6;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            width: 300px;
+            margin-top: 30px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .width-indicator {
+            width: 100%;
+            max-width: 250px;
+            height: 30px;
+            border: 2px dashed #FF4800;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        
+        .width-label {
+            position: absolute;
+            top: -25px;
+            left: 0;
+            font-weight: bold;
+            color: #FF4800;
+        }
+        
+        .width-marker {
+            position: absolute;
+            top: -5px;
+            height: 40px;
+            border-left: 2px solid #FF4800;
+        }
+        
+        .width-value {
+            position: absolute;
+            bottom: -25px;
+            font-weight: bold;
+            color: #FF4800;
+        }
+        
+        .step {
+            display: none;
+        }
+        
+        .active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Word Wrap Visualization</h1>
+        
+        <div class="visualization-container">
+            <div class="word-array">
+                <div class="word">This</div>
+                <div class="word">is</div>
+                <div class="word">an</div>
+                <div class="word">example</div>
+            </div>
+            
+            <div class="width-indicator">
+                <div class="width-label">Line Width:</div>
+                <div class="width-marker" style="left: 0px;"></div>
+                <div class="width-marker" style="left: 250px;"></div>
+                <div class="width-value" style="left: 120px;">10 characters</div>
+            </div>
+            
+            <div id="steps-container">
+                <!-- Step 1 -->
+                <div class="step active" id="step1">
+                    <div class="line-container">
+                        <div class="line">
+                            <div class="line-number">1</div>
+                            <div class="line-words">
+                                <div class="line-word">This</div>
+                                <div class="space"></div>
+                                <div class="line-word">is</div>
+                                <div class="space highlight-space"></div>
+                                <div class="space highlight-space"></div>
+                                <div class="space highlight-space"></div>
+                            </div>
+                            <div class="line-info">Length: 7, Spaces: 3, Cost = 3² = <span class="cost">9</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <p>In word wrapping, we try to fit words into lines with a maximum width. Here, our line width is 10 characters.</p>
+                        <p>For the first line, we have the words "This" (4 characters) and "is" (2 characters), plus 1 space between them = 7 characters total.</p>
+                        <p>This leaves 3 empty spaces at the end of the line (highlighted). The cost for this line is the square of the empty spaces: 3² = 9.</p>
+                    </div>
+                </div>
+                
+                <!-- Step 2 -->
+                <div class="step" id="step2">
+                    <div class="line-container">
+                        <div class="line">
+                            <div class="line-number">2</div>
+                            <div class="line-words">
+                                <div class="line-word">an</div>
+                                <div class="space"></div>
+                                <div class="line-word">example</div>
+                            </div>
+                            <div class="line-info">Length: 10, Spaces: 0, Cost = 0² = <span class="cost">0</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <p>For the second line, we have the words "an" (2 characters) and "example" (7 characters), plus 1 space between them = 10 characters total.</p>
+                        <p>This perfectly fills our line width of 10 characters, leaving 0 empty spaces at the end.</p>
+                        <p>The cost for this line is the square of the empty spaces: 0² = 0. Perfect fit!</p>
+                    </div>
+                </div>
+                
+                <!-- Step 3 -->
+                <div class="step" id="step3">
+                    <div class="line-container">
+                        <div class="line">
+                            <div class="line-number">1</div>
+                            <div class="line-words">
+                                <div class="line-word">This</div>
+                                <div class="space"></div>
+                                <div class="line-word">is</div>
+                                <div class="space highlight-space"></div>
+                                <div class="space highlight-space"></div>
+                                <div class="space highlight-space"></div>
+                            </div>
+                            <div class="line-info">Cost = <span class="cost">9</span></div>
+                        </div>
+                        
+                        <div class="line">
+                            <div class="line-number">2</div>
+                            <div class="line-words">
+                                <div class="line-word">an</div>
+                                <div class="space"></div>
+                                <div class="line-word">example</div>
+                            </div>
+                            <div class="line-info">Cost = <span class="cost">0</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="total-cost">
+                        Total Cost = 9 + 0 = <span class="cost">9</span>
+                    </div>
+                    
+                    <div class="explanation">
+                        <p>The total cost of the word wrapping is the sum of costs for all lines:</p>
+                        <p>Line 1 cost (9) + Line 2 cost (0) = 9</p>
+                        <p>Word wrapping algorithms aim to minimize this total cost, finding the optimal arrangement of words across lines.</p>
+                        <p>In dynamic programming approaches, we would calculate the cost of different combinations to find the arrangement with the minimum total cost.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="prev-btn" disabled>Previous</button>
+                <button id="next-btn">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const steps = document.querySelectorAll('.step');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            let currentStep = 0;
+            
+            function updateButtons() {
+                prevBtn.disabled = currentStep === 0;
+                nextBtn.disabled = currentStep === steps.length - 1;
+            }
+            
+            function showStep(stepIndex) {
+                steps.forEach((step, index) => {
+                    if (index === stepIndex) {
+                        step.classList.add('active');
+                    } else {
+                        step.classList.remove('active');
+                    }
+                });
+                
+                currentStep = stepIndex;
+                updateButtons();
+            }
+            
+            prevBtn.addEventListener('click', function() {
+                if (currentStep > 0) {
+                    showStep(currentStep - 1);
+                }
+            });
+            
+            nextBtn.addEventListener('click', function() {
+                if (currentStep < steps.length - 1) {
+                    showStep(currentStep + 1);
+                }
+            });
+            
+            // Initialize
+            showStep(0);
+        });
+    </script>
+</body>
+</html>
