@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Programming Table Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        
+        .dp-table {
+            border-collapse: collapse;
+            margin: 20px auto;
+        }
+        
+        .dp-table td {
+            border: 1px solid #000000;
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            font-weight: bold;
+            position: relative;
+        }
+        
+        .dp-table .header {
+            background-color: #FD9F78;
+            color: #000000;
+        }
+        
+        .dp-table .current {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            animation: pulse 1s infinite alternate;
+        }
+        
+        .dp-table .true {
+            background-color: #d4f7d4;
+            color: #008000;
+        }
+        
+        .dp-table .false {
+            background-color: #ffdddd;
+            color: #ff0000;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #FD9F78;
+            border-radius: 5px;
+            line-height: 1.6;
+        }
+        
+        .strings {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-left: 5px solid #FF4800;
+        }
+        
+        .step-counter {
+            color: #FF4800;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        @keyframes pulse {
+            from {
+                box-shadow: 0 0 0 0 rgba(255, 72, 0, 0.7);
+            }
+            to {
+                box-shadow: 0 0 0 10px rgba(255, 72, 0, 0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Dynamic Programming for Interleaving Strings</h1>
+    
+    <div class="strings">
+        <p><strong>s1 = </strong>'aab'</p>
+        <p><strong>s2 = </strong>'axy'</p>
+        <p><strong>s3 = </strong>'aaxaby'</p>
+        <p><strong>Question: </strong>Is s3 an interleaving of s1 and s2?</p>
+    </div>
+    
+    <div class="step-counter">Step: <span id="stepCount">0</span> / <span id="totalSteps">0</span></div>
+    
+    <div class="container">
+        <table class="dp-table" id="dpTable">
+            <!-- Table will be generated via JavaScript -->
+        </table>
+    </div>
+    
+    <div class="controls">
+        <button id="prevBtn">Previous</button>
+        <button id="nextBtn">Next</button>
+    </div>
+    
+    <div class="explanation" id="explanation">
+        Welcome to the DP Table Animation for Interleaving Strings problem. Click "Next" to start.
+    </div>
+    
+    <script>
+        // Constants
+        const s1 = "aab";
+        const s2 = "axy";
+        const s3 = "aaxaby";
+        
+        // DP table and steps for animation
+        let steps = [];
+        let currentStep = 0;
+        
+        // Initialize the DP table
+        function initDPTable() {
+            const m = s1.length;
+            const n = s2.length;
+            
+            // Create initial DP table
+            let dp = Array(m+1).fill().map(() => Array(n+1).fill(false));
+            
+            // Base case: empty strings are interleaving
+            dp[0][0] = true;
+            
+            // Base cases: s1 or s2 matching with s3
+            for (let i = 1; i <= m; i++) {
+                if (s1.charAt(i-1) === s3.charAt(i-1)) {
+                    dp[i][0] = dp[i-1][0];
+                }
+            }
+            
+            for (let j = 1; j <= n; j++) {
+                if (s2.charAt(j-1) === s3.charAt(j-1)) {
+                    dp[0][j] = dp[0][j-1];
+                }
+            }
+            
+            // Add initial state as first step
+            steps.push({
+                dp: JSON.parse(JSON.stringify(dp)),
+                currentCell: null,
+                explanation: "Initial DP table. dp[i][j] represents whether s3[0...i+j-1] is an interleaving of s1[0...i-1] and s2[0...j-1]. True values are shown in green, false in red."
+            });
+            
+            // Fill the DP table step by step
+            for (let i = 1; i <= m; i++) {
+                for (let j = 1; j <= n; j++) {
+                    let s1Match = false;
+                    let s2Match = false;
+                    
+                    // Check if current char in s1 matches s3
+                    if (s1.charAt(i-1) === s3.charAt(i+j-1)) {
+                        s1Match = dp[i-1][j];
+                    }
+                    
+                    // Check if current char in s2 matches s3
+                    if (s2.charAt(j-1) === s3.charAt(i+j-1)) {
+                        s2Match = dp[i][j-1];
+                    }
+                    
+                    // Update DP table
+                    dp[i][j] = s1Match || s2Match;
+                    
+                    // Add step for visualization
+                    steps.push({
+                        dp: JSON.parse(JSON.stringify(dp)),
+                        currentCell: {i, j},
+                        explanation: createExplanationForStep(i, j, s1Match, s2Match)
+                    });
+                }
+            }
+            
+            // Add final result explanation
+            steps.push({
+                dp: JSON.parse(JSON.stringify(dp)),
+                currentCell: null,
+                explanation: `Final result: dp[${m}][${n}] = ${dp[m][n]}. So, s3 ${dp[m][n] ? "is" : "is not"} an interleaving of s1 and s2.`
+            });
+            
+            // Update total steps count
+            document.getElementById("totalSteps").textContent = steps.length - 1;
+        }
+        
+        function createExplanationForStep(i, j, s1Match, s2Match) {
+            const currentPos = i + j - 1;
+            let explanation = `Checking cell dp[${i}][${j}] for whether s3[0...${currentPos}] is an interleaving.\n`;
+            
+            explanation += `Current character in s3 to match: s3[${i+j-1}] = '${s3.charAt(i+j-1)}'.\n`;
+            
+            if (s1.charAt(i-1) === s3.charAt(i+j-1)) {
+                explanation += `s1[${i-1}] = '${s1.charAt(i-1)}' matches s3[${i+j-1}]. `;
+                explanation += `If we use this character from s1, we need dp[${i-1}][${j}] to be true, which is ${s1Match}.\n`;
+            } else {
+                explanation += `s1[${i-1}] = '${s1.charAt(i-1)}' does not match s3[${i+j-1}] = '${s3.charAt(i+j-1)}'.\n`;
+            }
+            
+            if (s2.charAt(j-1) === s3.charAt(i+j-1)) {
+                explanation += `s2[${j-1}] = '${s2.charAt(j-1)}' matches s3[${i+j-1}]. `;
+                explanation += `If we use this character from s2, we need dp[${i}][${j-1}] to be true, which is ${s2Match}.\n`;
+            } else {
+                explanation += `s2[${j-1}] = '${s2.charAt(j-1)}' does not match s3[${i+j-1}] = '${s3.charAt(i+j-1)}'.\n`;
+            }
+            
+            explanation += `Therefore, dp[${i}][${j}] = ${s1Match} OR ${s2Match} = ${s1Match || s2Match}`;
+            
+            return explanation;
+        }
+        
+        // Draw the DP table based on current step
+        function drawDPTable() {
+            const step = steps[currentStep];
+            const dp = step.dp;
+            const currentCell = step.currentCell;
+            
+            const tableElement = document.getElementById('dpTable');
+            tableElement.innerHTML = '';
+            
+            // Create header row with characters from s2
+            const headerRow = document.createElement('tr');
+            const emptyCell = document.createElement('td');
+            emptyCell.className = 'header';
+            headerRow.appendChild(emptyCell);
+            
+            const s2Header = document.createElement('td');
+            s2Header.className = 'header';
+            s2Header.textContent = 'ε';
+            headerRow.appendChild(s2Header);
+            
+            for (let j = 0; j < s2.length; j++) {
+                const cell = document.createElement('td');
+                cell.className = 'header';
+                cell.textContent = s2.charAt(j);
+                headerRow.appendChild(cell);
+            }
+            
+            tableElement.appendChild(headerRow);
+            
+            // Create rows with data
+            for (let i = 0; i <= s1.length; i++) {
+                const row = document.createElement('tr');
+                
+                // Add s1 character for this row
+                const s1Cell = document.createElement('td');
+                s1Cell.className = 'header';
+                s1Cell.textContent = (i === 0) ? 'ε' : s1.charAt(i-1);
+                row.appendChild(s1Cell);
+                
+                for (let j = 0; j <= s2.length; j++) {
+                    const cell = document.createElement('td');
+                    
+                    if (currentCell && currentCell.i === i && currentCell.j === j) {
+                        cell.className = 'current';
+                    } else if (dp[i][j]) {
+                        cell.className = 'true';
+                    } else {
+                        cell.className = 'false';
+                    }
+                    
+                    cell.textContent = dp[i][j] ? 'T' : 'F';
+                    row.appendChild(cell);
+                }
+                
+                tableElement.appendChild(row);
+            }
+            
+            // Update explanation
+            document.getElementById('explanation').textContent = step.explanation;
+            
+            // Update step counter
+            document.getElementById('stepCount').textContent = currentStep;
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = (currentStep === 0);
+            document.getElementById('nextBtn').disabled = (currentStep === steps.length - 1);
+        }
+        
+        // Initialize the animation
+        function init() {
+            initDPTable();
+            drawDPTable();
+            
+            // Set up event listeners
+            document.getElementById('prevBtn').addEventListener('click', () => {
+                if (currentStep > 0) {
+                    currentStep--;
+                    drawDPTable();
+                }
+            });
+            
+            document.getElementById('nextBtn').addEventListener('click', () => {
+                if (currentStep < steps.length - 1) {
+                    currentStep++;
+                    drawDPTable();
+                }
+            });
+        }
+        
+        // Start the animation
+        window.onload = init;
+    </script>
+</body>
+</html>
