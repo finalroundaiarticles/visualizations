@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chain Formation Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        #animation-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            margin: 20px 0;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .pair {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 80px;
+            height: 40px;
+            background-color: #FD9F78;
+            border-radius: 20px;
+            color: #000000;
+            font-weight: bold;
+            position: absolute;
+            transition: all 1s ease;
+        }
+        
+        .arrow {
+            position: absolute;
+            height: 3px;
+            background-color: #FF4800;
+            transform-origin: left center;
+            transition: all 1s ease;
+        }
+        
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid #FF4800;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        
+        .explanation {
+            width: 100%;
+            padding: 20px;
+            background-color: #FD9F78;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            color: #000000;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 300px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Chain Formation Visualization</h1>
+        
+        <div id="animation-container"></div>
+        
+        <div class="explanation" id="explanation">
+            <p>Let's understand how chain formation works using the example: [[1,2], [2,3], [3,4]]</p>
+        </div>
+        
+        <div class="nav-buttons">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const animationContainer = document.getElementById('animation-container');
+        const explanationDiv = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        
+        const pairs = [
+            [1, 2],
+            [2, 3],
+            [3, 4]
+        ];
+        
+        const steps = [
+            {
+                explanation: "Let's understand how chain formation works using the example: [[1,2], [2,3], [3,4]]",
+                animation: function() {
+                    // Clear container
+                    animationContainer.innerHTML = '';
+                }
+            },
+            {
+                explanation: "First, we have three pairs: [1,2], [2,3], and [3,4]",
+                animation: function() {
+                    // Clear container
+                    animationContainer.innerHTML = '';
+                    
+                    // Display all pairs
+                    createPair(pairs[0], 150, 200);
+                    createPair(pairs[1], 350, 200);
+                    createPair(pairs[2], 550, 200);
+                }
+            },
+            {
+                explanation: "Two pairs can form a chain if the second element of the first pair equals the first element of the second pair.",
+                animation: function() {
+                    // Clear container
+                    animationContainer.innerHTML = '';
+                    
+                    // Display all pairs
+                    createPair(pairs[0], 150, 200);
+                    createPair(pairs[1], 350, 200);
+                    createPair(pairs[2], 550, 200);
+                    
+                    // Highlight condition
+                    setTimeout(() => {
+                        const firstPair = document.querySelector(`[data-pair="1,2"]`);
+                        const secondPair = document.querySelector(`[data-pair="2,3"]`);
+                        
+                        firstPair.style.backgroundColor = '#FF4800';
+                        secondPair.style.backgroundColor = '#FF4800';
+                        
+                        // Create connector between pairs
+                        createArrow(230, 200, 120, 0);
+                    }, 500);
+                }
+            },
+            {
+                explanation: "Here, [1,2] and [2,3] can form a chain because the second element of [1,2] is 2, which equals the first element of [2,3].",
+                animation: function() {
+                    // Clear container
+                    animationContainer.innerHTML = '';
+                    
+                    // Display all pairs
+                    createPair(pairs[0], 150, 150);
+                    createPair(pairs[1], 350, 150);
+                    createPair(pairs[2], 550, 150);
+                    
+                    // Highlight connection
+                    const firstPair = document.querySelector(`[data-pair="1,2"]`);
+                    const secondPair = document.querySelector(`[data-pair="2,3"]`);
+                    
+                    firstPair.style.backgroundColor = '#FF4800';
+                    secondPair.style.backgroundColor = '#FF4800';
+                    
+                    // Create connector between pairs
+                    createArrow(230, 150, 120, 0);
+                }
+            },
+            {
+                explanation: "Similarly, [2,3] and [3,4] can form a chain because the second element of [2,3] is 3, which equals the first element of [3,4].",
+                animation: function() {
+                    // Clear container
+                    animationContainer.innerHTML = '';
+                    
+                    // Display all pairs
+                    createPair(pairs[0], 150, 150);
+                    createPair(pairs[1], 350, 150);
+                    createPair(pairs[2], 550, 150);
+                    
+                    // Reset first connection
+                    const firstPair = document.querySelector(`[data-pair="1,2"]`);
+                    const secondPair = document.querySelector(`[data-pair="2,3"]`);
+                    const thirdPair = document.querySelector(`[data-pair="3,4"]`);
+                    
+                    firstPair.style.backgroundColor = '#FD9F78';
+                    secondPair.style.backgroundColor = '#FF4800';
+                    thirdPair.style.backgroundColor = '#FF4800';
+                    
+                    // Create connector between pairs
+                    createArrow(430, 150, 120, 0);
+                }
+            },
+            {
+                explanation: "We can also form a longer chain: [1,2] -> [2,3] -> [3,4], which has a length of 3.",
+                animation: function() {
+                    // Clear container
+                    animationContainer.innerHTML = '';
+                    
+                    // Display all pairs
+                    createPair(pairs[0], 150, 150);
+                    createPair(pairs[1], 350, 150);
+                    createPair(pairs[2], 550, 150);
+                    
+                    // Highlight all connections
+                    const firstPair = document.querySelector(`[data-pair="1,2"]`);
+                    const secondPair = document.querySelector(`[data-pair="2,3"]`);
+                    const thirdPair = document.querySelector(`[data-pair="3,4"]`);
+                    
+                    firstPair.style.backgroundColor = '#FF4800';
+                    secondPair.style.backgroundColor = '#FF4800';
+                    thirdPair.style.backgroundColor = '#FF4800';
+                    
+                    // Create connectors between pairs
+                    createArrow(230, 150, 120, 0);
+                    createArrow(430, 150, 120, 0);
+                }
+            },
+            {
+                explanation: "Interestingly, we can also form a chain by skipping the middle pair: [1,2] -> [3,4]. This works because the first number in [1,2] is less than the first number in [3,4], which is a valid chain according to the problem.",
+                animation: function() {
+                    // Clear container
+                    animationContainer.innerHTML = '';
+                    
+                    // Display pairs in new configuration
+                    createPair(pairs[0], 150, 200);
+                    createPair(pairs[1], 350, 100, 0.6); // Smaller and faded
+                    createPair(pairs[2], 550, 200);
+                    
+                    const firstPair = document.querySelector(`[data-pair="1,2"]`);
+                    const secondPair = document.querySelector(`[data-pair="2,3"]`);
+                    const thirdPair = document.querySelector(`[data-pair="3,4"]`);
+                    
+                    firstPair.style.backgroundColor = '#FF4800';
+                    secondPair.style.backgroundColor = '#FD9F78';
+                    secondPair.style.opacity = '0.6';
+                    thirdPair.style.backgroundColor = '#FF4800';
+                    
+                    // Create long arrow
+                    createArrow(230, 200, 320, 0);
+                }
+            },
+            {
+                explanation: "In this example, we have multiple possible chains. The longest chain has a length of 3 ([1,2] -> [2,3] -> [3,4]), which would be our answer if we're looking for the maximum length.",
+                animation: function() {
+                    // Clear container
+                    animationContainer.innerHTML = '';
+                    
+                    // Display all pairs
+                    createPair(pairs[0], 150, 150);
+                    createPair(pairs[1], 350, 150);
+                    createPair(pairs[2], 550, 150);
+                    
+                    // Highlight all connections
+                    const firstPair = document.querySelector(`[data-pair="1,2"]`);
+                    const secondPair = document.querySelector(`[data-pair="2,3"]`);
+                    const thirdPair = document.querySelector(`[data-pair="3,4"]`);
+                    
+                    firstPair.style.backgroundColor = '#FF4800';
+                    secondPair.style.backgroundColor = '#FF4800';
+                    thirdPair.style.backgroundColor = '#FF4800';
+                    
+                    // Create connectors between pairs
+                    createArrow(230, 150, 120, 0);
+                    createArrow(430, 150, 120, 0);
+                    
+                    // Add text
+                    const lengthText = document.createElement('div');
+                    lengthText.textContent = "Maximum Length: 3";
+                    lengthText.style.position = 'absolute';
+                    lengthText.style.bottom = '20px';
+                    lengthText.style.left = '50%';
+                    lengthText.style.transform = 'translateX(-50%)';
+                    lengthText.style.fontWeight = 'bold';
+                    lengthText.style.color = '#FF4800';
+                    lengthText.style.fontSize = '18px';
+                    animationContainer.appendChild(lengthText);
+                }
+            }
+        ];
+        
+        function createPair(pair, x, y, opacity = 1) {
+            const pairElement = document.createElement('div');
+            pairElement.className = 'pair';
+            pairElement.textContent = `[${pair[0]},${pair[1]}]`;
+            pairElement.setAttribute('data-pair', `${pair[0]},${pair[1]}`);
+            pairElement.style.left = `${x}px`;
+            pairElement.style.top = `${y}px`;
+            pairElement.style.opacity = opacity;
+            animationContainer.appendChild(pairElement);
+        }
+        
+        function createArrow(x, y, length, angle) {
+            const arrow = document.createElement('div');
+            arrow.className = 'arrow';
+            arrow.style.left = `${x}px`;
+            arrow.style.top = `${y}px`;
+            arrow.style.width = `${length}px`;
+            arrow.style.transform = `rotate(${angle}deg)`;
+            animationContainer.appendChild(arrow);
+        }
+        
+        let currentStep = 0;
+        
+        function updateUI() {
+            explanationDiv.innerHTML = `<p>${steps[currentStep].explanation}</p>`;
+            steps[currentStep].animation();
+            
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateUI();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateUI();
+            }
+        });
+        
+        // Initialize with first step
+        updateUI();
+    </script>
+</body>
+</html>
