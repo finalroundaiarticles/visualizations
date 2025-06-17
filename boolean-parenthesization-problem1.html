@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parenthesization Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .visualization-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 400px;
+            position: relative;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .expression-tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .node {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            margin: 10px;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+        .operator {
+            background-color: #FF4800;
+            color: white;
+        }
+        .operand {
+            background-color: #FD9F78;
+            color: white;
+        }
+        .result {
+            background-color: #000000;
+            color: white;
+            opacity: 0;
+        }
+        .level {
+            display: flex;
+            justify-content: center;
+        }
+        .connection {
+            width: 2px;
+            height: 30px;
+            background-color: #FF4800;
+            position: absolute;
+            bottom: 50px;
+        }
+        .connection-left {
+            transform: rotate(-30deg);
+            left: 10px;
+        }
+        .connection-right {
+            transform: rotate(30deg);
+            right: 10px;
+        }
+        .expression {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #FF4800;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .nav-button {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 18px;
+            color: #000000;
+        }
+        .evaluation-text {
+            text-align: center;
+            font-size: 18px;
+            margin-top: 10px;
+            height: 50px;
+            color: #FF4800;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Parenthesization Visualization</h1>
+        <div class="expression" id="current-expression">Expression: T|F&T</div>
+        <div class="visualization-container" id="visualization">
+            <!-- The visualization will be generated here by JavaScript -->
+        </div>
+        <div class="evaluation-text" id="evaluation-text"></div>
+        <div class="navigation">
+            <button class="nav-button" id="prev-btn" disabled>Previous</button>
+            <button class="nav-button" id="next-btn">Next</button>
+        </div>
+        <div class="step-indicator" id="step-indicator">Step 1/8</div>
+    </div>
+
+    <script>
+        const visualizationSteps = [
+            {
+                title: "Expression: T|F&T",
+                description: "Let's look at two ways to parenthesize T|F&T",
+                type: "intro"
+            },
+            {
+                title: "Case 1: (T|F)&T",
+                description: "First, we'll evaluate (T|F)&T",
+                tree: [
+                    { type: "operator", value: "&", x: 400, y: 80 },
+                    { type: "operator", value: "|", x: 350, y: 160 },
+                    { type: "operand", value: "T", x: 450, y: 160 },
+                    { type: "operand", value: "T", x: 300, y: 240 },
+                    { type: "operand", value: "F", x: 400, y: 240 }
+                ],
+                connections: [
+                    { from: 0, to: 1 },
+                    { from: 0, to: 2 },
+                    { from: 1, to: 3 },
+                    { from: 1, to: 4 }
+                ],
+                type: "tree"
+            },
+            {
+                title: "Case 1: (T|F)&T",
+                description: "Step 1: Evaluate T|F inside parentheses",
+                highlights: [1, 3, 4],
+                evaluation: "T|F = T (True OR False = True)",
+                type: "evaluation1"
+            },
+            {
+                title: "Case 1: (T|F)&T",
+                description: "Step 2: Evaluate (T)&T",
+                highlights: [0, 2],
+                result: "T",
+                evaluation: "T&T = T (True AND True = True)",
+                type: "evaluation1_result"
+            },
+            {
+                title: "Case 2: T|(F&T)",
+                description: "Now, let's evaluate T|(F&T)",
+                tree: [
+                    { type: "operator", value: "|", x: 400, y: 80 },
+                    { type: "operand", value: "T", x: 350, y: 160 },
+                    { type: "operator", value: "&", x: 450, y: 160 },
+                    { type: "operand", value: "F", x: 400, y: 240 },
+                    { type: "operand", value: "T", x: 500, y: 240 }
+                ],
+                connections: [
+                    { from: 0, to: 1 },
+                    { from: 0, to: 2 },
+                    { from: 2, to: 3 },
+                    { from: 2, to: 4 }
+                ],
+                type: "tree"
+            },
+            {
+                title: "Case 2: T|(F&T)",
+                description: "Step 1: Evaluate F&T inside parentheses",
+                highlights: [2, 3, 4],
+                evaluation: "F&T = F (False AND True = False)",
+                type: "evaluation2"
+            },
+            {
+                title: "Case 2: T|(F&T)",
+                description: "Step 2: Evaluate T|(F)",
+                highlights: [0, 1],
+                result: "T",
+                evaluation: "T|F = T (True OR False = True)",
+                type: "evaluation2_result"
+            },
+            {
+                title: "Conclusion",
+                description: "Both parenthesizations evaluate to True, but the evaluation process differs.",
+                finalResult: {
+                    case1: "(T|F)&T = T",
+                    case2: "T|(F&T) = T"
+                },
+                type: "conclusion"
+            }
+        ];
+
+        let currentStep = 0;
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const visualization = document.getElementById('visualization');
+        const stepIndicator = document.getElementById('step-indicator');
+        const currentExpression = document.getElementById('current-expression');
+        const evaluationText = document.getElementById('evaluation-text');
+
+        function updateStepIndicator() {
+            stepIndicator.textContent = `Step ${currentStep + 1}/${visualizationSteps.length}`;
+        }
+
+        function renderStep(step) {
+            currentExpression.textContent = step.title;
+            evaluationText.textContent = step.description;
+            
+            // Clear previous visualization
+            visualization.innerHTML = '';
+            
+            if (step.type === "tree") {
+                // Create nodes
+                step.tree.forEach((node, index) => {
+                    const nodeElement = document.createElement('div');
+                    nodeElement.className = `node ${node.type}`;
+                    nodeElement.textContent = node.value;
+                    nodeElement.style.position = 'absolute';
+                    nodeElement.style.left = `${node.x - 25}px`;
+                    nodeElement.style.top = `${node.y - 25}px`;
+                    nodeElement.id = `node-${index}`;
+                    visualization.appendChild(nodeElement);
+                });
+                
+                // Create connections
+                step.connections.forEach(conn => {
+                    const fromNode = step.tree[conn.from];
+                    const toNode = step.tree[conn.to];
+                    
+                    const connElement = document.createElement('div');
+                    connElement.className = 'connection';
+                    
+                    // Calculate angle and length
+                    const dx = toNode.x - fromNode.x;
+                    const dy = toNode.y - fromNode.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+                    
+                    connElement.style.width = `${length}px`;
+                    connElement.style.height = '2px';
+                    connElement.style.position = 'absolute';
+                    connElement.style.left = `${fromNode.x}px`;
+                    connElement.style.top = `${fromNode.y}px`;
+                    connElement.style.transformOrigin = '0 0';
+                    connElement.style.transform = `rotate(${angle}deg)`;
+                    
+                    visualization.appendChild(connElement);
+                });
+            } else if (step.type === "evaluation1" || step.type === "evaluation2") {
+                // Copy the tree from the previous step
+                const prevStep = visualizationSteps[currentStep - 1];
+                
+                prevStep.tree.forEach((node, index) => {
+                    const nodeElement = document.createElement('div');
+                    nodeElement.className = `node ${node.type}`;
+                    nodeElement.textContent = node.value;
+                    nodeElement.style.position = 'absolute';
+                    nodeElement.style.left = `${node.x - 25}px`;
+                    nodeElement.style.top = `${node.y - 25}px`;
+                    nodeElement.id = `node-${index}`;
+                    
+                    // Highlight nodes that are being evaluated
+                    if (step.highlights.includes(index)) {
+                        nodeElement.style.boxShadow = '0 0 15px #FF4800';
+                        nodeElement.style.transform = 'scale(1.2)';
+                    }
+                    
+                    visualization.appendChild(nodeElement);
+                });
+                
+                // Create connections
+                prevStep.connections.forEach(conn => {
+                    const fromNode = prevStep.tree[conn.from];
+                    const toNode = prevStep.tree[conn.to];
+                    
+                    const connElement = document.createElement('div');
+                    connElement.className = 'connection';
+                    
+                    // Calculate angle and length
+                    const dx = toNode.x - fromNode.x;
+                    const dy = toNode.y - fromNode.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+                    
+                    connElement.style.width = `${length}px`;
+                    connElement.style.height = '2px';
+                    connElement.style.position = 'absolute';
+                    connElement.style.left = `${fromNode.x}px`;
+                    connElement.style.top = `${fromNode.y}px`;
+                    connElement.style.transformOrigin = '0 0';
+                    connElement.style.transform = `rotate(${angle}deg)`;
+                    
+                    visualization.appendChild(connElement);
+                });
+                
+                evaluationText.textContent = step.evaluation;
+            } else if (step.type === "evaluation1_result" || step.type === "evaluation2_result") {
+                // Copy the tree from the first step and highlight the result
+                const treeStep = step.type === "evaluation1_result" ? 
+                    visualizationSteps[1] : visualizationSteps[4];
+                
+                treeStep.tree.forEach((node, index) => {
+                    const nodeElement = document.createElement('div');
+                    
+                    // If this is the operator being evaluated, show the result
+                    if (step.highlights.includes(index)) {
+                        nodeElement.className = `node operator`;
+                        nodeElement.textContent = node.value;
+                        nodeElement.style.boxShadow = '0 0 15px #FF4800';
+                        nodeElement.style.transform = 'scale(1.2)';
+                    } else {
+                        nodeElement.className = `node ${node.type}`;
+                        nodeElement.textContent = node.value;
+                    }
+                    
+                    nodeElement.style.position = 'absolute';
+                    nodeElement.style.left = `${node.x - 25}px`;
+                    nodeElement.style.top = `${node.y - 25}px`;
+                    
+                    visualization.appendChild(nodeElement);
+                });
+                
+                // Create connections
+                treeStep.connections.forEach(conn => {
+                    const fromNode = treeStep.tree[conn.from];
+                    const toNode = treeStep.tree[conn.to];
+                    
+                    const connElement = document.createElement('div');
+                    connElement.className = 'connection';
+                    
+                    // Calculate angle and length
+                    const dx = toNode.x - fromNode.x;
+                    const dy = toNode.y - fromNode.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+                    
+                    connElement.style.width = `${length}px`;
+                    connElement.style.height = '2px';
+                    connElement.style.position = 'absolute';
+                    connElement.style.left = `${fromNode.x}px`;
+                    connElement.style.top = `${fromNode.y}px`;
+                    connElement.style.transformOrigin = '0 0';
+                    connElement.style.transform = `rotate(${angle}deg)`;
+                    
+                    visualization.appendChild(connElement);
+                });
+                
+                // Add result node
+                const resultNode = document.createElement('div');
+                resultNode.className = 'node result';
+                resultNode.textContent = step.result;
+                resultNode.style.position = 'absolute';
+                resultNode.style.left = '375px';
+                resultNode.style.top = '320px';
+                resultNode.style.opacity = '1';
+                resultNode.style.backgroundColor = '#000000';
+                resultNode.style.fontSize = '24px';
+                resultNode.style.width = '60px';
+                resultNode.style.height = '60px';
+                
+                visualization.appendChild(resultNode);
+                
+                evaluationText.textContent = step.evaluation;
+            } else if (step.type === "conclusion") {
+                const conclusionDiv = document.createElement('div');
+                conclusionDiv.style.textAlign = 'center';
+                conclusionDiv.style.fontSize = '24px';
+                conclusionDiv.style.color = '#FF4800';
+                conclusionDiv.style.padding = '20px';
+                
+                conclusionDiv.innerHTML = `
+                    <p><strong>Case 1:</strong> ${step.finalResult.case1}</p>
+                    <p><strong>Case 2:</strong> ${step.finalResult.case2}</p>
+                    <p style="margin-top: 20px;">Both parenthesizations give the same result (True), 
+                    but the evaluation order is different.</p>
+                `;
+                
+                visualization.appendChild(conclusionDiv);
+            }
+        }
+
+        function nextStep() {
+            if (currentStep < visualizationSteps.length - 1) {
+                currentStep++;
+                renderStep(visualizationSteps[currentStep]);
+                updateStepIndicator();
+                prevBtn.disabled = false;
+                if (currentStep === visualizationSteps.length - 1) {
+                    nextBtn.disabled = true;
+                }
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                renderStep(visualizationSteps[currentStep]);
+                updateStepIndicator();
+                nextBtn.disabled = false;
+                if (currentStep === 0) {
+                    prevBtn.disabled = true;
+                }
+            }
+        }
+
+        nextBtn.addEventListener('click', nextStep);
+        prevBtn.addEventListener('click', prevStep);
+
+        // Initialize first step
+        renderStep(visualizationSteps[currentStep]);
+        updateStepIndicator();
+    </script>
+</body>
+</html>
