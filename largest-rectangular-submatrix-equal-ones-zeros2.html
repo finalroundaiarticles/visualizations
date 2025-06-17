@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1D Transformation Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+        }
+        
+        .visualization {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px 0;
+            position: relative;
+            height: 400px;
+        }
+        
+        .matrix-container {
+            display: grid;
+            grid-template-columns: repeat(6, 50px);
+            gap: 5px;
+            margin-bottom: 30px;
+        }
+        
+        .cell {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            border: 2px solid #000000;
+            border-radius: 5px;
+            transition: all 0.5s ease;
+        }
+        
+        .cell-0 {
+            background-color: #FD9F78;
+        }
+        
+        .cell-1 {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .array-container {
+            display: flex;
+            gap: 5px;
+            margin-top: 50px;
+        }
+        
+        .array-cell {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            border: 2px solid #000000;
+            border-radius: 5px;
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+        
+        .array-cell-neg1 {
+            background-color: #FD9F78;
+        }
+        
+        .array-cell-pos1 {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .prefix-sum {
+            margin-top: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .prefix-array {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .prefix-cell {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            border: 2px solid #000000;
+            border-radius: 5px;
+        }
+        
+        .highlight {
+            box-shadow: 0 0 15px #FF4800;
+            transform: scale(1.1);
+        }
+        
+        .arrow {
+            position: absolute;
+            font-size: 30px;
+            color: #FF4800;
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #000000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>1D Transformation Visualization</h1>
+        
+        <div class="explanation" id="step-explanation">
+            Welcome to the 1D Transformation Visualization! This animation will show you how a 2D matrix of 0's and 1's can be transformed into a 1D array by converting 0's to -1's and 1's to 1's.
+        </div>
+        
+        <div class="visualization" id="visualization">
+            <div class="matrix-container" id="matrix">
+                <!-- Matrix will be populated by JavaScript -->
+            </div>
+            
+            <div class="array-container" id="array">
+                <!-- Array will be populated by JavaScript -->
+            </div>
+            
+            <div class="prefix-sum" id="prefix-sum">
+                <h3>Prefix Sum Calculation</h3>
+                <div class="prefix-array" id="prefix-array">
+                    <!-- Prefix array will be populated by JavaScript -->
+                </div>
+                <p id="sum-explanation">When we have an equal number of 1's and 0's (or 1's and -1's after transformation), the sum becomes zero.</p>
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
+            <button class="nav-btn" id="next-btn">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="step-indicator">
+            Step 1/5
+        </div>
+    </div>
+
+    <script>
+        // Initial data
+        const matrix = [
+            [0, 1, 0, 0, 1, 0],
+            [1, 0, 1, 0, 0, 1],
+            [0, 0, 1, 1, 0, 0]
+        ];
+        
+        // Transformed array (will be computed)
+        let transformedArray = [];
+        
+        // Animation control
+        let currentStep = 1;
+        const totalSteps = 5;
+        
+        // DOM elements
+        const matrixEl = document.getElementById('matrix');
+        const arrayEl = document.getElementById('array');
+        const prefixSumEl = document.getElementById('prefix-sum');
+        const prefixArrayEl = document.getElementById('prefix-array');
+        const explanationEl = document.getElementById('step-explanation');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepIndicatorEl = document.getElementById('step-indicator');
+        
+        // Initialize matrix display
+        function initMatrix() {
+            matrixEl.innerHTML = '';
+            matrix.forEach((row, rowIndex) => {
+                row.forEach((cell, colIndex) => {
+                    const cellEl = document.createElement('div');
+                    cellEl.className = `cell cell-${cell}`;
+                    cellEl.textContent = cell;
+                    cellEl.id = `cell-${rowIndex}-${colIndex}`;
+                    matrixEl.appendChild(cellEl);
+                });
+            });
+        }
+        
+        // Flatten matrix and transform 0s to -1s
+        function computeTransformedArray() {
+            transformedArray = [];
+            matrix.forEach(row => {
+                row.forEach(cell => {
+                    // Transform 0 to -1, keep 1 as 1
+                    transformedArray.push(cell === 0 ? -1 : 1);
+                });
+            });
+            
+            return transformedArray;
+        }
+        
+        // Initialize array display
+        function initArray() {
+            arrayEl.innerHTML = '';
+            
+            computeTransformedArray();
+            
+            transformedArray.forEach((value, index) => {
+                const cellEl = document.createElement('div');
+                cellEl.className = `array-cell ${value === -1 ? 'array-cell-neg1' : 'array-cell-pos1'}`;
+                cellEl.textContent = value;
+                cellEl.id = `array-cell-${index}`;
+                arrayEl.appendChild(cellEl);
+            });
+        }
+        
+        // Initialize prefix sum display
+        function initPrefixSum() {
+            prefixArrayEl.innerHTML = '';
+            
+            let prefixSum = 0;
+            let prefixArray = [0]; // Start with 0
+            
+            transformedArray.forEach(value => {
+                prefixSum += value;
+                prefixArray.push(prefixSum);
+            });
+            
+            prefixArray.forEach((value, index) => {
+                const cellEl = document.createElement('div');
+                cellEl.className = 'prefix-cell';
+                cellEl.textContent = value;
+                cellEl.id = `prefix-cell-${index}`;
+                prefixArrayEl.appendChild(cellEl);
+            });
+        }
+        
+        // Update the step explanation
+        function updateExplanation(step) {
+            const explanations = [
+                "Welcome to the 1D Transformation Visualization! This animation will show you how a 2D matrix of 0's and 1's can be transformed into a 1D array by converting 0's to -1's and 1's to 1's.",
+                "Step 1: We start with a 2D matrix containing 0's and 1's. This is our original data structure.",
+                "Step 2: Now we transform the 2D matrix into a 1D array by reading each element row by row. As we do this, we convert each 0 to -1, while keeping 1's as they are.",
+                "Step 3: Our transformation is complete! We now have a 1D array where original 0's are represented as -1's and original 1's remain as 1's.",
+                "Step 4: We can use this transformed array for various algorithms. One common operation is calculating the prefix sum, which helps identify segments with special properties.",
+                "Step 5: Notice how the prefix sum goes back to 0 at certain points. This indicates that we have an equal number of 1's and -1's (or original 1's and 0's) in that segment!"
+            ];
+            
+            explanationEl.textContent = explanations[step - 1];
+        }
+        
+        // Update step indicator
+        function updateStepIndicator(step) {
+            stepIndicatorEl.textContent = `Step ${step}/${totalSteps}`;
+        }
+        
+        // Animation for each step
+        function animateStep(step) {
+            // Reset all highlights and arrows
+            document.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
+            document.querySelectorAll('.arrow').forEach(el => el.remove());
+            
+            // Update explanation and step indicator
+            updateExplanation(step);
+            updateStepIndicator(step);
+            
+            switch(step) {
+                case 1:
+                    // Show the initial matrix
+                    break;
+                    
+                case 2:
+                    // Highlight cells and show transformation
+                    let delay = 0;
+                    matrix.forEach((row, rowIndex) => {
+                        row.forEach((cell, colIndex) => {
+                            setTimeout(() => {
+                                const cellEl = document.getElementById(`cell-${rowIndex}-${colIndex}`);
+                                cellEl.classList.add('highlight');
+                                
+                                // Calculate the index in the flattened array
+                                const flatIndex = rowIndex * row.length + colIndex;
+                                
+                                // Show the corresponding array cell
+                                const arrayCell = document.getElementById(`array-cell-${flatIndex}`);
+                                arrayCell.style.opacity = '1';
+                                
+                                setTimeout(() => {
+                                    cellEl.classList.remove('highlight');
+                                }, 500);
+                            }, delay);
+                            
+                            delay += 200;
+                        });
+                    });
+                    break;
+                    
+                case 3:
+                    // All array cells visible
+                    document.querySelectorAll('.array-cell').forEach(cell => {
+                        cell.style.opacity = '1';
+                    });
+                    break;
+                    
+                case 4:
+                    // Show prefix sum calculation
+                    prefixSumEl.style.opacity = '1';
+                    break;
+                    
+                case 5:
+                    // Highlight zero sums in prefix array
+                    prefixSumEl.style.opacity = '1';
+                    
+                    // Find cells with value 0 in prefix array
+                    document.querySelectorAll('.prefix-cell').forEach(cell => {
+                        if (cell.textContent === '0') {
+                            cell.classList.add('highlight');
+                        }
+                    });
+                    break;
+            }
+        }
+        
+        // Navigation button handlers
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                animateStep(currentStep);
+                
+                prevBtn.disabled = false;
+                
+                if (currentStep === totalSteps) {
+                    nextBtn.disabled = true;
+                }
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                animateStep(currentStep);
+                
+                nextBtn.disabled = false;
+                
+                if (currentStep === 1) {
+                    prevBtn.disabled = true;
+                }
+            }
+        }
+        
+        // Initialize everything
+        function init() {
+            initMatrix();
+            initArray();
+            initPrefixSum();
+            animateStep(1);
+            
+            // Setup event listeners
+            prevBtn.addEventListener('click', prevStep);
+            nextBtn.addEventListener('click', nextStep);
+        }
+        
+        // Start the visualization
+        window.onload = init;
+    </script>
+</body>
+</html>
