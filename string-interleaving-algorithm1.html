@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>String Interleaving Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        
+        .visualization {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+        }
+        
+        .string-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+        
+        .string-box {
+            display: flex;
+            align-items: center;
+        }
+        
+        .string-label {
+            font-weight: bold;
+            margin-right: 10px;
+            color: #FF4800;
+        }
+        
+        .char {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            margin: 0 5px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 5px;
+            position: relative;
+        }
+        
+        .s1-char {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .s2-char {
+            background-color: #FD9F78;
+            color: #000000;
+        }
+        
+        .s3-char {
+            background-color: #FFFFFF;
+            border: 2px solid #000000;
+            width: 36px;
+            height: 36px;
+        }
+        
+        .result-container {
+            margin-top: 80px;
+        }
+        
+        .line {
+            position: absolute;
+            background-color: #000000;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .moving-char {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: transform 1.5s ease;
+            opacity: 0;
+        }
+        
+        .navigation {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #FD9F78;
+            color: #000000;
+            border-radius: 5px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>String Interleaving Visualization</h1>
+        
+        <div class="explanation" id="explanation">
+            <p>String interleaving combines two strings to form a third string where characters maintain their relative order from the original strings.</p>
+            <p>Click "Next" to see how s1="aab" and s2="axy" interleave to form s3="aaxaby".</p>
+        </div>
+        
+        <div class="visualization" id="visualization">
+            <div class="string-container">
+                <div class="string-box">
+                    <div class="string-label">s1:</div>
+                    <div class="char s1-char" id="s1-0">a</div>
+                    <div class="char s1-char" id="s1-1">a</div>
+                    <div class="char s1-char" id="s1-2">b</div>
+                </div>
+                
+                <div class="string-box">
+                    <div class="string-label">s2:</div>
+                    <div class="char s2-char" id="s2-0">a</div>
+                    <div class="char s2-char" id="s2-1">x</div>
+                    <div class="char s2-char" id="s2-2">y</div>
+                </div>
+            </div>
+            
+            <div class="result-container">
+                <div class="string-box" style="justify-content: center;">
+                    <div class="string-label">s3:</div>
+                    <div class="char s3-char" id="s3-0"></div>
+                    <div class="char s3-char" id="s3-1"></div>
+                    <div class="char s3-char" id="s3-2"></div>
+                    <div class="char s3-char" id="s3-3"></div>
+                    <div class="char s3-char" id="s3-4"></div>
+                    <div class="char s3-char" id="s3-5"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        // Setup variables
+        const s1 = "aab";
+        const s2 = "axy";
+        const s3 = "aaxaby";
+        
+        // Determine which string each character in s3 comes from
+        // For our example: a(s1) + a(s1) + x(s2) + a(s2) + b(s1) + y(s2)
+        const sourceMapping = [
+            {source: 's1', index: 0}, // a from s1
+            {source: 's1', index: 1}, // a from s1
+            {source: 's2', index: 1}, // x from s2
+            {source: 's2', index: 0}, // a from s2
+            {source: 's1', index: 2}, // b from s1
+            {source: 's2', index: 2}  // y from s2
+        ];
+        
+        let currentStep = 0;
+        const totalSteps = sourceMapping.length + 1; // +1 for initial state
+        
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const explanation = document.getElementById('explanation');
+        
+        // Animation functions
+        function createMovingChar(char, sourceId, targetId) {
+            const sourceElem = document.getElementById(sourceId);
+            const targetElem = document.getElementById(targetId);
+            
+            const sourceRect = sourceElem.getBoundingClientRect();
+            const targetRect = targetElem.getBoundingClientRect();
+            const vizRect = document.getElementById('visualization').getBoundingClientRect();
+            
+            // Create the moving character
+            const movingChar = document.createElement('div');
+            movingChar.className = `moving-char ${sourceId.startsWith('s1') ? 's1-char' : 's2-char'}`;
+            movingChar.textContent = char;
+            movingChar.style.left = (sourceRect.left - vizRect.left) + 'px';
+            movingChar.style.top = (sourceRect.top - vizRect.top) + 'px';
+            
+            document.getElementById('visualization').appendChild(movingChar);
+            
+            // Create line connecting source to target
+            const line = createLine(sourceRect, targetRect, vizRect);
+            
+            // Start animation
+            setTimeout(() => {
+                movingChar.style.opacity = '1';
+                line.style.opacity = '1';
+                
+                // Move character
+                movingChar.style.transform = `translate(${(targetRect.left - sourceRect.left)}px, ${(targetRect.top - sourceRect.top)}px)`;
+                
+                // After animation completes
+                setTimeout(() => {
+                    // Set the target character
+                    targetElem.textContent = char;
+                    // Remove the moving character and line
+                    movingChar.remove();
+                    line.remove();
+                }, 1600);
+            }, 100);
+        }
+        
+        function createLine(sourceRect, targetRect, vizRect) {
+            const line = document.createElement('div');
+            line.className = 'line';
+            
+            // Calculate positions relative to the visualization container
+            const x1 = sourceRect.left + sourceRect.width/2 - vizRect.left;
+            const y1 = sourceRect.top + sourceRect.height/2 - vizRect.top;
+            const x2 = targetRect.left + targetRect.width/2 - vizRect.left;
+            const y2 = targetRect.top + targetRect.height/2 - vizRect.top;
+            
+            // Calculate line length and angle
+            const length = Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
+            const angle = Math.atan2(y2-y1, x2-x1) * 180 / Math.PI;
+            
+            // Set line position and rotation
+            line.style.width = `${length}px`;
+            line.style.height = '2px';
+            line.style.left = `${x1}px`;
+            line.style.top = `${y1}px`;
+            line.style.transformOrigin = '0 0';
+            line.style.transform = `rotate(${angle}deg)`;
+            
+            document.getElementById('visualization').appendChild(line);
+            return line;
+        }
+        
+        function updateExplanation(step) {
+            if (step === 0) {
+                explanation.innerHTML = '<p>String interleaving combines two strings to form a third string where characters maintain their relative order from the original strings.</p>' +
+                '<p>Click "Next" to see how s1="aab" and s2="axy" interleave to form s3="aaxaby".</p>';
+            } else {
+                const mapping = sourceMapping[step - 1];
+                const char = s3[step - 1];
+                const source = mapping.source === 's1' ? 's1' : 's2';
+                const sourceString = mapping.source === 's1' ? 'aab' : 'axy';
+                const index = mapping.index;
+                
+                explanation.innerHTML = `<p>Step ${step} of ${totalSteps - 1}: Taking character "${char}" from ${source} (${sourceString}) at position ${index} and placing it as the ${getOrdinal(step)} character in s3.</p>` +
+                '<p>Notice how characters from both strings maintain their relative order in the resulting string.</p>';
+            }
+        }
+        
+        function getOrdinal(n) {
+            const s = ["th", "st", "nd", "rd"];
+            const v = n % 100;
+            return n + (s[(v-20)%10] || s[v] || s[0]);
+        }
+        
+        function resetStep(step) {
+            // Clear all result characters
+            for (let i = 0; i < s3.length; i++) {
+                document.getElementById(`s3-${i}`).textContent = i < step ? s3[i] : '';
+            }
+        }
+        
+        // Button handlers
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                
+                if (currentStep === 1) {
+                    prevBtn.disabled = false;
+                }
+                
+                if (currentStep === totalSteps - 1) {
+                    nextBtn.disabled = true;
+                }
+                
+                updateExplanation(currentStep);
+                
+                if (currentStep > 0) {
+                    const mapping = sourceMapping[currentStep - 1];
+                    const sourceId = `${mapping.source}-${mapping.index}`;
+                    const targetId = `s3-${currentStep - 1}`;
+                    const char = s3[currentStep - 1];
+                    
+                    createMovingChar(char, sourceId, targetId);
+                }
+            }
+        });
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                
+                if (currentStep === 0) {
+                    prevBtn.disabled = true;
+                }
+                
+                if (currentStep < totalSteps - 1) {
+                    nextBtn.disabled = false;
+                }
+                
+                updateExplanation(currentStep);
+                resetStep(currentStep);
+            }
+        });
+        
+        // Initialize
+        updateExplanation(0);
+    </script>
+</body>
+</html>
