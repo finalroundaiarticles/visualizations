@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palindrome DP Table Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        .explanation {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #000000;
+            font-size: 16px;
+            line-height: 1.5;
+            max-width: 700px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            width: 100%;
+        }
+        
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .dp-table-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        
+        .string-display {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .char-box {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #000000;
+            margin: 0 5px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .dp-table {
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .dp-table td, .dp-table th {
+            width: 50px;
+            height: 50px;
+            border: 1px solid #000000;
+            text-align: center;
+            font-size: 16px;
+            position: relative;
+        }
+        
+        .dp-table th {
+            background-color: #FD9F78;
+            color: #000000;
+        }
+        
+        .highlighted {
+            background-color: #FD9F78;
+            transition: background-color 0.5s;
+        }
+        
+        .true-cell {
+            background-color: #FF4800;
+            color: white;
+        }
+        
+        .false-cell {
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .active-cell {
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0px rgba(255, 72, 0, 0.7); }
+            100% { box-shadow: 0 0 0 10px rgba(255, 72, 0, 0); }
+        }
+        
+        .step-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #FD9F78;
+            color: #000000;
+            border-radius: 5px;
+            text-align: center;
+            min-height: 80px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Palindrome DP Table Visualization</h1>
+        
+        <div class="explanation">
+            <p>A palindrome is a string that reads the same backward as forward (like "madam" or "racecar"). 
+            This visualization shows how dynamic programming can determine which substrings of "aab" are palindromes.</p>
+        </div>
+        
+        <div class="dp-table-container">
+            <div class="string-display" id="stringDisplay"></div>
+            <table class="dp-table" id="dpTable"></table>
+        </div>
+        
+        <div class="step-info" id="stepInfo">
+            Click "Start" to begin the visualization.
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="startBtn">Start</button>
+            <button id="nextBtn" disabled>Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialization
+        const string = "aab";
+        let currentStep = 0;
+        const totalSteps = string.length * string.length + 1;
+        let dpTable = [];
+        let animationState = [];
+        
+        // Initialize the DP table with all false values
+        function initTable() {
+            dpTable = Array(string.length).fill().map(() => Array(string.length).fill(false));
+            animationState = Array(totalSteps).fill().map(() => ({
+                table: Array(string.length).fill().map(() => Array(string.length).fill(false)),
+                activeCell: null,
+                explanation: ""
+            }));
+        }
+        
+        // Build the string display
+        function buildStringDisplay() {
+            const stringDisplay = document.getElementById("stringDisplay");
+            stringDisplay.innerHTML = "";
+            
+            for (let i = 0; i < string.length; i++) {
+                const charBox = document.createElement("div");
+                charBox.className = "char-box";
+                charBox.textContent = string[i];
+                stringDisplay.appendChild(charBox);
+            }
+        }
+        
+        // Build the DP table
+        function buildDPTable() {
+            const table = document.getElementById("dpTable");
+            table.innerHTML = "";
+            
+            // Create header row with indices
+            const headerRow = document.createElement("tr");
+            const emptyHeader = document.createElement("th");
+            headerRow.appendChild(emptyHeader);
+            
+            for (let j = 0; j < string.length; j++) {
+                const th = document.createElement("th");
+                th.textContent = j;
+                headerRow.appendChild(th);
+            }
+            table.appendChild(headerRow);
+            
+            // Create table rows
+            for (let i = 0; i < string.length; i++) {
+                const row = document.createElement("tr");
+                
+                // Row header with index
+                const rowHeader = document.createElement("th");
+                rowHeader.textContent = i;
+                row.appendChild(rowHeader);
+                
+                for (let j = 0; j < string.length; j++) {
+                    const cell = document.createElement("td");
+                    cell.id = `cell-${i}-${j}`;
+                    cell.textContent = "?";
+                    row.appendChild(cell);
+                }
+                
+                table.appendChild(row);
+            }
+        }
+        
+        // Fill the animation states
+        function fillAnimationStates() {
+            // Step 0: Initial state
+            animationState[0] = {
+                table: Array(string.length).fill().map(() => Array(string.length).fill(false)),
+                activeCell: null,
+                explanation: "We'll use dynamic programming to find all palindromic substrings in 'aab'. Initially, all cells are set to false."
+            };
+            
+            let step = 1;
+            
+            // All single characters are palindromes (diagonal)
+            for (let i = 0; i < string.length; i++) {
+                const newTable = JSON.parse(JSON.stringify(animationState[step-1].table));
+                newTable[i][i] = true;
+                
+                animationState[step] = {
+                    table: newTable,
+                    activeCell: [i, i],
+                    explanation: `Every single character is a palindrome, so dp[${i}][${i}] = true for character '${string[i]}'`
+                };
+                step++;
+            }
+            
+            // Check for 2-character palindromes
+            for (let i = 0; i < string.length - 1; i++) {
+                const newTable = JSON.parse(JSON.stringify(animationState[step-1].table));
+                if (string[i] === string[i+1]) {
+                    newTable[i][i+1] = true;
+                    animationState[step] = {
+                        table: newTable,
+                        activeCell: [i, i+1],
+                        explanation: `Checking if "${string.substring(i, i+2)}" is a palindrome: Since s[${i}]='${string[i]}' equals s[${i+1}]='${string[i+1]}', dp[${i}][${i+1}] = true`
+                    };
+                } else {
+                    animationState[step] = {
+                        table: newTable,
+                        activeCell: [i, i+1],
+                        explanation: `Checking if "${string.substring(i, i+2)}" is a palindrome: Since s[${i}]='${string[i]}' does not equal s[${i+1}]='${string[i+1]}', dp[${i}][${i+1}] = false`
+                    };
+                }
+                step++;
+            }
+            
+            // Check for longer palindromes
+            for (let len = 3; len <= string.length; len++) {
+                for (let i = 0; i <= string.length - len; i++) {
+                    const j = i + len - 1;
+                    const newTable = JSON.parse(JSON.stringify(animationState[step-1].table));
+                    
+                    if (string[i] === string[j] && newTable[i+1][j-1]) {
+                        newTable[i][j] = true;
+                        animationState[step] = {
+                            table: newTable,
+                            activeCell: [i, j],
+                            explanation: `Checking if "${string.substring(i, j+1)}" is a palindrome: Since s[${i}]='${string[i]}' equals s[${j}]='${string[j]}' AND the substring in between "${string.substring(i+1, j)}" is a palindrome, dp[${i}][${j}] = true`
+                        };
+                    } else {
+                        animationState[step] = {
+                            table: newTable,
+                            activeCell: [i, j],
+                            explanation: `Checking if "${string.substring(i, j+1)}" is a palindrome: Either s[${i}]='${string[i]}' doesn't equal s[${j}]='${string[j]}' OR the substring in between is not a palindrome, so dp[${i}][${j}] = false`
+                        };
+                    }
+                    step++;
+                }
+            }
+        }
+        
+        // Update the table display based on current step
+        function updateDisplay() {
+            const state = animationState[currentStep];
+            
+            // Reset all cells
+            for (let i = 0; i < string.length; i++) {
+                for (let j = 0; j < string.length; j++) {
+                    const cell = document.getElementById(`cell-${i}-${j}`);
+                    cell.className = state.table[i][j] ? "true-cell" : "false-cell";
+                    cell.textContent = state.table[i][j] ? "True" : "False";
+                    cell.classList.remove("active-cell");
+                }
+            }
+            
+            // Highlight active cell
+            if (state.activeCell) {
+                const [i, j] = state.activeCell;
+                const activeCell = document.getElementById(`cell-${i}-${j}`);
+                activeCell.classList.add("active-cell");
+            }
+            
+            // Update step info
+            document.getElementById("stepInfo").textContent = state.explanation;
+            
+            // Update button states
+            document.getElementById("prevBtn").disabled = currentStep === 0;
+            document.getElementById("nextBtn").disabled = currentStep === totalSteps - 1;
+            document.getElementById("startBtn").style.display = "none";
+        }
+        
+        // Event listeners
+        document.getElementById("startBtn").addEventListener("click", function() {
+            initTable();
+            fillAnimationStates();
+            currentStep = 0;
+            updateDisplay();
+            document.getElementById("nextBtn").disabled = false;
+        });
+        
+        document.getElementById("nextBtn").addEventListener("click", function() {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateDisplay();
+            }
+        });
+        
+        document.getElementById("prevBtn").addEventListener("click", function() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateDisplay();
+            }
+        });
+        
+        // Initialize the visualization
+        function init() {
+            buildStringDisplay();
+            buildDPTable();
+            initTable();
+            fillAnimationStates();
+        }
+        
+        // Start the visualization
+        init();
+    </script>
+</body>
+</html>
