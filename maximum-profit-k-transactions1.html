@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Buy/Sell Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .chart-container {
+            margin: 30px 0;
+            position: relative;
+            height: 400px;
+        }
+        
+        .chart {
+            position: relative;
+            height: 300px;
+            border-bottom: 2px solid #000000;
+            border-left: 2px solid #000000;
+            margin-left: 40px;
+            margin-bottom: 20px;
+        }
+        
+        .bar {
+            position: absolute;
+            bottom: 0;
+            width: 40px;
+            background-color: #FD9F78;
+            border: 1px solid #FF4800;
+            text-align: center;
+            transition: height 1s ease;
+        }
+        
+        .price-label {
+            position: absolute;
+            top: -25px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .day-label {
+            position: absolute;
+            bottom: -30px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .y-axis {
+            position: absolute;
+            left: -40px;
+            height: 100%;
+            display: flex;
+            flex-direction: column-reverse;
+            justify-content: space-between;
+        }
+        
+        .y-label {
+            margin-right: 10px;
+        }
+        
+        .buy-marker, .sell-marker {
+            position: absolute;
+            width: 40px;
+            text-align: center;
+            font-weight: bold;
+            z-index: 10;
+        }
+        
+        .buy-marker {
+            color: green;
+            bottom: -50px;
+        }
+        
+        .sell-marker {
+            color: red;
+            bottom: -70px;
+        }
+        
+        .transaction {
+            position: absolute;
+            border: 2px dashed;
+            z-index: 5;
+            transition: all 1s ease;
+            opacity: 0;
+        }
+        
+        .transaction-1 {
+            border-color: green;
+        }
+        
+        .transaction-2 {
+            border-color: purple;
+        }
+        
+        .arrow {
+            position: absolute;
+            width: 60px;
+            height: 30px;
+            z-index: 5;
+            opacity: 0;
+            transition: all 1s ease;
+        }
+        
+        .profit-display {
+            margin-top: 100px;
+            font-size: 18px;
+            text-align: center;
+            color: #FF4800;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #000000;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+            background-color: rgba(253, 159, 120, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Stock Buy/Sell Profit Maximization</h1>
+        
+        <div class="explanation" id="explanationText">
+            Welcome to the stock buy/sell visualization! We'll show how to maximize profit with two transactions on a stock with prices [2, 4, 1, 5, 7, 2, 4].
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart" id="stockChart">
+                <div class="y-axis" id="yAxis"></div>
+                <!-- Bars will be added here dynamically -->
+            </div>
+            <div class="profit-display" id="profitDisplay">
+                Total Profit: $0
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" class="nav-btn" disabled>Previous</button>
+            <button id="nextBtn" class="nav-btn">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">
+            Step 1 of 5
+        </div>
+    </div>
+    
+    <script>
+        const stockPrices = [2, 4, 1, 5, 7, 2, 4];
+        const buyPoints = [2, 5]; // Indices where we buy (price 1 and price 2)
+        const sellPoints = [4, 6]; // Indices where we sell (price 7 and price 4)
+        const maxPrice = Math.max(...stockPrices);
+        
+        const chartEl = document.getElementById('stockChart');
+        const yAxisEl = document.getElementById('yAxis');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        const profitDisplay = document.getElementById('profitDisplay');
+        const explanationText = document.getElementById('explanationText');
+        
+        let currentStep = 0;
+        const totalSteps = 5;
+        
+        // Create Y-axis labels
+        for (let i = 0; i <= maxPrice; i++) {
+            const yLabel = document.createElement('div');
+            yLabel.className = 'y-label';
+            yLabel.textContent = '$' + i;
+            yAxisEl.appendChild(yLabel);
+        }
+        
+        // Create bars for stock prices
+        stockPrices.forEach((price, index) => {
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            bar.style.left = `${(index * 100) / stockPrices.length}%`;
+            bar.style.width = `${80 / stockPrices.length}%`;
+            bar.style.height = '0'; // Start with height 0
+            
+            const priceLabel = document.createElement('div');
+            priceLabel.className = 'price-label';
+            priceLabel.textContent = '$' + price;
+            
+            const dayLabel = document.createElement('div');
+            dayLabel.className = 'day-label';
+            dayLabel.textContent = 'Day ' + (index + 1);
+            
+            bar.appendChild(priceLabel);
+            bar.appendChild(dayLabel);
+            chartEl.appendChild(bar);
+        });
+        
+        // Create buy/sell markers (initially hidden)
+        buyPoints.forEach((day, idx) => {
+            const buyMarker = document.createElement('div');
+            buyMarker.className = 'buy-marker';
+            buyMarker.textContent = 'BUY';
+            buyMarker.style.left = `${(day * 100) / stockPrices.length}%`;
+            buyMarker.style.display = 'none';
+            chartEl.appendChild(buyMarker);
+            
+            const sellMarker = document.createElement('div');
+            sellMarker.className = 'sell-marker';
+            sellMarker.textContent = 'SELL';
+            sellMarker.style.left = `${(sellPoints[idx] * 100) / stockPrices.length}%`;
+            sellMarker.style.display = 'none';
+            chartEl.appendChild(sellMarker);
+        });
+        
+        // Create transaction highlight areas (initially hidden)
+        for (let i = 0; i < buyPoints.length; i++) {
+            const transaction = document.createElement('div');
+            transaction.className = `transaction transaction-${i+1}`;
+            
+            const left = (buyPoints[i] * 100) / stockPrices.length;
+            const width = ((sellPoints[i] - buyPoints[i]) * 100) / stockPrices.length;
+            
+            transaction.style.left = `${left}%`;
+            transaction.style.width = `${width}%`;
+            transaction.style.bottom = '0';
+            transaction.style.height = '0';
+            
+            chartEl.appendChild(transaction);
+        }
+        
+        // Create profit arrows (initially hidden)
+        for (let i = 0; i < buyPoints.length; i++) {
+            const arrow = document.createElement('div');
+            arrow.className = 'arrow';
+            arrow.innerHTML = `+$${stockPrices[sellPoints[i]] - stockPrices[buyPoints[i]]}`;
+            arrow.style.left = `${((buyPoints[i] + sellPoints[i]) * 50) / stockPrices.length}%`;
+            arrow.style.bottom = '100px';
+            arrow.style.color = i === 0 ? 'green' : 'purple';
+            arrow.style.fontWeight = 'bold';
+            arrow.style.display = 'none';
+            
+            chartEl.appendChild(arrow);
+        }
+        
+        // Step progression functions
+        function updateStep() {
+            // Update step indicator
+            stepIndicator.textContent = `Step ${currentStep + 1} of ${totalSteps}`;
+            
+            // Enable/disable navigation buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+            
+            // Update the visualization based on current step
+            const bars = document.querySelectorAll('.bar');
+            const buyMarkers = document.querySelectorAll('.buy-marker');
+            const sellMarkers = document.querySelectorAll('.sell-marker');
+            const transactions = document.querySelectorAll('.transaction');
+            const arrows = document.querySelectorAll('.arrow');
+            
+            switch (currentStep) {
+                case 0:
+                    // Initial state - just show the bars
+                    bars.forEach((bar, idx) => {
+                        setTimeout(() => {
+                            bar.style.height = `${(stockPrices[idx] / maxPrice) * 100}%`;
+                        }, idx * 200);
+                    });
+                    
+                    explanationText.innerHTML = 'This is our stock price timeline for 7 days. We want to maximize profit by making at most 2 transactions (buy-sell pairs).';
+                    profitDisplay.style.opacity = '0';
+                    break;
+                    
+                case 1:
+                    // Show the first transaction
+                    buyMarkers[0].style.display = 'block';
+                    sellMarkers[0].style.display = 'block';
+                    
+                    transactions[0].style.opacity = '1';
+                    transactions[0].style.height = `${(stockPrices[buyPoints[0]] / maxPrice) * 100}%`;
+                    
+                    arrows[0].style.display = 'block';
+                    setTimeout(() => {
+                        arrows[0].style.opacity = '1';
+                    }, 500);
+                    
+                    explanationText.innerHTML = 'First transaction: We buy at day 3 (price $1) and sell at day 5 (price $7). This gives us a profit of $6.';
+                    profitDisplay.innerHTML = 'Profit from first transaction: $6';
+                    profitDisplay.style.opacity = '1';
+                    break;
+                    
+                case 2:
+                    // Show the second transaction
+                    buyMarkers[1].style.display = 'block';
+                    sellMarkers[1].style.display = 'block';
+                    
+                    transactions[1].style.opacity = '1';
+                    transactions[1].style.height = `${(stockPrices[buyPoints[1]] / maxPrice) * 100}%`;
+                    
+                    arrows[1].style.display = 'block';
+                    setTimeout(() => {
+                        arrows[1].style.opacity = '1';
+                    }, 500);
+                    
+                    explanationText.innerHTML = 'Second transaction: We buy at day 6 (price $2) and sell at day 7 (price $4). This gives us a profit of $2.';
+                    profitDisplay.innerHTML = 'Profit from second transaction: $2';
+                    break;
+                    
+                case 3:
+                    // Show total profit
+                    explanationText.innerHTML = 'By making these two transactions, we maximize our profit. The first transaction gives $6 and the second gives $2.';
+                    profitDisplay.innerHTML = 'Total Profit: $6 + $2 = $8';
+                    break;
+                    
+                case 4:
+                    // Final explanation
+                    explanationText.innerHTML = 'To maximize profit with at most two transactions, we found the optimal buy-sell points: buy at $1, sell at $7, buy at $2, sell at $4. This gives us a total profit of $8.';
+                    profitDisplay.innerHTML = 'Total Profit: $8';
+                    break;
+            }
+        }
+        
+        // Event listeners for navigation
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateStep();
+            }
+        });
+        
+        // Initialize
+        updateStep();
+    </script>
+</body>
+</html>
