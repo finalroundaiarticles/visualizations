@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Compression Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .animation-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .matrix {
+            display: grid;
+            grid-template-columns: repeat(3, 60px);
+            grid-gap: 5px;
+            margin: 20px auto;
+        }
+        .cell {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #000000;
+            font-size: 20px;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        .temp-array {
+            display: flex;
+            justify-content: center;
+            margin: 20px auto;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .temp-cell {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #000000;
+            margin: 0 5px;
+            font-size: 20px;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        .highlight {
+            background-color: #FD9F78;
+        }
+        .active-highlight {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .operation {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 20px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .kadane {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 20px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 30px;
+        }
+        .nav-button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .explanation {
+            margin: 20px 0;
+            text-align: center;
+            font-size: 18px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Matrix Compression Technique</h1>
+        
+        <div class="explanation" id="explanation">
+            Let's learn how matrix compression works step-by-step.
+        </div>
+        
+        <div class="animation-container">
+            <div id="animation-content">
+                <div class="matrix" id="matrix">
+                    <div class="cell">1</div>
+                    <div class="cell">-2</div>
+                    <div class="cell">3</div>
+                    <div class="cell">-4</div>
+                    <div class="cell">5</div>
+                    <div class="cell">-1</div>
+                    <div class="cell">7</div>
+                    <div class="cell">-8</div>
+                    <div class="cell">9</div>
+                </div>
+                
+                <div class="operation" id="operation"></div>
+                
+                <div class="temp-array" id="temp-array">
+                    <div class="temp-cell"></div>
+                    <div class="temp-cell"></div>
+                    <div class="temp-cell"></div>
+                </div>
+                
+                <div class="kadane" id="kadane"></div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prev-btn" disabled>Previous</button>
+            <button class="nav-button" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const steps = [
+            {
+                explanation: "We start with a 3x3 matrix. Matrix compression helps us find the maximum sum submatrix.",
+                action: () => {
+                    document.querySelectorAll('.cell').forEach(cell => {
+                        cell.classList.remove('highlight', 'active-highlight');
+                    });
+                    document.getElementById('operation').style.opacity = 0;
+                    document.getElementById('temp-array').style.opacity = 0;
+                    document.getElementById('kadane').style.opacity = 0;
+                }
+            },
+            {
+                explanation: "We'll select two rows to compress: Row 0 (top row) and Row 1 (middle row).",
+                action: () => {
+                    const cells = document.querySelectorAll('.cell');
+                    // Highlight row 0
+                    cells[0].classList.add('highlight');
+                    cells[1].classList.add('highlight');
+                    cells[2].classList.add('highlight');
+                    // Highlight row 1
+                    cells[3].classList.add('highlight');
+                    cells[4].classList.add('highlight');
+                    cells[5].classList.add('highlight');
+                    
+                    document.getElementById('operation').style.opacity = 0;
+                    document.getElementById('temp-array').style.opacity = 0;
+                }
+            },
+            {
+                explanation: "Now we'll compress these two rows by adding corresponding elements together.",
+                action: () => {
+                    document.getElementById('operation').innerHTML = "Compression: Row 0 + Row 1";
+                    document.getElementById('operation').style.opacity = 1;
+                }
+            },
+            {
+                explanation: "Let's add the first elements: 1 + (-4) = -3",
+                action: () => {
+                    const cells = document.querySelectorAll('.cell');
+                    cells[0].classList.add('active-highlight');
+                    cells[3].classList.add('active-highlight');
+                    
+                    const tempCells = document.querySelectorAll('.temp-cell');
+                    tempCells[0].textContent = "-3";
+                    document.getElementById('temp-array').style.opacity = 1;
+                    
+                    document.getElementById('operation').innerHTML = "1 + (-4) = -3";
+                }
+            },
+            {
+                explanation: "Next, let's add the second elements: -2 + 5 = 3",
+                action: () => {
+                    const cells = document.querySelectorAll('.cell');
+                    cells[0].classList.remove('active-highlight');
+                    cells[3].classList.remove('active-highlight');
+                    cells[1].classList.add('active-highlight');
+                    cells[4].classList.add('active-highlight');
+                    
+                    const tempCells = document.querySelectorAll('.temp-cell');
+                    tempCells[1].textContent = "3";
+                    
+                    document.getElementById('operation').innerHTML = "-2 + 5 = 3";
+                }
+            },
+            {
+                explanation: "Finally, let's add the third elements: 3 + (-1) = 2",
+                action: () => {
+                    const cells = document.querySelectorAll('.cell');
+                    cells[1].classList.remove('active-highlight');
+                    cells[4].classList.remove('active-highlight');
+                    cells[2].classList.add('active-highlight');
+                    cells[5].classList.add('active-highlight');
+                    
+                    const tempCells = document.querySelectorAll('.temp-cell');
+                    tempCells[2].textContent = "2";
+                    
+                    document.getElementById('operation').innerHTML = "3 + (-1) = 2";
+                }
+            },
+            {
+                explanation: "We've created a compressed array: [-3, 3, 2]. This represents the sum of the two rows at each column.",
+                action: () => {
+                    const cells = document.querySelectorAll('.cell');
+                    cells[2].classList.remove('active-highlight');
+                    cells[5].classList.remove('active-highlight');
+                    
+                    document.getElementById('operation').innerHTML = "Compressed Array: [-3, 3, 2]";
+                    
+                    const tempCells = document.querySelectorAll('.temp-cell');
+                    tempCells.forEach(cell => cell.classList.add('highlight'));
+                }
+            },
+            {
+                explanation: "Now we apply Kadane's algorithm to find the maximum subarray sum in our compressed array.",
+                action: () => {
+                    document.getElementById('kadane').innerHTML = "Applying Kadane's Algorithm";
+                    document.getElementById('kadane').style.opacity = 1;
+                }
+            },
+            {
+                explanation: "Kadane's algorithm processes the array [-3, 3, 2]. Starting with element -3...",
+                action: () => {
+                    const tempCells = document.querySelectorAll('.temp-cell');
+                    tempCells.forEach(cell => cell.classList.remove('highlight', 'active-highlight'));
+                    tempCells[0].classList.add('active-highlight');
+                    
+                    document.getElementById('kadane').innerHTML = "Current sum: -3, Max sum: -3";
+                }
+            },
+            {
+                explanation: "Moving to element 3. We decide whether to start a new subarray (3) or extend the previous one (-3 + 3 = 0).",
+                action: () => {
+                    const tempCells = document.querySelectorAll('.temp-cell');
+                    tempCells[0].classList.remove('active-highlight');
+                    tempCells[1].classList.add('active-highlight');
+                    
+                    document.getElementById('kadane').innerHTML = "Current sum: 3, Max sum: 3";
+                }
+            },
+            {
+                explanation: "Moving to element 2. We can extend the subarray (3 + 2 = 5).",
+                action: () => {
+                    const tempCells = document.querySelectorAll('.temp-cell');
+                    tempCells[1].classList.remove('active-highlight');
+                    tempCells[2].classList.add('active-highlight');
+                    
+                    document.getElementById('kadane').innerHTML = "Current sum: 5, Max sum: 5";
+                }
+            },
+            {
+                explanation: "Kadane's algorithm finds that the maximum subarray is [3, 2] with sum 5.",
+                action: () => {
+                    const tempCells = document.querySelectorAll('.temp-cell');
+                    tempCells[0].classList.remove('active-highlight');
+                    tempCells[1].classList.add('highlight');
+                    tempCells[2].classList.add('highlight');
+                    
+                    document.getElementById('kadane').innerHTML = "Maximum subarray: [3, 2], Sum: 5";
+                }
+            },
+            {
+                explanation: "This means the best submatrix when using rows 0 and 1 involves taking columns 1 and 2, giving a sum of 5.",
+                action: () => {
+                    const cells = document.querySelectorAll('.cell');
+                    cells.forEach(cell => cell.classList.remove('highlight'));
+                    
+                    // Highlight the actual submatrix in the original matrix
+                    cells[1].classList.add('active-highlight');
+                    cells[2].classList.add('active-highlight');
+                    cells[4].classList.add('active-highlight');
+                    cells[5].classList.add('active-highlight');
+                    
+                    document.getElementById('kadane').innerHTML = "Maximum submatrix sum: 5";
+                }
+            },
+            {
+                explanation: "We would repeat this process for all possible row combinations to find the overall maximum submatrix.",
+                action: () => {
+                    // Final state
+                }
+            }
+        ];
+
+        let currentStep = 0;
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const explanation = document.getElementById('explanation');
+
+        function updateUI() {
+            explanation.textContent = steps[currentStep].explanation;
+            steps[currentStep].action();
+            
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateUI();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateUI();
+            }
+        });
+
+        // Initialize
+        updateUI();
+    </script>
+</body>
+</html>
