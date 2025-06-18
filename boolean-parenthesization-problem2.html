@@ -3,379 +3,311 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Memoization Table Visualization</title>
+    <title>Boolean Expression Visualizer</title>
     <style>
         body {
+            background-color: white;
             font-family: Arial, sans-serif;
-            background-color: #FFFFFF;
             margin: 0;
             padding: 20px;
-            color: #000000;
         }
         
-        h1 {
-            color: #FF4800;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .controls {
             text-align: center;
             margin-bottom: 30px;
         }
         
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-        
-        #visualization {
-            width: 100%;
-            height: 500px;
-            position: relative;
-        }
-        
-        .explanation {
-            margin-top: 30px;
-            padding: 20px;
-            border: 2px solid #FD9F78;
-            border-radius: 10px;
-            background-color: rgba(253, 159, 120, 0.1);
-        }
-        
-        .explanation h2 {
-            color: #FF4800;
-            margin-top: 0;
-        }
-        
-        .navigation {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-        
-        .nav-btn {
-            background-color: #FF4800;
-            color: #FFFFFF;
+        .nav-button {
+            background-color: #ff4800;
+            color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 24px;
+            margin: 0 10px;
             border-radius: 5px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
             cursor: pointer;
-            font-weight: bold;
-            transition: background-color 0.3s;
+            transition: opacity 0.3s;
         }
         
-        .nav-btn:hover {
-            background-color: #FD9F78;
+        .nav-button:hover {
+            opacity: 0.8;
         }
         
-        .nav-btn:disabled {
-            background-color: #FD9F78;
-            opacity: 0.5;
+        .nav-button:disabled {
+            background-color: #cccccc;
             cursor: not-allowed;
         }
         
-        .step-indicator {
+        .visualization-area {
+            background-color: white;
+            border: 2px solid #1c1d20;
+            border-radius: 10px;
+            padding: 30px;
+            min-height: 500px;
+        }
+        
+        .step-info {
+            background-color: #f8f8f8;
+            border-left: 4px solid #ff4800;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .expression-display {
+            font-size: 24px;
             text-align: center;
-            margin-top: 15px;
-            color: #FF4800;
+            margin: 20px 0;
+            color: #1c1d20;
             font-weight: bold;
+        }
+        
+        .tree-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        
+        .tree-node {
+            background-color: #ff4800;
+            color: white;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .leaf-node {
+            background-color: #1c1d20;
+        }
+        
+        .calculation-box {
+            background-color: #f0f0f0;
+            border: 2px solid #1c1d20;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .result-highlight {
+            background-color: #ff4800;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            display: inline-block;
+            margin: 5px;
+        }
+        
+        .ways-count {
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            color: #ff4800;
+            margin: 20px 0;
+        }
+        
+        .parenthesization {
+            background-color: #1c1d20;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin: 5px;
+            display: inline-block;
+            font-size: 18px;
+        }
+        
+        .parenthesizations-container {
+            text-align: center;
+            margin: 20px 0;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>3D Memoization Table for Boolean Parenthesization</h1>
-        
-        <div id="visualization"></div>
-        
-        <div class="step-indicator">
-            <span id="current-step">1</span>/<span id="total-steps">5</span>
+        <div class="controls">
+            <button class="nav-button" id="prevBtn" onclick="previousStep()">Previous</button>
+            <button class="nav-button" id="nextBtn" onclick="nextStep()">Next</button>
         </div>
         
-        <div class="navigation">
-            <button id="prev-btn" class="nav-btn" disabled>Previous</button>
-            <button id="next-btn" class="nav-btn">Next</button>
-        </div>
-        
-        <div class="explanation">
-            <h2>Memoization Table for "T|F&T"</h2>
-            <div id="step-explanation">
-                <p>This visualization shows a 3D memoization table for solving the Boolean Parenthesization problem.</p>
-                <p>We're using the expression "T|F&T" as our example. The table helps us store and retrieve computed results efficiently.</p>
-            </div>
+        <div class="visualization-area" id="visualizationArea">
+            <!-- Content will be dynamically generated -->
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
-    
     <script>
-        // Scene setup
-        const container = document.getElementById('visualization');
-        let scene, camera, renderer, controls;
-        let currentStep = 1;
-        const totalSteps = 5;
+        const expression = "T|F&T";
+        let currentStep = 0;
         
-        // Array of explanations for each step
-        const explanations = [
-            `<p>This is our 3D memoization table structure for the expression "T|F&T".</p>
-             <p>The three dimensions represent:</p>
-             <ul>
-                <li><strong>i-axis (red):</strong> Starting index in the expression (0 to 2)</li>
-                <li><strong>j-axis (orange):</strong> Ending index in the expression (0 to 2)</li>
-                <li><strong>k-axis (vertical):</strong> Boolean result (0 for False, 1 for True)</li>
-             </ul>
-             <p>The table is currently empty, and we'll fill it as we solve the problem.</p>`,
-            
-            `<p>First, we fill the diagonal cells (where i=j).</p>
-             <p>These represent individual symbols in our expression:</p>
-             <ul>
-                <li>dp[0][0][1] = 1 (T at position 0 is true)</li>
-                <li>dp[1][1][0] = 1 (F at position 1 is false)</li>
-                <li>dp[2][2][1] = 1 (T at position 2 is true)</li>
-             </ul>
-             <p>The highlighted cells show these base cases.</p>`,
-            
-            `<p>Now we start filling cells for length=2 subproblems.</p>
-             <p>For "T|F" (i=0, j=1):</p>
-             <ul>
-                <li>The operator is OR (|)</li>
-                <li>dp[0][1][1] = 1 (T|F evaluates to True)</li>
-                <li>dp[0][1][0] = 0 (T|F cannot be False)</li>
-             </ul>
-             <p>The highlighted cells show the computed values.</p>`,
-            
-            `<p>For "F&T" (i=1, j=2):</p>
-             <ul>
-                <li>The operator is AND (&)</li>
-                <li>dp[1][2][1] = 0 (F&T evaluates to False)</li>
-                <li>dp[1][2][0] = 1 (F&T is False)</li>
-             </ul>
-             <p>The highlighted cells show these computed values.</p>`,
-            
-            `<p>Finally, we compute the result for the entire expression "T|F&T" (i=0, j=2):</p>
-             <ul>
-                <li>We break at k=1: (T|F) & T</li>
-                <li>dp[0][2][1] = 1 (T|F&T evaluates to True)</li>
-                <li>dp[0][2][0] = 0 (T|F&T cannot be False)</li>
-             </ul>
-             <p>The completed memoization table helps us solve the problem efficiently without recalculating subproblems.</p>`
+        const steps = [
+            {
+                title: "Problem Setup",
+                content: `
+                    <div class="expression-display">Expression: ${expression}</div>
+                    <div class="step-info">
+                        <strong>Goal:</strong> Count the number of ways to parenthesize this expression to make it evaluate to True.
+                    </div>
+                    <div class="calculation-box">
+                        <p><strong>Expression breakdown:</strong></p>
+                        <p>T = True, F = False</p>
+                        <p>| = OR operator</p>
+                        <p>& = AND operator</p>
+                        <p>We need to find all valid parenthesizations that result in True.</p>
+                    </div>
+                `
+            },
+            {
+                title: "Recursive Structure",
+                content: `
+                    <div class="expression-display">Analyzing: ${expression}</div>
+                    <div class="step-info">
+                        <strong>Step 1:</strong> Split at each operator and solve subproblems
+                    </div>
+                    <div class="tree-container">
+                        <div class="tree-node">|</div>
+                        <div style="margin: 0 20px;">
+                            <div class="tree-node leaf-node">T</div>
+                            <div class="tree-node">F&T</div>
+                        </div>
+                    </div>
+                    <div class="calculation-box">
+                        <p><strong>Split at position 1 (|):</strong></p>
+                        <p>Left part: T</p>
+                        <p>Right part: F&T</p>
+                    </div>
+                `
+            },
+            {
+                title: "Split at & Operator",
+                content: `
+                    <div class="expression-display">Analyzing: ${expression}</div>
+                    <div class="step-info">
+                        <strong>Step 2:</strong> Split at & operator
+                    </div>
+                    <div class="tree-container">
+                        <div class="tree-node">&</div>
+                        <div style="margin: 0 20px;">
+                            <div class="tree-node">T|F</div>
+                            <div class="tree-node leaf-node">T</div>
+                        </div>
+                    </div>
+                    <div class="calculation-box">
+                        <p><strong>Split at position 3 (&):</strong></p>
+                        <p>Left part: T|F</p>
+                        <p>Right part: T</p>
+                    </div>
+                `
+            },
+            {
+                title: "Calculate Subproblems",
+                content: `
+                    <div class="expression-display">Subproblem Results</div>
+                    <div class="step-info">
+                        <strong>Step 3:</strong> Calculate ways for each subproblem
+                    </div>
+                    <div class="calculation-box">
+                        <p><strong>For T:</strong></p>
+                        <p>Ways to make True: <span class="result-highlight">1</span></p>
+                        <p>Ways to make False: <span class="result-highlight">0</span></p>
+                        
+                        <p><strong>For F:</strong></p>
+                        <p>Ways to make True: <span class="result-highlight">0</span></p>
+                        <p>Ways to make False: <span class="result-highlight">1</span></p>
+                        
+                        <p><strong>For T|F:</strong></p>
+                        <p>Ways to make True: <span class="result-highlight">1</span> (T|F = T)</p>
+                        <p>Ways to make False: <span class="result-highlight">0</span></p>
+                        
+                        <p><strong>For F&T:</strong></p>
+                        <p>Ways to make True: <span class="result-highlight">0</span> (F&T = F)</p>
+                        <p>Ways to make False: <span class="result-highlight">1</span></p>
+                    </div>
+                `
+            },
+            {
+                title: "Combine Results",
+                content: `
+                    <div class="expression-display">Combining Results for ${expression}</div>
+                    <div class="step-info">
+                        <strong>Step 4:</strong> Combine subproblem results using operators
+                    </div>
+                    <div class="calculation-box">
+                        <p><strong>Split at | (OR):</strong></p>
+                        <p>Left True × Right True + Left True × Right False + Left False × Right True</p>
+                        <p>= 1 × 0 + 1 × 1 + 0 × 0 = <span class="result-highlight">1</span></p>
+                        
+                        <p><strong>Split at & (AND):</strong></p>
+                        <p>Left True × Right True</p>
+                        <p>= 1 × 1 = <span class="result-highlight">1</span></p>
+                        
+                        <p><strong>Total ways:</strong> 1 + 1 = <span class="result-highlight">2</span></p>
+                    </div>
+                `
+            },
+            {
+                title: "Final Result",
+                content: `
+                    <div class="expression-display">${expression}</div>
+                    <div class="ways-count">Number of ways to make True: 2</div>
+                    
+                    <div class="step-info">
+                        <strong>Valid Parenthesizations:</strong>
+                    </div>
+                    
+                    <div class="parenthesizations-container">
+                        <div class="parenthesization">(T|F)&T = T&T = T</div>
+                        <div class="parenthesization">T|(F&T) = T|F = T</div>
+                    </div>
+                    
+                    <div class="calculation-box">
+                        <p><strong>Verification:</strong></p>
+                        <p>1. (T|F)&T = (True|False)&True = True&True = True ✓</p>
+                        <p>2. T|(F&T) = True|(False&True) = True|False = True ✓</p>
+                        <p>Both parenthesizations result in True, confirming our answer of 2 ways.</p>
+                    </div>
+                `
+            }
         ];
         
-        // Initialize the 3D scene
-        initScene();
-        
-        // Create initial empty table
-        createEmptyTable();
-        
-        // Handle navigation
-        document.getElementById('next-btn').addEventListener('click', nextStep);
-        document.getElementById('prev-btn').addEventListener('click', prevStep);
-        
-        function initScene() {
-            // Create scene
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xFFFFFF);
+        function updateVisualization() {
+            const area = document.getElementById('visualizationArea');
+            area.innerHTML = `
+                <h2 style="color: #1c1d20; text-align: center; margin-bottom: 20px;">
+                    ${steps[currentStep].title}
+                </h2>
+                ${steps[currentStep].content}
+            `;
             
-            // Create camera
-            camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
-            camera.position.set(10, 8, 10);
-            
-            // Create renderer
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            container.appendChild(renderer.domElement);
-            
-            // Add controls
-            controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.dampingFactor = 0.05;
-            
-            // Add lights
-            const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.6);
-            scene.add(ambientLight);
-            
-            const directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.8);
-            directionalLight.position.set(5, 10, 7);
-            scene.add(directionalLight);
-            
-            // Add axes helper
-            const axesHelper = new THREE.AxesHelper(5);
-            scene.add(axesHelper);
-            
-            // Add coordinate system labels
-            addCoordinateLabels();
-            
-            // Animation loop
-            animate();
-        }
-        
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update();
-            renderer.render(scene, camera);
-        }
-        
-        function addCoordinateLabels() {
-            // Create labels for axes
-            const iLabel = createTextSprite("i (start index)", { x: 5, y: 0, z: 0 }, "#FF4800");
-            const jLabel = createTextSprite("j (end index)", { x: 0, y: 0, z: 5 }, "#FD9F78");
-            const kLabel = createTextSprite("k (True/False)", { x: 0, y: 5, z: 0 }, "#000000");
-            
-            scene.add(iLabel);
-            scene.add(jLabel);
-            scene.add(kLabel);
-        }
-        
-        function createTextSprite(text, position, color) {
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            canvas.width = 256;
-            canvas.height = 64;
-            
-            context.font = "Bold 24px Arial";
-            context.fillStyle = color;
-            context.fillText(text, 0, 40);
-            
-            const texture = new THREE.Texture(canvas);
-            texture.needsUpdate = true;
-            
-            const material = new THREE.SpriteMaterial({ map: texture });
-            const sprite = new THREE.Sprite(material);
-            
-            sprite.position.set(position.x, position.y, position.z);
-            sprite.scale.set(5, 1.25, 1);
-            
-            return sprite;
-        }
-        
-        function createEmptyTable() {
-            // Create grid lines for the 3D table
-            const gridHelper = new THREE.GridHelper(6, 3);
-            gridHelper.rotation.x = Math.PI / 2;
-            scene.add(gridHelper);
-            
-            const gridHelper2 = new THREE.GridHelper(6, 3);
-            gridHelper2.position.y = 3;
-            gridHelper2.rotation.x = Math.PI / 2;
-            scene.add(gridHelper2);
-            
-            // Add vertical grid lines
-            for (let i = 0; i <= 3; i++) {
-                const verticalLine = new THREE.Line(
-                    new THREE.BufferGeometry().setFromPoints([
-                        new THREE.Vector3(i * 2, 0, 0),
-                        new THREE.Vector3(i * 2, 3, 0)
-                    ]),
-                    new THREE.LineBasicMaterial({ color: 0x000000 })
-                );
-                scene.add(verticalLine);
-                
-                const verticalLine2 = new THREE.Line(
-                    new THREE.BufferGeometry().setFromPoints([
-                        new THREE.Vector3(0, 0, i * 2),
-                        new THREE.Vector3(0, 3, i * 2)
-                    ]),
-                    new THREE.LineBasicMaterial({ color: 0x000000 })
-                );
-                scene.add(verticalLine2);
-                
-                // Add index labels
-                if (i < 3) {
-                    const iLabel = createTextSprite(i.toString(), { x: i * 2, y: -0.5, z: -0.5 }, "#FF4800");
-                    const jLabel = createTextSprite(i.toString(), { x: -0.5, y: -0.5, z: i * 2 }, "#FD9F78");
-                    scene.add(iLabel);
-                    scene.add(jLabel);
-                }
-            }
-            
-            // Add labels for k-axis
-            const kFalseLabel = createTextSprite("False (0)", { x: -0.5, y: 0, z: -0.5 }, "#000000");
-            const kTrueLabel = createTextSprite("True (1)", { x: -0.5, y: 3, z: -0.5 }, "#000000");
-            scene.add(kFalseLabel);
-            scene.add(kTrueLabel);
-            
-            // Expression display
-            const exprLabel = createTextSprite("Expression: T|F&T", { x: 3, y: 5, z: 3 }, "#FF4800");
-            scene.add(exprLabel);
-        }
-        
-        function createTableCell(i, j, k, value) {
-            const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
-            
-            const color = value === 1 ? 0xFF4800 : 0xFD9F78;
-            const material = new THREE.MeshLambertMaterial({ 
-                color: color, 
-                transparent: true, 
-                opacity: 0.8 
-            });
-            
-            const cube = new THREE.Mesh(geometry, material);
-            cube.position.set(i * 2, k * 3, j * 2);
-            scene.add(cube);
-            
-            // Add value label
-            const valueLabel = createTextSprite(value.toString(), { x: i * 2, y: k * 3, z: j * 2 }, "#FFFFFF");
-            scene.add(valueLabel);
-            
-            return { cube, label: valueLabel };
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === steps.length - 1;
         }
         
         function nextStep() {
-            if (currentStep < totalSteps) {
+            if (currentStep < steps.length - 1) {
                 currentStep++;
-                updateStep();
+                updateVisualization();
             }
         }
         
-        function prevStep() {
-            if (currentStep > 1) {
+        function previousStep() {
+            if (currentStep > 0) {
                 currentStep--;
-                updateStep();
+                updateVisualization();
             }
         }
         
-        function updateStep() {
-            // Clear previous objects
-            while(scene.children.length > 0){ 
-                scene.remove(scene.children[0]); 
-            }
-            
-            // Recreate base grid
-            createEmptyTable();
-            
-            // Update explanation
-            document.getElementById('step-explanation').innerHTML = explanations[currentStep - 1];
-            
-            // Update step indicator
-            document.getElementById('current-step').textContent = currentStep;
-            
-            // Update button states
-            document.getElementById('prev-btn').disabled = (currentStep === 1);
-            document.getElementById('next-btn').disabled = (currentStep === totalSteps);
-            
-            // Add cells based on current step
-            if (currentStep >= 2) {
-                // Base cases (diagonal elements)
-                createTableCell(0, 0, 1, 1); // T at position 0 is true
-                createTableCell(1, 1, 0, 1); // F at position 1 is false
-                createTableCell(2, 2, 1, 1); // T at position 2 is true
-            }
-            
-            if (currentStep >= 3) {
-                // T|F subproblem
-                createTableCell(0, 1, 1, 1); // T|F is true
-                createTableCell(0, 1, 0, 0); // T|F is not false
-            }
-            
-            if (currentStep >= 4) {
-                // F&T subproblem
-                createTableCell(1, 2, 1, 0); // F&T is not true
-                createTableCell(1, 2, 0, 1); // F&T is false
-            }
-            
-            if (currentStep >= 5) {
-                // Complete expression T|F&T
-                createTableCell(0, 2, 1, 1); // T|F&T is true
-                createTableCell(0, 2, 0, 0); // T|F&T is not false
-            }
-        }
+        // Initialize
+        updateVisualization();
     </script>
 </body>
 </html>
