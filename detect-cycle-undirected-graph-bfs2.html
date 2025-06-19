@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BFS Cycle Detection Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .animation-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .graph-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+        .vertex {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            border: 2px solid #FF4800;
+            transition: background-color 0.5s, transform 0.3s;
+        }
+        .vertex.visited {
+            background-color: #FF4800;
+            color: white;
+        }
+        .vertex.current {
+            transform: scale(1.2);
+            box-shadow: 0 0 10px rgba(255, 72, 0, 0.7);
+        }
+        .edge {
+            position: absolute;
+            background-color: #000000;
+            height: 2px;
+            transform-origin: 0 0;
+            transition: background-color 0.5s;
+        }
+        .edge.traversed {
+            background-color: #FF4800;
+            height: 3px;
+        }
+        .edge.cycle {
+            background-color: #FF4800;
+            height: 4px;
+            box-shadow: 0 0 8px rgba(255, 72, 0, 0.7);
+        }
+        .info-panel {
+            width: 100%;
+            background-color: #FFFFFF;
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .step-info {
+            margin-bottom: 15px;
+        }
+        .queue-container, .visited-container, .parent-container {
+            margin-bottom: 10px;
+        }
+        .data-box {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+            background-color: #FD9F78;
+            border: 1px solid #FF4800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+        .data-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .data-label {
+            width: 100px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .nav-button {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-counter {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #FF4800;
+        }
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #FFF;
+            border-left: 4px solid #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BFS Cycle Detection Process</h1>
+        <div class="step-counter">Step <span id="current-step">1</span> of <span id="total-steps">6</span></div>
+        
+        <div class="animation-container">
+            <div class="graph-container" id="graph">
+                <!-- Vertices -->
+                <div class="vertex" id="vertex-0" style="top: 100px; left: 100px;">0</div>
+                <div class="vertex" id="vertex-1" style="top: 100px; left: 300px;">1</div>
+                <div class="vertex" id="vertex-2" style="top: 300px; left: 300px;">2</div>
+                <div class="vertex" id="vertex-3" style="top: 300px; left: 100px;">3</div>
+                
+                <!-- Edges -->
+                <div class="edge" id="edge-0-1"></div>
+                <div class="edge" id="edge-1-2"></div>
+                <div class="edge" id="edge-2-3"></div>
+                <div class="edge" id="edge-3-0"></div>
+            </div>
+            
+            <div class="info-panel">
+                <div class="step-info" id="step-description">
+                    Starting BFS from vertex 0
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-label">Queue:</div>
+                    <div class="queue-container" id="queue-display"></div>
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-label">Visited:</div>
+                    <div class="visited-container" id="visited-display"></div>
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-label">Parent:</div>
+                    <div class="parent-container" id="parent-display"></div>
+                </div>
+                
+                <div class="explanation" id="explanation-text">
+                    We start by adding vertex 0 to the queue and marking it as visited.
+                </div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prev-btn" disabled>Previous</button>
+            <button class="nav-button" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up edges with correct positions and rotations
+            function setupEdges() {
+                const v0 = document.getElementById('vertex-0').getBoundingClientRect();
+                const v1 = document.getElementById('vertex-1').getBoundingClientRect();
+                const v2 = document.getElementById('vertex-2').getBoundingClientRect();
+                const v3 = document.getElementById('vertex-3').getBoundingClientRect();
+                
+                const edge01 = document.getElementById('edge-0-1');
+                const edge12 = document.getElementById('edge-1-2');
+                const edge23 = document.getElementById('edge-2-3');
+                const edge30 = document.getElementById('edge-3-0');
+                
+                // Calculate center points of vertices
+                const center0 = {x: v0.left + v0.width/2, y: v0.top + v0.height/2};
+                const center1 = {x: v1.left + v1.width/2, y: v1.top + v1.height/2};
+                const center2 = {x: v2.left + v2.width/2, y: v2.top + v2.height/2};
+                const center3 = {x: v3.left + v3.width/2, y: v3.top + v3.height/2};
+                
+                // Edge 0-1
+                const length01 = Math.sqrt(Math.pow(center1.x - center0.x, 2) + Math.pow(center1.y - center0.y, 2));
+                const angle01 = Math.atan2(center1.y - center0.y, center1.x - center0.x);
+                edge01.style.width = `${length01}px`;
+                edge01.style.transform = `rotate(${angle01}rad)`;
+                edge01.style.left = `${center0.x - document.getElementById('graph').getBoundingClientRect().left}px`;
+                edge01.style.top = `${center0.y - document.getElementById('graph').getBoundingClientRect().top}px`;
+                
+                // Edge 1-2
+                const length12 = Math.sqrt(Math.pow(center2.x - center1.x, 2) + Math.pow(center2.y - center1.y, 2));
+                const angle12 = Math.atan2(center2.y - center1.y, center2.x - center1.x);
+                edge12.style.width = `${length12}px`;
+                edge12.style.transform = `rotate(${angle12}rad)`;
+                edge12.style.left = `${center1.x - document.getElementById('graph').getBoundingClientRect().left}px`;
+                edge12.style.top = `${center1.y - document.getElementById('graph').getBoundingClientRect().top}px`;
+                
+                // Edge 2-3
+                const length23 = Math.sqrt(Math.pow(center3.x - center2.x, 2) + Math.pow(center3.y - center2.y, 2));
+                const angle23 = Math.atan2(center3.y - center2.y, center3.x - center2.x);
+                edge23.style.width = `${length23}px`;
+                edge23.style.transform = `rotate(${angle23}rad)`;
+                edge23.style.left = `${center2.x - document.getElementById('graph').getBoundingClientRect().left}px`;
+                edge23.style.top = `${center2.y - document.getElementById('graph').getBoundingClientRect().top}px`;
+                
+                // Edge 3-0
+                const length30 = Math.sqrt(Math.pow(center0.x - center3.x, 2) + Math.pow(center0.y - center3.y, 2));
+                const angle30 = Math.atan2(center0.y - center3.y, center0.x - center3.x);
+                edge30.style.width = `${length30}px`;
+                edge30.style.transform = `rotate(${angle30}rad)`;
+                edge30.style.left = `${center3.x - document.getElementById('graph').getBoundingClientRect().left}px`;
+                edge30.style.top = `${center3.y - document.getElementById('graph').getBoundingClientRect().top}px`;
+            }
+            
+            setupEdges();
+            
+            // Handle window resize to adjust edges
+            window.addEventListener('resize', setupEdges);
+            
+            // Animation states
+            const steps = [
+                {
+                    description: "Starting BFS from vertex 0",
+                    queue: [0],
+                    visited: [0],
+                    parent: {0: null},
+                    currentVertex: 0,
+                    traversedEdges: [],
+                    cycleEdge: null,
+                    explanation: "We start by adding vertex 0 to the queue and marking it as visited. Parent of 0 is set to null as it's our starting vertex."
+                },
+                {
+                    description: "Processing vertex 0",
+                    queue: [1],
+                    visited: [0, 1],
+                    parent: {0: null, 1: 0},
+                    currentVertex: 1,
+                    traversedEdges: ["0-1"],
+                    cycleEdge: null,
+                    explanation: "We dequeue vertex 0 and explore its neighbor vertex 1. We add vertex 1 to the queue, mark it as visited, and set its parent to 0."
+                },
+                {
+                    description: "Processing vertex 1",
+                    queue: [2],
+                    visited: [0, 1, 2],
+                    parent: {0: null, 1: 0, 2: 1},
+                    currentVertex: 2,
+                    traversedEdges: ["0-1", "1-2"],
+                    cycleEdge: null,
+                    explanation: "We dequeue vertex 1 and explore its neighbor vertex 2. We add vertex 2 to the queue, mark it as visited, and set its parent to 1."
+                },
+                {
+                    description: "Processing vertex 2",
+                    queue: [3],
+                    visited: [0, 1, 2, 3],
+                    parent: {0: null, 1: 0, 2: 1, 3: 2},
+                    currentVertex: 3,
+                    traversedEdges: ["0-1", "1-2", "2-3"],
+                    cycleEdge: null,
+                    explanation: "We dequeue vertex 2 and explore its neighbor vertex 3. We add vertex 3 to the queue, mark it as visited, and set its parent to 2."
+                },
+                {
+                    description: "Processing vertex 3",
+                    queue: [],
+                    visited: [0, 1, 2, 3],
+                    parent: {0: null, 1: 0, 2: 1, 3: 2},
+                    currentVertex: 3,
+                    traversedEdges: ["0-1", "1-2", "2-3"],
+                    cycleEdge: "3-0",
+                    explanation: "We dequeue vertex 3 and check its neighbor vertex 0. Vertex 0 is already visited and is not the parent of vertex 3. This means we've found a cycle in the graph!"
+                },
+                {
+                    description: "Cycle Detected!",
+                    queue: [],
+                    visited: [0, 1, 2, 3],
+                    parent: {0: null, 1: 0, 2: 1, 3: 2},
+                    currentVertex: null,
+                    traversedEdges: ["0-1", "1-2", "2-3"],
+                    cycleEdge: "3-0",
+                    explanation: "The cycle is formed by vertices 0 → 1 → 2 → 3 → 0. BFS has successfully detected a cycle in the graph. The cycle detection is complete."
+                }
+            ];
+            
+            let currentStepIndex = 0;
+            const totalSteps = steps.length;
+            document.getElementById('total-steps').textContent = totalSteps;
+            
+            // Update the UI for the current step
+            function updateUI(stepIndex) {
+                const step = steps[stepIndex];
+                
+                // Update step description
+                document.getElementById('step-description').textContent = step.description;
+                document.getElementById('current-step').textContent = stepIndex + 1;
+                
+                // Update queue display
+                const queueDisplay = document.getElementById('queue-display');
+                queueDisplay.innerHTML = '';
+                if (step.queue.length === 0) {
+                    queueDisplay.innerHTML = '<span style="font-style: italic;">Empty</span>';
+                } else {
+                    step.queue.forEach(vertex => {
+                        const dataBox = document.createElement('div');
+                        dataBox.className = 'data-box';
+                        dataBox.textContent = vertex;
+                        queueDisplay.appendChild(dataBox);
+                    });
+                }
+                
+                // Update visited display
+                const visitedDisplay = document.getElementById('visited-display');
+                visitedDisplay.innerHTML = '';
+                step.visited.forEach(vertex => {
+                    const dataBox = document.createElement('div');
+                    dataBox.className = 'data-box';
+                    dataBox.textContent = vertex;
+                    visitedDisplay.appendChild(dataBox);
+                });
+                
+                // Update parent display
+                const parentDisplay = document.getElementById('parent-display');
+                parentDisplay.innerHTML = '';
+                for (const [child, parent] of Object.entries(step.parent)) {
+                    const parentInfo = document.createElement('div');
+                    parentInfo.style.marginRight = '15px';
+                    parentInfo.innerHTML = `${child}: ${parent !== null ? parent : 'null'}`;
+                    parentDisplay.appendChild(parentInfo);
+                }
+                
+                // Update explanation
+                document.getElementById('explanation-text').textContent = step.explanation;
+                
+                // Update vertices state
+                document.querySelectorAll('.vertex').forEach(vertex => {
+                    const vertexId = parseInt(vertex.textContent);
+                    vertex.classList.remove('visited', 'current');
+                    
+                    if (step.visited.includes(vertexId)) {
+                        vertex.classList.add('visited');
+                    }
+                    
+                    if (step.currentVertex === vertexId) {
+                        vertex.classList.add('current');
+                    }
+                });
+                
+                // Update edges state
+                document.querySelectorAll('.edge').forEach(edge => {
+                    edge.classList.remove('traversed', 'cycle');
+                });
+                
+                // Mark traversed edges
+                step.traversedEdges.forEach(edgeId => {
+                    const [v1, v2] = edgeId.split('-').map(Number);
+                    document.getElementById(`edge-${v1}-${v2}`).classList.add('traversed');
+                });
+                
+                // Mark cycle edge if any
+                if (step.cycleEdge) {
+                    const [v1, v2] = step.cycleEdge.split('-').map(Number);
+                    document.getElementById(`edge-${v1}-${v2}`).classList.add('cycle');
+                }
+                
+                // Update navigation buttons
+                document.getElementById('prev-btn').disabled = stepIndex === 0;
+                document.getElementById('next-btn').disabled = stepIndex === totalSteps - 1;
+            }
+            
+            // Initial UI update
+            updateUI(currentStepIndex);
+            
+            // Button event listeners
+            document.getElementById('next-btn').addEventListener('click', () => {
+                if (currentStepIndex < totalSteps - 1) {
+                    currentStepIndex++;
+                    updateUI(currentStepIndex);
+                }
+            });
+            
+            document.getElementById('prev-btn').addEventListener('click', () => {
+                if (currentStepIndex > 0) {
+                    currentStepIndex--;
+                    updateUI(currentStepIndex);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
