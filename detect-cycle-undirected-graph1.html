@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Visualization - Cycle vs. No Cycle</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .graph-container {
+            width: 45%;
+            min-width: 300px;
+            margin: 10px;
+            padding: 15px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .graph-title {
+            color: #FF4800;
+            margin-bottom: 15px;
+        }
+
+        canvas {
+            background-color: #FFFFFF;
+            border-radius: 5px;
+        }
+
+        .explanation {
+            margin: 20px auto;
+            max-width: 800px;
+            padding: 15px;
+            background-color: #FFFFFF;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            text-align: left;
+        }
+
+        .navigation {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .nav-button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+
+        .nav-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .step-indicator {
+            margin-top: 10px;
+            color: #000000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Graph Visualization - Cycle vs. No Cycle</h1>
+    
+    <div class="container">
+        <div class="graph-container">
+            <h2 class="graph-title">Graph with Cycle</h2>
+            <canvas id="cycleGraph" width="400" height="300"></canvas>
+        </div>
+        
+        <div class="graph-container">
+            <h2 class="graph-title">Graph without Cycle</h2>
+            <canvas id="noCycleGraph" width="400" height="300"></canvas>
+        </div>
+    </div>
+    
+    <div class="explanation" id="explanation">
+        <p id="explanation-text">Welcome to Graph Visualization! This animation will show you the difference between graphs with cycles and graphs without cycles.</p>
+    </div>
+    
+    <div class="navigation">
+        <button id="prevBtn" class="nav-button" disabled>Previous</button>
+        <button id="nextBtn" class="nav-button">Next</button>
+    </div>
+    
+    <div class="step-indicator">
+        Step <span id="currentStep">1</span> of <span id="totalSteps">5</span>
+    </div>
+
+    <script>
+        // Canvas setup
+        const cycleCanvas = document.getElementById('cycleGraph');
+        const noCycleCanvas = document.getElementById('noCycleGraph');
+        const cycleCtx = cycleCanvas.getContext('2d');
+        const noCycleCtx = noCycleCanvas.getContext('2d');
+        
+        // Node positions
+        const cycleNodes = [
+            { id: 0, x: 200, y: 50, label: "0" },
+            { id: 1, x: 100, y: 200, label: "1" },
+            { id: 2, x: 300, y: 200, label: "2" }
+        ];
+        
+        const noCycleNodes = [
+            { id: 0, x: 100, y: 150, label: "0" },
+            { id: 1, x: 200, y: 150, label: "1" },
+            { id: 2, x: 300, y: 150, label: "2" },
+            { id: 3, x: 400, y: 150, label: "3" }
+        ];
+        
+        // Edge definitions
+        const cycleEdges = [
+            { source: 0, target: 1 },
+            { source: 1, target: 2 },
+            { source: 2, target: 0 }
+        ];
+        
+        const noCycleEdges = [
+            { source: 0, target: 1 },
+            { source: 1, target: 2 },
+            { source: 2, target: 3 }
+        ];
+        
+        // Colors
+        const nodeColor = "#FF4800";
+        const nodeStrokeColor = "#000000";
+        const edgeColor = "#FD9F78";
+        const highlightColor = "#FF4800";
+        const textColor = "#FFFFFF";
+        
+        // Animation state
+        let currentStep = 1;
+        const totalSteps = 5;
+        let animationFrameId;
+        let cycleHighlightedEdges = [];
+        let noCycleHighlightedEdges = [];
+        let animationProgress = 0;
+        
+        // Navigation setup
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const currentStepEl = document.getElementById('currentStep');
+        const totalStepsEl = document.getElementById('totalSteps');
+        const explanationText = document.getElementById('explanation-text');
+        
+        totalStepsEl.textContent = totalSteps;
+        
+        // Step explanations
+        const explanations = [
+            "Welcome to Graph Visualization! This animation will show you the difference between graphs with cycles and graphs without cycles.",
+            "A graph consists of nodes (vertices) and edges. On the left, we have a graph with nodes 0, 1, and 2. On the right, we have nodes 0, 1, 2, and 3.",
+            "Let's look at the graph on the left. We can follow a path from node 0 to 1, then to 2, and back to 0. This creates a cycle - a path where we can return to the starting point.",
+            "Now let's look at the graph on the right. We can only follow a linear path from node 0 to 1 to 2 to 3. There's no way to return to a previous node. This graph has no cycles.",
+            "Cycles are important in graph theory and algorithms. Detecting cycles is crucial for many applications like deadlock detection, circuit analysis, and dependency resolution."
+        ];
+        
+        // Draw functions
+        function drawNode(ctx, node, isHighlighted = false) {
+            const radius = 20;
+            
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = isHighlighted ? highlightColor : nodeColor;
+            ctx.fill();
+            ctx.strokeStyle = nodeStrokeColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = textColor;
+            ctx.font = "bold 16px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(node.label, node.x, node.y);
+        }
+        
+        function drawEdge(ctx, source, target, isHighlighted = false, progress = 1) {
+            ctx.beginPath();
+            ctx.moveTo(source.x, source.y);
+            
+            if (progress < 1) {
+                const x = source.x + (target.x - source.x) * progress;
+                const y = source.y + (target.y - source.y) * progress;
+                ctx.lineTo(x, y);
+            } else {
+                ctx.lineTo(target.x, target.y);
+            }
+            
+            ctx.strokeStyle = isHighlighted ? highlightColor : edgeColor;
+            ctx.lineWidth = isHighlighted ? 4 : 2;
+            ctx.stroke();
+            
+            // Draw arrow
+            if (progress > 0.9) {
+                const angle = Math.atan2(target.y - source.y, target.x - source.x);
+                const length = 10;
+                
+                ctx.beginPath();
+                ctx.moveTo(
+                    target.x - length * Math.cos(angle) - length * Math.cos(angle - Math.PI/6),
+                    target.y - length * Math.sin(angle) - length * Math.sin(angle - Math.PI/6)
+                );
+                ctx.lineTo(target.x - length * Math.cos(angle), target.y - length * Math.sin(angle));
+                ctx.lineTo(
+                    target.x - length * Math.cos(angle) - length * Math.cos(angle + Math.PI/6),
+                    target.y - length * Math.sin(angle) - length * Math.sin(angle + Math.PI/6)
+                );
+                ctx.fillStyle = isHighlighted ? highlightColor : edgeColor;
+                ctx.fill();
+            }
+        }
+        
+        function drawGraph(ctx, nodes, edges, highlightedEdges, progress = 1) {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            
+            // Draw edges
+            edges.forEach((edge, index) => {
+                const source = nodes[edge.source];
+                const target = nodes[edge.target];
+                const isHighlighted = highlightedEdges.includes(index);
+                
+                if (isHighlighted) {
+                    drawEdge(ctx, source, target, true, progress);
+                } else {
+                    drawEdge(ctx, source, target, false, 1);
+                }
+            });
+            
+            // Draw nodes
+            nodes.forEach(node => {
+                drawNode(ctx, node);
+            });
+        }
+        
+        function animate() {
+            animationProgress += 0.02;
+            if (animationProgress > 1) animationProgress = 1;
+            
+            drawGraph(cycleCtx, cycleNodes, cycleEdges, cycleHighlightedEdges, animationProgress);
+            drawGraph(noCycleCtx, noCycleNodes, noCycleEdges, noCycleHighlightedEdges, animationProgress);
+            
+            if (animationProgress < 1) {
+                animationFrameId = requestAnimationFrame(animate);
+            }
+        }
+        
+        // Initial render
+        drawGraph(cycleCtx, cycleNodes, cycleEdges, []);
+        drawGraph(noCycleCtx, noCycleNodes, noCycleEdges, []);
+        
+        // Navigation handlers
+        function updateStep(newStep) {
+            currentStep = newStep;
+            currentStepEl.textContent = currentStep;
+            
+            // Enable/disable buttons
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === totalSteps;
+            
+            // Update explanation
+            explanationText.textContent = explanations[currentStep - 1];
+            
+            // Reset animation state
+            animationProgress = 0;
+            
+            // Set highlighted edges based on current step
+            cycleHighlightedEdges = [];
+            noCycleHighlightedEdges = [];
+            
+            switch(currentStep) {
+                case 1:
+                    // Introduction - no highlights
+                    break;
+                case 2:
+                    // Show all nodes and edges
+                    cycleHighlightedEdges = [0, 1, 2];
+                    noCycleHighlightedEdges = [0, 1, 2];
+                    break;
+                case 3:
+                    // Highlight cycle in left graph
+                    cycleHighlightedEdges = [0, 1, 2];
+                    break;
+                case 4:
+                    // Highlight path in right graph
+                    noCycleHighlightedEdges = [0, 1, 2];
+                    break;
+                case 5:
+                    // Show both graphs fully
+                    cycleHighlightedEdges = [0, 1, 2];
+                    noCycleHighlightedEdges = [0, 1, 2];
+                    break;
+            }
+            
+            // Start animation
+            cancelAnimationFrame(animationFrameId);
+            animate();
+        }
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                updateStep(currentStep + 1);
+            }
+        });
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                updateStep(currentStep - 1);
+            }
+        });
+        
+        // Initialize with step 1
+        updateStep(1);
+    </script>
+</body>
+</html>
