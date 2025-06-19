@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dijkstra's Algorithm Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        #canvas-container {
+            width: 100%;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas {
+            border: 2px solid #FD9F78;
+            border-radius: 5px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .info-box {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            color: #000000;
+        }
+        .step-counter {
+            text-align: center;
+            font-size: 18px;
+            margin: 15px 0;
+            color: #FF4800;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dijkstra's Algorithm Visualization</h1>
+        
+        <div class="info-box">
+            <p>Dijkstra's algorithm finds the shortest path from a source node to all other nodes in a graph with non-negative edge weights.</p>
+        </div>
+        
+        <div class="step-counter">
+            Step: <span id="step-counter">1</span> of 9
+        </div>
+        
+        <div id="canvas-container">
+            <canvas id="graphCanvas" width="700" height="400"></canvas>
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn">Previous Step</button>
+            <button id="nextBtn">Next Step</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('graphCanvas');
+            const ctx = canvas.getContext('2d');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const stepCounter = document.getElementById('step-counter');
+            
+            let currentStep = 1;
+            const totalSteps = 9;
+            
+            // Define graph nodes
+            const nodes = [
+                { id: 'A', x: 100, y: 100, distance: 0, status: 'unvisited' },
+                { id: 'B', x: 250, y: 50, distance: Infinity, status: 'unvisited' },
+                { id: 'C', x: 350, y: 150, distance: Infinity, status: 'unvisited' },
+                { id: 'D', x: 200, y: 200, distance: Infinity, status: 'unvisited' },
+                { id: 'E', x: 400, y: 250, distance: Infinity, status: 'unvisited' },
+                { id: 'F', x: 550, y: 150, distance: Infinity, status: 'unvisited' }
+            ];
+            
+            // Define graph edges
+            const edges = [
+                { from: 'A', to: 'B', weight: 4 },
+                { from: 'A', to: 'D', weight: 2 },
+                { from: 'B', to: 'C', weight: 3 },
+                { from: 'C', to: 'F', weight: 6 },
+                { from: 'C', to: 'E', weight: 2 },
+                { from: 'D', to: 'B', weight: 1 },
+                { from: 'D', to: 'C', weight: 5 },
+                { from: 'D', to: 'E', weight: 7 },
+                { from: 'E', to: 'F', weight: 4 }
+            ];
+            
+            // Dijkstra algorithm steps
+            const steps = [
+                // Step 1: Initialize
+                {
+                    description: "Initialize: Set distance to source node A as 0, all others as Infinity. Priority queue contains all nodes.",
+                    priorityQueue: ['A', 'B', 'C', 'D', 'E', 'F'],
+                    current: null,
+                    distances: { A: 0, B: Infinity, C: Infinity, D: Infinity, E: Infinity, F: Infinity },
+                    visited: []
+                },
+                // Step 2: Process A
+                {
+                    description: "Process node A: Update distances to neighbors B(4) and D(2).",
+                    priorityQueue: ['B', 'C', 'D', 'E', 'F'],
+                    current: 'A',
+                    distances: { A: 0, B: 4, C: Infinity, D: 2, E: Infinity, F: Infinity },
+                    visited: ['A']
+                },
+                // Step 3: Process D
+                {
+                    description: "Process node D: Update distances to neighbors B(3), C(7), E(9).",
+                    priorityQueue: ['B', 'C', 'E', 'F'],
+                    current: 'D',
+                    distances: { A: 0, B: 3, C: 7, D: 2, E: 9, F: Infinity },
+                    visited: ['A', 'D']
+                },
+                // Step 4: Process B
+                {
+                    description: "Process node B: Update distance to neighbor C(6).",
+                    priorityQueue: ['C', 'E', 'F'],
+                    current: 'B',
+                    distances: { A: 0, B: 3, C: 6, D: 2, E: 9, F: Infinity },
+                    visited: ['A', 'D', 'B']
+                },
+                // Step 5: Process C
+                {
+                    description: "Process node C: Update distances to neighbors E(8) and F(12).",
+                    priorityQueue: ['E', 'F'],
+                    current: 'C',
+                    distances: { A: 0, B: 3, C: 6, D: 2, E: 8, F: 12 },
+                    visited: ['A', 'D', 'B', 'C']
+                },
+                // Step 6: Process E
+                {
+                    description: "Process node E: Update distance to neighbor F(12).",
+                    priorityQueue: ['F'],
+                    current: 'E',
+                    distances: { A: 0, B: 3, C: 6, D: 2, E: 8, F: 12 },
+                    visited: ['A', 'D', 'B', 'C', 'E']
+                },
+                // Step 7: Process F
+                {
+                    description: "Process node F: All nodes visited, algorithm complete.",
+                    priorityQueue: [],
+                    current: 'F',
+                    distances: { A: 0, B: 3, C: 6, D: 2, E: 8, F: 12 },
+                    visited: ['A', 'D', 'B', 'C', 'E', 'F']
+                },
+                // Step 8: Final state
+                {
+                    description: "Final result: Shortest paths from source A to all nodes.",
+                    priorityQueue: [],
+                    current: null,
+                    distances: { A: 0, B: 3, C: 6, D: 2, E: 8, F: 12 },
+                    visited: ['A', 'D', 'B', 'C', 'E', 'F'],
+                    final: true
+                },
+                // Step 9: Highlight shortest paths
+                {
+                    description: "The shortest paths from source A to all other nodes are highlighted.",
+                    priorityQueue: [],
+                    current: null,
+                    distances: { A: 0, B: 3, C: 6, D: 2, E: 8, F: 12 },
+                    visited: ['A', 'D', 'B', 'C', 'E', 'F'],
+                    final: true,
+                    showPaths: true
+                }
+            ];
+            
+            // Find node by ID
+            function findNode(id) {
+                return nodes.find(node => node.id === id);
+            }
+            
+            // Draw node
+            function drawNode(node, step) {
+                const currentStep = steps[currentStep - 1];
+                let fillColor = '#FFFFFF';
+                let strokeColor = '#000000';
+                
+                // Determine node color based on status
+                if (currentStep.current === node.id) {
+                    fillColor = '#FF4800'; // Current node being processed
+                } else if (currentStep.visited && currentStep.visited.includes(node.id)) {
+                    fillColor = '#FD9F78'; // Visited node
+                }
+                
+                // Draw node circle
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 25, 0, Math.PI * 2);
+                ctx.fillStyle = fillColor;
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = strokeColor;
+                ctx.stroke();
+                
+                // Draw node ID
+                ctx.font = '18px Arial';
+                ctx.fillStyle = '#000000';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node.id, node.x, node.y);
+                
+                // Draw distance
+                const distance = currentStep.distances[node.id];
+                const distanceText = distance === Infinity ? '∞' : distance;
+                ctx.font = '14px Arial';
+                ctx.fillStyle = '#000000';
+                ctx.fillText(distanceText, node.x, node.y + 40);
+            }
+            
+            // Draw edge
+            function drawEdge(from, to, weight, highlight = false) {
+                const fromNode = findNode(from);
+                const toNode = findNode(to);
+                
+                // Calculate angle for edge
+                const angle = Math.atan2(toNode.y - fromNode.y, toNode.x - fromNode.x);
+                
+                // Calculate start and end points (offset from node center)
+                const startX = fromNode.x + Math.cos(angle) * 25;
+                const startY = fromNode.y + Math.sin(angle) * 25;
+                const endX = toNode.x - Math.cos(angle) * 25;
+                const endY = toNode.y - Math.sin(angle) * 25;
+                
+                // Draw line
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                
+                // Set edge style
+                if (highlight) {
+                    ctx.strokeStyle = '#FF4800';
+                    ctx.lineWidth = 3;
+                } else {
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 1;
+                }
+                ctx.stroke();
+                
+                // Draw weight
+                const midX = (fromNode.x + toNode.x) / 2;
+                const midY = (fromNode.y + toNode.y) / 2;
+                
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(midX, midY, 12, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                ctx.font = '14px Arial';
+                ctx.fillStyle = '#000000';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(weight, midX, midY);
+            }
+            
+            // Draw priority queue
+            function drawPriorityQueue(queue) {
+                const step = steps[currentStep - 1];
+                
+                ctx.font = '16px Arial';
+                ctx.fillStyle = '#000000';
+                ctx.textAlign = 'left';
+                ctx.fillText('Priority Queue:', 20, 300);
+                
+                if (queue.length === 0) {
+                    ctx.fillText('Empty', 20, 325);
+                } else {
+                    let queueText = queue.map(nodeId => {
+                        const dist = step.distances[nodeId];
+                        return `${nodeId}(${dist === Infinity ? '∞' : dist})`;
+                    }).join(', ');
+                    ctx.fillText(queueText, 20, 325);
+                }
+            }
+            
+            // Draw step description
+            function drawDescription(text) {
+                ctx.font = '14px Arial';
+                ctx.fillStyle = '#000000';
+                ctx.textAlign = 'left';
+                ctx.fillText(text, 20, 350);
+            }
+            
+            // Draw shortest paths for final step
+            function drawShortestPaths() {
+                const shortestPaths = {
+                    'A': [],
+                    'B': ['A', 'D', 'B'],
+                    'C': ['A', 'D', 'B', 'C'],
+                    'D': ['A', 'D'],
+                    'E': ['A', 'D', 'B', 'C', 'E'],
+                    'F': ['A', 'D', 'B', 'C', 'E', 'F']
+                };
+                
+                // Draw path edges
+                for (const node in shortestPaths) {
+                    const path = shortestPaths[node];
+                    for (let i = 0; i < path.length - 1; i++) {
+                        const edge = edges.find(e => 
+                            (e.from === path[i] && e.to === path[i+1]) ||
+                            (e.to === path[i] && e.from === path[i+1])
+                        );
+                        
+                        if (edge) {
+                            drawEdge(edge.from, edge.to, edge.weight, true);
+                        }
+                    }
+                }
+            }
+            
+            // Render the graph based on current step
+            function render() {
+                const step = steps[currentStep - 1];
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw all edges first
+                edges.forEach(edge => {
+                    drawEdge(edge.from, edge.to, edge.weight);
+                });
+                
+                // Draw shortest paths for final step
+                if (step.showPaths) {
+                    drawShortestPaths();
+                }
+                
+                // Draw all nodes
+                nodes.forEach(node => {
+                    drawNode(node, step);
+                });
+                
+                // Draw priority queue
+                drawPriorityQueue(step.priorityQueue);
+                
+                // Draw step description
+                drawDescription(step.description);
+                
+                // Update step counter
+                stepCounter.textContent = currentStep;
+                
+                // Enable/disable buttons
+                prevBtn.disabled = currentStep === 1;
+                nextBtn.disabled = currentStep === totalSteps;
+            }
+            
+            // Event handlers for buttons
+            prevBtn.addEventListener('click', () => {
+                if (currentStep > 1) {
+                    currentStep--;
+                    render();
+                }
+            });
+            
+            nextBtn.addEventListener('click', () => {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    render();
+                }
+            });
+            
+            // Initialize
+            render();
+        });
+    </script>
+</body>
+</html>
