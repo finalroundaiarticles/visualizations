@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weighted Graph Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        
+        .container {
+            width: 800px;
+            max-width: 100%;
+            margin: 20px auto;
+            position: relative;
+        }
+        
+        #graphCanvas {
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .explanation {
+            background-color: #FFFFFF;
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            color: #000000;
+        }
+        
+        .node {
+            position: absolute;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Weighted Graph Visualization</h1>
+    
+    <div class="container">
+        <canvas id="graphCanvas" width="800" height="500"></canvas>
+        
+        <div class="controls">
+            <button id="prevBtn">Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="step-indicator">
+            Step <span id="currentStep">1</span> of <span id="totalSteps">5</span>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <p>A weighted graph consists of vertices (nodes) connected by edges with weights. The weights can represent distances, costs, or times between vertices.</p>
+            <p>In this example, we have 6 vertices (0-5) connected by weighted edges. The numbers on the edges represent the weights.</p>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const explanationDiv = document.getElementById('explanation');
+        const currentStepSpan = document.getElementById('currentStep');
+        const totalStepsSpan = document.getElementById('totalSteps');
+        
+        // Define vertices (nodes)
+        const vertices = [
+            { id: 0, x: 150, y: 100, label: '0' },
+            { id: 1, x: 300, y: 80, label: '1' },
+            { id: 2, x: 450, y: 120, label: '2' },
+            { id: 3, x: 200, y: 250, label: '3' },
+            { id: 4, x: 400, y: 300, label: '4' },
+            { id: 5, x: 600, y: 220, label: '5' }
+        ];
+        
+        // Define edges with weights
+        const edges = [
+            { from: 0, to: 1, weight: 5 },
+            { from: 0, to: 3, weight: 8 },
+            { from: 1, to: 2, weight: 3 },
+            { from: 1, to: 3, weight: 2 },
+            { from: 2, to: 5, weight: 7 },
+            { from: 3, to: 4, weight: 4 },
+            { from: 3, to: 2, weight: 6 },
+            { from: 4, to: 5, weight: 1 }
+        ];
+
+        // Steps for the animation
+        const steps = [
+            {
+                title: "Introduction to Weighted Graphs",
+                content: "A weighted graph consists of vertices (nodes) connected by edges with weights. The weights can represent distances, costs, or times between vertices. In this example, we have 6 vertices (0-5) connected by weighted edges. The numbers on the edges represent the weights.",
+                highlight: [],
+                highlightNodes: []
+            },
+            {
+                title: "Paths in Weighted Graphs",
+                content: "A path in a weighted graph is a sequence of vertices connected by edges. The weight of a path is the sum of the weights of all edges in the path. For example, the path from 0 to 2 through 1 has a weight of 5 + 3 = 8.",
+                highlight: [
+                    { from: 0, to: 1 },
+                    { from: 1, to: 2 }
+                ],
+                highlightNodes: [0, 1, 2]
+            },
+            {
+                title: "Multiple Paths",
+                content: "There can be multiple paths between two vertices. For example, from vertex 0 to vertex 5, we can go through different routes: 0→1→2→5 (weight: 5+3+7=15) or 0→3→4→5 (weight: 8+4+1=13).",
+                highlight: [
+                    { from: 0, to: 1 },
+                    { from: 1, to: 2 },
+                    { from: 2, to: 5 },
+                ],
+                highlightNodes: [0, 1, 2, 5]
+            },
+            {
+                title: "Alternative Path",
+                content: "An alternative path from vertex 0 to vertex 5 goes through vertices 3 and 4: 0→3→4→5 with a total weight of 8+4+1=13. This path has a lower total weight than the previous one (13 vs 15).",
+                highlight: [
+                    { from: 0, to: 3 },
+                    { from: 3, to: 4 },
+                    { from: 4, to: 5 }
+                ],
+                highlightNodes: [0, 3, 4, 5]
+            },
+            {
+                title: "Complex Path",
+                content: "We can also find more complex paths. For example, 0→3→2→5 with weight 8+6+7=21. This is a valid path but has a higher weight than the previous ones we explored.",
+                highlight: [
+                    { from: 0, to: 3 },
+                    { from: 3, to: 2 },
+                    { from: 2, to: 5 }
+                ],
+                highlightNodes: [0, 3, 2, 5]
+            }
+        ];
+        
+        let currentStep = 0;
+        totalStepsSpan.textContent = steps.length;
+        
+        // Function to draw the graph
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges
+            edges.forEach(edge => {
+                const from = vertices.find(v => v.id === edge.from);
+                const to = vertices.find(v => v.id === edge.to);
+                
+                // Check if this edge should be highlighted
+                const isHighlighted = steps[currentStep].highlight.some(h => 
+                    h.from === edge.from && h.to === edge.to);
+                
+                // Draw edge
+                ctx.beginPath();
+                ctx.moveTo(from.x, from.y);
+                ctx.lineTo(to.x, to.y);
+                ctx.strokeStyle = isHighlighted ? '#FF4800' : '#FD9F78';
+                ctx.lineWidth = isHighlighted ? 4 : 2;
+                ctx.stroke();
+                
+                // Draw arrow
+                const angle = Math.atan2(to.y - from.y, to.x - from.x);
+                const arrowLength = 15;
+                const arrowWidth = 8;
+                
+                const arrowX = to.x - 30 * Math.cos(angle);
+                const arrowY = to.y - 30 * Math.sin(angle);
+                
+                ctx.beginPath();
+                ctx.moveTo(arrowX, arrowY);
+                ctx.lineTo(
+                    arrowX - arrowLength * Math.cos(angle) + arrowWidth * Math.sin(angle),
+                    arrowY - arrowLength * Math.sin(angle) - arrowWidth * Math.cos(angle)
+                );
+                ctx.lineTo(
+                    arrowX - arrowLength * Math.cos(angle) - arrowWidth * Math.sin(angle),
+                    arrowY - arrowLength * Math.sin(angle) + arrowWidth * Math.cos(angle)
+                );
+                ctx.closePath();
+                ctx.fillStyle = isHighlighted ? '#FF4800' : '#FD9F78';
+                ctx.fill();
+                
+                // Draw weight
+                const midX = (from.x + to.x) / 2;
+                const midY = (from.y + to.y) / 2;
+                
+                ctx.fillStyle = '#000000';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                // Draw weight background
+                ctx.beginPath();
+                ctx.arc(midX, midY, 15, 0, Math.PI * 2);
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fill();
+                ctx.strokeStyle = isHighlighted ? '#FF4800' : '#FD9F78';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Draw weight text
+                ctx.fillStyle = isHighlighted ? '#FF4800' : '#000000';
+                ctx.fillText(edge.weight.toString(), midX, midY);
+            });
+            
+            // Draw vertices
+            vertices.forEach(vertex => {
+                const isHighlighted = steps[currentStep].highlightNodes.includes(vertex.id);
+                
+                // Draw vertex
+                ctx.beginPath();
+                ctx.arc(vertex.x, vertex.y, 25, 0, Math.PI * 2);
+                ctx.fillStyle = isHighlighted ? '#FF4800' : '#FD9F78';
+                ctx.fill();
+                
+                // Draw vertex label
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 18px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(vertex.label, vertex.x, vertex.y);
+            });
+        }
+        
+        // Function to update the step
+        function updateStep() {
+            currentStepSpan.textContent = currentStep + 1;
+            explanationDiv.innerHTML = `<h3>${steps[currentStep].title}</h3><p>${steps[currentStep].content}</p>`;
+            drawGraph();
+            
+            // Enable/disable buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        // Event listeners for buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateStep();
+            }
+        });
+        
+        // Initialize
+        updateStep();
+    </script>
+</body>
+</html>
