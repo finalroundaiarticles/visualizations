@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DFS Cycle Detection Walkthrough</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .graph-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+        }
+        .node {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+        .node.visited {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .node.current {
+            box-shadow: 0 0 15px #FF4800;
+            transform: scale(1.1);
+        }
+        .edge {
+            position: absolute;
+            height: 2px;
+            background-color: #000000;
+            transform-origin: 0 0;
+            z-index: -1;
+            transition: all 0.3s ease;
+        }
+        .edge.traversed {
+            background-color: #FF4800;
+            height: 3px;
+        }
+        .edge.back-edge {
+            background-color: #FF4800;
+            height: 3px;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+        .description {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+            background-color: #FFF;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #FF4800;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DFS Cycle Detection Walkthrough</h1>
+        
+        <div class="graph-container" id="graphContainer">
+            <!-- Graph will be dynamically created here -->
+        </div>
+        
+        <div class="description" id="description">
+            <!-- Step description will be updated here -->
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">
+            <!-- Step indicator will be updated here -->
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn">Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Graph structure
+        const nodes = [
+            { id: 0, x: 400, y: 100 },
+            { id: 1, x: 200, y: 250 },
+            { id: 2, x: 600, y: 250 }
+        ];
+        
+        const edges = [
+            { from: 0, to: 1 },
+            { from: 1, to: 2 },
+            { from: 2, to: 0 }  // This creates a cycle
+        ];
+        
+        // Animation steps
+        const steps = [
+            {
+                title: "Initial Graph",
+                description: "This is our graph with 3 vertices (0, 1, 2) and 3 edges. We'll use DFS to detect if there's a cycle in this graph."
+            },
+            {
+                title: "Step 1: Start DFS from Vertex 0",
+                description: "We start DFS from vertex 0 and mark it as visited.",
+                currentNode: 0,
+                visitedNodes: [0]
+            },
+            {
+                title: "Step 2: Explore Edge from 0 to 1",
+                description: "We visit vertex 1 and mark it as visited. Vertex 0 is the parent of vertex 1.",
+                currentNode: 1,
+                visitedNodes: [0, 1],
+                traversedEdges: [[0, 1]]
+            },
+            {
+                title: "Step 3: Explore Edge from 1 to 2",
+                description: "We visit vertex 2 and mark it as visited. Vertex 1 is the parent of vertex 2.",
+                currentNode: 2,
+                visitedNodes: [0, 1, 2],
+                traversedEdges: [[0, 1], [1, 2]]
+            },
+            {
+                title: "Step 4: Detect Back Edge from 2 to 0",
+                description: "We find an edge from vertex 2 to vertex 0. Vertex 0 is already visited and is NOT the parent of vertex 2. This is a back edge, indicating a cycle!",
+                currentNode: 2,
+                visitedNodes: [0, 1, 2],
+                traversedEdges: [[0, 1], [1, 2]],
+                backEdge: [2, 0]
+            },
+            {
+                title: "Step 5: Cycle Detected!",
+                description: "A cycle has been detected in the graph! The cycle consists of vertices 0 → 1 → 2 → 0.",
+                visitedNodes: [0, 1, 2],
+                traversedEdges: [[0, 1], [1, 2]],
+                backEdge: [2, 0],
+                highlightCycle: true
+            }
+        ];
+        
+        let currentStep = 0;
+        
+        // Initialize the graph
+        function createGraph() {
+            const container = document.getElementById('graphContainer');
+            container.innerHTML = '';
+            
+            // Create edges first (so they appear behind nodes)
+            edges.forEach(edge => {
+                const fromNode = nodes.find(n => n.id === edge.from);
+                const toNode = nodes.find(n => n.id === edge.to);
+                
+                const edgeElement = document.createElement('div');
+                edgeElement.className = 'edge';
+                edgeElement.id = `edge-${edge.from}-${edge.to}`;
+                
+                // Calculate the angle and length of the edge
+                const dx = toNode.x - fromNode.x;
+                const dy = toNode.y - fromNode.y;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                // Position and rotate the edge
+                edgeElement.style.width = `${length - 50}px`; // Adjust for node radius
+                edgeElement.style.transform = `translate(${fromNode.x + 25}px, ${fromNode.y + 25}px) rotate(${angle}deg)`;
+                
+                container.appendChild(edgeElement);
+            });
+            
+            // Create nodes
+            nodes.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'node';
+                nodeElement.id = `node-${node.id}`;
+                nodeElement.textContent = node.id;
+                nodeElement.style.left = `${node.x}px`;
+                nodeElement.style.top = `${node.y}px`;
+                
+                container.appendChild(nodeElement);
+            });
+        }
+        
+        // Update the visualization based on the current step
+        function updateVisualization() {
+            const step = steps[currentStep];
+            
+            // Reset all nodes and edges
+            document.querySelectorAll('.node').forEach(node => {
+                node.className = 'node';
+            });
+            
+            document.querySelectorAll('.edge').forEach(edge => {
+                edge.className = 'edge';
+            });
+            
+            // Update visited nodes
+            if (step.visitedNodes) {
+                step.visitedNodes.forEach(nodeId => {
+                    const nodeElement = document.getElementById(`node-${nodeId}`);
+                    nodeElement.classList.add('visited');
+                });
+            }
+            
+            // Update current node
+            if (step.currentNode !== undefined) {
+                const currentNodeElement = document.getElementById(`node-${step.currentNode}`);
+                currentNodeElement.classList.add('current');
+            }
+            
+            // Update traversed edges
+            if (step.traversedEdges) {
+                step.traversedEdges.forEach(([from, to]) => {
+                    const edgeElement = document.getElementById(`edge-${from}-${to}`);
+                    if (edgeElement) {
+                        edgeElement.classList.add('traversed');
+                    }
+                });
+            }
+            
+            // Update back edge
+            if (step.backEdge) {
+                const [from, to] = step.backEdge;
+                const edgeElement = document.getElementById(`edge-${from}-${to}`);
+                if (edgeElement) {
+                    edgeElement.classList.add('back-edge');
+                }
+            }
+            
+            // Update description
+            document.getElementById('description').innerHTML = `
+                <h3>${step.title}</h3>
+                <p>${step.description}</p>
+            `;
+            
+            // Update step indicator
+            document.getElementById('stepIndicator').textContent = `Step ${currentStep + 1} of ${steps.length}`;
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === steps.length - 1;
+        }
+        
+        // Navigate to previous step
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        }
+        
+        // Navigate to next step
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        }
+        
+        // Initialize the visualization
+        window.onload = function() {
+            createGraph();
+            updateVisualization();
+            
+            document.getElementById('prevBtn').addEventListener('click', prevStep);
+            document.getElementById('nextBtn').addEventListener('click', nextStep);
+        };
+    </script>
+</body>
+</html>
