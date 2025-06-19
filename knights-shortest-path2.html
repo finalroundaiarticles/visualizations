@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knight's BFS Traversal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #FF4800;
+            margin-bottom: 20px;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 800px;
+        }
+        
+        .chessboard {
+            display: grid;
+            grid-template-columns: repeat(6, 80px);
+            grid-template-rows: repeat(6, 80px);
+            gap: 2px;
+            margin: 20px 0;
+        }
+        
+        .cell {
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            border: 1px solid #000000;
+            position: relative;
+            transition: background-color 0.3s ease;
+        }
+        
+        .light {
+            background-color: #FFFFFF;
+        }
+        
+        .dark {
+            background-color: #FD9F78;
+        }
+        
+        .knight {
+            color: #FF4800;
+            font-size: 36px;
+        }
+        
+        .target {
+            color: #FF4800;
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 3px solid #FF4800;
+        }
+        
+        .highlighted {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .highlighted.dark {
+            background-color: #FF4800;
+        }
+        
+        .step-number {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 14px;
+            color: #000000;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+            max-width: 600px;
+            line-height: 1.5;
+        }
+        
+        .step-indicator {
+            color: #FF4800;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .knight-coords {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            font-size: 12px;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Knight's BFS Traversal Visualization</h1>
+    
+    <div class="container">
+        <div class="explanation">
+            <p>This animation shows how a knight can find the shortest path on a chessboard using Breadth-First Search (BFS). Starting from position (4, 5), we want to reach target position (1, 1) using the knight's L-shaped movement.</p>
+            <p>Each cell will be labeled with the minimum number of steps needed to reach it from the starting position.</p>
+        </div>
+        
+        <div class="step-indicator">Step <span id="currentStep">0</span> of <span id="totalSteps">0</span></div>
+        
+        <div class="chessboard" id="chessboard"></div>
+        
+        <div class="controls">
+            <button id="prevBtn">Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="explanation" id="currentExplanation"></div>
+    </div>
+
+    <script>
+        // Constants
+        const BOARD_SIZE = 6;
+        const START_ROW = 4;
+        const START_COL = 5;
+        const TARGET_ROW = 1;
+        const TARGET_COL = 1;
+        
+        // Knight's moves (8 possible moves)
+        const KNIGHT_MOVES = [
+            [-2, -1], [-2, 1], [-1, -2], [-1, 2],
+            [1, -2], [1, 2], [2, -1], [2, 1]
+        ];
+        
+        // Store animation steps
+        let animationSteps = [];
+        let currentStepIndex = 0;
+        
+        // DOM elements
+        const chessboard = document.getElementById('chessboard');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const currentStepEl = document.getElementById('currentStep');
+        const totalStepsEl = document.getElementById('totalSteps');
+        const currentExplanationEl = document.getElementById('currentExplanation');
+        
+        // Initialize the chessboard
+        function initializeChessboard() {
+            chessboard.innerHTML = '';
+            
+            // Create 6x6 chessboard
+            for (let row = 0; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = `cell ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
+                    cell.id = `cell-${row}-${col}`;
+                    
+                    // Add coordinates
+                    const coords = document.createElement('div');
+                    coords.className = 'knight-coords';
+                    coords.textContent = `(${row},${col})`;
+                    cell.appendChild(coords);
+                    
+                    chessboard.appendChild(cell);
+                }
+            }
+        }
+        
+        // BFS Algorithm to find shortest path
+        function bfs() {
+            // Reset animation steps
+            animationSteps = [];
+            
+            // Add initial step showing the starting position and target
+            animationSteps.push({
+                type: 'initial',
+                knightPosition: [START_ROW, START_COL],
+                targetPosition: [TARGET_ROW, TARGET_COL],
+                explanation: "We start with the knight at position (4, 5) and want to reach the target at position (1, 1). We'll use BFS to find the shortest path."
+            });
+            
+            // Initialize BFS data structures
+            const queue = [];
+            const visited = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(false));
+            const distance = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(-1));
+            
+            // Start BFS
+            queue.push([START_ROW, START_COL]);
+            visited[START_ROW][START_COL] = true;
+            distance[START_ROW][START_COL] = 0;
+            
+            let foundTarget = false;
+            let visitOrder = [];
+            
+            while (queue.length > 0 && !foundTarget) {
+                const [row, col] = queue.shift();
+                
+                // Add step for current position
+                visitOrder.push([row, col]);
+                
+                // Try all possible knight moves
+                for (const [dr, dc] of KNIGHT_MOVES) {
+                    const newRow = row + dr;
+                    const newCol = col + dc;
+                    
+                    // Check if the move is valid and not visited
+                    if (isValid(newRow, newCol) && !visited[newRow][newCol]) {
+                        queue.push([newRow, newCol]);
+                        visited[newRow][newCol] = true;
+                        distance[newRow][newCol] = distance[row][col] + 1;
+                        
+                        // Add step for exploring this position
+                        animationSteps.push({
+                            type: 'explore',
+                            from: [row, col],
+                            to: [newRow, newCol],
+                            distance: distance[newRow][newCol],
+                            visited: JSON.parse(JSON.stringify(visited)),
+                            distances: JSON.parse(JSON.stringify(distance)),
+                            explanation: `Exploring from (${row}, ${col}) to (${newRow}, ${newCol}). This takes ${distance[newRow][newCol]} step(s) from the start.`
+                        });
+                        
+                        // Check if target is found
+                        if (newRow === TARGET_ROW && newCol === TARGET_COL) {
+                            foundTarget = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // Final step showing all distances
+            animationSteps.push({
+                type: 'final',
+                distances: JSON.parse(JSON.stringify(distance)),
+                explanation: `The BFS traversal is complete! The minimum number of steps required for the knight to reach position (${TARGET_ROW}, ${TARGET_COL}) from (${START_ROW}, ${START_COL}) is ${distance[TARGET_ROW][TARGET_COL]}.`
+            });
+            
+            // Update UI
+            totalStepsEl.textContent = animationSteps.length;
+            currentStepIndex = 0;
+            updateStepButtons();
+            renderStep(currentStepIndex);
+        }
+        
+        // Check if a position is valid
+        function isValid(row, col) {
+            return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
+        }
+        
+        // Render a specific step
+        function renderStep(stepIndex) {
+            // Reset all cells
+            for (let row = 0; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    const cell = document.getElementById(`cell-${row}-${col}`);
+                    cell.innerHTML = `<div class="knight-coords">(${row},${col})</div>`;
+                    cell.classList.remove('highlighted');
+                }
+            }
+            
+            const step = animationSteps[stepIndex];
+            currentExplanationEl.textContent = step.explanation;
+            
+            if (step.type === 'initial') {
+                // Mark start position with knight
+                const startCell = document.getElementById(`cell-${step.knightPosition[0]}-${step.knightPosition[1]}`);
+                startCell.innerHTML += '<div class="knight">♞</div>';
+                
+                // Mark target position
+                const targetCell = document.getElementById(`cell-${step.targetPosition[0]}-${step.targetPosition[1]}`);
+                targetCell.innerHTML += '<div class="target"></div>';
+                
+            } else if (step.type === 'explore') {
+                // Show the knight at the "from" position
+                const fromCell = document.getElementById(`cell-${step.from[0]}-${step.from[1]}`);
+                fromCell.classList.add('highlighted');
+                
+                // Show the destination cell
+                const toCell = document.getElementById(`cell-${step.to[0]}-${step.to[1]}`);
+                toCell.classList.add('highlighted');
+                toCell.innerHTML += `<div class="step-number">${step.distance}</div>`;
+                
+                // Mark target position
+                const targetCell = document.getElementById(`cell-${TARGET_ROW}-${TARGET_COL}`);
+                targetCell.innerHTML += '<div class="target"></div>';
+                
+                // Show all visited cells with their distances
+                for (let row = 0; row < BOARD_SIZE; row++) {
+                    for (let col = 0; col < BOARD_SIZE; col++) {
+                        if (step.distances[row][col] !== -1 && !(row === step.to[0] && col === step.to[1]) && !(row === step.from[0] && col === step.from[1])) {
+                            const cell = document.getElementById(`cell-${row}-${col}`);
+                            if (!cell.querySelector('.step-number')) {
+                                cell.innerHTML += `<div class="step-number">${step.distances[row][col]}</div>`;
+                            }
+                        }
+                    }
+                }
+                
+            } else if (step.type === 'final') {
+                // Show all distances
+                for (let row = 0; row < BOARD_SIZE; row++) {
+                    for (let col = 0; col < BOARD_SIZE; col++) {
+                        if (step.distances[row][col] !== -1) {
+                            const cell = document.getElementById(`cell-${row}-${col}`);
+                            cell.innerHTML += `<div class="step-number">${step.distances[row][col]}</div>`;
+                        }
+                    }
+                }
+                
+                // Highlight the path from start to target
+                const startCell = document.getElementById(`cell-${START_ROW}-${START_COL}`);
+                startCell.classList.add('highlighted');
+                
+                const targetCell = document.getElementById(`cell-${TARGET_ROW}-${TARGET_COL}`);
+                targetCell.classList.add('highlighted');
+                targetCell.innerHTML += '<div class="target"></div>';
+            }
+            
+            currentStepEl.textContent = stepIndex + 1;
+        }
+        
+        // Update step buttons
+        function updateStepButtons() {
+            prevBtn.disabled = currentStepIndex <= 0;
+            nextBtn.disabled = currentStepIndex >= animationSteps.length - 1;
+        }
+        
+        // Event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentStepIndex > 0) {
+                currentStepIndex--;
+                renderStep(currentStepIndex);
+                updateStepButtons();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStepIndex < animationSteps.length - 1) {
+                currentStepIndex++;
+                renderStep(currentStepIndex);
+                updateStepButtons();
+            }
+        });
+        
+        // Initialize
+        initializeChessboard();
+        bfs();
+    </script>
+</body>
+</html>
