@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bidirectional BFS Search Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .animation-container {
+            width: 100%;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .word {
+            position: absolute;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-align: center;
+            transition: all 0.5s ease;
+        }
+        
+        .source {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .target {
+            background-color: #000000;
+            color: #FFFFFF;
+        }
+        
+        .source-visited {
+            background-color: #FD9F78;
+            color: #000000;
+        }
+        
+        .target-visited {
+            background-color: #666666;
+            color: #FFFFFF;
+        }
+        
+        .meeting-point {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: 3px solid #000000;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .explanation {
+            padding: 15px;
+            background-color: #f8f8f8;
+            border-left: 4px solid #FF4800;
+            margin: 20px 0;
+        }
+        
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px dashed;
+            opacity: 0;
+            transition: all 0.8s ease;
+        }
+        
+        .source-circle {
+            border-color: #FF4800;
+        }
+        
+        .target-circle {
+            border-color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bidirectional BFS Search Visualization</h1>
+        
+        <div class="explanation" id="currentExplanation">
+            Bidirectional Breadth-First Search (BFS) searches simultaneously from both the start and target nodes, meeting in the middle to find the shortest path more efficiently.
+        </div>
+        
+        <div class="animation-container" id="animationContainer">
+            <!-- Animation elements will be added here by JavaScript -->
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Animation state management
+        let currentStep = 0;
+        const totalSteps = 6;
+        
+        // DOM elements
+        const animationContainer = document.getElementById('animationContainer');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const currentExplanation = document.getElementById('currentExplanation');
+        
+        // Words for our example
+        const words = [
+            { id: 'hit', x: 100, y: 250, class: 'source', label: 'hit' },
+            { id: 'hot', x: 200, y: 180, label: 'hot' },
+            { id: 'dot', x: 300, y: 120, label: 'dot' },
+            { id: 'dog', x: 400, y: 180, label: 'dog' },
+            { id: 'cog', x: 500, y: 250, class: 'target', label: 'cog' },
+            { id: 'hog', x: 200, y: 320, label: 'hog' },
+            { id: 'log', x: 300, y: 380, label: 'log' },
+            { id: 'fog', x: 400, y: 320, label: 'fog' }
+        ];
+        
+        // Create initial words
+        words.forEach(word => {
+            const wordElement = document.createElement('div');
+            wordElement.id = word.id;
+            wordElement.className = `word ${word.class || ''}`;
+            wordElement.style.left = `${word.x}px`;
+            wordElement.style.top = `${word.y}px`;
+            wordElement.textContent = word.label;
+            animationContainer.appendChild(wordElement);
+        });
+        
+        // Create source and target circles
+        const sourceCircle = document.createElement('div');
+        sourceCircle.className = 'circle source-circle';
+        sourceCircle.style.left = `${words[0].x + 25}px`;
+        sourceCircle.style.top = `${words[0].y + 20}px`;
+        sourceCircle.style.width = '0px';
+        sourceCircle.style.height = '0px';
+        sourceCircle.style.transform = 'translate(-50%, -50%)';
+        animationContainer.appendChild(sourceCircle);
+        
+        const targetCircle = document.createElement('div');
+        targetCircle.className = 'circle target-circle';
+        targetCircle.style.left = `${words[4].x + 25}px`;
+        targetCircle.style.top = `${words[4].y + 20}px`;
+        targetCircle.style.width = '0px';
+        targetCircle.style.height = '0px';
+        targetCircle.style.transform = 'translate(-50%, -50%)';
+        animationContainer.appendChild(targetCircle);
+        
+        // Animation steps explanations
+        const explanations = [
+            "Bidirectional Breadth-First Search (BFS) searches simultaneously from both the start and target nodes, meeting in the middle to find the shortest path more efficiently.",
+            "We start our search from both ends: 'hit' (source) and 'cog' (target). We'll explore one level at a time from both directions.",
+            "From 'hit', we explore to find words that differ by one letter: 'hot' and 'hog'. From 'cog', we find 'dog' and 'fog'.",
+            "We continue the search from both directions. From 'hot', we can reach 'dot'. From 'hog', we can reach 'dog'. From the target side, 'dog' can reach 'dot'.",
+            "We've found a meeting point! Both searches have reached 'dog'. This means we've found a path connecting 'hit' and 'cog'.",
+            "The complete path is: hit → hot → dot → dog → cog. Bidirectional search is more efficient because each search only needs to explore about half the distance compared to a single-directional search."
+        ];
+        
+        // Arrow creation helper function
+        function createArrow(from, to, color) {
+            // Calculate positions and angle
+            const fromWord = words.find(w => w.id === from);
+            const toWord = words.find(w => w.id === to);
+            
+            const fromX = fromWord.x + 25;
+            const fromY = fromWord.y + 20;
+            const toX = toWord.x + 25;
+            const toY = toWord.y + 20;
+            
+            // Create SVG for arrow
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", "800");
+            svg.setAttribute("height", "500");
+            svg.style.position = "absolute";
+            svg.style.top = "0";
+            svg.style.left = "0";
+            svg.style.pointerEvents = "none";
+            svg.style.opacity = "0";
+            svg.classList.add("arrow");
+            
+            // Create the arrow line
+            const arrow = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            arrow.setAttribute("x1", fromX);
+            arrow.setAttribute("y1", fromY);
+            arrow.setAttribute("x2", toX);
+            arrow.setAttribute("y2", toY);
+            arrow.setAttribute("stroke", color);
+            arrow.setAttribute("stroke-width", "2");
+            arrow.setAttribute("marker-end", "url(#arrowhead)");
+            
+            // Create arrowhead marker
+            const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+            const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+            marker.setAttribute("id", "arrowhead");
+            marker.setAttribute("markerWidth", "10");
+            marker.setAttribute("markerHeight", "7");
+            marker.setAttribute("refX", "9");
+            marker.setAttribute("refY", "3.5");
+            marker.setAttribute("orient", "auto");
+            
+            const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+            polygon.setAttribute("points", "0 0, 10 3.5, 0 7");
+            polygon.setAttribute("fill", color);
+            
+            marker.appendChild(polygon);
+            defs.appendChild(marker);
+            svg.appendChild(defs);
+            svg.appendChild(arrow);
+            
+            animationContainer.appendChild(svg);
+            return svg;
+        }
+        
+        // Create all arrows
+        const arrows = [
+            createArrow('hit', 'hot', '#FF4800'),
+            createArrow('hit', 'hog', '#FF4800'),
+            createArrow('cog', 'dog', '#000000'),
+            createArrow('cog', 'fog', '#000000'),
+            createArrow('hot', 'dot', '#FF4800'),
+            createArrow('hog', 'dog', '#FF4800'),
+            createArrow('dog', 'dot', '#000000'),
+            createArrow('dot', 'dog', '#FF4800')
+        ];
+        
+        // Update UI based on current step
+        function updateUI() {
+            currentExplanation.textContent = explanations[currentStep];
+            
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+            
+            // Reset all elements
+            document.querySelectorAll('.word').forEach(el => {
+                el.className = 'word';
+                if (el.id === 'hit') el.classList.add('source');
+                if (el.id === 'cog') el.classList.add('target');
+            });
+            
+            arrows.forEach(arrow => {
+                arrow.style.opacity = '0';
+            });
+            
+            sourceCircle.style.opacity = '0';
+            sourceCircle.style.width = '0px';
+            sourceCircle.style.height = '0px';
+            
+            targetCircle.style.opacity = '0';
+            targetCircle.style.width = '0px';
+            targetCircle.style.height = '0px';
+            
+            // Update based on current step
+            if (currentStep >= 1) {
+                // Show start and end points
+                document.getElementById('hit').className = 'word source';
+                document.getElementById('cog').className = 'word target';
+            }
+            
+            if (currentStep >= 2) {
+                // First level from both sides
+                document.getElementById('hot').className = 'word source-visited';
+                document.getElementById('hog').className = 'word source-visited';
+                document.getElementById('dog').className = 'word target-visited';
+                document.getElementById('fog').className = 'word target-visited';
+                
+                arrows[0].style.opacity = '1';
+                arrows[1].style.opacity = '1';
+                arrows[2].style.opacity = '1';
+                arrows[3].style.opacity = '1';
+                
+                sourceCircle.style.opacity = '0.5';
+                sourceCircle.style.width = '100px';
+                sourceCircle.style.height = '100px';
+                
+                targetCircle.style.opacity = '0.5';
+                targetCircle.style.width = '100px';
+                targetCircle.style.height = '100px';
+            }
+            
+            if (currentStep >= 3) {
+                // Second level
+                document.getElementById('dot').className = 'word source-visited';
+                arrows[4].style.opacity = '1';
+                arrows[5].style.opacity = '1';
+                arrows[6].style.opacity = '1';
+                
+                sourceCircle.style.width = '200px';
+                sourceCircle.style.height = '200px';
+                
+                targetCircle.style.width = '200px';
+                targetCircle.style.height = '200px';
+            }
+            
+            if (currentStep >= 4) {
+                // Meeting point
+                document.getElementById('dog').className = 'word meeting-point';
+                arrows[7].style.opacity = '1';
+                
+                sourceCircle.style.width = '300px';
+                sourceCircle.style.height = '300px';
+                
+                targetCircle.style.width = '300px';
+                targetCircle.style.height = '300px';
+            }
+            
+            if (currentStep >= 5) {
+                // Complete path
+                document.getElementById('hit').className = 'word source';
+                document.getElementById('hot').className = 'word source-visited';
+                document.getElementById('dot').className = 'word source-visited';
+                document.getElementById('dog').className = 'word meeting-point';
+                document.getElementById('cog').className = 'word target';
+                
+                // Reset other nodes
+                document.getElementById('hog').className = 'word';
+                document.getElementById('log').className = 'word';
+                document.getElementById('fog').className = 'word';
+                
+                // Show only path arrows
+                arrows.forEach(arrow => arrow.style.opacity = '0');
+                arrows[0].style.opacity = '1'; // hit -> hot
+                arrows[4].style.opacity = '1'; // hot -> dot
+                arrows[7].style.opacity = '1'; // dot -> dog
+                arrows[2].style.opacity = '1'; // dog -> cog
+            }
+        }
+        
+        // Initialize the UI
+        updateUI();
+        
+        // Event listeners for navigation
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateUI();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateUI();
+            }
+        });
+    </script>
+</body>
+</html>
