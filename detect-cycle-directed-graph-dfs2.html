@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three-Color DFS States Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .explanation {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #000000;
+        }
+        
+        .canvas-container {
+            position: relative;
+            margin: 20px auto;
+            width: 600px;
+            height: 400px;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 0 15px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 8px;
+            border: 1px solid #000000;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-counter {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        
+        .info-box {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #FD9F78;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Three-Color DFS States Visualization</h1>
+        
+        <div class="explanation">
+            <p>In this visualization, we demonstrate how Depth-First Search (DFS) uses three colors to track vertex states:</p>
+            <ul>
+                <li><strong>White</strong>: Unvisited vertices</li>
+                <li><strong>Gray</strong>: Vertices currently being processed (DFS has started but not finished with them)</li>
+                <li><strong>Black</strong>: Completed vertices (DFS has finished processing them and all their descendants)</li>
+            </ul>
+            <p>A cycle is detected when DFS encounters a gray vertex again during traversal.</p>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: white;"></div>
+                <span>White (Unvisited)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #aaaaaa;"></div>
+                <span>Gray (In Process)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: black;"></div>
+                <span>Black (Completed)</span>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="graphCanvas" width="600" height="400"></canvas>
+        </div>
+        
+        <div class="step-counter">
+            Step <span id="currentStep">1</span> of <span id="totalSteps">1</span>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="info-box" id="stepDescription">
+            Initialize the graph with all vertices colored white (unvisited).
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const currentStepElement = document.getElementById('currentStep');
+        const totalStepsElement = document.getElementById('totalSteps');
+        const stepDescription = document.getElementById('stepDescription');
+        
+        // Define colors
+        const colors = {
+            white: '#FFFFFF',
+            gray: '#AAAAAA',
+            black: '#000000',
+            edge: '#FF4800',
+            highlight: '#FD9F78',
+            text: '#000000'
+        };
+        
+        // Define vertices
+        const vertices = [
+            { id: 'A', x: 300, y: 80 },
+            { id: 'B', x: 200, y: 150 },
+            { id: 'C', x: 400, y: 150 },
+            { id: 'D', x: 150, y: 250 },
+            { id: 'E', x: 250, y: 250 },
+            { id: 'F', x: 350, y: 250 },
+            { id: 'G', x: 450, y: 250 },
+        ];
+        
+        // Define edges (adjacency list)
+        const adjacencyList = {
+            'A': ['B', 'C'],
+            'B': ['D', 'E'],
+            'C': ['F', 'G'],
+            'D': [],
+            'E': ['F'], // This creates a cycle with F and C
+            'F': ['C'],
+            'G': []
+        };
+        
+        // Define DFS steps for animation
+        const steps = [
+            {
+                description: "Initialize the graph with all vertices colored white (unvisited).",
+                colors: { A: 'white', B: 'white', C: 'white', D: 'white', E: 'white', F: 'white', G: 'white' },
+                currentEdge: null,
+                highlight: null
+            },
+            {
+                description: "Start DFS from vertex A. Mark A as gray (in process).",
+                colors: { A: 'gray', B: 'white', C: 'white', D: 'white', E: 'white', F: 'white', G: 'white' },
+                currentEdge: null,
+                highlight: 'A'
+            },
+            {
+                description: "Explore A's first neighbor: B. Mark B as gray.",
+                colors: { A: 'gray', B: 'gray', C: 'white', D: 'white', E: 'white', F: 'white', G: 'white' },
+                currentEdge: ['A', 'B'],
+                highlight: 'B'
+            },
+            {
+                description: "Explore B's first neighbor: D. Mark D as gray.",
+                colors: { A: 'gray', B: 'gray', C: 'white', D: 'gray', E: 'white', F: 'white', G: 'white' },
+                currentEdge: ['B', 'D'],
+                highlight: 'D'
+            },
+            {
+                description: "D has no neighbors. Mark D as black (completed).",
+                colors: { A: 'gray', B: 'gray', C: 'white', D: 'black', E: 'white', F: 'white', G: 'white' },
+                currentEdge: null,
+                highlight: 'D'
+            },
+            {
+                description: "Backtrack to B. Explore B's next neighbor: E. Mark E as gray.",
+                colors: { A: 'gray', B: 'gray', C: 'white', D: 'black', E: 'gray', F: 'white', G: 'white' },
+                currentEdge: ['B', 'E'],
+                highlight: 'E'
+            },
+            {
+                description: "Explore E's neighbor: F. Mark F as gray.",
+                colors: { A: 'gray', B: 'gray', C: 'white', D: 'black', E: 'gray', F: 'gray', G: 'white' },
+                currentEdge: ['E', 'F'],
+                highlight: 'F'
+            },
+            {
+                description: "Explore F's neighbor: C. Mark C as gray.",
+                colors: { A: 'gray', B: 'gray', C: 'gray', D: 'black', E: 'gray', F: 'gray', G: 'white' },
+                currentEdge: ['F', 'C'],
+                highlight: 'C'
+            },
+            {
+                description: "Explore C's first neighbor: F. F is already gray! CYCLE DETECTED between C and F!",
+                colors: { A: 'gray', B: 'gray', C: 'gray', D: 'black', E: 'gray', F: 'gray', G: 'white' },
+                currentEdge: ['C', 'F'],
+                highlight: 'cycle',
+                cycleVertices: ['C', 'F']
+            },
+            {
+                description: "After handling the cycle, let's continue. Explore C's next neighbor: G. Mark G as gray.",
+                colors: { A: 'gray', B: 'gray', C: 'gray', D: 'black', E: 'gray', F: 'gray', G: 'gray' },
+                currentEdge: ['C', 'G'],
+                highlight: 'G'
+            },
+            {
+                description: "G has no neighbors. Mark G as black (completed).",
+                colors: { A: 'gray', B: 'gray', C: 'gray', D: 'black', E: 'gray', F: 'gray', G: 'black' },
+                currentEdge: null,
+                highlight: 'G'
+            },
+            {
+                description: "Backtrack to C. All of C's neighbors are explored. Mark C as black.",
+                colors: { A: 'gray', B: 'gray', C: 'black', D: 'black', E: 'gray', F: 'gray', G: 'black' },
+                currentEdge: null,
+                highlight: 'C'
+            },
+            {
+                description: "Backtrack to F. All of F's neighbors are explored. Mark F as black.",
+                colors: { A: 'gray', B: 'gray', C: 'black', D: 'black', E: 'gray', F: 'black', G: 'black' },
+                currentEdge: null,
+                highlight: 'F'
+            },
+            {
+                description: "Backtrack to E. All of E's neighbors are explored. Mark E as black.",
+                colors: { A: 'gray', B: 'gray', C: 'black', D: 'black', E: 'black', F: 'black', G: 'black' },
+                currentEdge: null,
+                highlight: 'E'
+            },
+            {
+                description: "Backtrack to B. All of B's neighbors are explored. Mark B as black.",
+                colors: { A: 'gray', B: 'black', C: 'black', D: 'black', E: 'black', F: 'black', G: 'black' },
+                currentEdge: null,
+                highlight: 'B'
+            },
+            {
+                description: "Backtrack to A. Explore A's next neighbor: C. C is already black, no action needed.",
+                colors: { A: 'gray', B: 'black', C: 'black', D: 'black', E: 'black', F: 'black', G: 'black' },
+                currentEdge: ['A', 'C'],
+                highlight: 'C'
+            },
+            {
+                description: "All of A's neighbors are explored. Mark A as black. DFS is complete.",
+                colors: { A: 'black', B: 'black', C: 'black', D: 'black', E: 'black', F: 'black', G: 'black' },
+                currentEdge: null,
+                highlight: 'A'
+            }
+        ];
+        
+        let currentStep = 0;
+        totalStepsElement.textContent = steps.length;
+        
+        // Draw vertex
+        function drawVertex(vertex, color, isHighlighted = false) {
+            ctx.beginPath();
+            ctx.arc(vertex.x, vertex.y, isHighlighted ? 25 : 20, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.lineWidth = isHighlighted ? 3 : 2;
+            ctx.strokeStyle = isHighlighted ? colors.highlight : colors.edge;
+            ctx.stroke();
+            
+            ctx.fillStyle = color === colors.black ? '#FFFFFF' : '#000000';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(vertex.id, vertex.x, vertex.y);
+        }
+        
+        // Draw edge
+        function drawEdge(v1, v2, isHighlighted = false) {
+            ctx.beginPath();
+            ctx.moveTo(v1.x, v1.y);
+            ctx.lineTo(v2.x, v2.y);
+            ctx.strokeStyle = isHighlighted ? colors.highlight : colors.edge;
+            ctx.lineWidth = isHighlighted ? 4 : 2;
+            ctx.stroke();
+            
+            // Draw arrow
+            const angle = Math.atan2(v2.y - v1.y, v2.x - v1.x);
+            const arrowLength = 15;
+            const arrowWidth = 8;
+            
+            // Calculate the point on the circle edge
+            const dist = Math.sqrt(Math.pow(v2.x - v1.x, 2) + Math.pow(v2.y - v1.y, 2));
+            const endX = v2.x - 20 * (v2.x - v1.x) / dist;
+            const endY = v2.y - 20 * (v2.y - v1.y) / dist;
+            
+            ctx.beginPath();
+            ctx.moveTo(
+                endX - arrowLength * Math.cos(angle) + arrowWidth * Math.sin(angle),
+                endY - arrowLength * Math.sin(angle) - arrowWidth * Math.cos(angle)
+            );
+            ctx.lineTo(endX, endY);
+            ctx.lineTo(
+                endX - arrowLength * Math.cos(angle) - arrowWidth * Math.sin(angle),
+                endY - arrowLength * Math.sin(angle) + arrowWidth * Math.cos(angle)
+            );
+            ctx.fillStyle = isHighlighted ? colors.highlight : colors.edge;
+            ctx.fill();
+        }
+        
+        // Draw graph based on current step
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges
+            for (const fromId in adjacencyList) {
+                const from = vertices.find(v => v.id === fromId);
+                adjacencyList[fromId].forEach(toId => {
+                    const to = vertices.find(v => v.id === toId);
+                    const isHighlighted = steps[currentStep].currentEdge && 
+                        ((steps[currentStep].currentEdge[0] === fromId && steps[currentStep].currentEdge[1] === toId) ||
+                         (steps[currentStep].highlight === 'cycle' && 
+                          steps[currentStep].cycleVertices.includes(fromId) && 
+                          steps[currentStep].cycleVertices.includes(toId)));
+                    
+                    drawEdge(from, to, isHighlighted);
+                });
+            }
+            
+            // Draw vertices
+            vertices.forEach(vertex => {
+                const color = colors[steps[currentStep].colors[vertex.id]];
+                const isHighlighted = steps[currentStep].highlight === vertex.id || 
+                                     (steps[currentStep].highlight === 'cycle' && 
+                                      steps[currentStep].cycleVertices.includes(vertex.id));
+                drawVertex(vertex, color, isHighlighted);
+            });
+            
+            // Update step description
+            stepDescription.textContent = steps[currentStep].description;
+            currentStepElement.textContent = currentStep + 1;
+        }
+        
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                drawGraph();
+                nextBtn.disabled = false;
+                if (currentStep === 0) {
+                    prevBtn.disabled = true;
+                }
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                drawGraph();
+                prevBtn.disabled = false;
+                if (currentStep === steps.length - 1) {
+                    nextBtn.disabled = true;
+                }
+            }
+        });
+        
+        // Initial draw
+        drawGraph();
+    </script>
+</body>
+</html>
