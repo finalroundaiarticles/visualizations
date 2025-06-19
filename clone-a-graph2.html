@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BFS Graph Cloning Process</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .animation-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            min-height: 500px;
+        }
+        
+        .graph-container {
+            width: 45%;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            padding: 10px;
+            position: relative;
+        }
+        
+        .title {
+            text-align: center;
+            color: #FF4800;
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .queue-container {
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 20px;
+        }
+        
+        .hashmap-container {
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 20px;
+        }
+        
+        .queue, .hashmap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .queue-item {
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        
+        .hashmap-item {
+            display: flex;
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        
+        .hashmap-key, .hashmap-value {
+            margin: 0 5px;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 300px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .explanation {
+            margin-top: 30px;
+            padding: 15px;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            line-height: 1.6;
+        }
+        
+        .step-counter {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BFS Graph Cloning Process</h1>
+        
+        <div class="animation-container">
+            <div class="graph-container">
+                <div class="title">Original Graph</div>
+                <canvas id="originalGraph"></canvas>
+            </div>
+            
+            <div class="graph-container">
+                <div class="title">Cloned Graph</div>
+                <canvas id="clonedGraph"></canvas>
+                
+                <div class="queue-container">
+                    <div class="title">Queue</div>
+                    <div class="queue" id="queue"></div>
+                </div>
+                
+                <div class="hashmap-container">
+                    <div class="title">HashMap (Original Node → Cloned Node)</div>
+                    <div class="hashmap" id="hashmap"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="step-counter">Step <span id="currentStep">1</span> of <span id="totalSteps">6</span></div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <p>We'll use BFS (Breadth-First Search) to clone a graph. We start by creating a copy of the first node and use a queue to process all nodes in a breadth-first manner.</p>
+            <p>The HashMap will help us keep track of which original nodes have already been cloned, and what their corresponding cloned nodes are.</p>
+        </div>
+    </div>
+    
+    <script>
+        // Graph Nodes and Animation State
+        const originalNodes = [
+            { id: 1, x: 150, y: 100, color: "#FF4800", connections: [2, 3] },
+            { id: 2, x: 80, y: 200, color: "#FF4800", connections: [1, 4] },
+            { id: 3, x: 220, y: 200, color: "#FF4800", connections: [1, 4] },
+            { id: 4, x: 150, y: 300, color: "#FF4800", connections: [2, 3] }
+        ];
+        
+        let clonedNodes = [];
+        let queue = [];
+        let hashmap = [];
+        let currentStep = 1;
+        const totalSteps = 6;
+        
+        // Initialize canvas contexts
+        const originalCanvas = document.getElementById('originalGraph');
+        const clonedCanvas = document.getElementById('clonedGraph');
+        const originalCtx = originalCanvas.getContext('2d');
+        const clonedCtx = clonedCanvas.getContext('2d');
+        
+        // Set canvas dimensions
+        originalCanvas.width = originalCanvas.offsetWidth;
+        originalCanvas.height = originalCanvas.offsetHeight;
+        clonedCanvas.width = clonedCanvas.offsetWidth;
+        clonedCanvas.height = clonedCanvas.offsetHeight;
+        
+        // Draw a node
+        function drawNode(ctx, node, highlight = false) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 25, 0, 2 * Math.PI);
+            ctx.fillStyle = highlight ? "#FD9F78" : node.color;
+            ctx.fill();
+            ctx.strokeStyle = highlight ? "#000000" : node.color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = "#FFFFFF";
+            ctx.font = "16px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(node.id, node.x, node.y);
+        }
+        
+        // Draw connections between nodes
+        function drawConnections(ctx, nodes, highlightNode = null) {
+            nodes.forEach(node => {
+                const isHighlighted = highlightNode && (node.id === highlightNode.id);
+                node.connections.forEach(connId => {
+                    const connNode = nodes.find(n => n.id === connId);
+                    if (connNode) {
+                        ctx.beginPath();
+                        ctx.moveTo(node.x, node.y);
+                        ctx.lineTo(connNode.x, connNode.y);
+                        ctx.strokeStyle = isHighlighted ? "#FD9F78" : "#000000";
+                        ctx.lineWidth = isHighlighted ? 3 : 2;
+                        ctx.stroke();
+                    }
+                });
+            });
+        }
+        
+        // Draw original graph
+        function drawOriginalGraph(highlightNode = null) {
+            originalCtx.clearRect(0, 0, originalCanvas.width, originalCanvas.height);
+            drawConnections(originalCtx, originalNodes, highlightNode);
+            originalNodes.forEach(node => {
+                drawNode(originalCtx, node, highlightNode && node.id === highlightNode.id);
+            });
+        }
+        
+        // Draw cloned graph
+        function drawClonedGraph(highlightNode = null) {
+            clonedCtx.clearRect(0, 0, clonedCanvas.width, clonedCanvas.height);
+            if (clonedNodes.length > 0) {
+                drawConnections(clonedCtx, clonedNodes, highlightNode);
+                clonedNodes.forEach(node => {
+                    drawNode(clonedCtx, node, highlightNode && node.id === highlightNode.id);
+                });
+            }
+        }
+        
+        // Update queue display
+        function updateQueue() {
+            const queueContainer = document.getElementById('queue');
+            queueContainer.innerHTML = '';
+            queue.forEach(nodeId => {
+                const queueItem = document.createElement('div');
+                queueItem.className = 'queue-item';
+                queueItem.textContent = `Node ${nodeId}`;
+                queueContainer.appendChild(queueItem);
+            });
+        }
+        
+        // Update hashmap display
+        function updateHashmap() {
+            const hashmapContainer = document.getElementById('hashmap');
+            hashmapContainer.innerHTML = '';
+            hashmap.forEach(item => {
+                const hashmapItem = document.createElement('div');
+                hashmapItem.className = 'hashmap-item';
+                
+                const key = document.createElement('span');
+                key.className = 'hashmap-key';
+                key.textContent = `Node ${item.original}`;
+                
+                const arrow = document.createElement('span');
+                arrow.textContent = ' → ';
+                
+                const value = document.createElement('span');
+                value.className = 'hashmap-value';
+                value.textContent = `Node ${item.cloned}`;
+                
+                hashmapItem.appendChild(key);
+                hashmapItem.appendChild(arrow);
+                hashmapItem.appendChild(value);
+                
+                hashmapContainer.appendChild(hashmapItem);
+            });
+        }
+        
+        // Update explanation based on current step
+        function updateExplanation() {
+            const explanationDiv = document.getElementById('explanation');
+            
+            switch(currentStep) {
+                case 1:
+                    explanationDiv.innerHTML = `
+                        <p>We start the BFS graph cloning process:</p>
+                        <p>1. We begin by creating a clone of the first node (Node 1) and add it to our HashMap.</p>
+                        <p>2. Then we add Node 1 to the queue for processing its neighbors.</p>
+                    `;
+                    break;
+                case 2:
+                    explanationDiv.innerHTML = `
+                        <p>We take Node 1 from the queue and process its neighbors:</p>
+                        <p>1. For neighbor Node 2: We create a clone, add it to the HashMap, and add the connection from cloned Node 1 to cloned Node 2.</p>
+                        <p>2. For neighbor Node 3: We create a clone, add it to the HashMap, and add the connection from cloned Node 1 to cloned Node 3.</p>
+                        <p>3. We add Nodes 2 and 3 to the queue to process their neighbors next.</p>
+                    `;
+                    break;
+                case 3:
+                    explanationDiv.innerHTML = `
+                        <p>We take Node 2 from the queue and process its neighbors:</p>
+                        <p>1. For neighbor Node 1: It's already in the HashMap, so we just add the connection from cloned Node 2 to cloned Node 1.</p>
+                        <p>2. For neighbor Node 4: We create a clone, add it to the HashMap, and add the connection from cloned Node 2 to cloned Node 4.</p>
+                        <p>3. We add Node 4 to the queue for processing.</p>
+                    `;
+                    break;
+                case 4:
+                    explanationDiv.innerHTML = `
+                        <p>We take Node 3 from the queue and process its neighbors:</p>
+                        <p>1. For neighbor Node 1: It's already in the HashMap, so we just add the connection from cloned Node 3 to cloned Node 1.</p>
+                        <p>2. For neighbor Node 4: It's already in the HashMap, so we just add the connection from cloned Node 3 to cloned Node 4.</p>
+                    `;
+                    break;
+                case 5:
+                    explanationDiv.innerHTML = `
+                        <p>We take Node 4 from the queue and process its neighbors:</p>
+                        <p>1. For neighbor Node 2: It's already in the HashMap, so we just add the connection from cloned Node 4 to cloned Node 2.</p>
+                        <p>2. For neighbor Node 3: It's already in the HashMap, so we just add the connection from cloned Node 4 to cloned Node 3.</p>
+                    `;
+                    break;
+                case 6:
+                    explanationDiv.innerHTML = `
+                        <p>The BFS graph cloning process is complete!</p>
+                        <p>1. All nodes have been cloned and all connections have been established.</p>
+                        <p>2. The queue is empty, meaning we've processed all nodes.</p>
+                        <p>3. Our HashMap contains mappings for all original nodes to their cloned counterparts.</p>
+                        <p>4. The cloned graph is an exact structural copy of the original graph.</p>
+                    `;
+                    break;
+            }
+        }
+        
+        // Render current step
+        function renderStep() {
+            // Reset visualization
+            clonedNodes = [];
+            queue = [];
+            hashmap = [];
+            
+            let highlightOriginal = null;
+            let highlightCloned = null;
+            
+            switch(currentStep) {
+                case 1:
+                    // Initial state: Add node 1 to hashmap and queue
+                    const node1 = { ...originalNodes[0], connections: [] };
+                    clonedNodes.push(node1);
+                    hashmap.push({ original: 1, cloned: 1 });
+                    queue.push(1);
+                    highlightOriginal = originalNodes[0];
+                    highlightCloned = node1;
+                    break;
+                    
+                case 2:
+                    // Process node 1: Create neighbors 2 and 3, add them to queue
+                    const node1_step2 = { ...originalNodes[0], connections: [2, 3] };
+                    const node2 = { ...originalNodes[1], connections: [1] };
+                    const node3 = { ...originalNodes[2], connections: [1] };
+                    clonedNodes.push(node1_step2, node2, node3);
+                    hashmap.push(
+                        { original: 1, cloned: 1 },
+                        { original: 2, cloned: 2 },
+                        { original: 3, cloned: 3 }
+                    );
+                    queue.push(2, 3);
+                    highlightOriginal = originalNodes[0];
+                    break;
+                    
+                case 3:
+                    // Process node 2: Add connection back to 1, create node 4
+                    const node1_step3 = { ...originalNodes[0], connections: [2, 3] };
+                    const node2_step3 = { ...originalNodes[1], connections: [1, 4] };
+                    const node3_step3 = { ...originalNodes[2], connections: [1] };
+                    const node4 = { ...originalNodes[3], connections: [2] };
+                    clonedNodes.push(node1_step3, node2_step3, node3_step3, node4);
+                    hashmap.push(
+                        { original: 1, cloned: 1 },
+                        { original: 2, cloned: 2 },
+                        { original: 3, cloned: 3 },
+                        { original: 4, cloned: 4 }
+                    );
+                    queue.push(3, 4);
+                    highlightOriginal = originalNodes[1];
+                    highlightCloned = node2_step3;
+                    break;
+                    
+                case 4:
+                    // Process node 3: Add connections to nodes 1 and 4
+                    const node1_step4 = { ...originalNodes[0], connections: [2, 3] };
+                    const node2_step4 = { ...originalNodes[1], connections: [1, 4] };
+                    const node3_step4 = { ...originalNodes[2], connections: [1, 4] };
+                    const node4_step4 = { ...originalNodes[3], connections: [2, 3] };
+                    clonedNodes.push(node1_step4, node2_step4, node3_step4, node4_step4);
+                    hashmap.push(
+                        { original: 1, cloned: 1 },
+                        { original: 2, cloned: 2 },
+                        { original: 3, cloned: 3 },
+                        { original: 4, cloned: 4 }
+                    );
+                    queue.push(4);
+                    highlightOriginal = originalNodes[2];
+                    highlightCloned = node3_step4;
+                    break;
+                    
+                case 5:
+                    // Process node 4: Add connections to nodes 2 and 3
+                    const node1_step5 = { ...originalNodes[0], connections: [2, 3] };
+                    const node2_step5 = { ...originalNodes[1], connections: [1, 4] };
+                    const node3_step5 = { ...originalNodes[2], connections: [1, 4] };
+                    const node4_step5 = { ...originalNodes[3], connections: [2, 3] };
+                    clonedNodes.push(node1_step5, node2_step5, node3_step5, node4_step5);
+                    hashmap.push(
+                        { original: 1, cloned: 1 },
+                        { original: 2, cloned: 2 },
+                        { original: 3, cloned: 3 },
+                        { original: 4, cloned: 4 }
+                    );
+                    queue = []; // Empty queue
+                    highlightOriginal = originalNodes[3];
+                    highlightCloned = node4_step5;
+                    break;
+                    
+                case 6:
+                    // Final state: Complete graph clone
+                    clonedNodes = originalNodes.map(node => ({ ...node }));
+                    hashmap.push(
+                        { original: 1, cloned: 1 },
+                        { original: 2, cloned: 2 },
+                        { original: 3, cloned: 3 },
+                        { original: 4, cloned: 4 }
+                    );
+                    queue = []; // Empty queue
+                    break;
+            }
+            
+            // Update DOM elements
+            document.getElementById('currentStep').textContent = currentStep;
+            document.getElementById('totalSteps').textContent = totalSteps;
+            document.getElementById('prevBtn').disabled = currentStep === 1;
+            document.getElementById('nextBtn').disabled = currentStep === totalSteps;
+            
+            // Draw graphs
+            drawOriginalGraph(highlightOriginal);
+            drawClonedGraph(highlightCloned);
+            
+            // Update queue and hashmap displays
+            updateQueue();
+            updateHashmap();
+            
+            // Update explanation
+            updateExplanation();
+        }
+        
+        // Event listeners for navigation buttons
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                renderStep();
+            }
+        });
+        
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                renderStep();
+            }
+        });
+        
+        // Initialize on load
+        window.onload = function() {
+            // Set canvas dimensions with proper scaling
+            const setCanvasDimensions = () => {
+                originalCanvas.width = originalCanvas.offsetWidth;
+                originalCanvas.height = originalCanvas.offsetHeight;
+                clonedCanvas.width = clonedCanvas.offsetWidth;
+                clonedCanvas.height = clonedCanvas.offsetHeight;
+            };
+            
+            setCanvasDimensions();
+            window.addEventListener('resize', () => {
+                setCanvasDimensions();
+                renderStep();
+            });
+            
+            renderStep();
+        };
+    </script>
+</body>
+</html>
