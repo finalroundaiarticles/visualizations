@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Directed Cycle Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #000000;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            width: 800px;
+            max-width: 100%;
+            position: relative;
+        }
+        .explanation {
+            margin-bottom: 20px;
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .canvas-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Simple Directed Cycle Example</h1>
+        
+        <div class="explanation" id="explanation">
+            A directed cycle is a path in a directed graph that starts and ends at the same vertex. In this example, we have vertices A, B, and C with directed edges forming a cycle: A → B → C → A.
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="graphCanvas"></canvas>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const explanation = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        // Set canvas resolution
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // Define vertices
+        const vertices = [
+            { id: 'A', x: 150, y: 200, color: '#FF4800' },
+            { id: 'B', x: 400, y: 100, color: '#FF4800' },
+            { id: 'C', x: 650, y: 200, color: '#FF4800' }
+        ];
+        
+        // Define edges
+        const edges = [
+            { from: 'A', to: 'B', color: '#000000', animated: false },
+            { from: 'B', to: 'C', color: '#000000', animated: false },
+            { from: 'C', to: 'A', color: '#000000', animated: false }
+        ];
+        
+        let step = 0;
+        const totalSteps = 5;
+        
+        function updateButtonStates() {
+            prevBtn.disabled = step === 0;
+            nextBtn.disabled = step === totalSteps - 1;
+        }
+        
+        function drawVertex(vertex, highlight = false) {
+            ctx.beginPath();
+            ctx.arc(vertex.x, vertex.y, 30, 0, Math.PI * 2);
+            ctx.fillStyle = highlight ? '#FD9F78' : vertex.color;
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(vertex.id, vertex.x, vertex.y);
+        }
+        
+        function drawEdge(edge, progress = 1) {
+            const fromVertex = vertices.find(v => v.id === edge.from);
+            const toVertex = vertices.find(v => v.id === edge.to);
+            
+            // Calculate direction vector
+            const dx = toVertex.x - fromVertex.x;
+            const dy = toVertex.y - fromVertex.y;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            
+            // Normalize
+            const nx = dx / length;
+            const ny = dy / length;
+            
+            // Start and end points (adjusted for vertex radius)
+            const startX = fromVertex.x + nx * 30;
+            const startY = fromVertex.y + ny * 30;
+            const endX = toVertex.x - nx * 30;
+            const endY = toVertex.y - ny * 30;
+            
+            // For animation
+            const currentEndX = startX + (endX - startX) * progress;
+            const currentEndY = startY + (endY - startY) * progress;
+            
+            // Draw line
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(currentEndX, currentEndY);
+            ctx.strokeStyle = edge.color;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // Draw arrowhead if the edge is fully drawn
+            if (progress === 1) {
+                const arrowSize = 15;
+                const angle = Math.atan2(dy, dx);
+                
+                ctx.beginPath();
+                ctx.moveTo(endX, endY);
+                ctx.lineTo(
+                    endX - arrowSize * Math.cos(angle - Math.PI / 6),
+                    endY - arrowSize * Math.sin(angle - Math.PI / 6)
+                );
+                ctx.lineTo(
+                    endX - arrowSize * Math.cos(angle + Math.PI / 6),
+                    endY - arrowSize * Math.sin(angle + Math.PI / 6)
+                );
+                ctx.closePath();
+                ctx.fillStyle = edge.color;
+                ctx.fill();
+            }
+        }
+        
+        function animate() {
+            if (animating) {
+                requestAnimationFrame(animate);
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw all edges first (static ones)
+                edges.forEach(edge => {
+                    if (!edge.animated) {
+                        drawEdge(edge);
+                    }
+                });
+                
+                // Draw animated edge
+                if (currentAnimatedEdge) {
+                    drawEdge(currentAnimatedEdge, animationProgress);
+                }
+                
+                // Draw all vertices
+                vertices.forEach(vertex => {
+                    drawVertex(vertex, highlightedVertex === vertex.id);
+                });
+                
+                // Update animation progress
+                animationProgress += 0.02;
+                if (animationProgress >= 1) {
+                    currentAnimatedEdge.animated = true;
+                    animationProgress = 0;
+                    
+                    // Move to the next edge in the sequence
+                    currentAnimationStep++;
+                    
+                    if (currentAnimationStep >= animationSequence.length) {
+                        animating = false;
+                    } else {
+                        const nextEdgeId = animationSequence[currentAnimationStep];
+                        currentAnimatedEdge = edges.find(e => e.from === nextEdgeId.from && e.to === nextEdgeId.to);
+                        highlightedVertex = nextEdgeId.from;
+                    }
+                }
+            }
+        }
+        
+        let animating = false;
+        let animationProgress = 0;
+        let currentAnimatedEdge = null;
+        let currentAnimationStep = 0;
+        let animationSequence = [];
+        let highlightedVertex = null;
+        
+        function startAnimation() {
+            // Reset animation state
+            edges.forEach(edge => edge.animated = false);
+            animating = true;
+            animationProgress = 0;
+            currentAnimationStep = 0;
+            
+            // Define the sequence of edges to animate
+            animationSequence = [
+                { from: 'A', to: 'B' },
+                { from: 'B', to: 'C' },
+                { from: 'C', to: 'A' }
+            ];
+            
+            currentAnimatedEdge = edges.find(e => e.from === animationSequence[0].from && e.to === animationSequence[0].to);
+            highlightedVertex = animationSequence[0].from;
+            
+            animate();
+        }
+        
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges
+            edges.forEach(edge => {
+                if (edge.animated) {
+                    drawEdge(edge);
+                }
+            });
+            
+            // Draw vertices
+            vertices.forEach(vertex => {
+                drawVertex(vertex, highlightedVertex === vertex.id);
+            });
+        }
+        
+        function updateStep(newStep) {
+            step = newStep;
+            updateButtonStates();
+            
+            switch (step) {
+                case 0:
+                    explanation.textContent = "A directed cycle is a path in a directed graph that starts and ends at the same vertex. In this example, we have vertices A, B, and C with directed edges forming a cycle: A → B → C → A.";
+                    edges.forEach(edge => edge.animated = false);
+                    highlightedVertex = null;
+                    draw();
+                    break;
+                case 1:
+                    explanation.textContent = "Let's start at vertex A. We have a directed edge from A to B, indicating we can travel from A to B.";
+                    edges[0].animated = true;
+                    edges[1].animated = false;
+                    edges[2].animated = false;
+                    highlightedVertex = 'A';
+                    draw();
+                    break;
+                case 2:
+                    explanation.textContent = "From vertex B, we have a directed edge to C, allowing us to travel from B to C.";
+                    edges[0].animated = true;
+                    edges[1].animated = true;
+                    edges[2].animated = false;
+                    highlightedVertex = 'B';
+                    draw();
+                    break;
+                case 3:
+                    explanation.textContent = "Finally, from vertex C, we have a directed edge back to A, completing the cycle. This means we can travel from A to B to C and back to A, forming a closed loop.";
+                    edges[0].animated = true;
+                    edges[1].animated = true;
+                    edges[2].animated = true;
+                    highlightedVertex = 'C';
+                    draw();
+                    break;
+                case 4:
+                    explanation.textContent = "This is a simple directed cycle: A → B → C → A. Directed cycles are important in graph theory and have applications in many fields including scheduling problems, dependency analysis, and circuit design.";
+                    edges.forEach(edge => edge.animated = true);
+                    highlightedVertex = null;
+                    startAnimation();
+                    break;
+            }
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (step > 0) {
+                updateStep(step - 1);
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (step < totalSteps - 1) {
+                updateStep(step + 1);
+            }
+        });
+        
+        // Initialize
+        updateStep(0);
+    </script>
+</body>
+</html>
