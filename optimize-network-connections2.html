@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Union-Find Process Illustration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        .canvas-container {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+            position: relative;
+        }
+        canvas {
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .explanation {
+            background-color: #FFFFFF;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+            line-height: 1.6;
+        }
+        .step-counter {
+            font-weight: bold;
+            color: #FF4800;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Union-Find Process Illustration</h1>
+        
+        <div class="canvas-container">
+            <canvas id="unionFindCanvas" width="800" height="400"></canvas>
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="step-counter" id="stepCounter">Step 1 of 5</div>
+        
+        <div class="explanation" id="explanation">
+            <p>Initial state: We have 4 separate sets (nodes 0, 1, 2, and 3). Each node is in its own set, representing disconnected components.</p>
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('unionFindCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Buttons
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepCounter = document.getElementById('stepCounter');
+        const explanationDiv = document.getElementById('explanation');
+        
+        // Step tracking
+        let currentStep = 1;
+        const totalSteps = 5;
+        
+        // Node positions
+        const nodes = [
+            { id: 0, x: 200, y: 150, parent: 0 },
+            { id: 1, x: 400, y: 150, parent: 1 },
+            { id: 2, x: 600, y: 150, parent: 2 },
+            { id: 3, x: 400, y: 300, parent: 3 }
+        ];
+        
+        // Connections to be processed
+        const connections = [
+            [0, 1],  // Step 2
+            [0, 2],  // Step 3
+            [1, 2],  // Step 4 (redundant)
+            [1, 3]   // Step 5
+        ];
+        
+        // Explanations for each step
+        const explanations = [
+            "Initial state: We have 4 separate sets (nodes 0, 1, 2, and 3). Each node is in its own set, representing disconnected components.",
+            "Processing connection [0,1]: We merge the sets containing nodes 0 and 1. Node 1 now points to node 0 as its parent.",
+            "Processing connection [0,2]: We merge the sets containing nodes 0 and 2. Node 2 now points to node 0 as its parent. Nodes 0, 1, and 2 are now in the same connected component.",
+            "Processing connection [1,2]: This is a redundant connection! When we check, we find that nodes 1 and 2 are already in the same set (both have node 0 as their root). No merge is needed.",
+            "Processing connection [1,3]: We merge the sets containing nodes 1 and 3. Node 3 now points to node 0 as its parent. All nodes are now in one connected component."
+        ];
+        
+        // State of connections at each step
+        const stepConnections = [
+            [],  // Step 1: No connections
+            [[0, 1]],  // Step 2: Connection between 0 and 1
+            [[0, 1], [0, 2]],  // Step 3: Connections between 0-1 and 0-2
+            [[0, 1], [0, 2], [1, 2]],  // Step 4: Connections between 0-1, 0-2, and 1-2 (redundant)
+            [[0, 1], [0, 2], [1, 2], [1, 3]]  // Step 5: All connections
+        ];
+        
+        // Parent state at each step
+        const parentStates = [
+            [0, 1, 2, 3],  // Step 1: Each node is its own parent
+            [0, 0, 2, 3],  // Step 2: Node 1 points to 0
+            [0, 0, 0, 3],  // Step 3: Node 2 points to 0
+            [0, 0, 0, 3],  // Step 4: No change (redundant)
+            [0, 0, 0, 0]   // Step 5: Node 3 points to 0
+        ];
+        
+        // Draw the current state
+        function draw() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Set current parent state
+            for (let i = 0; i < nodes.length; i++) {
+                nodes[i].parent = parentStates[currentStep-1][i];
+            }
+            
+            // Draw connections
+            ctx.strokeStyle = '#FD9F78';
+            ctx.lineWidth = 2;
+            
+            // Draw all connections for this step
+            stepConnections[currentStep-1].forEach(conn => {
+                const node1 = nodes[conn[0]];
+                const node2 = nodes[conn[1]];
+                
+                ctx.beginPath();
+                ctx.moveTo(node1.x, node1.y);
+                ctx.lineTo(node2.x, node2.y);
+                ctx.stroke();
+                
+                // Draw connection label
+                const midX = (node1.x + node2.x) / 2;
+                const midY = (node1.y + node2.y) / 2;
+                
+                // Highlight the redundant connection in step 4
+                if (currentStep === 4 && conn[0] === 1 && conn[1] === 2) {
+                    ctx.fillStyle = '#FF4800';
+                    ctx.font = "bold 14px Arial";
+                    ctx.fillText("Redundant", midX - 40, midY - 10);
+                }
+            });
+            
+            // Draw parent pointers
+            ctx.strokeStyle = '#FF4800';
+            ctx.lineWidth = 2;
+            
+            nodes.forEach(node => {
+                if (node.id !== node.parent) {
+                    // Find the parent node
+                    const parentNode = nodes.find(n => n.id === node.parent);
+                    
+                    // Draw curved arrow from node to parent
+                    const dx = parentNode.x - node.x;
+                    const dy = parentNode.y - node.y;
+                    const distance = Math.sqrt(dx*dx + dy*dy);
+                    
+                    // Control point for curve
+                    const cpX = (node.x + parentNode.x) / 2 - dy * 0.3;
+                    const cpY = (node.y + parentNode.y) / 2 + dx * 0.3;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(node.x, node.y);
+                    ctx.quadraticCurveTo(cpX, cpY, parentNode.x, parentNode.y);
+                    ctx.stroke();
+                    
+                    // Draw arrowhead
+                    const angle = Math.atan2(parentNode.y - cpY, parentNode.x - cpX);
+                    ctx.beginPath();
+                    ctx.moveTo(parentNode.x, parentNode.y);
+                    ctx.lineTo(
+                        parentNode.x - 15 * Math.cos(angle - Math.PI/6),
+                        parentNode.y - 15 * Math.sin(angle - Math.PI/6)
+                    );
+                    ctx.lineTo(
+                        parentNode.x - 15 * Math.cos(angle + Math.PI/6),
+                        parentNode.y - 15 * Math.sin(angle + Math.PI/6)
+                    );
+                    ctx.closePath();
+                    ctx.fillStyle = '#FF4800';
+                    ctx.fill();
+                }
+            });
+            
+            // Draw nodes
+            nodes.forEach(node => {
+                // Node circle
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 30, 0, Math.PI * 2);
+                ctx.fillStyle = node.id === node.parent ? '#FF4800' : '#FD9F78';
+                ctx.fill();
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Node label
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = "20px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(node.id, node.x, node.y);
+            });
+            
+            // Update explanation
+            explanationDiv.innerHTML = `<p>${explanations[currentStep-1]}</p>`;
+            
+            // Update step counter
+            stepCounter.textContent = `Step ${currentStep} of ${totalSteps}`;
+        }
+        
+        // Event listeners for buttons
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                prevBtn.disabled = false;
+                if (currentStep === totalSteps) {
+                    nextBtn.disabled = true;
+                }
+                draw();
+            }
+        });
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                nextBtn.disabled = false;
+                if (currentStep === 1) {
+                    prevBtn.disabled = true;
+                }
+                draw();
+            }
+        });
+        
+        // Initial draw
+        draw();
+    </script>
+</body>
+</html>
