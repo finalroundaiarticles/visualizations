@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Ladder Transformation</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #FFFFFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            position: relative;
+        }
+
+        .slide {
+            display: none;
+            text-align: center;
+            animation: fadeEffect 1s;
+        }
+
+        .word-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 40px 0;
+        }
+
+        .word {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0 10px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            background-color: #FD9F78;
+            color: #000000;
+            display: inline-block;
+        }
+
+        .arrow {
+            font-size: 2rem;
+            color: #FF4800;
+            margin: 0 10px;
+        }
+
+        .letter {
+            display: inline-block;
+            padding: 5px;
+        }
+
+        .highlight {
+            color: #FF4800;
+            font-weight: bold;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #FD9F78;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .explanation {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f8f8f8;
+            border-radius: 8px;
+            color: #000000;
+            font-size: 1.1rem;
+            line-height: 1.5;
+            text-align: left;
+        }
+
+        @keyframes fadeEffect {
+            from {opacity: 0.4}
+            to {opacity: 1}
+        }
+
+        .progress-dots {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .dot {
+            height: 12px;
+            width: 12px;
+            margin: 0 5px;
+            background-color: #FD9F78;
+            border-radius: 50%;
+            display: inline-block;
+            transition: background-color 0.3s;
+        }
+
+        .active-dot {
+            background-color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <h1>Word Ladder Transformation: <span style="color: #FF4800;">hit</span> → <span style="color: #FF4800;">cog</span></h1>
+    
+    <div class="container">
+        <div class="slide" id="slide1">
+            <div class="word-container">
+                <div class="word">
+                    <span class="letter highlight">h</span>
+                    <span class="letter">i</span>
+                    <span class="letter">t</span>
+                </div>
+            </div>
+            <div class="explanation">
+                <p>We start with the word <strong>"hit"</strong>. In a word ladder, we can change one letter at a time to form new valid words until we reach our target word.</p>
+                <p>Let's begin our transformation from "hit" to "cog" by changing one letter at a time.</p>
+            </div>
+        </div>
+
+        <div class="slide" id="slide2">
+            <div class="word-container">
+                <div class="word">
+                    <span class="letter">h</span>
+                    <span class="letter">i</span>
+                    <span class="letter">t</span>
+                </div>
+                <div class="arrow">→</div>
+                <div class="word">
+                    <span class="letter">h</span>
+                    <span class="letter highlight">o</span>
+                    <span class="letter">t</span>
+                </div>
+            </div>
+            <div class="explanation">
+                <p>First transformation: <strong>"hit" → "hot"</strong></p>
+                <p>We change the middle letter 'i' to 'o'. Notice that only one letter changes at each step, and we form a valid English word.</p>
+            </div>
+        </div>
+
+        <div class="slide" id="slide3">
+            <div class="word-container">
+                <div class="word">
+                    <span class="letter">h</span>
+                    <span class="letter">o</span>
+                    <span class="letter">t</span>
+                </div>
+                <div class="arrow">→</div>
+                <div class="word">
+                    <span class="letter highlight">d</span>
+                    <span class="letter">o</span>
+                    <span class="letter">t</span>
+                </div>
+            </div>
+            <div class="explanation">
+                <p>Second transformation: <strong>"hot" → "dot"</strong></p>
+                <p>We change the first letter 'h' to 'd'. Again, only one letter changes and we get a valid word "dot".</p>
+            </div>
+        </div>
+
+        <div class="slide" id="slide4">
+            <div class="word-container">
+                <div class="word">
+                    <span class="letter">d</span>
+                    <span class="letter">o</span>
+                    <span class="letter">t</span>
+                </div>
+                <div class="arrow">→</div>
+                <div class="word">
+                    <span class="letter">d</span>
+                    <span class="letter">o</span>
+                    <span class="letter highlight">g</span>
+                </div>
+            </div>
+            <div class="explanation">
+                <p>Third transformation: <strong>"dot" → "dog"</strong></p>
+                <p>We change the last letter 't' to 'g'. We're getting closer to our target word!</p>
+            </div>
+        </div>
+
+        <div class="slide" id="slide5">
+            <div class="word-container">
+                <div class="word">
+                    <span class="letter">d</span>
+                    <span class="letter">o</span>
+                    <span class="letter">g</span>
+                </div>
+                <div class="arrow">→</div>
+                <div class="word">
+                    <span class="letter highlight">c</span>
+                    <span class="letter">o</span>
+                    <span class="letter">g</span>
+                </div>
+            </div>
+            <div class="explanation">
+                <p>Final transformation: <strong>"dog" → "cog"</strong></p>
+                <p>We change the first letter 'd' to 'c', and we've reached our target word "cog"!</p>
+            </div>
+        </div>
+
+        <div class="slide" id="slide6">
+            <div class="word-container">
+                <div class="word">
+                    <span class="letter">h</span>
+                    <span class="letter">i</span>
+                    <span class="letter">t</span>
+                </div>
+                <div class="arrow">→</div>
+                <div class="word">
+                    <span class="letter">h</span>
+                    <span class="letter">o</span>
+                    <span class="letter">t</span>
+                </div>
+                <div class="arrow">→</div>
+                <div class="word">
+                    <span class="letter">d</span>
+                    <span class="letter">o</span>
+                    <span class="letter">t</span>
+                </div>
+                <div class="arrow">→</div>
+                <div class="word">
+                    <span class="letter">d</span>
+                    <span class="letter">o</span>
+                    <span class="letter">g</span>
+                </div>
+                <div class="arrow">→</div>
+                <div class="word">
+                    <span class="letter">c</span>
+                    <span class="letter">o</span>
+                    <span class="letter">g</span>
+                </div>
+            </div>
+            <div class="explanation">
+                <p><strong>Complete Word Ladder:</strong> hit → hot → dot → dog → cog</p>
+                <p>We've successfully transformed "hit" to "cog" by changing just one letter at a time, creating a valid word at each step. This is what we call a word ladder or word chain.</p>
+            </div>
+        </div>
+
+        <div class="progress-dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+        </div>
+
+        <div class="buttons">
+            <button id="prevBtn">Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        let slideIndex = 1;
+        showSlide(slideIndex);
+
+        function showSlide(n) {
+            const slides = document.getElementsByClassName("slide");
+            const dots = document.getElementsByClassName("dot");
+            
+            if (n > slides.length) {
+                slideIndex = 1;
+            }
+            if (n < 1) {
+                slideIndex = slides.length;
+            }
+            
+            // Hide all slides
+            for (let i = 0; i < slides.length; i++) {
+                slides[i].style.display = "none";
+                dots[i].className = dots[i].className.replace(" active-dot", "");
+            }
+            
+            // Show the current slide
+            slides[slideIndex - 1].style.display = "block";
+            dots[slideIndex - 1].className += " active-dot";
+            
+            // Update button states
+            document.getElementById("prevBtn").disabled = (slideIndex === 1);
+            document.getElementById("nextBtn").disabled = (slideIndex === slides.length);
+        }
+
+        document.getElementById("prevBtn").addEventListener("click", function() {
+            showSlide(slideIndex -= 1);
+        });
+
+        document.getElementById("nextBtn").addEventListener("click", function() {
+            showSlide(slideIndex += 1);
+        });
+
+        // Add click functionality to the dots
+        const dots = document.getElementsByClassName("dot");
+        for (let i = 0; i < dots.length; i++) {
+            dots[i].addEventListener("click", function() {
+                showSlide(slideIndex = i + 1);
+            });
+        }
+    </script>
+</body>
+</html>
