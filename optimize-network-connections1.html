@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Components Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .animation-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin: 20px 0;
+            height: 500px;
+            position: relative;
+        }
+        
+        canvas {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #FFFFFF;
+        }
+        
+        .description {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            line-height: 1.6;
+            color: #000000;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .step {
+            width: 10px;
+            height: 10px;
+            background-color: #ddd;
+            border-radius: 50%;
+            margin: 0 5px;
+        }
+
+        .step.active {
+            background-color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Network Components Visualization</h1>
+        
+        <div class="animation-container">
+            <canvas id="networkCanvas" width="800" height="400"></canvas>
+        </div>
+
+        <div class="step-indicator" id="stepIndicator"></div>
+        
+        <div class="description" id="description">
+            In networking, components refer to computers connected by cables. We'll visualize two examples showing how networks can be structured and modified.
+        </div>
+        
+        <div class="nav-buttons">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('networkCanvas');
+        const ctx = canvas.getContext('2d');
+        const descriptionEl = document.getElementById('description');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        
+        let currentStep = 0;
+        
+        // Define color constants
+        const PRIMARY_COLOR = '#FF4800';
+        const SECONDARY_COLOR = '#FD9F78';
+        const BLACK = '#000000';
+        const WHITE = '#FFFFFF';
+        const HIGHLIGHT_COLOR = '#FF0000';
+        const NODE_COLOR = '#3498db';
+        const CONNECTED_GROUP_COLORS = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12'];
+        
+        // Animation steps
+        const steps = [
+            {
+                title: "Introduction to Network Components",
+                description: "Networks consist of computers (nodes) connected by cables. Let's explore how these components form connected groups.",
+                render: () => {
+                    clearCanvas();
+                    
+                    // Draw title
+                    ctx.font = "bold 24px Arial";
+                    ctx.fillStyle = BLACK;
+                    ctx.textAlign = "center";
+                    ctx.fillText("Network Components", canvas.width / 2, 50);
+                    
+                    // Draw computers and connections illustration
+                    drawComputers(canvas.width / 2 - 150, 200, 4, 100);
+                    
+                    // Add description text
+                    ctx.font = "16px Arial";
+                    ctx.fillText("Computers (nodes) connected by cables form a network", canvas.width / 2, 350);
+                }
+            },
+            {
+                title: "Example 1: Initial Configuration",
+                description: "Example 1 shows 4 computers (nodes 0-3) with initial connections between: 0-1, 1-2, and 2-3. This forms a single connected group.",
+                render: () => {
+                    clearCanvas();
+                    
+                    // Draw title
+                    ctx.font = "bold 24px Arial";
+                    ctx.fillStyle = BLACK;
+                    ctx.textAlign = "center";
+                    ctx.fillText("Example 1: Initial Configuration", canvas.width / 2, 50);
+                    
+                    // Draw the 4 computers with initial connections
+                    const nodes = drawComputersWithLabels(canvas.width / 2, 200, 4, 100);
+                    
+                    // Draw initial connections
+                    drawConnection(nodes[0], nodes[1]);
+                    drawConnection(nodes[1], nodes[2]);
+                    drawConnection(nodes[2], nodes[3]);
+                    
+                    // Add description
+                    ctx.font = "16px Arial";
+                    ctx.fillText("All computers are in a single connected group", canvas.width / 2, 350);
+                }
+            },
+            {
+                title: "Example 1: Cable to be Moved",
+                description: "In this network, we need to move one cable. The cable between computers 1-2 will be disconnected.",
+                render: () => {
+                    clearCanvas();
+                    
+                    // Draw title
+                    ctx.font = "bold 24px Arial";
+                    ctx.fillStyle = BLACK;
+                    ctx.textAlign = "center";
+                    ctx.fillText("Example 1: Cable to be Moved", canvas.width / 2, 50);
+                    
+                    // Draw the 4 computers with initial connections
+                    const nodes = drawComputersWithLabels(canvas.width / 2, 200, 4, 100);
+                    
+                    // Draw connections
+                    drawConnection(nodes[0], nodes[1]);
+                    drawConnection(nodes[2], nodes[3]);
+                    
+                    // Highlight the cable to be moved
+                    ctx.strokeStyle = HIGHLIGHT_COLOR;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(nodes[1].x, nodes[1].y);
+                    ctx.lineTo(nodes[2].x, nodes[2].y);
+                    ctx.stroke();
+                    
+                    // Add explanation
+                    ctx.font = "16px Arial";
+                    ctx.fillStyle = BLACK;
+                    ctx.fillText("The cable between computers 1-2 (highlighted in red) will be moved", canvas.width / 2, 350);
+                }
+            },
+            {
+                title: "Example 1: New Configuration",
+                description: "After moving the cable, we now connect computers 0-3 instead of 1-2. This creates a different network topology while maintaining connectivity.",
+                render: () => {
+                    clearCanvas();
+                    
+                    // Draw title
+                    ctx.font = "bold 24px Arial";
+                    ctx.fillStyle = BLACK;
+                    ctx.textAlign = "center";
+                    ctx.fillText("Example 1: New Configuration", canvas.width / 2, 50);
+                    
+                    // Draw the 4 computers
+                    const nodes = drawComputersWithLabels(canvas.width / 2, 200, 4, 100);
+                    
+                    // Draw connections
+                    drawConnection(nodes[0], nodes[1]);
+                    drawConnection(nodes[2], nodes[3]);
+                    
+                    // Draw new connection (0-3)
+                    ctx.strokeStyle = HIGHLIGHT_COLOR;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(nodes[0].x, nodes[0].y);
+                    ctx.lineTo(nodes[3].x, nodes[3].y);
+                    ctx.stroke();
+                    
+                    // Add explanation
+                    ctx.font = "16px Arial";
+                    ctx.fillStyle = BLACK;
+                    ctx.fillText("Cable now connects computers 0-3 (highlighted in red)", canvas.width / 2, 350);
+                }
+            },
+            {
+                title: "Example 2: Six Computer Network",
+                description: "Example 2 shows a network of 6 computers (nodes 0-5) with connections between: 0-1, 1-2, 2-0, 3-4, and 4-5.",
+                render: () => {
+                    clearCanvas();
+                    
+                    // Draw title
+                    ctx.font = "bold 24px Arial";
+                    ctx.fillStyle = BLACK;
+                    ctx.textAlign = "center";
+                    ctx.fillText("Example 2: Six Computer Network", canvas.width / 2, 50);
+                    
+                    // Draw the 6 computers
+                    const nodes = drawSixComputersWithLabels(canvas.width / 2, 200);
+                    
+                    // Draw connections
+                    drawConnection(nodes[0], nodes[1]);
+                    drawConnection(nodes[1], nodes[2]);
+                    drawConnection(nodes[2], nodes[0]);
+                    drawConnection(nodes[3], nodes[4]);
+                    drawConnection(nodes[4], nodes[5]);
+                    
+                    // Add explanation
+                    ctx.font = "16px Arial";
+                    ctx.fillStyle = BLACK;
+                    ctx.fillText("A network with 6 computers and their connections", canvas.width / 2, 350);
+                }
+            },
+            {
+                title: "Example 2: Separate Network Groups",
+                description: "This network has two separate connected groups: Group 1 (computers 0, 1, 2) and Group 2 (computers 3, 4, 5). There is no connection between these groups.",
+                render: () => {
+                    clearCanvas();
+                    
+                    // Draw title
+                    ctx.font = "bold 24px Arial";
+                    ctx.fillStyle = BLACK;
+                    ctx.textAlign = "center";
+                    ctx.fillText("Example 2: Separate Network Groups", canvas.width / 2, 50);
+                    
+                    // Draw the 6 computers
+                    const nodes = drawSixComputersWithLabels(canvas.width / 2, 200);
+                    
+                    // Color the first group
+                    ctx.fillStyle = CONNECTED_GROUP_COLORS[0];
+                    for (let i = 0; i < 3; i++) {
+                        ctx.beginPath();
+                        ctx.arc(nodes[i].x, nodes[i].y, 25, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Re-add labels
+                        ctx.fillStyle = WHITE;
+                        ctx.font = "14px Arial";
+                        ctx.textAlign = "center";
+                        ctx.fillText(i.toString(), nodes[i].x, nodes[i].y + 5);
+                    }
+                    
+                    // Color the second group
+                    ctx.fillStyle = CONNECTED_GROUP_COLORS[1];
+                    for (let i = 3; i < 6; i++) {
+                        ctx.beginPath();
+                        ctx.arc(nodes[i].x, nodes[i].y, 25, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Re-add labels
+                        ctx.fillStyle = WHITE;
+                        ctx.font = "14px Arial";
+                        ctx.textAlign = "center";
+                        ctx.fillText(i.toString(), nodes[i].x, nodes[i].y + 5);
+                    }
+                    
+                    // Draw connections
+                    ctx.strokeStyle = BLACK;
+                    ctx.lineWidth = 2;
+                    drawConnection(nodes[0], nodes[1]);
+                    drawConnection(nodes[1], nodes[2]);
+                    drawConnection(nodes[2], nodes[0]);
+                    drawConnection(nodes[3], nodes[4]);
+                    drawConnection(nodes[4], nodes[5]);
+                    
+                    // Add explanation
+                    ctx.font = "16px Arial";
+                    ctx.fillStyle = BLACK;
+                    ctx.fillText("Two separate groups: Group 1 (0,1,2) and Group 2 (3,4,5)", canvas.width / 2, 350);
+                }
+            },
+            {
+                title: "Connected vs. Disconnected Networks",
+                description: "In networking, we want all computers to be connected in a single group. When computers form separate groups with no connections between them, the network is disconnected. To fix this, we need to add at least one cable between the groups.",
+                render: () => {
+                    clearCanvas();
+                    
+                    // Draw title
+                    ctx.font = "bold 24px Arial";
+                    ctx.fillStyle = BLACK;
+                    ctx.textAlign = "center";
+                    ctx.fillText("Connected vs. Disconnected Networks", canvas.width / 2, 50);
+                    
+                    // Draw two smaller networks
+                    const leftCenter = {x: canvas.width / 3, y: 200};
+                    const rightCenter = {x: 2 * canvas.width / 3, y: 200};
+                    
+                    // Draw left network (connected)
+                    const leftNodes = [];
+                    for (let i = 0; i < 4; i++) {
+                        const angle = (i * Math.PI / 2) + Math.PI / 4;
+                        const x = leftCenter.x + 70 * Math.cos(angle);
+                        const y = leftCenter.y + 70 * Math.sin(angle);
+                        leftNodes.push({x, y});
+                        
+                        ctx.fillStyle = CONNECTED_GROUP_COLORS[0];
+                        ctx.beginPath();
+                        ctx.arc(x, y, 20, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    // Draw connections for left network
+                    ctx.strokeStyle = BLACK;
+                    ctx.lineWidth = 2;
+                    for (let i = 0; i < leftNodes.length; i++) {
+                        drawConnection(leftNodes[i], leftNodes[(i + 1) % leftNodes.length]);
+                    }
+                    
+                    // Draw text for left network
+                    ctx.font = "16px Arial";
+                    ctx.fillStyle = BLACK;
+                    ctx.textAlign = "center";
+                    ctx.fillText("Connected Network", leftCenter.x, leftCenter.y - 100);
+                    
+                    // Draw right network (disconnected)
+                    const rightTopNodes = [];
+                    const rightBottomNodes = [];
+                    
+                    // Top group
+                    for (let i = 0; i < 2; i++) {
+                        const x = rightCenter.x - 40 + i * 80;
+                        const y = rightCenter.y - 50;
+                        rightTopNodes.push({x, y});
+                        
+                        ctx.fillStyle = CONNECTED_GROUP_COLORS[1];
+                        ctx.beginPath();
+                        ctx.arc(x, y, 20, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    // Bottom group
+                    for (let i = 0; i < 2; i++) {
+                        const x = rightCenter.x - 40 + i * 80;
+                        const y = rightCenter.y + 50;
+                        rightBottomNodes.push({x, y});
+                        
+                        ctx.fillStyle = CONNECTED_GROUP_COLORS[2];
+                        ctx.beginPath();
+                        ctx.arc(x, y, 20, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    // Draw connections for right network
+                    drawConnection(rightTopNodes[0], rightTopNodes[1]);
+                    drawConnection(rightBottomNodes[0], rightBottomNodes[1]);
+                    
+                    // Draw dotted potential connection
+                    ctx.strokeStyle = HIGHLIGHT_COLOR;
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.moveTo(rightTopNodes[0].x, rightTopNodes[0].y);
+                    ctx.lineTo(rightBottomNodes[0].x, rightBottomNodes[0].y);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    
+                    // Draw text for right network
+                    ctx.font = "16px Arial";
+                    ctx.fillStyle = BLACK;
+                    ctx.textAlign = "center";
+                    ctx.fillText("Disconnected Network", rightCenter.x, rightCenter.y - 100);
+                    ctx.fillText("Needs a cable (dotted line)", rightCenter.x, rightCenter.y + 100);
+                }
+            }
+        ];
+        
+        // Setup step indicators
+        function setupStepIndicators() {
+            stepIndicator.innerHTML = '';
+            for (let i = 0; i < steps.length; i++) {
+                const step = document.createElement('div');
+                step.classList.add('step');
+                if (i === currentStep) {
+                    step.classList.add('active');
+                }
+                stepIndicator.appendChild(step);
+            }
+        }
+        
+        // Helper functions
+        function clearCanvas() {
+            ctx.fillStyle = WHITE;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        function drawComputers(centerX, centerY, count, radius) {
+            const computerRadius = 25;
+            
+            for (let i = 0; i < count; i++) {
+                const angle = (i * 2 * Math.PI / count);
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                
+                // Draw computer
+                ctx.fillStyle = NODE_COLOR;
+                ctx.beginPath();
+                ctx.arc(x, y, computerRadius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw connection to next computer
+                if (i < count - 1) {
+                    const nextAngle = ((i + 1) * 2 * Math.PI / count);
+                    const nextX = centerX + radius * Math.cos(nextAngle);
+                    const nextY = centerY + radius * Math.sin(nextAngle);
+                    
+                    ctx.strokeStyle = BLACK;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(nextX, nextY);
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        function drawComputersWithLabels(centerX, centerY, count, radius) {
+            const computerRadius = 25;
+            const nodes = [];
+            
+            for (let i = 0; i < count; i++) {
+                const angle = (i * 2 * Math.PI / count) - Math.PI / 2;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                
+                nodes.push({x, y});
+                
+                // Draw computer
+                ctx.fillStyle = NODE_COLOR;
+                ctx.beginPath();
+                ctx.arc(x, y, computerRadius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Add label
+                ctx.fillStyle = WHITE;
+                ctx.font = "14px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText(i.toString(), x, y + 5);
+            }
+            
+            return nodes;
+        }
+        
+        function drawSixComputersWithLabels(centerX, centerY) {
+            const computerRadius = 25;
+            const nodes = [];
+            
+            // First three computers in a triangle at the top
+            for (let i = 0; i < 3; i++) {
+                const angle = (i * 2 * Math.PI / 3) - Math.PI / 2;
+                const x = centerX + 100 * Math.cos(angle);
+                const y = centerY - 50 + 80 * Math.sin(angle);
+                
+                nodes.push({x, y});
+                
+                // Draw computer
+                ctx.fillStyle = NODE_COLOR;
+                ctx.beginPath();
+                ctx.arc(x, y, computerRadius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Add label
+                ctx.fillStyle = WHITE;
+                ctx.font = "14px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText(i.toString(), x, y + 5);
+            }
+            
+            // Second three computers in a triangle at the bottom
+            for (let i = 0; i < 3; i++) {
+                const angle = (i * 2 * Math.PI / 3) + Math.PI / 2;
+                const x = centerX + 100 * Math.cos(angle);
+                const y = centerY + 50 + 80 * Math.sin(angle);
+                
+                nodes.push({x, y});
+                
+                // Draw computer
+                ctx.fillStyle = NODE_COLOR;
+                ctx.beginPath();
+                ctx.arc(x, y, computerRadius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Add label
+                ctx.fillStyle = WHITE;
+                ctx.font = "14px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText((i + 3).toString(), x, y + 5);
+            }
+            
+            return nodes;
+        }
+        
+        function drawConnection(node1, node2) {
+            ctx.strokeStyle = BLACK;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(node1.x, node1.y);
+            ctx.lineTo(node2.x, node2.y);
+            ctx.stroke();
+        }
+        
+        // Navigation functions
+        function updateUI() {
+            // Update description
+            descriptionEl.textContent = steps[currentStep].description;
+            
+            // Update buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+            
+            // Update step indicators
+            const stepDots = document.querySelectorAll('.step');
+            stepDots.forEach((dot, index) => {
+                if (index === currentStep) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+            
+            // Render current step
+            steps[currentStep].render();
+        }
+        
+        function goToNextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateUI();
+            }
+        }
+        
+        function goToPrevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateUI();
+            }
+        }
+        
+        // Event listeners
+        nextBtn.addEventListener('click', goToNextStep);
+        prevBtn.addEventListener('click', goToPrevStep);
+        
+        // Initialize
+        setupStepIndicators();
+        updateUI();
+    </script>
+</body>
+</html>
