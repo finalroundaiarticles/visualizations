@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Directed Graph Cycles</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .graphs-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .graph {
+            width: 45%;
+            min-width: 300px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px;
+            position: relative;
+        }
+        .graph-title {
+            text-align: center;
+            color: #FF4800;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+        }
+        .explanation {
+            background-color: #FD9F78;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #000000;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Directed Graph Cycle Examples</h1>
+        
+        <div class="graphs-container">
+            <div class="graph">
+                <div class="graph-title">Graph with a Cycle</div>
+                <canvas id="cycleGraph" width="300" height="300"></canvas>
+            </div>
+            
+            <div class="graph">
+                <div class="graph-title">Graph without a Cycle</div>
+                <canvas id="noCycleGraph" width="300" height="300"></canvas>
+            </div>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <h3>What is a Cycle in a Directed Graph?</h3>
+            <p>A cycle in a directed graph occurs when you can start at a node, follow the directed edges, and return to the same starting node.</p>
+            <p>In the left example, we have a cycle: A → B → C → A, meaning you can start at node A and eventually return to it.</p>
+            <p>In the right example, there is no cycle: A → B → C forms a path, but there's no way to return to any previous node.</p>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" class="nav-btn" disabled>Previous</button>
+            <button id="nextBtn" class="nav-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Set up canvas contexts
+        const cycleCanvas = document.getElementById('cycleGraph');
+        const cycleCtx = cycleCanvas.getContext('2d');
+        
+        const noCycleCanvas = document.getElementById('noCycleGraph');
+        const noCycleCtx = noCycleCanvas.getContext('2d');
+        
+        // Define colors
+        const primaryColor = '#FF4800';
+        const secondaryColor = '#FD9F78';
+        const blackColor = '#000000';
+        const whiteColor = '#FFFFFF';
+        
+        // Define nodes
+        const nodes = [
+            { id: 'A', x: 150, y: 100 },
+            { id: 'B', x: 220, y: 200 },
+            { id: 'C', x: 80, y: 200 }
+        ];
+        
+        // Define edges for cycle graph
+        const cycleEdges = [
+            { from: 0, to: 1 },
+            { from: 1, to: 2 },
+            { from: 2, to: 0 }
+        ];
+        
+        // Define edges for no-cycle graph
+        const noCycleEdges = [
+            { from: 0, to: 1 },
+            { from: 1, to: 2 }
+        ];
+        
+        // Animation parameters
+        let animationStep = 0;
+        const totalSteps = 4;
+        let activeEdgeCycle = -1;
+        let activeEdgeNoCycle = -1;
+        
+        // Explanation texts for each step
+        const explanations = [
+            `<h3>What is a Cycle in a Directed Graph?</h3>
+            <p>A cycle in a directed graph occurs when you can start at a node, follow the directed edges, and return to the same starting node.</p>
+            <p>In the left example, we have a cycle: A → B → C → A, meaning you can start at node A and eventually return to it.</p>
+            <p>In the right example, there is no cycle: A → B → C forms a path, but there's no way to return to any previous node.</p>`,
+            
+            `<h3>Exploring the Cycle Graph</h3>
+            <p>Let's trace the path in the left graph:</p>
+            <p><strong>Step 1:</strong> Start at node A and follow the edge to node B.</p>
+            <p>If we continue following edges, we'll see that we can return to node A, forming a cycle.</p>`,
+            
+            `<h3>Exploring the Cycle Graph</h3>
+            <p><strong>Step 2:</strong> From node B, follow the edge to node C.</p>
+            <p>We're still following the path that will eventually lead us back to where we started.</p>`,
+            
+            `<h3>Exploring the Cycle Graph</h3>
+            <p><strong>Step 3:</strong> From node C, follow the edge back to node A.</p>
+            <p>We've now returned to our starting point! This confirms we have a cycle in this graph.</p>
+            <p>In contrast, the graph on the right has no way to return to a previous node, so it doesn't contain a cycle.</p>`
+        ];
+        
+        // Draw a node
+        function drawNode(ctx, node, isActive = false) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 25, 0, Math.PI * 2);
+            ctx.fillStyle = isActive ? primaryColor : secondaryColor;
+            ctx.fill();
+            ctx.strokeStyle = blackColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.font = 'bold 18px Arial';
+            ctx.fillStyle = whiteColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.id, node.x, node.y);
+        }
+        
+        // Draw an edge
+        function drawEdge(ctx, fromNode, toNode, isActive = false) {
+            const headSize = 10;
+            
+            // Calculate direction vector
+            const dx = toNode.x - fromNode.x;
+            const dy = toNode.y - fromNode.y;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            
+            // Normalize
+            const unitX = dx / length;
+            const unitY = dy / length;
+            
+            // Adjust start and end points to be outside the nodes
+            const startX = fromNode.x + unitX * 25;
+            const startY = fromNode.y + unitY * 25;
+            const endX = toNode.x - unitX * 25;
+            const endY = toNode.y - unitY * 25;
+            
+            // Draw the line
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = isActive ? primaryColor : blackColor;
+            ctx.lineWidth = isActive ? 4 : 2;
+            ctx.stroke();
+            
+            // Calculate angle for the arrow head
+            const angle = Math.atan2(dy, dx);
+            
+            // Draw arrowhead
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(
+                endX - headSize * Math.cos(angle - Math.PI / 6),
+                endY - headSize * Math.sin(angle - Math.PI / 6)
+            );
+            ctx.lineTo(
+                endX - headSize * Math.cos(angle + Math.PI / 6),
+                endY - headSize * Math.sin(angle + Math.PI / 6)
+            );
+            ctx.closePath();
+            ctx.fillStyle = isActive ? primaryColor : blackColor;
+            ctx.fill();
+        }
+        
+        // Draw complete graph
+        function drawGraph(ctx, edges, activeEdge = -1, activeNode = -1) {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            
+            // Draw edges
+            edges.forEach((edge, index) => {
+                const fromNode = nodes[edge.from];
+                const toNode = nodes[edge.to];
+                drawEdge(ctx, fromNode, toNode, index === activeEdge);
+            });
+            
+            // Draw nodes
+            nodes.forEach((node, index) => {
+                drawNode(ctx, node, index === activeNode);
+            });
+        }
+        
+        // Initial draw
+        drawGraph(cycleCtx, cycleEdges);
+        drawGraph(noCycleCtx, noCycleEdges);
+        
+        // Navigation functions
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const explanationElement = document.getElementById('explanation');
+        
+        prevBtn.addEventListener('click', () => {
+            animationStep--;
+            updateAnimation();
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            animationStep++;
+            updateAnimation();
+        });
+        
+        function updateAnimation() {
+            // Update navigation buttons
+            prevBtn.disabled = animationStep === 0;
+            nextBtn.disabled = animationStep === totalSteps - 1;
+            
+            // Update explanation text
+            explanationElement.innerHTML = explanations[animationStep];
+            
+            // Reset active elements
+            activeEdgeCycle = -1;
+            activeEdgeNoCycle = -1;
+            let activeNodeCycle = -1;
+            let activeNodeNoCycle = -1;
+            
+            // Set active elements based on animation step
+            if (animationStep === 1) {
+                activeEdgeCycle = 0;
+                activeNodeCycle = 0;
+            } else if (animationStep === 2) {
+                activeEdgeCycle = 1;
+                activeNodeCycle = 1;
+            } else if (animationStep === 3) {
+                activeEdgeCycle = 2;
+                activeNodeCycle = 2;
+            }
+            
+            // Redraw graphs
+            drawGraph(cycleCtx, cycleEdges, activeEdgeCycle, activeNodeCycle);
+            drawGraph(noCycleCtx, noCycleEdges, activeEdgeNoCycle, activeNodeNoCycle);
+        }
+    </script>
+</body>
+</html>
