@@ -3,54 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maze Visualization</title>
+    <title>BFS Maze Solver Visualization</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #FFFFFF;
             margin: 0;
             padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: white;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            min-height: 100vh;
         }
-        
-        h1 {
-            color: #000000;
+
+        .controls {
             margin-bottom: 20px;
         }
-        
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            max-width: 800px;
-            width: 100%;
+
+        button {
+            background-color: #ff4800;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 0 10px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            border-radius: 4px;
         }
-        
-        .explanation {
-            margin-bottom: 20px;
-            color: #000000;
-            text-align: center;
-            max-width: 600px;
+
+        button:hover:not(:disabled) {
+            opacity: 0.8;
         }
-        
+
+        button:disabled {
+            background-color: #1c1d20;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .maze-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 20px 0;
+            display: inline-block;
+            border: 2px solid #1c1d20;
         }
-        
+
         .maze {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-gap: 4px;
-            margin: 20px 0;
+            grid-template-columns: repeat(4, 60px);
+            gap: 1px;
+            background-color: #1c1d20;
+            padding: 1px;
         }
-        
+
         .cell {
             width: 60px;
             height: 60px;
@@ -58,251 +61,290 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 18px;
-            border: 2px solid #000000;
-            transition: all 0.3s ease;
+            font-size: 14px;
         }
-        
+
         .wall {
-            background-color: #000000;
-            color: #FFFFFF;
+            background-color: #1c1d20;
+            color: white;
         }
-        
-        .path {
-            background-color: #FFFFFF;
-            color: #000000;
+
+        .empty {
+            background-color: white;
+            color: #1c1d20;
         }
-        
-        .start {
-            background-color: #FF4800;
-            color: #FFFFFF;
+
+        .current {
+            background-color: #ff4800;
+            color: white;
         }
-        
-        .end {
-            background-color: #FF4800;
-            color: #FFFFFF;
+
+        .visited {
+            background-color: #ffccb3;
+            color: #1c1d20;
         }
-        
-        .solution-path {
-            background-color: #FD9F78;
-            color: #000000;
+
+        .queued {
+            background-color: #ffe0d6;
+            color: #1c1d20;
         }
-        
-        .nav-buttons {
-            display: flex;
+
+        .final-path {
+            background-color: #ff4800;
+            color: white;
+        }
+
+        .step-info {
             margin-top: 20px;
-            gap: 20px;
-        }
-        
-        button {
-            padding: 10px 20px;
-            background-color: #FF4800;
-            color: #FFFFFF;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-        
-        button:hover {
-            background-color: #FD9F78;
-        }
-        
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        
-        .legend {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .legend-color {
-            width: 20px;
-            height: 20px;
-            border: 1px solid #000000;
-        }
-        
-        .step-counter {
-            margin: 10px 0;
-            font-weight: bold;
-            color: #000000;
+            font-size: 18px;
+            color: #1c1d20;
+            text-align: center;
+            min-height: 50px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Maze Visualization</h1>
-        
-        <div class="explanation">
-            <p id="explanation-text">Welcome to Maze Visualization! We have a 4x4 grid where 0 represents an open path and 1 represents a wall. The goal is to find a path from the start position (0,0) to the destination (3,3) moving only horizontally or vertically.</p>
-        </div>
-        
-        <div class="step-counter">Step <span id="current-step">1</span> of <span id="total-steps">5</span></div>
-        
-        <div class="maze-container">
-            <div class="maze" id="maze-grid">
-                <!-- Maze cells will be generated by JavaScript -->
-            </div>
-        </div>
-        
-        <div class="legend">
-            <div class="legend-item">
-                <div class="legend-color start"></div>
-                <span>Start/End</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color wall"></div>
-                <span>Wall (1)</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color path"></div>
-                <span>Path (0)</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color solution-path"></div>
-                <span>Solution Path</span>
-            </div>
-        </div>
-        
-        <div class="nav-buttons">
-            <button id="prev-btn" disabled>Previous</button>
-            <button id="next-btn">Next</button>
-        </div>
+    <div class="controls">
+        <button id="prevBtn">Previous</button>
+        <button id="nextBtn">Next</button>
     </div>
-    
+
+    <div class="maze-container">
+        <div class="maze" id="maze"></div>
+    </div>
+
+    <div class="step-info" id="stepInfo">Click Next to start BFS maze solving</div>
+
     <script>
-        // Define maze
         const maze = [
-            [0, 1, 1, 1],
-            [0, 0, 1, 1],
-            [1, 0, 0, 1],
-            [1, 1, 0, 0]
+            [0, 1, 0, 0],
+            [0, 1, 0, 1],
+            [0, 0, 0, 1],
+            [1, 0, 0, 0]
         ];
-        
-        // Define the solution path steps (coordinates)
-        const solutionSteps = [
-            [], // Step 1: Empty (just show the maze)
-            [[0, 0]], // Step 2: Start position
-            [[0, 0], [1, 0]], // Step 3: Move down
-            [[0, 0], [1, 0], [1, 1]], // Step 4: Move right
-            [[0, 0], [1, 0], [1, 1], [2, 1], [2, 2], [3, 2], [3, 3]] // Step 5: Complete path
-        ];
-        
-        // Define explanations for each step
-        const explanations = [
-            "This is our 4x4 maze. The cells marked with 0 are paths we can travel through, while cells marked with 1 are walls we cannot pass. We need to find a path from the top-left (0,0) to the bottom-right (3,3).",
-            "We start at position (0,0), the top-left corner of the maze. This is our starting point.",
-            "From the start, we can move down to position (1,0) as this cell is open (value 0).",
-            "Now we can move right to position (1,1) as this cell is also open (value 0).",
-            "Following the path of open cells, we can move down to (2,1), then right to (2,2), then down to (3,2), and finally right to (3,3), which is our destination. The highlighted path shows the complete solution."
-        ];
-        
-        let currentStep = 0;
-        const totalSteps = solutionSteps.length;
-        
-        // Initialize the maze grid
-        function initMaze() {
-            const mazeGrid = document.getElementById('maze-grid');
-            mazeGrid.innerHTML = '';
+
+        let steps = [];
+        let currentStep = -1;
+        let isInitialized = false;
+
+        function solveMazeBFS() {
+            const rows = maze.length;
+            const cols = maze[0].length;
             
-            for (let i = 0; i < 4; i++) {
-                for (let j = 0; j < 4; j++) {
+            steps = [];
+            const queue = [[0, 0, [[0, 0]]]]; // [row, col, path]
+            const visited = new Set();
+            visited.add('0,0');
+            
+            steps.push({
+                type: 'start',
+                current: [0, 0],
+                queue: [[0, 0, [[0, 0]]]],
+                visited: new Set(['0,0']),
+                message: 'Starting BFS from (0,0)'
+            });
+
+            const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+
+            while (queue.length > 0) {
+                const [row, col, path] = queue.shift();
+                
+                steps.push({
+                    type: 'process',
+                    current: [row, col],
+                    queue: copyQueue(queue),
+                    visited: new Set(visited),
+                    currentPath: copyPath(path),
+                    message: `Processing cell (${row}, ${col})`
+                });
+
+                for (let i = 0; i < directions.length; i++) {
+                    const dr = directions[i][0];
+                    const dc = directions[i][1];
+                    const newRow = row + dr;
+                    const newCol = col + dc;
+                    const key = `${newRow},${newCol}`;
+
+                    if (newRow >= 0 && newRow < rows && 
+                        newCol >= 0 && newCol < cols && 
+                        !visited.has(key) && 
+                        maze[newRow][newCol] === 0) {
+                        
+                        const newPath = [...path, [newRow, newCol]];
+                        
+                        if (newRow === rows - 1 && newCol === cols - 1) {
+                            steps.push({
+                                type: 'found',
+                                current: [newRow, newCol],
+                                queue: copyQueue(queue),
+                                visited: new Set(visited),
+                                finalPath: copyPath(newPath),
+                                message: `Found destination! Shortest path has ${newPath.length} steps`
+                            });
+                            isInitialized = true;
+                            return;
+                        }
+
+                        queue.push([newRow, newCol, newPath]);
+                        visited.add(key);
+                        
+                        steps.push({
+                            type: 'explore',
+                            current: [row, col],
+                            newCell: [newRow, newCol],
+                            queue: copyQueue(queue),
+                            visited: new Set(visited),
+                            message: `Added (${newRow}, ${newCol}) to queue`
+                        });
+                    }
+                }
+            }
+
+            steps.push({
+                type: 'no-path',
+                current: null,
+                queue: [],
+                visited: new Set(visited),
+                message: 'No path found to destination'
+            });
+            
+            isInitialized = true;
+        }
+
+        function copyQueue(queue) {
+            return queue.map(item => [item[0], item[1], copyPath(item[2])]);
+        }
+
+        function copyPath(path) {
+            return path.map(pos => [pos[0], pos[1]]);
+        }
+
+        function renderMaze() {
+            const mazeElement = document.getElementById('maze');
+            mazeElement.innerHTML = '';
+
+            const rows = maze.length;
+            const cols = maze[0].length;
+            let currentStepData = null;
+            
+            if (currentStep >= 0 && currentStep < steps.length) {
+                currentStepData = steps[currentStep];
+            }
+
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
                     const cell = document.createElement('div');
-                    cell.className = maze[i][j] === 1 ? 'cell wall' : 'cell path';
-                    cell.textContent = maze[i][j];
-                    cell.dataset.row = i;
-                    cell.dataset.col = j;
-                    mazeGrid.appendChild(cell);
+                    cell.className = 'cell';
+
+                    if (maze[i][j] === 1) {
+                        cell.classList.add('wall');
+                        cell.textContent = '█';
+                    } else {
+                        cell.classList.add('empty');
+                        
+                        if (currentStepData) {
+                            const key = `${i},${j}`;
+                            
+                            if (currentStepData.type === 'found') {
+                                let isInFinalPath = false;
+                                for (let p = 0; p < currentStepData.finalPath.length; p++) {
+                                    if (currentStepData.finalPath[p][0] === i && currentStepData.finalPath[p][1] === j) {
+                                        isInFinalPath = true;
+                                        break;
+                                    }
+                                }
+                                if (isInFinalPath) {
+                                    cell.classList.remove('empty');
+                                    cell.classList.add('final-path');
+                                    cell.textContent = '●';
+                                }
+                            } else {
+                                if (currentStepData.current && 
+                                    currentStepData.current[0] === i && 
+                                    currentStepData.current[1] === j) {
+                                    cell.classList.remove('empty');
+                                    cell.classList.add('current');
+                                    cell.textContent = '◉';
+                                } else if (currentStepData.visited && currentStepData.visited.has(key)) {
+                                    cell.classList.remove('empty');
+                                    cell.classList.add('visited');
+                                    cell.textContent = '·';
+                                } else if (currentStepData.queue) {
+                                    let isInQueue = false;
+                                    for (let q = 0; q < currentStepData.queue.length; q++) {
+                                        if (currentStepData.queue[q][0] === i && currentStepData.queue[q][1] === j) {
+                                            isInQueue = true;
+                                            break;
+                                        }
+                                    }
+                                    if (isInQueue) {
+                                        cell.classList.remove('empty');
+                                        cell.classList.add('queued');
+                                        cell.textContent = '○';
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (i === 0 && j === 0 && !cell.classList.contains('current') && !cell.classList.contains('final-path')) {
+                        cell.textContent = 'S';
+                    }
+                    
+                    if (i === rows - 1 && j === cols - 1 && !cell.classList.contains('current') && !cell.classList.contains('final-path')) {
+                        cell.textContent = 'E';
+                    }
+
+                    mazeElement.appendChild(cell);
                 }
             }
-            
-            // Update step counter
-            document.getElementById('current-step').textContent = currentStep + 1;
-            document.getElementById('total-steps').textContent = totalSteps;
-            
-            // Update explanation
-            document.getElementById('explanation-text').textContent = explanations[currentStep];
-            
-            updateMazeVisualization();
         }
-        
-        // Update the maze visualization based on current step
-        function updateMazeVisualization() {
-            // Reset all cells to their original state
-            const cells = document.querySelectorAll('.cell');
-            cells.forEach(cell => {
-                const row = parseInt(cell.dataset.row);
-                const col = parseInt(cell.dataset.col);
-                
-                if (maze[row][col] === 1) {
-                    cell.className = 'cell wall';
-                } else {
-                    cell.className = 'cell path';
-                }
-                
-                cell.textContent = maze[row][col];
-            });
-            
-            // Always mark start and end positions
-            markCell(0, 0, 'start');
-            markCell(3, 3, 'end');
-            
-            // Mark solution path for current step
-            const currentSolution = solutionSteps[currentStep];
-            currentSolution.forEach(([row, col]) => {
-                // Don't override start and end cells
-                if ((row === 0 && col === 0) || (row === 3 && col === 3)) return;
-                markCell(row, col, 'solution-path');
-            });
-            
-            // Update explanation
-            document.getElementById('explanation-text').textContent = explanations[currentStep];
-            
-            // Update step counter
-            document.getElementById('current-step').textContent = currentStep + 1;
-        }
-        
-        // Helper function to mark a cell with a specific class
-        function markCell(row, col, className) {
-            const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
-            if (cell) {
-                cell.className = `cell ${className}`;
+
+        function updateInfo() {
+            const stepInfo = document.getElementById('stepInfo');
+            if (currentStep >= 0 && currentStep < steps.length) {
+                const step = steps[currentStep];
+                stepInfo.textContent = `Step ${currentStep + 1}/${steps.length}: ${step.message}`;
+            } else {
+                stepInfo.textContent = 'Click Next to start BFS maze solving';
             }
         }
-        
-        // Event listeners for navigation buttons
-        document.getElementById('prev-btn').addEventListener('click', () => {
-            if (currentStep > 0) {
-                currentStep--;
-                updateMazeVisualization();
-                document.getElementById('next-btn').disabled = false;
-                document.getElementById('prev-btn').disabled = currentStep === 0;
-            }
-        });
-        
-        document.getElementById('next-btn').addEventListener('click', () => {
-            if (currentStep < totalSteps - 1) {
+
+        function updateButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.disabled = currentStep <= -1;
+            nextBtn.disabled = isInitialized && currentStep >= steps.length - 1;
+        }
+
+        function nextStep() {
+            if (!isInitialized) {
+                solveMazeBFS();
+                currentStep = 0;
+            } else if (currentStep < steps.length - 1) {
                 currentStep++;
-                updateMazeVisualization();
-                document.getElementById('prev-btn').disabled = false;
-                document.getElementById('next-btn').disabled = currentStep === totalSteps - 1;
             }
-        });
-        
-        // Initialize the maze
-        window.onload = initMaze;
+            renderMaze();
+            updateInfo();
+            updateButtons();
+        }
+
+        function prevStep() {
+            if (currentStep > -1) {
+                currentStep--;
+                renderMaze();
+                updateInfo();
+                updateButtons();
+            }
+        }
+
+        document.getElementById('nextBtn').onclick = nextStep;
+        document.getElementById('prevBtn').onclick = prevStep;
+
+        renderMaze();
+        updateInfo();
+        updateButtons();
     </script>
 </body>
 </html>
