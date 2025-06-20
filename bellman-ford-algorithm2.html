@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bellman Ford Algorithm</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .graph-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        svg {
+            border: 1px solid #FD9F78;
+            border-radius: 8px;
+            background-color: #FFFFFF;
+        }
+
+        .explanation {
+            background-color: #FFFFFF;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .table-container {
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #FD9F78;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+
+        .infinity {
+            font-style: italic;
+        }
+
+        .updated {
+            background-color: #FD9F78;
+            color: #000000;
+            transition: background-color 0.5s ease;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #FD9F78;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .current-step {
+            font-weight: bold;
+            margin: 10px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bellman Ford Algorithm Visualization</h1>
+        
+        <div class="explanation" id="explanation">
+            <p>The Bellman Ford algorithm finds the shortest path from a source vertex to all other vertices in a weighted graph. It can handle graphs with negative weight edges (unlike Dijkstra's algorithm).</p>
+            <p>In this visualization, we start from vertex A as our source.</p>
+        </div>
+
+        <div class="graph-container">
+            <svg width="500" height="300" id="graph"></svg>
+        </div>
+
+        <div class="current-step" id="current-step">Step 0: Initialize distances</div>
+
+        <div class="table-container">
+            <table id="distance-table">
+                <thead>
+                    <tr>
+                        <th>Step</th>
+                        <th>A</th>
+                        <th>B</th>
+                        <th>C</th>
+                        <th>D</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <!-- Table will be filled by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="nav-buttons">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Graph structure and Bellman Ford algorithm simulation
+        const vertices = ['A', 'B', 'C', 'D'];
+        const edges = [
+            { from: 'A', to: 'B', weight: 6 },
+            { from: 'A', to: 'C', weight: 4 },
+            { from: 'B', to: 'C', weight: -2 },
+            { from: 'B', to: 'D', weight: 3 },
+            { from: 'C', to: 'D', weight: 5 },
+            { from: 'D', to: 'B', weight: -1 }
+        ];
+
+        // Calculate positions for the graph
+        const positions = {
+            'A': { x: 100, y: 150 },
+            'B': { x: 250, y: 80 },
+            'C': { x: 250, y: 220 },
+            'D': { x: 400, y: 150 }
+        };
+
+        // Steps of the algorithm for animation
+        const steps = [
+            {
+                description: "Initialize distances: A = 0 (source), all others = ∞",
+                distances: { 'A': 0, 'B': Infinity, 'C': Infinity, 'D': Infinity },
+                updated: []
+            },
+            // First iteration (i=1)
+            {
+                description: "Iteration 1: Process edge A→B",
+                distances: { 'A': 0, 'B': 6, 'C': Infinity, 'D': Infinity },
+                updated: ['B']
+            },
+            {
+                description: "Iteration 1: Process edge A→C",
+                distances: { 'A': 0, 'B': 6, 'C': 4, 'D': Infinity },
+                updated: ['C']
+            },
+            {
+                description: "Iteration 1: Process edge B→C (no update as 4 < 6+(-2))",
+                distances: { 'A': 0, 'B': 6, 'C': 4, 'D': Infinity },
+                updated: []
+            },
+            {
+                description: "Iteration 1: Process edge B→D",
+                distances: { 'A': 0, 'B': 6, 'C': 4, 'D': 9 },
+                updated: ['D']
+            },
+            {
+                description: "Iteration 1: Process edge C→D",
+                distances: { 'A': 0, 'B': 6, 'C': 4, 'D': 9 },
+                updated: []
+            },
+            {
+                description: "Iteration 1: Process edge D→B (no update as 6 < 9+(-1))",
+                distances: { 'A': 0, 'B': 6, 'C': 4, 'D': 9 },
+                updated: []
+            },
+            // Second iteration (i=2)
+            {
+                description: "Iteration 2: Process edge A→B (no update)",
+                distances: { 'A': 0, 'B': 6, 'C': 4, 'D': 9 },
+                updated: []
+            },
+            {
+                description: "Iteration 2: Process edge A→C (no update)",
+                distances: { 'A': 0, 'B': 6, 'C': 4, 'D': 9 },
+                updated: []
+            },
+            {
+                description: "Iteration 2: Process edge B→C",
+                distances: { 'A': 0, 'B': 6, 'C': 4, 'D': 9 },
+                updated: []
+            },
+            {
+                description: "Iteration 2: Process edge B→D (no update)",
+                distances: { 'A': 0, 'B': 6, 'C': 4, 'D': 9 },
+                updated: []
+            },
+            {
+                description: "Iteration 2: Process edge C→D",
+                distances: { 'A': 0, 'B': 6, 'C': 4, 'D': 9 },
+                updated: []
+            },
+            {
+                description: "Iteration 2: Process edge D→B",
+                distances: { 'A': 0, 'B': 8, 'C': 4, 'D': 9 },
+                updated: ['B']
+            },
+            // Third iteration (i=3)
+            {
+                description: "Iteration 3: Process edge A→B (no update)",
+                distances: { 'A': 0, 'B': 8, 'C': 4, 'D': 9 },
+                updated: []
+            },
+            {
+                description: "Iteration 3: Process edge A→C (no update)",
+                distances: { 'A': 0, 'B': 8, 'C': 4, 'D': 9 },
+                updated: []
+            },
+            {
+                description: "Iteration 3: Process edge B→C",
+                distances: { 'A': 0, 'B': 8, 'C': 4, 'D': 9 },
+                updated: []
+            },
+            {
+                description: "Iteration 3: Process edge B→D (no update)",
+                distances: { 'A': 0, 'B': 8, 'C': 4, 'D': 9 },
+                updated: []
+            },
+            {
+                description: "Iteration 3: Process edge C→D",
+                distances: { 'A': 0, 'B': 8, 'C': 4, 'D': 9 },
+                updated: []
+            },
+            {
+                description: "Iteration 3: Process edge D→B",
+                distances: { 'A': 0, 'B': 8, 'C': 4, 'D': 9 },
+                updated: []
+            },
+            {
+                description: "Final distances: A = 0, B = 8, C = 4, D = 9",
+                distances: { 'A': 0, 'B': 8, 'C': 4, 'D': 9 },
+                updated: []
+            }
+        ];
+
+        let currentStep = 0;
+        
+        // Draw the graph
+        function drawGraph() {
+            const svg = document.getElementById('graph');
+            svg.innerHTML = '';
+
+            // Draw edges
+            edges.forEach(edge => {
+                const from = positions[edge.from];
+                const to = positions[edge.to];
+                
+                // Calculate the direction vector
+                const dx = to.x - from.x;
+                const dy = to.y - from.y;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                
+                // Normalize the direction vector
+                const nx = dx / length;
+                const ny = dy / length;
+                
+                // Calculate the starting and ending points (adjusted for the circle radius)
+                const radius = 25;
+                const startX = from.x + nx * radius;
+                const startY = from.y + ny * radius;
+                const endX = to.x - nx * radius;
+                const endY = to.y - ny * radius;
+                
+                // Create the line
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', startX);
+                line.setAttribute('y1', startY);
+                line.setAttribute('x2', endX);
+                line.setAttribute('y2', endY);
+                line.setAttribute('stroke', '#000000');
+                line.setAttribute('stroke-width', '2');
+                svg.appendChild(line);
+                
+                // Create arrowhead
+                const arrowSize = 8;
+                const angle = Math.atan2(dy, dx);
+                const arrowX1 = endX - arrowSize * Math.cos(angle - Math.PI / 6);
+                const arrowY1 = endY - arrowSize * Math.sin(angle - Math.PI / 6);
+                const arrowX2 = endX - arrowSize * Math.cos(angle + Math.PI / 6);
+                const arrowY2 = endY - arrowSize * Math.sin(angle + Math.PI / 6);
+                
+                const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                arrow.setAttribute('points', `${endX},${endY} ${arrowX1},${arrowY1} ${arrowX2},${arrowY2}`);
+                arrow.setAttribute('fill', '#000000');
+                svg.appendChild(arrow);
+                
+                // Add weight text
+                const textX = (startX + endX) / 2;
+                const textY = (startY + endY) / 2 - 10;
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', textX);
+                text.setAttribute('y', textY);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('fill', '#FF4800');
+                text.setAttribute('font-weight', 'bold');
+                text.textContent = edge.weight;
+                svg.appendChild(text);
+            });
+
+            // Draw vertices
+            for (const [vertex, pos] of Object.entries(positions)) {
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', pos.x);
+                circle.setAttribute('cy', pos.y);
+                circle.setAttribute('r', 25);
+                circle.setAttribute('fill', '#FD9F78');
+                circle.setAttribute('stroke', '#FF4800');
+                circle.setAttribute('stroke-width', '2');
+                svg.appendChild(circle);
+                
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', pos.x);
+                text.setAttribute('y', pos.y + 5);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('fill', '#000000');
+                text.setAttribute('font-weight', 'bold');
+                text.textContent = vertex;
+                svg.appendChild(text);
+            }
+        }
+
+        // Update the distance table
+        function updateTable() {
+            const tableBody = document.getElementById('table-body');
+            tableBody.innerHTML = '';
+            
+            // Add all steps up to current step
+            for (let i = 0; i <= currentStep; i++) {
+                const step = steps[i];
+                const row = document.createElement('tr');
+                
+                // Add step number
+                const stepCell = document.createElement('td');
+                stepCell.textContent = i;
+                row.appendChild(stepCell);
+                
+                // Add distances for each vertex
+                for (const vertex of vertices) {
+                    const cell = document.createElement('td');
+                    if (step.distances[vertex] === Infinity) {
+                        cell.innerHTML = '<span class="infinity">∞</span>';
+                    } else {
+                        cell.textContent = step.distances[vertex];
+                    }
+                    
+                    // Highlight updated cells
+                    if (step.updated.includes(vertex)) {
+                        cell.classList.add('updated');
+                    }
+                    
+                    row.appendChild(cell);
+                }
+                
+                tableBody.appendChild(row);
+            }
+        }
+
+        // Update the explanation
+        function updateExplanation() {
+            const explanation = document.getElementById('explanation');
+            const currentStepDisplay = document.getElementById('current-step');
+            currentStepDisplay.textContent = steps[currentStep].description;
+            
+            // Add specific explanations based on the step
+            if (currentStep === 0) {
+                explanation.innerHTML = `
+                    <p>The Bellman Ford algorithm finds the shortest path from a source vertex to all other vertices in a weighted graph.</p>
+                    <p>First, we initialize the distance to the source vertex (A) as 0 and all other distances as infinity.</p>
+                `;
+            } else if (currentStep === steps.length - 1) {
+                explanation.innerHTML = `
+                    <p>After all iterations, we have found the shortest path from A to all other vertices.</p>
+                    <p>The final distances are: A = 0, B = 8, C = 4, D = 9.</p>
+                    <p>This means the shortest path from A to B has length 8, from A to C has length 4, and from A to D has length 9.</p>
+                `;
+            } else {
+                const iterationNum = Math.floor((currentStep - 1) / 6) + 1;
+                explanation.innerHTML = `
+                    <p>In iteration ${iterationNum}, we're checking if we can improve any of the current shortest paths by considering one of the edges.</p>
+                    <p>For each edge (u,v) with weight w, we check if distance[v] > distance[u] + w. If so, we update distance[v].</p>
+                    <p>${steps[currentStep].description}</p>
+                `;
+            }
+        }
+
+        // Update the navigation buttons
+        function updateButtons() {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+
+        // Update everything
+        function updateVisualization() {
+            updateTable();
+            updateExplanation();
+            updateButtons();
+        }
+
+        // Event listeners for navigation buttons
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        });
+
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+
+        // Initialize the visualization
+        drawGraph();
+        updateVisualization();
+    </script>
+</body>
+</html>
