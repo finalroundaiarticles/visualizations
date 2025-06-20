@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimum Spanning Tree Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        canvas {
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+        }
+        .explanation {
+            background-color: #FFF;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 10px;
+        }
+        button {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .step-counter {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+            color: #FF4800;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Minimum Spanning Tree Animation</h1>
+        
+        <div class="explanation">
+            <p>A <strong>Minimum Spanning Tree (MST)</strong> is a subset of edges from a connected, weighted graph that connects all vertices together with the minimum possible total edge weight, without creating any cycles.</p>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #000000;"></div>
+                <span>Original Edge</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FF4800;"></div>
+                <span>MST Edge</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FD9F78;"></div>
+                <span>Current Edge</span>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="graphCanvas" width="800" height="500"></canvas>
+        </div>
+        
+        <div class="step-counter">
+            Step: <span id="currentStep">1</span> of <span id="totalSteps">7</span>
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn">Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="explanation" id="stepExplanation">
+            <p>This is our initial weighted graph. The numbers on the edges represent their weights. Our goal is to find a tree that connects all vertices with minimum total weight.</p>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const currentStepEl = document.getElementById('currentStep');
+        const stepExplanationEl = document.getElementById('stepExplanation');
+        
+        // Graph vertices
+        const vertices = [
+            { id: 'A', x: 200, y: 100 },
+            { id: 'B', x: 400, y: 100 },
+            { id: 'C', x: 500, y: 250 },
+            { id: 'D', x: 400, y: 400 },
+            { id: 'E', x: 200, y: 400 },
+            { id: 'F', x: 100, y: 250 }
+        ];
+        
+        // Graph edges with weights
+        const edges = [
+            { from: 'A', to: 'B', weight: 4 },
+            { from: 'A', to: 'F', weight: 2 },
+            { from: 'B', to: 'C', weight: 6 },
+            { from: 'C', to: 'D', weight: 3 },
+            { from: 'D', to: 'E', weight: 5 },
+            { from: 'E', to: 'F', weight: 4 },
+            { from: 'F', to: 'B', weight: 8 },
+            { from: 'B', to: 'D', weight: 9 },
+            { from: 'A', to: 'E', weight: 7 }
+        ];
+        
+        // Sort edges by weight for Kruskal's algorithm
+        const sortedEdges = [...edges].sort((a, b) => a.weight - b.weight);
+        
+        // MST animation steps
+        const steps = [
+            {
+                title: "Initial Graph",
+                explanation: "This is our initial weighted graph. The numbers on the edges represent their weights. Our goal is to find a tree that connects all vertices with minimum total weight.",
+                mstEdges: [],
+                currentEdge: null
+            },
+            {
+                title: "First Edge",
+                explanation: "We start by selecting the edge with the lowest weight: A-F with weight 2.",
+                mstEdges: [{ from: 'A', to: 'F', weight: 2 }],
+                currentEdge: { from: 'A', to: 'F', weight: 2 }
+            },
+            {
+                title: "Second Edge",
+                explanation: "Next, we select A-B with weight 4. It doesn't form a cycle with our existing tree.",
+                mstEdges: [
+                    { from: 'A', to: 'F', weight: 2 },
+                    { from: 'A', to: 'B', weight: 4 }
+                ],
+                currentEdge: { from: 'A', to: 'B', weight: 4 }
+            },
+            {
+                title: "Third Edge",
+                explanation: "The next lowest weight edge is E-F with weight 4. It doesn't form a cycle, so we add it.",
+                mstEdges: [
+                    { from: 'A', to: 'F', weight: 2 },
+                    { from: 'A', to: 'B', weight: 4 },
+                    { from: 'E', to: 'F', weight: 4 }
+                ],
+                currentEdge: { from: 'E', to: 'F', weight: 4 }
+            },
+            {
+                title: "Fourth Edge",
+                explanation: "Next is C-D with weight 3. It doesn't form a cycle, so we add it.",
+                mstEdges: [
+                    { from: 'A', to: 'F', weight: 2 },
+                    { from: 'A', to: 'B', weight: 4 },
+                    { from: 'E', to: 'F', weight: 4 },
+                    { from: 'C', to: 'D', weight: 3 }
+                ],
+                currentEdge: { from: 'C', to: 'D', weight: 3 }
+            },
+            {
+                title: "Fifth Edge",
+                explanation: "Next, we consider B-C with weight 6. It connects two separate components without forming a cycle, so we add it.",
+                mstEdges: [
+                    { from: 'A', to: 'F', weight: 2 },
+                    { from: 'A', to: 'B', weight: 4 },
+                    { from: 'E', to: 'F', weight: 4 },
+                    { from: 'C', to: 'D', weight: 3 },
+                    { from: 'B', to: 'C', weight: 6 }
+                ],
+                currentEdge: { from: 'B', to: 'C', weight: 6 }
+            },
+            {
+                title: "Final MST",
+                explanation: "Our Minimum Spanning Tree is complete! It connects all vertices with a total weight of 19. Any other spanning tree would have a higher total weight.",
+                mstEdges: [
+                    { from: 'A', to: 'F', weight: 2 },
+                    { from: 'A', to: 'B', weight: 4 },
+                    { from: 'E', to: 'F', weight: 4 },
+                    { from: 'C', to: 'D', weight: 3 },
+                    { from: 'B', to: 'C', weight: 6 }
+                ],
+                currentEdge: null
+            }
+        ];
+        
+        let currentStep = 0;
+        
+        // Function to find vertex by ID
+        function findVertex(id) {
+            return vertices.find(v => v.id === id);
+        }
+        
+        // Function to draw the graph
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges
+            edges.forEach(edge => {
+                const fromVertex = findVertex(edge.from);
+                const toVertex = findVertex(edge.to);
+                
+                // Check if edge is in MST
+                const inMST = steps[currentStep].mstEdges.some(
+                    e => (e.from === edge.from && e.to === edge.to) || 
+                         (e.from === edge.to && e.to === edge.from)
+                );
+                
+                // Check if it's the current edge being considered
+                const isCurrent = steps[currentStep].currentEdge && 
+                                 ((steps[currentStep].currentEdge.from === edge.from && 
+                                   steps[currentStep].currentEdge.to === edge.to) ||
+                                  (steps[currentStep].currentEdge.from === edge.to && 
+                                   steps[currentStep].currentEdge.to === edge.from));
+                
+                // Set line style based on edge status
+                if (isCurrent) {
+                    ctx.strokeStyle = '#FD9F78';
+                    ctx.lineWidth = 4;
+                } else if (inMST) {
+                    ctx.strokeStyle = '#FF4800';
+                    ctx.lineWidth = 4;
+                } else {
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 2;
+                }
+                
+                // Draw the edge
+                ctx.beginPath();
+                ctx.moveTo(fromVertex.x, fromVertex.y);
+                ctx.lineTo(toVertex.x, toVertex.y);
+                ctx.stroke();
+                
+                // Draw the weight
+                const midX = (fromVertex.x + toVertex.x) / 2;
+                const midY = (fromVertex.y + toVertex.y) / 2;
+                
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(midX, midY, 15, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#000000';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(edge.weight.toString(), midX, midY);
+            });
+            
+            // Draw vertices
+            vertices.forEach(vertex => {
+                ctx.fillStyle = '#FF4800';
+                ctx.beginPath();
+                ctx.arc(vertex.x, vertex.y, 25, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 20px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(vertex.id, vertex.x, vertex.y);
+            });
+        }
+        
+        // Function to update the UI based on current step
+        function updateUI() {
+            currentStepEl.textContent = (currentStep + 1).toString();
+            stepExplanationEl.innerHTML = `<p>${steps[currentStep].explanation}</p>`;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+            
+            // Draw the graph
+            drawGraph();
+        }
+        
+        // Initialize
+        updateUI();
+        
+        // Event listeners for buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateUI();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateUI();
+            }
+        });
+    </script>
+</body>
+</html>
