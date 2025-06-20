@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Directed Graph Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        .graph-container {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+            position: relative;
+        }
+        .vertex {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            position: absolute;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+        .vertex:hover {
+            transform: scale(1.1);
+        }
+        .edge {
+            position: absolute;
+            height: 2px;
+            background-color: #000000;
+            transform-origin: 0 0;
+            z-index: -1;
+        }
+        .edge-weight {
+            position: absolute;
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 12px solid #000000;
+            transform-origin: 50% 50%;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            border-left: 4px solid #FF4800;
+        }
+        .step-counter {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Directed Graph Visualization</h1>
+        <div class="graph-container" id="graphContainer"></div>
+        
+        <div class="explanation" id="explanation">
+            <p>This is a directed graph with 4 vertices (0, 1, 2, 3) connected by weighted edges. Each edge has a direction and a weight value.</p>
+            <p><strong>Connections shown:</strong></p>
+            <ul>
+                <li>Vertex 0 to Vertex 1 with weight 5</li>
+                <li>Vertex 0 to Vertex 3 with weight 10</li>
+                <li>Vertex 1 to Vertex 2 with weight 3</li>
+                <li>Vertex 2 to Vertex 3 with weight 1</li>
+            </ul>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" class="nav-btn" disabled>Previous</button>
+            <button id="nextBtn" class="nav-btn">Next</button>
+        </div>
+        
+        <div class="step-counter">
+            Step <span id="currentStep">1</span> of <span id="totalSteps">5</span>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const graphContainer = document.getElementById('graphContainer');
+            const explanationElement = document.getElementById('explanation');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const currentStepElement = document.getElementById('currentStep');
+            const totalStepsElement = document.getElementById('totalSteps');
+            
+            // Define graph vertices positions
+            const vertices = [
+                { id: 0, x: 100, y: 100 },
+                { id: 1, x: 300, y: 100 },
+                { id: 2, x: 300, y: 300 },
+                { id: 3, x: 100, y: 300 }
+            ];
+            
+            // Define edges with weights
+            const edges = [
+                { from: 0, to: 1, weight: 5 },
+                { from: 0, to: 3, weight: 10 },
+                { from: 1, to: 2, weight: 3 },
+                { from: 2, to: 3, weight: 1 }
+            ];
+            
+            let currentStep = 1;
+            const totalSteps = 5;
+            totalStepsElement.textContent = totalSteps;
+            
+            // Steps for animation
+            const steps = [
+                {
+                    explanation: `<p>This is a directed graph with 4 vertices (0, 1, 2, 3) connected by weighted edges. Each edge has a direction and a weight value.</p>
+                    <p><strong>Connections shown:</strong></p>
+                    <ul>
+                        <li>Vertex 0 to Vertex 1 with weight 5</li>
+                        <li>Vertex 0 to Vertex 3 with weight 10</li>
+                        <li>Vertex 1 to Vertex 2 with weight 3</li>
+                        <li>Vertex 2 to Vertex 3 with weight 1</li>
+                    </ul>`,
+                    highlightEdge: null,
+                    highlightVertex: null
+                },
+                {
+                    explanation: `<p>Let's examine edge from Vertex 0 to Vertex 1:</p>
+                    <p>This edge has a weight of 5. In a directed graph, the edge points from one vertex to another, showing a one-way relationship.</p>
+                    <p>The weight could represent distance, cost, or any other measure between these two vertices.</p>`,
+                    highlightEdge: { from: 0, to: 1 },
+                    highlightVertex: null
+                },
+                {
+                    explanation: `<p>Next, we have edge from Vertex 0 to Vertex 3:</p>
+                    <p>This edge has a weight of 10, which is higher than the previous edge. This could mean it's more "expensive" to travel directly from Vertex 0 to Vertex 3.</p>`,
+                    highlightEdge: { from: 0, to: 3 },
+                    highlightVertex: null
+                },
+                {
+                    explanation: `<p>The edge from Vertex 1 to Vertex 2 has a weight of 3.</p>
+                    <p>Notice how edges only go in one direction - there's no direct way to go from Vertex 2 back to Vertex 1 in this graph.</p>`,
+                    highlightEdge: { from: 1, to: 2 },
+                    highlightVertex: null
+                },
+                {
+                    explanation: `<p>Finally, the edge from Vertex 2 to Vertex 3 has a weight of 1.</p>
+                    <p>This is the smallest weight in our graph. An interesting observation: we can go from Vertex 0 to Vertex 3 directly with weight 10, or we can go from 0→1→2→3 with a total weight of 5+3+1 = 9, which is less expensive!</p>
+                    <p>This is the kind of insight that makes weighted graphs useful for finding optimal paths.</p>`,
+                    highlightEdge: { from: 2, to: 3 },
+                    highlightVertex: null
+                }
+            ];
+            
+            function drawGraph() {
+                graphContainer.innerHTML = '';
+                
+                // Draw edges
+                edges.forEach(edge => {
+                    const fromVertex = vertices.find(v => v.id === edge.from);
+                    const toVertex = vertices.find(v => v.id === edge.to);
+                    
+                    // Calculate edge properties
+                    const deltaX = toVertex.x - fromVertex.x;
+                    const deltaY = toVertex.y - fromVertex.y;
+                    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                    const angle = Math.atan2(deltaY, deltaX);
+                    
+                    // Account for vertex radius in length calculation
+                    const adjustedLength = distance - 50; // subtract diameter
+                    
+                    // Create edge
+                    const edgeElement = document.createElement('div');
+                    edgeElement.className = 'edge';
+                    edgeElement.style.width = `${adjustedLength}px`;
+                    edgeElement.style.left = `${fromVertex.x + 25}px`;
+                    edgeElement.style.top = `${fromVertex.y + 25}px`;
+                    edgeElement.style.transform = `rotate(${angle}rad)`;
+                    
+                    // Highlight the current edge if needed
+                    if (steps[currentStep - 1].highlightEdge && 
+                        steps[currentStep - 1].highlightEdge.from === edge.from && 
+                        steps[currentStep - 1].highlightEdge.to === edge.to) {
+                        edgeElement.style.backgroundColor = '#FF4800';
+                        edgeElement.style.height = '4px';
+                        edgeElement.style.zIndex = '1';
+                    }
+                    
+                    graphContainer.appendChild(edgeElement);
+                    
+                    // Create arrow
+                    const arrowElement = document.createElement('div');
+                    arrowElement.className = 'arrow';
+                    arrowElement.style.left = `${fromVertex.x + 25 + (adjustedLength - 12) * Math.cos(angle)}px`;
+                    arrowElement.style.top = `${fromVertex.y + 25 + (adjustedLength - 12) * Math.sin(angle)}px`;
+                    arrowElement.style.transform = `rotate(${angle + Math.PI/2}rad)`;
+                    
+                    if (steps[currentStep - 1].highlightEdge && 
+                        steps[currentStep - 1].highlightEdge.from === edge.from && 
+                        steps[currentStep - 1].highlightEdge.to === edge.to) {
+                        arrowElement.style.borderBottom = '12px solid #FF4800';
+                    }
+                    
+                    graphContainer.appendChild(arrowElement);
+                    
+                    // Create weight label
+                    const weightElement = document.createElement('div');
+                    weightElement.className = 'edge-weight';
+                    weightElement.textContent = edge.weight;
+                    
+                    // Position weight label in the middle of the edge
+                    const midX = fromVertex.x + 25 + (adjustedLength / 2) * Math.cos(angle);
+                    const midY = fromVertex.y + 25 + (adjustedLength / 2) * Math.sin(angle);
+                    const offset = 15; // Offset to not overlap with the edge
+                    
+                    weightElement.style.left = `${midX - 15}px`;
+                    weightElement.style.top = `${midY - 15}px`;
+                    
+                    if (steps[currentStep - 1].highlightEdge && 
+                        steps[currentStep - 1].highlightEdge.from === edge.from && 
+                        steps[currentStep - 1].highlightEdge.to === edge.to) {
+                        weightElement.style.backgroundColor = '#FF4800';
+                        weightElement.style.color = '#FFFFFF';
+                        weightElement.style.transform = 'scale(1.2)';
+                    }
+                    
+                    graphContainer.appendChild(weightElement);
+                });
+                
+                // Draw vertices
+                vertices.forEach(vertex => {
+                    const vertexElement = document.createElement('div');
+                    vertexElement.className = 'vertex';
+                    vertexElement.textContent = vertex.id;
+                    vertexElement.style.left = `${vertex.x}px`;
+                    vertexElement.style.top = `${vertex.y}px`;
+                    
+                    if (steps[currentStep - 1].highlightVertex === vertex.id) {
+                        vertexElement.style.transform = 'scale(1.2)';
+                        vertexElement.style.boxShadow = '0 0 10px rgba(255, 72, 0, 0.8)';
+                    }
+                    
+                    graphContainer.appendChild(vertexElement);
+                });
+                
+                // Update explanation
+                explanationElement.innerHTML = steps[currentStep - 1].explanation;
+                
+                // Update step counter
+                currentStepElement.textContent = currentStep;
+                
+                // Update button states
+                prevBtn.disabled = currentStep === 1;
+                nextBtn.disabled = currentStep === totalSteps;
+            }
+            
+            // Navigation buttons
+            prevBtn.addEventListener('click', function() {
+                if (currentStep > 1) {
+                    currentStep--;
+                    drawGraph();
+                }
+            });
+            
+            nextBtn.addEventListener('click', function() {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    drawGraph();
+                }
+            });
+            
+            // Initial draw
+            drawGraph();
+        });
+    </script>
+</body>
+</html>
