@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BFS vs DFS Comparison</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .comparison {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        
+        .algorithm {
+            width: 48%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .algorithm h2 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .canvas-container {
+            position: relative;
+            margin-bottom: 20px;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+        }
+        
+        canvas {
+            display: block;
+        }
+        
+        .description {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 5px;
+            color: #000000;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            width: 100%;
+        }
+        
+        .btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+            width: 100%;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 15px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BFS vs DFS - Island Traversal Comparison</h1>
+        
+        <div class="comparison">
+            <div class="algorithm">
+                <h2>Breadth-First Search (BFS)</h2>
+                <div class="canvas-container">
+                    <canvas id="bfsCanvas" width="500" height="500"></canvas>
+                </div>
+                <div class="description">
+                    <p><strong>BFS (Breadth-First Search)</strong> explores the island level by level, like expanding ripples. It visits all immediate neighbors before moving to the next level of neighbors. This results in a more even exploration pattern.</p>
+                </div>
+            </div>
+            
+            <div class="algorithm">
+                <h2>Depth-First Search (DFS)</h2>
+                <div class="canvas-container">
+                    <canvas id="dfsCanvas" width="500" height="500"></canvas>
+                </div>
+                <div class="description">
+                    <p><strong>DFS (Depth-First Search)</strong> explores the island by going as deep as possible along each path before backtracking. It follows one path to its end before exploring alternatives, resulting in a deeper, more focused exploration pattern.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #0077be;"></div>
+                <span>Water</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #8fbc8f;"></div>
+                <span>Unvisited Land</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FF4800;"></div>
+                <span>Currently Visiting</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FD9F78;"></div>
+                <span>Visited Land</span>
+            </div>
+        </div>
+        
+        <div class="btn-container">
+            <button id="prevBtn" class="btn" disabled>Previous</button>
+            <button id="nextBtn" class="btn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        const map = [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 1, 1, 0, 0, 0, 1, 0, 0],
+            [0, 1, 0, 1, 0, 0, 0, 1, 1, 0],
+            [0, 1, 1, 1, 1, 1, 0, 0, 1, 0],
+            [0, 0, 0, 0, 0, 1, 1, 1, 1, 0],
+            [0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
+            [0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        ];
+        
+        const bfsCanvas = document.getElementById('bfsCanvas');
+        const dfsCanvas = document.getElementById('dfsCanvas');
+        const bfsCtx = bfsCanvas.getContext('2d');
+        const dfsCtx = dfsCanvas.getContext('2d');
+        
+        const cellSize = 50;
+        const waterColor = '#0077be';
+        const landColor = '#8fbc8f';
+        const visitingColor = '#FF4800';
+        const visitedColor = '#FD9F78';
+        
+        // BFS traversal steps
+        const bfsSteps = [];
+        const bfsVisited = new Set();
+        
+        // Start BFS from the first land cell
+        let startRow, startCol;
+        for (let i = 0; i < map.length; i++) {
+            for (let j = 0; j < map[i].length; j++) {
+                if (map[i][j] === 1) {
+                    startRow = i;
+                    startCol = j;
+                    break;
+                }
+            }
+            if (startRow !== undefined) break;
+        }
+        
+        // BFS traversal
+        function performBFS() {
+            const queue = [[startRow, startCol]];
+            const visited = new Set();
+            const steps = [];
+            
+            while (queue.length > 0) {
+                const currentLevel = queue.length;
+                const currentLevelCells = [];
+                
+                for (let i = 0; i < currentLevel; i++) {
+                    const [row, col] = queue.shift();
+                    const key = `${row},${col}`;
+                    
+                    if (visited.has(key) || map[row][col] === 0) continue;
+                    
+                    visited.add(key);
+                    currentLevelCells.push([row, col]);
+                    
+                    // Add neighbors
+                    const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+                    for (const [dr, dc] of directions) {
+                        const newRow = row + dr;
+                        const newCol = col + dc;
+                        
+                        if (newRow >= 0 && newRow < map.length && 
+                            newCol >= 0 && newCol < map[0].length && 
+                            map[newRow][newCol] === 1 &&
+                            !visited.has(`${newRow},${newCol}`)) {
+                            queue.push([newRow, newCol]);
+                        }
+                    }
+                }
+                
+                if (currentLevelCells.length > 0) {
+                    steps.push([...currentLevelCells]);
+                }
+            }
+            
+            return steps;
+        }
+        
+        // DFS traversal
+        function performDFS() {
+            const visited = new Set();
+            const steps = [];
+            
+            function dfs(row, col) {
+                const key = `${row},${col}`;
+                
+                if (row < 0 || row >= map.length || col < 0 || col >= map[0].length || 
+                    map[row][col] === 0 || visited.has(key)) {
+                    return;
+                }
+                
+                visited.add(key);
+                steps.push([[row, col]]);
+                
+                // Visit neighbors
+                dfs(row - 1, col); // up
+                dfs(row, col + 1); // right
+                dfs(row + 1, col); // down
+                dfs(row, col - 1); // left
+            }
+            
+            dfs(startRow, startCol);
+            return steps;
+        }
+        
+        const bfsTraversalSteps = performBFS();
+        const dfsTraversalSteps = performDFS();
+        
+        let currentStep = -1;
+        const visitedBFS = new Set();
+        const visitedDFS = new Set();
+        
+        function drawGrid(ctx, visited, current = []) {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            
+            for (let row = 0; row < map.length; row++) {
+                for (let col = 0; col < map[row].length; col++) {
+                    if (map[row][col] === 0) {
+                        // Water
+                        ctx.fillStyle = waterColor;
+                    } else {
+                        // Land - check if visited
+                        const key = `${row},${col}`;
+                        if (visited.has(key)) {
+                            ctx.fillStyle = visitedColor;
+                        } else {
+                            ctx.fillStyle = landColor;
+                        }
+                    }
+                    
+                    ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+                    
+                    // Draw grid lines
+                    ctx.strokeStyle = '#FFFFFF';
+                    ctx.strokeRect(col * cellSize, row * cellSize, cellSize, cellSize);
+                }
+            }
+            
+            // Draw currently visiting cells
+            for (const [row, col] of current) {
+                ctx.fillStyle = visitingColor;
+                ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.strokeRect(col * cellSize, row * cellSize, cellSize, cellSize);
+                
+                // Draw step number
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const stepNumber = Array.from(visited).findIndex(v => v === `${row},${col}`) + 1;
+                ctx.fillText(stepNumber, col * cellSize + cellSize/2, row * cellSize + cellSize/2);
+            }
+        }
+        
+        function drawInitialState() {
+            drawGrid(bfsCtx, new Set());
+            drawGrid(dfsCtx, new Set());
+        }
+        
+        function nextStep() {
+            if (currentStep < Math.max(bfsTraversalSteps.length, dfsTraversalSteps.length) - 1) {
+                currentStep++;
+                updateCanvases();
+                document.getElementById('prevBtn').disabled = false;
+                
+                if (currentStep >= Math.max(bfsTraversalSteps.length, dfsTraversalSteps.length) - 1) {
+                    document.getElementById('nextBtn').disabled = true;
+                }
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > -1) {
+                currentStep--;
+                
+                // Reset visited sets and rebuild
+                visitedBFS.clear();
+                visitedDFS.clear();
+                
+                for (let i = 0; i <= currentStep; i++) {
+                    if (i < bfsTraversalSteps.length) {
+                        for (const [row, col] of bfsTraversalSteps[i]) {
+                            visitedBFS.add(`${row},${col}`);
+                        }
+                    }
+                    
+                    if (i < dfsTraversalSteps.length) {
+                        for (const [row, col] of dfsTraversalSteps[i]) {
+                            visitedDFS.add(`${row},${col}`);
+                        }
+                    }
+                }
+                
+                updateCanvases();
+                document.getElementById('nextBtn').disabled = false;
+                
+                if (currentStep === -1) {
+                    document.getElementById('prevBtn').disabled = true;
+                }
+            }
+        }
+        
+        function updateCanvases() {
+            // BFS
+            let currentBFS = [];
+            if (currentStep >= 0 && currentStep < bfsTraversalSteps.length) {
+                currentBFS = bfsTraversalSteps[currentStep];
+                for (const [row, col] of currentBFS) {
+                    visitedBFS.add(`${row},${col}`);
+                }
+            }
+            
+            // DFS
+            let currentDFS = [];
+            if (currentStep >= 0 && currentStep < dfsTraversalSteps.length) {
+                currentDFS = dfsTraversalSteps[currentStep];
+                for (const [row, col] of currentDFS) {
+                    visitedDFS.add(`${row},${col}`);
+                }
+            }
+            
+            drawGrid(bfsCtx, visitedBFS, currentBFS);
+            drawGrid(dfsCtx, visitedDFS, currentDFS);
+        }
+        
+        // Initialize
+        drawInitialState();
+        
+        // Add event listeners
+        document.getElementById('nextBtn').addEventListener('click', nextStep);
+        document.getElementById('prevBtn').addEventListener('click', prevStep);
+    </script>
+</body>
+</html>
