@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laplacian Matrix Construction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .animation-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .step {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .step.active {
+            opacity: 1;
+            z-index: 1;
+        }
+        
+        .graph {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        
+        .vertex {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            z-index: 2;
+        }
+        
+        .edge {
+            position: absolute;
+            background-color: #FF4800;
+            transform-origin: 0 0;
+            height: 2px;
+            z-index: 1;
+        }
+        
+        .matrix {
+            display: grid;
+            grid-template-columns: repeat(5, 50px);
+            grid-gap: 1px;
+            margin: 20px 0;
+        }
+        
+        .matrix-cell {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #000000;
+            font-weight: bold;
+        }
+        
+        .matrix-cell.highlight {
+            background-color: #FD9F78;
+        }
+        
+        .matrix-header {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .matrix-label {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .explanation {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 18px;
+            padding: 0 20px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Laplacian Matrix Construction</h1>
+        
+        <div class="animation-container" id="animation-container">
+            <!-- Step 1: Introduce the Graph -->
+            <div class="step active" id="step1">
+                <h2>Step 1: Our Example Graph</h2>
+                <div class="graph" id="graph1">
+                    <div class="vertex" style="left: 130px; top: 30px;">1</div>
+                    <div class="vertex" style="left: 230px; top: 130px;">2</div>
+                    <div class="vertex" style="left: 130px; top: 230px;">3</div>
+                    <div class="vertex" style="left: 30px; top: 130px;">4</div>
+                </div>
+                <div class="explanation">
+                    This is our graph with 4 vertices. Each vertex is connected to some other vertices by edges.
+                </div>
+            </div>
+            
+            <!-- Step 2: Show the Edges -->
+            <div class="step" id="step2">
+                <h2>Step 2: Graph with Edges</h2>
+                <div class="graph" id="graph2">
+                    <div class="vertex" style="left: 130px; top: 30px;">1</div>
+                    <div class="vertex" style="left: 230px; top: 130px;">2</div>
+                    <div class="vertex" style="left: 130px; top: 230px;">3</div>
+                    <div class="vertex" style="left: 30px; top: 130px;">4</div>
+                    <div class="edge" id="edge1-2"></div>
+                    <div class="edge" id="edge1-4"></div>
+                    <div class="edge" id="edge2-3"></div>
+                    <div class="edge" id="edge3-4"></div>
+                </div>
+                <div class="explanation">
+                    Now we see the connections between vertices:
+                    Vertex 1 is connected to vertices 2 and 4.
+                    Vertex 2 is connected to vertices 1 and 3.
+                    Vertex 3 is connected to vertices 2 and 4.
+                    Vertex 4 is connected to vertices 1 and 3.
+                </div>
+            </div>
+            
+            <!-- Step 3: Adjacency Matrix -->
+            <div class="step" id="step3">
+                <h2>Step 3: Adjacency Matrix</h2>
+                <div class="graph small" id="graph3">
+                    <div class="vertex" style="left: 130px; top: 30px;">1</div>
+                    <div class="vertex" style="left: 230px; top: 130px;">2</div>
+                    <div class="vertex" style="left: 130px; top: 230px;">3</div>
+                    <div class="vertex" style="left: 30px; top: 130px;">4</div>
+                    <div class="edge" id="edge1-2-s3"></div>
+                    <div class="edge" id="edge1-4-s3"></div>
+                    <div class="edge" id="edge2-3-s3"></div>
+                    <div class="edge" id="edge3-4-s3"></div>
+                </div>
+                <div class="matrix" id="adjacency-matrix">
+                    <div class="matrix-cell matrix-header"></div>
+                    <div class="matrix-cell matrix-header">1</div>
+                    <div class="matrix-cell matrix-header">2</div>
+                    <div class="matrix-cell matrix-header">3</div>
+                    <div class="matrix-cell matrix-header">4</div>
+                    
+                    <div class="matrix-cell matrix-label">1</div>
+                    <div class="matrix-cell">0</div>
+                    <div class="matrix-cell">1</div>
+                    <div class="matrix-cell">0</div>
+                    <div class="matrix-cell">1</div>
+                    
+                    <div class="matrix-cell matrix-label">2</div>
+                    <div class="matrix-cell">1</div>
+                    <div class="matrix-cell">0</div>
+                    <div class="matrix-cell">1</div>
+                    <div class="matrix-cell">0</div>
+                    
+                    <div class="matrix-cell matrix-label">3</div>
+                    <div class="matrix-cell">0</div>
+                    <div class="matrix-cell">1</div>
+                    <div class="matrix-cell">0</div>
+                    <div class="matrix-cell">1</div>
+                    
+                    <div class="matrix-cell matrix-label">4</div>
+                    <div class="matrix-cell">1</div>
+                    <div class="matrix-cell">0</div>
+                    <div class="matrix-cell">1</div>
+                    <div class="matrix-cell">0</div>
+                </div>
+                <div class="explanation">
+                    The adjacency matrix shows connections between vertices.
+                    A 1 at position (i,j) means vertex i is connected to vertex j.
+                    A 0 means there is no connection.
+                </div>
+            </div>
+            
+            <!-- Step 4: Degree Matrix -->
+            <div class="step" id="step4">
+                <h2>Step 4: Degree Matrix</h2>
+                <div class="graph small" id="graph4">
+                    <div class="vertex" style="left: 130px; top: 30px;">1</div>
+                    <div class="vertex" style="left: 230px; top: 130px;">2</div>
+                    <div class="vertex" style="left: 130px; top: 230px;">3</div>
+                    <div class="vertex" style="left: 30px; top: 130px;">4</div>
+                    <div class="edge" id="edge1-2-s4"></div>
+                    <div class="edge" id="edge1-4-s4"></div>
+                    <div class="edge" id="edge2-3-s4"></div>
+                    <div class="edge" id="edge3-4-s4"></div>
+                </div>
+                <div class="matrix" id="degree-matrix">
+                    <div class="matrix-cell matrix-header"></div>
+                    <div class="matrix-cell matrix-header">1</div>
+                    <div class="matrix-cell matrix-header">2</div>
+                    <div class="matrix-cell matrix-header">3</div>
+                    <div class="matrix-cell matrix-header">4</div>
+                    
+                    <div class="matrix-cell matrix-label">1</div>
+                    <div class="matrix-cell highlight">2</div>
+                    <div class="matrix-cell">0</div>
+                    <div class="matrix-cell">0</div>
+                    <div class="matrix-cell">0</div>
+                    
+                    <div class="matrix-cell matrix-label">2</div>
+                    <div class="matrix-cell">0</div>
+                    <div class="matrix-cell highlight">2</div>
+                    <div class="matrix-cell">0</div>
+                    <div class="matrix-cell">0</div>
+                    
+                    <div class="matrix-cell matrix-label">3</div>
+                    <div class="matrix-cell">0</div>
+                    <div class="matrix-cell">0</div>
+                    <div class="matrix-cell highlight">2</div>
+                    <div class="matrix-cell">0</div>
+                    
+                    <div class="matrix-cell matrix-label">4</div>
+                    <div class="matrix-cell">0</div>
+                    <div class="matrix-cell">0</div>
+                    <div class="matrix-cell">0</div>
+                    <div class="matrix-cell highlight">2</div>
+                </div>
+                <div class="explanation">
+                    The degree matrix is a diagonal matrix where each entry (i,i) shows the number of connections that vertex i has.
+                    Here, each vertex has 2 connections, so all diagonal entries are 2.
+                </div>
+            </div>
+            
+            <!-- Step 5: Laplacian Matrix Calculation -->
+            <div class="step" id="step5">
+                <h2>Step 5: Laplacian Matrix Calculation</h2>
+                <div class="explanation">
+                    Laplacian Matrix = Degree Matrix - Adjacency Matrix
+                    <br><br>
+                    For diagonal elements: Use the vertex degree (number of connections)
+                    <br>
+                    For off-diagonal elements: Use -1 if vertices are connected, 0 otherwise
+                </div>
+            </div>
+            
+            <!-- Step 6: Laplacian Matrix -->
+            <div class="step" id="step6">
+                <h2>Step 6: Laplacian Matrix</h2>
+                <div class="matrix" id="laplacian-matrix">
+                    <div class="matrix-cell matrix-header"></div>
+                    <div class="matrix-cell matrix-header">1</div>
+                    <div class="matrix-cell matrix-header">2</div>
+                    <div class="matrix-cell matrix-header">3</div>
+                    <div class="matrix-cell matrix-header">4</div>
+                    
+                    <div class="matrix-cell matrix-label">1</div>
+                    <div class="matrix-cell highlight">2</div>
+                    <div class="matrix-cell highlight">-1</div>
+                    <div class="matrix-cell">0</div>
+                    <div class="matrix-cell highlight">-1</div>
+                    
+                    <div class="matrix-cell matrix-label">2</div>
+                    <div class="matrix-cell highlight">-1</div>
+                    <div class="matrix-cell highlight">2</div>
+                    <div class="matrix-cell highlight">-1</div>
+                    <div class="matrix-cell">0</div>
+                    
+                    <div class="matrix-cell matrix-label">3</div>
+                    <div class="matrix-cell">0</div>
+                    <div class="matrix-cell highlight">-1</div>
+                    <div class="matrix-cell highlight">2</div>
+                    <div class="matrix-cell highlight">-1</div>
+                    
+                    <div class="matrix-cell matrix-label">4</div>
+                    <div class="matrix-cell highlight">-1</div>
+                    <div class="matrix-cell">0</div>
+                    <div class="matrix-cell highlight">-1</div>
+                    <div class="matrix-cell highlight">2</div>
+                </div>
+                <div class="explanation">
+                    The final Laplacian matrix:
+                    <br>
+                    - Diagonal elements (i,i) = degree of vertex i
+                    <br>
+                    - Off-diagonal elements (i,j) = -1 if vertices i and j are connected
+                    <br>
+                    - Off-diagonal elements (i,j) = 0 if vertices i and j are not connected
+                </div>
+            </div>
+            
+            <!-- Step 7: Conclusion -->
+            <div class="step" id="step7">
+                <h2>Step 7: Summary</h2>
+                <div class="graph small" id="graph7">
+                    <div class="vertex" style="left: 130px; top: 30px;">1</div>
+                    <div class="vertex" style="left: 230px; top: 130px;">2</div>
+                    <div class="vertex" style="left: 130px; top: 230px;">3</div>
+                    <div class="vertex" style="left: 30px; top: 130px;">4</div>
+                    <div class="edge" id="edge1-2-s7"></div>
+                    <div class="edge" id="edge1-4-s7"></div>
+                    <div class="edge" id="edge2-3-s7"></div>
+                    <div class="edge" id="edge3-4-s7"></div>
+                </div>
+                <div class="matrix" id="laplacian-matrix-small">
+                    <div class="matrix-cell matrix-header"></div>
+                    <div class="matrix-cell matrix-header">1</div>
+                    <div class="matrix-cell matrix-header">2</div>
+                    <div class="matrix-cell matrix-header">3</div>
+                    <div class="matrix-cell matrix-header">4</div>
+                    
+                    <div class="matrix-cell matrix-label">1</div>
+                    <div class="matrix-cell">2</div>
+                    <div class="matrix-cell">-1</div>
+                    <div class="matrix-cell">0</div>
+                    <div class="matrix-cell">-1</div>
+                    
+                    <div class="matrix-cell matrix-label">2</div>
+                    <div class="matrix-cell">-1</div>
+                    <div class="matrix-cell">2</div>
+                    <div class="matrix-cell">-1</div>
+                    <div class="matrix-cell">0</div>
+                    
+                    <div class="matrix-cell matrix-label">3</div>
+                    <div class="matrix-cell">0</div>
+                    <div class="matrix-cell">-1</div>
+                    <div class="matrix-cell">2</div>
+                    <div class="matrix-cell">-1</div>
+                    
+                    <div class="matrix-cell matrix-label">4</div>
+                    <div class="matrix-cell">-1</div>
+                    <div class="matrix-cell">0</div>
+                    <div class="matrix-cell">-1</div>
+                    <div class="matrix-cell">2</div>
+                </div>
+                <div class="explanation">
+                    The Laplacian matrix is useful for many graph algorithms and spectral graph theory.
+                    <br><br>
+                    Key properties:
+                    <br>
+                    - Row sums and column sums are zero
+                    <br>
+                    - It's a symmetric matrix
+                    <br>
+                    - The number of zero eigenvalues equals the number of connected components in the graph
+                </div>
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
+            <button class="nav-btn" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Draw edges for step 2
+            drawEdge('edge1-2', 150, 50, 230, 130);
+            drawEdge('edge1-4', 150, 50, 50, 130);
+            drawEdge('edge2-3', 230, 130, 150, 230);
+            drawEdge('edge3-4', 150, 230, 50, 130);
+            
+            // Draw edges for step 3
+            drawEdge('edge1-2-s3', 150, 50, 230, 130);
+            drawEdge('edge1-4-s3', 150, 50, 50, 130);
+            drawEdge('edge2-3-s3', 230, 130, 150, 230);
+            drawEdge('edge3-4-s3', 150, 230, 50, 130);
+            
+            // Draw edges for step 4
+            drawEdge('edge1-2-s4', 150, 50, 230, 130);
+            drawEdge('edge1-4-s4', 150, 50, 50, 130);
+            drawEdge('edge2-3-s4', 230, 130, 150, 230);
+            drawEdge('edge3-4-s4', 150, 230, 50, 130);
+            
+            // Draw edges for step 7
+            drawEdge('edge1-2-s7', 150, 50, 230, 130);
+            drawEdge('edge1-4-s7', 150, 50, 50, 130);
+            drawEdge('edge2-3-s7', 230, 130, 150, 230);
+            drawEdge('edge3-4-s7', 150, 230, 50, 130);
+            
+            // Navigation logic
+            const steps = document.querySelectorAll('.step');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            let currentStep = 0;
+            
+            function updateButtons() {
+                prevBtn.disabled = currentStep === 0;
+                nextBtn.disabled = currentStep === steps.length - 1;
+            }
+            
+            function showStep(index) {
+                steps.forEach((step, i) => {
+                    if (i === index) {
+                        step.classList.add('active');
+                    } else {
+                        step.classList.remove('active');
+                    }
+                });
+                currentStep = index;
+                updateButtons();
+            }
+            
+            prevBtn.addEventListener('click', function() {
+                if (currentStep > 0) {
+                    showStep(currentStep - 1);
+                }
+            });
+            
+            nextBtn.addEventListener('click', function() {
+                if (currentStep < steps.length - 1) {
+                    showStep(currentStep + 1);
+                }
+            });
+        });
+        
+        function drawEdge(id, x1, y1, x2, y2) {
+            const edge = document.getElementById(id);
+            if (!edge) return;
+            
+            const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+            
+            edge.style.width = length + 'px';
+            edge.style.left = x1 + 'px';
+            edge.style.top = y1 + 'px';
+            edge.style.transform = `rotate(${angle}deg)`;
+        }
+    </script>
+</body>
+</html>
