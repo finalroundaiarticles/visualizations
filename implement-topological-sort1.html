@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Directed Acyclic Graph Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+        }
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .explanation {
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Directed Acyclic Graph (DAG) Visualization</h1>
+        <div class="canvas-container">
+            <canvas id="graphCanvas"></canvas>
+        </div>
+        <div class="explanation" id="explanation">
+            Welcome to the Directed Acyclic Graph visualization. Click Next to begin.
+        </div>
+        <div class="nav-buttons">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const explanationDiv = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        // Set canvas dimensions with high resolution
+        function setCanvasDimensions() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth * 2;
+            canvas.height = container.clientHeight * 2;
+            ctx.scale(2, 2);
+        }
+
+        // Call once on load
+        setCanvasDimensions();
+        // And again on window resize
+        window.addEventListener('resize', setCanvasDimensions);
+
+        // Colors
+        const primaryColor = '#FF4800';
+        const secondaryColor = '#FD9F78';
+        const blackColor = '#000000';
+        const whiteColor = '#FFFFFF';
+
+        // Define our nodes/courses
+        const nodes = [
+            { id: 1, label: 'Math 101', x: 100, y: 100, color: primaryColor },
+            { id: 2, label: 'Math 201', x: 250, y: 100, color: primaryColor },
+            { id: 3, label: 'Math 301', x: 400, y: 100, color: primaryColor },
+            { id: 4, label: 'Physics 101', x: 100, y: 250, color: secondaryColor },
+            { id: 5, label: 'Physics 201', x: 250, y: 250, color: secondaryColor }
+        ];
+
+        // Define our edges/prerequisites
+        const edges = [
+            { from: 1, to: 2, animated: false, progress: 0 },
+            { from: 2, to: 3, animated: false, progress: 0 },
+            { from: 4, to: 5, animated: false, progress: 0 }
+        ];
+
+        // Animation steps
+        const steps = [
+            {
+                explanation: "A Directed Acyclic Graph (DAG) is a graph with directed edges and no cycles. In our example, we'll visualize course prerequisites using a DAG.",
+                action: () => {
+                    clearCanvas();
+                }
+            },
+            {
+                explanation: "Let's start by adding our first node: Math 101. In a DAG, nodes represent entities (in this case, courses).",
+                action: () => {
+                    clearCanvas();
+                    drawNode(nodes[0]);
+                }
+            },
+            {
+                explanation: "Now we add Math 201, which requires Math 101 as a prerequisite.",
+                action: () => {
+                    clearCanvas();
+                    drawNode(nodes[0]);
+                    drawNode(nodes[1]);
+                }
+            },
+            {
+                explanation: "We connect Math 101 to Math 201 with a directed edge, showing that Math 101 must be taken before Math 201.",
+                action: () => {
+                    clearCanvas();
+                    drawNode(nodes[0]);
+                    drawNode(nodes[1]);
+                    edges[0].animated = true;
+                    edges[0].progress = 0;
+                    animateEdge(0);
+                }
+            },
+            {
+                explanation: "Next, we add Math 301, which requires Math 201 as a prerequisite.",
+                action: () => {
+                    clearCanvas();
+                    drawNode(nodes[0]);
+                    drawNode(nodes[1]);
+                    drawEdge(edges[0]);
+                    drawNode(nodes[2]);
+                }
+            },
+            {
+                explanation: "We connect Math 201 to Math 301 with another directed edge.",
+                action: () => {
+                    clearCanvas();
+                    drawNode(nodes[0]);
+                    drawNode(nodes[1]);
+                    drawEdge(edges[0]);
+                    drawNode(nodes[2]);
+                    edges[1].animated = true;
+                    edges[1].progress = 0;
+                    animateEdge(1);
+                }
+            },
+            {
+                explanation: "Now let's add Physics 101, which is independent of the Math courses.",
+                action: () => {
+                    clearCanvas();
+                    drawNode(nodes[0]);
+                    drawNode(nodes[1]);
+                    drawEdge(edges[0]);
+                    drawNode(nodes[2]);
+                    drawEdge(edges[1]);
+                    drawNode(nodes[3]);
+                }
+            },
+            {
+                explanation: "Finally, we add Physics 201, which requires Physics 101 as a prerequisite.",
+                action: () => {
+                    clearCanvas();
+                    drawNode(nodes[0]);
+                    drawNode(nodes[1]);
+                    drawEdge(edges[0]);
+                    drawNode(nodes[2]);
+                    drawEdge(edges[1]);
+                    drawNode(nodes[3]);
+                    drawNode(nodes[4]);
+                }
+            },
+            {
+                explanation: "We connect Physics 101 to Physics 201 with a directed edge.",
+                action: () => {
+                    clearCanvas();
+                    drawNode(nodes[0]);
+                    drawNode(nodes[1]);
+                    drawEdge(edges[0]);
+                    drawNode(nodes[2]);
+                    drawEdge(edges[1]);
+                    drawNode(nodes[3]);
+                    drawNode(nodes[4]);
+                    edges[2].animated = true;
+                    edges[2].progress = 0;
+                    animateEdge(2);
+                }
+            },
+            {
+                explanation: "Our complete DAG shows two paths: Math 101 → Math 201 → Math 301 and Physics 101 → Physics 201. This graph is acyclic because there are no cycles (you can't go back to a previous course).",
+                action: () => {
+                    clearCanvas();
+                    drawNode(nodes[0]);
+                    drawNode(nodes[1]);
+                    drawEdge(edges[0]);
+                    drawNode(nodes[2]);
+                    drawEdge(edges[1]);
+                    drawNode(nodes[3]);
+                    drawNode(nodes[4]);
+                    drawEdge(edges[2]);
+                }
+            },
+            {
+                explanation: "The directed edges in our DAG represent prerequisites or dependencies. The direction is important - it shows which course must be taken before another.",
+                action: () => {
+                    highlightAllEdges();
+                }
+            },
+            {
+                explanation: "This DAG helps students plan their course sequence. For example, to take Math 301, you must first complete Math 201, which requires Math 101. DAGs are useful in many applications like task scheduling, build systems, and data processing pipelines.",
+                action: () => {
+                    clearCanvas();
+                    drawFullGraph();
+                }
+            }
+        ];
+
+        let currentStep = 0;
+
+        function updateButtons() {
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                explanationDiv.textContent = steps[currentStep].explanation;
+                steps[currentStep].action();
+                updateButtons();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                explanationDiv.textContent = steps[currentStep].explanation;
+                steps[currentStep].action();
+                updateButtons();
+            }
+        }
+
+        // Add event listeners
+        nextBtn.addEventListener('click', nextStep);
+        prevBtn.addEventListener('click', prevStep);
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width / 2, canvas.height / 2);
+        }
+
+        function drawNode(node) {
+            // Draw circle
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 30, 0, 2 * Math.PI);
+            ctx.fillStyle = node.color;
+            ctx.fill();
+            ctx.strokeStyle = blackColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Draw text
+            ctx.fillStyle = whiteColor;
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.label, node.x, node.y);
+        }
+
+        function drawEdge(edge, highlight = false) {
+            const fromNode = nodes.find(n => n.id === edge.from);
+            const toNode = nodes.find(n => n.id === edge.to);
+            
+            // Calculate angle
+            const angle = Math.atan2(toNode.y - fromNode.y, toNode.x - fromNode.x);
+            
+            // Calculate start and end points (adjusted for node radius)
+            const startX = fromNode.x + 30 * Math.cos(angle);
+            const startY = fromNode.y + 30 * Math.sin(angle);
+            const endX = toNode.x - 30 * Math.cos(angle);
+            const endY = toNode.y - 30 * Math.sin(angle);
+            
+            // Draw line
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = highlight ? '#FF0000' : blackColor;
+            ctx.lineWidth = highlight ? 3 : 2;
+            ctx.stroke();
+            
+            // Draw arrowhead
+            const arrowSize = 10;
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(
+                endX - arrowSize * Math.cos(angle - Math.PI / 6),
+                endY - arrowSize * Math.sin(angle - Math.PI / 6)
+            );
+            ctx.lineTo(
+                endX - arrowSize * Math.cos(angle + Math.PI / 6),
+                endY - arrowSize * Math.sin(angle + Math.PI / 6)
+            );
+            ctx.closePath();
+            ctx.fillStyle = highlight ? '#FF0000' : blackColor;
+            ctx.fill();
+        }
+
+        function animateEdge(edgeIndex) {
+            const edge = edges[edgeIndex];
+            if (!edge.animated) return;
+            
+            const fromNode = nodes.find(n => n.id === edge.from);
+            const toNode = nodes.find(n => n.id === edge.to);
+            
+            // Calculate angle
+            const angle = Math.atan2(toNode.y - fromNode.y, toNode.x - fromNode.x);
+            
+            // Calculate start point (adjusted for node radius)
+            const startX = fromNode.x + 30 * Math.cos(angle);
+            const startY = fromNode.y + 30 * Math.sin(angle);
+            
+            // Calculate end point based on progress
+            const totalDist = Math.sqrt(Math.pow(toNode.x - fromNode.x, 2) + Math.pow(toNode.y - fromNode.y, 2)) - 60;
+            const currentDist = totalDist * edge.progress;
+            const currentX = startX + currentDist * Math.cos(angle);
+            const currentY = startY + currentDist * Math.sin(angle);
+            
+            // Clear and redraw static elements
+            clearCanvas();
+            nodes.forEach(node => drawNode(node));
+            edges.forEach((e, i) => {
+                if (i !== edgeIndex && !e.animated) {
+                    drawEdge(e);
+                }
+            });
+            
+            // Draw animated edge
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(currentX, currentY);
+            ctx.strokeStyle = blackColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw arrowhead if near completion
+            if (edge.progress > 0.8) {
+                const endX = toNode.x - 30 * Math.cos(angle);
+                const endY = toNode.y - 30 * Math.sin(angle);
+                const arrowSize = 10;
+                
+                ctx.beginPath();
+                ctx.moveTo(endX, endY);
+                ctx.lineTo(
+                    endX - arrowSize * Math.cos(angle - Math.PI / 6),
+                    endY - arrowSize * Math.sin(angle - Math.PI / 6)
+                );
+                ctx.lineTo(
+                    endX - arrowSize * Math.cos(angle + Math.PI / 6),
+                    endY - arrowSize * Math.sin(angle + Math.PI / 6)
+                );
+                ctx.closePath();
+                ctx.fillStyle = blackColor;
+                ctx.fill();
+            }
+            
+            // Update progress
+            edge.progress += 0.02;
+            if (edge.progress >= 1) {
+                edge.animated = false;
+                edge.progress = 1;
+                drawEdge(edge);
+            } else {
+                requestAnimationFrame(() => animateEdge(edgeIndex));
+            }
+        }
+
+        function drawFullGraph() {
+            clearCanvas();
+            // Draw all edges first
+            edges.forEach(edge => drawEdge(edge));
+            // Then draw all nodes to ensure they're on top
+            nodes.forEach(node => drawNode(node));
+        }
+
+        function highlightAllEdges() {
+            clearCanvas();
+            
+            // Draw edges with highlighting
+            edges.forEach(edge => drawEdge(edge, true));
+            
+            // Draw nodes
+            nodes.forEach(node => drawNode(node));
+            
+            // Restore normal edges after a delay
+            setTimeout(() => {
+                clearCanvas();
+                drawFullGraph();
+            }, 1500);
+        }
+
+        // Initialize the visualization
+        explanationDiv.textContent = steps[currentStep].explanation;
+        steps[currentStep].action();
+        updateButtons();
+    </script>
+</body>
+</html>
