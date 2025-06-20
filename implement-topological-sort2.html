@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kahn's Algorithm Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        #animation-container {
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            height: 500px;
+        }
+        
+        canvas {
+            display: block;
+        }
+        
+        .info-panel {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            background-color: #FD9F78;
+            border-radius: 5px;
+            padding: 10px;
+            color: #000000;
+        }
+        
+        .info-box {
+            background-color: #FFFFFF;
+            border-radius: 5px;
+            padding: 10px;
+            min-width: 150px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .info-box h3 {
+            margin-top: 0;
+            color: #FF4800;
+            font-size: 16px;
+        }
+        
+        .explanation {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #FFFFFF;
+            border-left: 4px solid #FF4800;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-counter {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Kahn's Algorithm: Topological Sorting</h1>
+        
+        <div id="animation-container">
+            <canvas id="graphCanvas" width="860" height="300"></canvas>
+            
+            <div class="info-panel">
+                <div class="info-box">
+                    <h3>Queue</h3>
+                    <div id="queue-content"></div>
+                </div>
+                <div class="info-box">
+                    <h3>In-Degree Values</h3>
+                    <div id="indegree-content"></div>
+                </div>
+                <div class="info-box">
+                    <h3>Result</h3>
+                    <div id="result-content"></div>
+                </div>
+            </div>
+            
+            <div class="explanation" id="explanation-text"></div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button id="prevBtn" disabled>Previous Step</button>
+            <button id="nextBtn">Next Step</button>
+        </div>
+        
+        <div class="step-counter">Step <span id="current-step">0</span> of <span id="total-steps">0</span></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Node positions
+        const nodePositions = [
+            { id: 0, x: 400, y: 220, label: '0' },  // Adjusted positions
+            { id: 1, x: 550, y: 220, label: '1' },
+            { id: 2, x: 300, y: 150, label: '2' },
+            { id: 3, x: 450, y: 150, label: '3' },
+            { id: 4, x: 500, y: 80, label: '4' },
+            { id: 5, x: 250, y: 80, label: '5' }
+        ];
+        
+        // Edges
+        const edges = [
+            { from: 5, to: 2 },
+            { from: 5, to: 0 },
+            { from: 4, to: 0 },
+            { from: 4, to: 1 },
+            { from: 2, to: 3 },
+            { from: 3, to: 1 }
+        ];
+        
+        // Algorithm steps
+        const steps = [
+            {
+                description: "Initialize the graph with 6 vertices and edges: (5,2), (5,0), (4,0), (4,1), (2,3), (3,1). Calculate in-degree for each vertex.",
+                queue: [],
+                indegree: { 0: 2, 1: 2, 2: 1, 3: 1, 4: 0, 5: 0 },
+                result: [],
+                activeNodes: [],
+                activeEdges: []
+            },
+            {
+                description: "Find all vertices with in-degree 0. Vertices 4 and 5 have in-degree 0, so we add them to the queue.",
+                queue: [4, 5],
+                indegree: { 0: 2, 1: 2, 2: 1, 3: 1, 4: 0, 5: 0 },
+                result: [],
+                activeNodes: [4, 5],
+                activeEdges: []
+            },
+            {
+                description: "Remove vertex 4 from the queue. Add it to the result. Decrease in-degree of its neighbors (0 and 1).",
+                queue: [5],
+                indegree: { 0: 1, 1: 1, 2: 1, 3: 1, 4: 0, 5: 0 },
+                result: [4],
+                activeNodes: [4, 0, 1],
+                activeEdges: [2, 3]
+            },
+            {
+                description: "Remove vertex 5 from the queue. Add it to the result. Decrease in-degree of its neighbors (0 and 2).",
+                queue: [],
+                indegree: { 0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 0 },
+                result: [4, 5],
+                activeNodes: [5, 0, 2],
+                activeEdges: [0, 1]
+            },
+            {
+                description: "Vertices 0 and 2 now have in-degree 0. Add them to the queue.",
+                queue: [0, 2],
+                indegree: { 0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 0 },
+                result: [4, 5],
+                activeNodes: [0, 2],
+                activeEdges: []
+            },
+            {
+                description: "Remove vertex 0 from the queue. Add it to the result. It has no outgoing edges.",
+                queue: [2],
+                indegree: { 0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 0 },
+                result: [4, 5, 0],
+                activeNodes: [0],
+                activeEdges: []
+            },
+            {
+                description: "Remove vertex 2 from the queue. Add it to the result. Decrease in-degree of its neighbor (3).",
+                queue: [],
+                indegree: { 0: 0, 1: 1, 2: 0, 3: 0, 4: 0, 5: 0 },
+                result: [4, 5, 0, 2],
+                activeNodes: [2, 3],
+                activeEdges: [4]
+            },
+            {
+                description: "Vertex 3 now has in-degree 0. Add it to the queue.",
+                queue: [3],
+                indegree: { 0: 0, 1: 1, 2: 0, 3: 0, 4: 0, 5: 0 },
+                result: [4, 5, 0, 2],
+                activeNodes: [3],
+                activeEdges: []
+            },
+            {
+                description: "Remove vertex 3 from the queue. Add it to the result. Decrease in-degree of its neighbor (1).",
+                queue: [],
+                indegree: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+                result: [4, 5, 0, 2, 3],
+                activeNodes: [3, 1],
+                activeEdges: [5]
+            },
+            {
+                description: "Vertex 1 now has in-degree 0. Add it to the queue.",
+                queue: [1],
+                indegree: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+                result: [4, 5, 0, 2, 3],
+                activeNodes: [1],
+                activeEdges: []
+            },
+            {
+                description: "Remove vertex 1 from the queue. Add it to the result. It has no outgoing edges.",
+                queue: [],
+                indegree: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+                result: [4, 5, 0, 2, 3, 1],
+                activeNodes: [1],
+                activeEdges: []
+            },
+            {
+                description: "Queue is empty and all vertices are processed. The topological sort is complete: [4, 5, 0, 2, 3, 1]",
+                queue: [],
+                indegree: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+                result: [4, 5, 0, 2, 3, 1],
+                activeNodes: [],
+                activeEdges: []
+            }
+        ];
+        
+        let currentStep = 0;
+        
+        // Update the total steps counter
+        document.getElementById('total-steps').textContent = steps.length - 1;
+        
+        // Draw the graph
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges
+            edges.forEach((edge, index) => {
+                const fromNode = nodePositions.find(node => node.id === edge.from);
+                const toNode = nodePositions.find(node => node.id === edge.to);
+                
+                // Check if this edge is active in the current step
+                const isActive = steps[currentStep].activeEdges.includes(index);
+                
+                ctx.beginPath();
+                ctx.moveTo(fromNode.x, fromNode.y);
+                ctx.lineTo(toNode.x, toNode.y);
+                
+                if (isActive) {
+                    ctx.strokeStyle = '#FF4800';
+                    ctx.lineWidth = 3;
+                } else {
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 1;
+                }
+                
+                ctx.stroke();
+                
+                // Draw arrow
+                const angle = Math.atan2(toNode.y - fromNode.y, toNode.x - fromNode.x);
+                const arrowSize = 10;
+                
+                ctx.beginPath();
+                ctx.moveTo(
+                    toNode.x - arrowSize * Math.cos(angle) - arrowSize * Math.sin(angle),
+                    toNode.y - arrowSize * Math.sin(angle) + arrowSize * Math.cos(angle)
+                );
+                ctx.lineTo(toNode.x, toNode.y);
+                ctx.lineTo(
+                    toNode.x - arrowSize * Math.cos(angle) + arrowSize * Math.sin(angle),
+                    toNode.y - arrowSize * Math.sin(angle) - arrowSize * Math.cos(angle)
+                );
+                
+                if (isActive) {
+                    ctx.fillStyle = '#FF4800';
+                } else {
+                    ctx.fillStyle = '#000000';
+                }
+                
+                ctx.fill();
+            });
+            
+            // Draw nodes
+            nodePositions.forEach(node => {
+                const isActive = steps[currentStep].activeNodes.includes(node.id);
+                const isInResult = steps[currentStep].result.includes(node.id);
+                
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 20, 0, 2 * Math.PI);
+                
+                if (isActive) {
+                    ctx.fillStyle = '#FF4800';
+                } else if (isInResult) {
+                    ctx.fillStyle = '#FD9F78';
+                } else {
+                    ctx.fillStyle = '#FFFFFF';
+                }
+                
+                ctx.fill();
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Draw node labels
+                ctx.fillStyle = isActive || isInResult ? '#FFFFFF' : '#000000';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node.label, node.x, node.y);
+            });
+        }
+        
+        // Update the information panels
+        function updateInfoPanels() {
+            const step = steps[currentStep];
+            
+            // Update queue
+            const queueContent = document.getElementById('queue-content');
+            queueContent.innerHTML = step.queue.length > 0 
+                ? step.queue.join(' → ') 
+                : '<em>Empty</em>';
+            
+            // Update in-degree values
+            const indegreeContent = document.getElementById('indegree-content');
+            indegreeContent.innerHTML = '';
+            for (let i = 0; i < 6; i++) {
+                indegreeContent.innerHTML += `Node ${i}: ${step.indegree[i]}<br>`;
+            }
+            
+            // Update result
+            const resultContent = document.getElementById('result-content');
+            resultContent.innerHTML = step.result.length > 0 
+                ? step.result.join(' → ') 
+                : '<em>Empty</em>';
+            
+            // Update explanation
+            document.getElementById('explanation-text').textContent = step.description;
+            
+            // Update step counter
+            document.getElementById('current-step').textContent = currentStep;
+        }
+        
+        // Navigation functions
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateVisualization();
+                document.getElementById('prevBtn').disabled = false;
+                
+                if (currentStep === steps.length - 1) {
+                    document.getElementById('nextBtn').disabled = true;
+                }
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+                document.getElementById('nextBtn').disabled = false;
+                
+                if (currentStep === 0) {
+                    document.getElementById('prevBtn').disabled = true;
+                }
+            }
+        }
+        
+        function updateVisualization() {
+            drawGraph();
+            updateInfoPanels();
+        }
+        
+        // Initialize
+        updateVisualization();
+        
+        // Add event listeners
+        document.getElementById('nextBtn').addEventListener('click', nextStep);
+        document.getElementById('prevBtn').addEventListener('click', prevStep);
+    </script>
+</body>
+</html>
