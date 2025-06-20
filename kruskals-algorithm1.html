@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Visualization with MST</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            color: #FF4800;
+        }
+        .canvas-container {
+            position: relative;
+            margin: 20px auto;
+            width: 500px;
+            height: 400px;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .explanation {
+            background-color: #FFFFFF;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        .step-counter {
+            color: #FF4800;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Graph Visualization with Minimum Spanning Tree</h1>
+        
+        <div class="canvas-container">
+            <canvas id="graphCanvas" width="500" height="400"></canvas>
+        </div>
+        
+        <div class="step-counter">
+            Step <span id="currentStep">1</span> of <span id="totalSteps">5</span>
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <p>This is a weighted graph with vertices A, B, C, and D. The numbers on the edges represent weights.</p>
+            <p>We'll find the Minimum Spanning Tree (MST) - a subset of edges that connects all vertices with minimum total weight.</p>
+        </div>
+    </div>
+
+    <script>
+        // Graph data
+        const vertices = [
+            { id: 'A', x: 100, y: 100 },
+            { id: 'B', x: 400, y: 100 },
+            { id: 'C', x: 400, y: 300 },
+            { id: 'D', x: 100, y: 300 }
+        ];
+        
+        const edges = [
+            { from: 'A', to: 'B', weight: 1 },
+            { from: 'B', to: 'C', weight: 2 },
+            { from: 'A', to: 'C', weight: 3 },
+            { from: 'A', to: 'D', weight: 4 },
+            { from: 'C', to: 'D', weight: 5 }
+        ];
+        
+        // MST will be built step by step for visualization
+        const mstSteps = [
+            { edges: [] }, // Initial state
+            { edges: ['A-B'] }, // Add edge A-B with weight 1
+            { edges: ['A-B', 'B-C'] }, // Add edge B-C with weight 2
+            { edges: ['A-B', 'B-C', 'A-D'] }, // Add edge A-D with weight 4
+            { edges: ['A-B', 'B-C', 'A-D'] } // Final MST
+        ];
+        
+        const explanations = [
+            "This is a weighted graph with vertices A, B, C, and D. The numbers on the edges represent weights. We'll find the Minimum Spanning Tree (MST) - a subset of edges that connects all vertices with minimum total weight.",
+            
+            "Step 1: We start by selecting the edge with the minimum weight. Edge A-B has weight 1, which is the smallest, so we add it to our MST.",
+            
+            "Step 2: Among the remaining edges, B-C has the smallest weight (2). Adding it doesn't create a cycle, so we include it in our MST.",
+            
+            "Step 3: Next, we consider edge A-C with weight 3. However, adding this would create a cycle A-B-C-A. So we skip it and move to edge A-D with weight 4, which we add to our MST.",
+            
+            "Final MST: The Minimum Spanning Tree consists of edges A-B (weight 1), B-C (weight 2), and A-D (weight 4), with a total weight of 7. This is the minimum weight tree that connects all vertices."
+        ];
+        
+        // Canvas setup
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // State
+        let currentStep = 0;
+        const totalSteps = mstSteps.length;
+        document.getElementById('totalSteps').textContent = totalSteps;
+        
+        // Navigation
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const explanationDiv = document.getElementById('explanation');
+        const currentStepSpan = document.getElementById('currentStep');
+        
+        // Draw graph
+        function drawGraph() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges
+            edges.forEach(edge => {
+                const fromVertex = vertices.find(v => v.id === edge.from);
+                const toVertex = vertices.find(v => v.id === edge.to);
+                
+                const edgeKey = `${edge.from}-${edge.to}`;
+                const reversedEdgeKey = `${edge.to}-${edge.from}`;
+                
+                const isMSTEdge = mstSteps[currentStep].edges.includes(edgeKey) || 
+                                  mstSteps[currentStep].edges.includes(reversedEdgeKey);
+                
+                ctx.beginPath();
+                ctx.moveTo(fromVertex.x, fromVertex.y);
+                ctx.lineTo(toVertex.x, toVertex.y);
+                
+                if (isMSTEdge) {
+                    ctx.strokeStyle = '#FF4800';
+                    ctx.lineWidth = 3;
+                } else {
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 1;
+                }
+                
+                ctx.stroke();
+                
+                // Draw weight
+                const midX = (fromVertex.x + toVertex.x) / 2;
+                const midY = (fromVertex.y + toVertex.y) / 2;
+                
+                // Background for weight
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(midX, midY, 15, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Weight text
+                ctx.fillStyle = '#000000';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(edge.weight, midX, midY);
+            });
+            
+            // Draw vertices
+            vertices.forEach(vertex => {
+                // Vertex circle
+                ctx.beginPath();
+                ctx.arc(vertex.x, vertex.y, 20, 0, Math.PI * 2);
+                ctx.fillStyle = '#FD9F78';
+                ctx.fill();
+                ctx.strokeStyle = '#FF4800';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Vertex label
+                ctx.fillStyle = '#000000';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(vertex.id, vertex.x, vertex.y);
+            });
+        }
+        
+        // Update UI
+        function updateUI() {
+            currentStepSpan.textContent = currentStep + 1;
+            explanationDiv.innerHTML = `<p>${explanations[currentStep]}</p>`;
+            
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+            
+            drawGraph();
+        }
+        
+        // Event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateUI();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateUI();
+            }
+        });
+        
+        // Initial render
+        updateUI();
+    </script>
+</body>
+</html>
