@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Floyd Warshall Algorithm Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            color: #FF4800;
+            margin-bottom: 20px;
+        }
+        .matrix-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+        .matrix {
+            border-collapse: collapse;
+            margin: 10px auto;
+        }
+        .matrix td {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            border: 1px solid #000000;
+            font-size: 18px;
+        }
+        .highlight {
+            background-color: #FD9F78;
+            transition: background-color 0.5s ease;
+        }
+        .infinity {
+            font-style: italic;
+            color: #FF4800;
+        }
+        .step-info {
+            margin: 20px 0;
+            font-size: 18px;
+            min-height: 50px;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #999999;
+            cursor: not-allowed;
+        }
+        .intermediate-vertex {
+            font-weight: bold;
+            color: #FF4800;
+        }
+        .step-counter {
+            margin-top: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Floyd Warshall Algorithm Visualization</h1>
+        
+        <div class="step-info" id="stepInfo">
+            Starting with the initial distance matrix
+        </div>
+        
+        <div class="matrix-container">
+            <div class="matrix-label">Distance Matrix</div>
+            <table class="matrix" id="matrix"></table>
+        </div>
+        
+        <div class="step-counter" id="stepCounter">Step 0 of 4</div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prevBtn" disabled>Previous</button>
+            <button class="nav-btn" id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Define infinity for visualization
+        const INF = Infinity;
+        
+        // Initial distance matrix
+        const initialMatrix = [
+            [0, 5, INF, 10],
+            [INF, 0, 3, INF],
+            [INF, INF, 0, 1],
+            [INF, INF, INF, 0]
+        ];
+        
+        // Store all steps of the algorithm
+        const steps = [
+            {
+                matrix: JSON.parse(JSON.stringify(initialMatrix)),
+                info: "Starting with the initial distance matrix",
+                changedCells: []
+            }
+        ];
+        
+        // Execute Floyd Warshall algorithm and track changes
+        function executeFloydWarshall() {
+            const n = initialMatrix.length;
+            let dist = JSON.parse(JSON.stringify(initialMatrix));
+            
+            for (let k = 0; k < n; k++) {
+                const newDist = JSON.parse(JSON.stringify(dist));
+                const changedCells = [];
+                
+                for (let i = 0; i < n; i++) {
+                    for (let j = 0; j < n; j++) {
+                        // If using vertex k improves the path
+                        if (dist[i][k] !== INF && dist[k][j] !== INF && 
+                            dist[i][k] + dist[k][j] < dist[i][j]) {
+                            
+                            newDist[i][j] = dist[i][k] + dist[k][j];
+                            changedCells.push([i, j]);
+                        }
+                    }
+                }
+                
+                dist = newDist;
+                steps.push({
+                    matrix: JSON.parse(JSON.stringify(dist)),
+                    info: `Considering vertex <span class="intermediate-vertex">${k}</span> as an intermediate vertex`,
+                    changedCells: changedCells
+                });
+            }
+        }
+        
+        // Execute algorithm
+        executeFloydWarshall();
+        
+        // DOM elements
+        const matrixElement = document.getElementById('matrix');
+        const stepInfoElement = document.getElementById('stepInfo');
+        const stepCounterElement = document.getElementById('stepCounter');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        let currentStep = 0;
+        
+        // Render matrix
+        function renderMatrix(step) {
+            matrixElement.innerHTML = '';
+            
+            const matrix = steps[step].matrix;
+            const changedCells = steps[step].changedCells;
+            
+            for (let i = 0; i < matrix.length; i++) {
+                const row = document.createElement('tr');
+                
+                for (let j = 0; j < matrix.length; j++) {
+                    const cell = document.createElement('td');
+                    const value = matrix[i][j];
+                    
+                    if (value === INF) {
+                        cell.innerHTML = '<span class="infinity">∞</span>';
+                    } else {
+                        cell.textContent = value;
+                    }
+                    
+                    // Highlight changed cells
+                    if (step > 0 && changedCells.some(([x, y]) => x === i && y === j)) {
+                        cell.classList.add('highlight');
+                    }
+                    
+                    row.appendChild(cell);
+                }
+                
+                matrixElement.appendChild(row);
+            }
+            
+            // Update info and counter
+            stepInfoElement.innerHTML = steps[step].info;
+            stepCounterElement.textContent = `Step ${step} of ${steps.length - 1}`;
+            
+            // Update button states
+            prevBtn.disabled = step === 0;
+            nextBtn.disabled = step === steps.length - 1;
+        }
+        
+        // Navigation handlers
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                renderMatrix(currentStep);
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                renderMatrix(currentStep);
+            }
+        });
+        
+        // Initial render
+        renderMatrix(currentStep);
+    </script>
+</body>
+</html>
