@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Visualization and MST</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        .container {
+            width: 800px;
+            max-width: 100%;
+            margin: 20px auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        canvas {
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .explanation {
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            max-width: 800px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Graph Visualization and Minimum Spanning Tree (MST)</h1>
+        <canvas id="graphCanvas" width="600" height="400"></canvas>
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        <div class="explanation" id="explanation">
+            Step 1: This is our initial graph with vertices A, B, C, D and weighted edges connecting them.
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const explanationEl = document.getElementById('explanation');
+
+        // Define vertices
+        const vertices = {
+            A: { x: 150, y: 100 },
+            B: { x: 450, y: 100 },
+            C: { x: 150, y: 300 },
+            D: { x: 450, y: 300 }
+        };
+
+        // Define edges with weights
+        const edges = [
+            { from: 'A', to: 'B', weight: 4 },
+            { from: 'A', to: 'C', weight: 2 },
+            { from: 'B', to: 'C', weight: 1 },
+            { from: 'B', to: 'D', weight: 5 },
+            { from: 'C', to: 'D', weight: 3 }
+        ];
+
+        // MST edges (will be highlighted)
+        const mstEdges = [
+            { from: 'B', to: 'C', weight: 1 },
+            { from: 'A', to: 'C', weight: 2 },
+            { from: 'C', to: 'D', weight: 3 }
+        ];
+
+        let currentStep = 0;
+        const totalSteps = 4; // Initial graph, and 3 steps for adding MST edges
+
+        function drawVertex(x, y, label) {
+            ctx.beginPath();
+            ctx.arc(x, y, 25, 0, 2 * Math.PI);
+            ctx.fillStyle = '#FF4800';
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, x, y);
+        }
+
+        function drawEdge(fromX, fromY, toX, toY, weight, highlight = false) {
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.strokeStyle = highlight ? '#FF4800' : '#000000';
+            ctx.lineWidth = highlight ? 4 : 2;
+            ctx.stroke();
+            
+            // Draw weight
+            const midX = (fromX + toX) / 2;
+            const midY = (fromY + toY) / 2;
+            
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.arc(midX, midY, 15, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.strokeStyle = highlight ? '#FF4800' : '#000000';
+            ctx.stroke();
+            
+            ctx.fillStyle = '#000000';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(weight, midX, midY);
+        }
+
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw all edges
+            edges.forEach(edge => {
+                const from = vertices[edge.from];
+                const to = vertices[edge.to];
+                
+                // Determine if this edge should be highlighted as part of MST
+                let highlight = false;
+                if (currentStep > 0) {
+                    for (let i = 0; i < currentStep && i < mstEdges.length; i++) {
+                        const mstEdge = mstEdges[i];
+                        if ((edge.from === mstEdge.from && edge.to === mstEdge.to) || 
+                            (edge.from === mstEdge.to && edge.to === mstEdge.from)) {
+                            highlight = true;
+                            break;
+                        }
+                    }
+                }
+                
+                drawEdge(from.x, from.y, to.x, to.y, edge.weight, highlight);
+            });
+            
+            // Draw all vertices
+            for (const [label, position] of Object.entries(vertices)) {
+                drawVertex(position.x, position.y, label);
+            }
+        }
+
+        function updateExplanation() {
+            let text = '';
+            switch(currentStep) {
+                case 0:
+                    text = "Step 1: This is our initial graph with vertices A, B, C, D and weighted edges connecting them.";
+                    break;
+                case 1:
+                    text = "Step 2: For our MST, we first add the edge B-C with weight 1, which is the smallest weight in the graph.";
+                    break;
+                case 2:
+                    text = "Step 3: Next, we add edge A-C with weight 2, which is the next smallest edge that doesn't create a cycle.";
+                    break;
+                case 3:
+                    text = "Step 4: Finally, we add edge C-D with weight 3, completing our Minimum Spanning Tree with a total weight of 6.";
+                    break;
+            }
+            explanationEl.textContent = text;
+        }
+
+        function updateButtons() {
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+        }
+
+        function update() {
+            drawGraph();
+            updateExplanation();
+            updateButtons();
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                update();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                update();
+            }
+        });
+
+        // Initial render
+        update();
+
+        // Add animation effect when highlighting edges
+        let isAnimating = false;
+        function animateHighlight() {
+            if (currentStep > 0 && !isAnimating) {
+                isAnimating = true;
+                let opacity = 0.5;
+                let increasing = true;
+                
+                const animationInterval = setInterval(() => {
+                    if (increasing) {
+                        opacity += 0.05;
+                        if (opacity >= 1) {
+                            increasing = false;
+                        }
+                    } else {
+                        opacity -= 0.05;
+                        if (opacity <= 0.5) {
+                            increasing = true;
+                        }
+                    }
+                    
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Draw all edges
+                    edges.forEach(edge => {
+                        const from = vertices[edge.from];
+                        const to = vertices[edge.to];
+                        
+                        let highlight = false;
+                        let pulseHighlight = false;
+                        
+                        if (currentStep > 0) {
+                            for (let i = 0; i < currentStep && i < mstEdges.length; i++) {
+                                const mstEdge = mstEdges[i];
+                                if ((edge.from === mstEdge.from && edge.to === mstEdge.to) || 
+                                    (edge.from === mstEdge.to && edge.to === mstEdge.from)) {
+                                    highlight = true;
+                                    if (i === currentStep - 1) {
+                                        pulseHighlight = true;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (pulseHighlight) {
+                            ctx.globalAlpha = opacity;
+                        }
+                        
+                        drawEdge(from.x, from.y, to.x, to.y, edge.weight, highlight);
+                        ctx.globalAlpha = 1;
+                    });
+                    
+                    // Draw all vertices
+                    for (const [label, position] of Object.entries(vertices)) {
+                        drawVertex(position.x, position.y, label);
+                    }
+                    
+                }, 50);
+                
+                setTimeout(() => {
+                    clearInterval(animationInterval);
+                    isAnimating = false;
+                    drawGraph();
+                }, 2000);
+            }
+        }
+
+        nextBtn.addEventListener('click', animateHighlight);
+    </script>
+</body>
+</html>
