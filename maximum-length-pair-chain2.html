@@ -3,367 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Greedy Selection Process Animation</title>
+    <title>Longest Chain Visualization</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #FFFFFF;
             margin: 0;
-            padding: 20px;
-            color: #000000;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        h1 {
-            color: #FF4800;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .animation-container {
-            width: 100%;
-            height: 400px;
-            position: relative;
-            margin: 30px 0;
-            border: 2px solid #FD9F78;
-            border-radius: 10px;
+            padding: 0;
+            background-color: white;
+            font-family: Arial, sans-serif;
             overflow: hidden;
         }
-        .pair {
+        
+        #canvas {
+            display: block;
+            margin: 0 auto;
+            background-color: white;
+        }
+        
+        .controls {
             position: absolute;
-            padding: 10px 15px;
-            background-color: #FD9F78;
-            border-radius: 8px;
-            color: #000000;
-            font-weight: bold;
-            transition: all 0.5s ease;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 80px;
-            height: 40px;
-            opacity: 0;
+            gap: 10px;
         }
-        .arrow {
-            position: absolute;
-            background-color: #FF4800;
-            height: 3px;
-            transform-origin: left center;
-            transition: all 0.5s ease;
-            opacity: 0;
-        }
-        .arrow::after {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: -5px;
-            width: 0;
-            height: 0;
-            border-left: 10px solid #FF4800;
-            border-top: 6px solid transparent;
-            border-bottom: 6px solid transparent;
-        }
-        .explanation {
-            margin: 20px 0;
-            padding: 15px;
-            border-radius: 8px;
-            background-color: #FFF;
-            border: 1px solid #FD9F78;
-            color: #000000;
-            font-size: 16px;
-            line-height: 1.5;
-            text-align: center;
-            min-height: 100px;
-        }
-        .navigation {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        .nav-btn {
-            background-color: #FF4800;
-            color: #FFFFFF;
+        
+        button {
+            background-color: #ff4800;
+            color: white;
             border: none;
-            padding: 10px 20px;
-            margin: 0 10px;
-            border-radius: 5px;
-            cursor: pointer;
+            padding: 12px 24px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
             font-weight: bold;
-            transition: background-color 0.3s;
-        }
-        .nav-btn:hover {
-            background-color: #FD9F78;
-        }
-        .nav-btn:disabled {
-            background-color: #FD9F78;
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .timeline {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 15px;
-            width: 100%;
-            padding: 0 50px;
-            box-sizing: border-box;
-        }
-        .timeline-point {
-            width: 20px;
-            height: 20px;
-            background-color: #FD9F78;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             cursor: pointer;
-            position: relative;
+            border-radius: 5px;
         }
-        .timeline-point.active {
-            background-color: #FF4800;
-            transform: scale(1.2);
+        
+        button:hover {
+            background-color: #e63f00;
         }
-        .timeline-point::after {
-            content: attr(data-step);
-            position: absolute;
-            top: -25px;
-            font-size: 12px;
-            color: #000000;
-        }
-        .timeline-line {
-            height: 3px;
-            background-color: #FD9F78;
-            flex-grow: 1;
-            margin: 0 5px;
-            align-self: center;
+        
+        button:disabled {
+            background-color: #1c1d20;
+            cursor: not-allowed;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Greedy Selection Process</h1>
-        <div class="animation-container" id="animation-area">
-            <!-- Pairs will be added here by JavaScript -->
-        </div>
-        <div class="explanation" id="explanation-text">
-            We'll demonstrate the Greedy Selection Process step-by-step to form a maximum chain of pairs.
-        </div>
-        <div class="navigation">
-            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
-            <button class="nav-btn" id="next-btn">Next</button>
-        </div>
-        <div class="timeline" id="timeline">
-            <div class="timeline-point active" data-step="1" onclick="goToStep(0)"></div>
-            <div class="timeline-line"></div>
-            <div class="timeline-point" data-step="2" onclick="goToStep(1)"></div>
-            <div class="timeline-line"></div>
-            <div class="timeline-point" data-step="3" onclick="goToStep(2)"></div>
-            <div class="timeline-line"></div>
-            <div class="timeline-point" data-step="4" onclick="goToStep(3)"></div>
-            <div class="timeline-line"></div>
-            <div class="timeline-point" data-step="5" onclick="goToStep(4)"></div>
-            <div class="timeline-line"></div>
-            <div class="timeline-point" data-step="6" onclick="goToStep(5)"></div>
-        </div>
+    <canvas id="canvas" width="1200" height="800"></canvas>
+    <div class="controls">
+        <button id="prevBtn">Previous</button>
+        <button id="nextBtn">Next</button>
     </div>
 
     <script>
-        const pairs = [
-            { id: "pair1", value: "[1,2]", x: 100, y: 100 },
-            { id: "pair2", value: "[2,3]", x: 350, y: 100 },
-            { id: "pair3", value: "[3,4]", x: 600, y: 100 }
-        ];
-
-        const animationSteps = [
-            {
-                explanation: "We start with three pairs sorted by their second element: [1,2], [2,3], and [3,4].",
-                actions: function() {
-                    // Reset everything first
-                    resetAnimation();
-                    
-                    // Show all pairs
-                    pairs.forEach((pair, index) => {
-                        const elem = document.getElementById(pair.id);
-                        elem.style.opacity = 1;
-                        elem.style.backgroundColor = "#FD9F78";
-                        elem.style.transform = "scale(1)";
-                    });
-                }
-            },
-            {
-                explanation: "The greedy algorithm selects the pair with the smallest second element first. So we pick [1,2].",
-                actions: function() {
-                    // Highlight first pair
-                    const firstPair = document.getElementById("pair1");
-                    firstPair.style.backgroundColor = "#FF4800";
-                    firstPair.style.transform = "scale(1.2)";
-                    firstPair.style.color = "#FFFFFF";
-                }
-            },
-            {
-                explanation: "Next, we look for pairs that don't conflict with our first selection [1,2]. A pair conflicts if its first element is ≤ the second element of our last selected pair.",
-                actions: function() {
-                    // Draw arrow from first pair to second pair
-                    createArrow("pair1", "pair2", "arrow1");
-                }
-            },
-            {
-                explanation: "Since [2,3] has its first element (2) equal to the second element of [1,2], it conflicts with our selection. So we skip [2,3].",
-                actions: function() {
-                    // Highlight pair2 as skipped
-                    const secondPair = document.getElementById("pair2");
-                    secondPair.style.backgroundColor = "#FD9F78";
-                    secondPair.style.transform = "scale(1)";
-                    secondPair.style.opacity = "0.5";
-                    
-                    // Update arrow style
-                    const arrow1 = document.getElementById("arrow1");
-                    arrow1.style.backgroundColor = "#FD9F78";
-                }
-            },
-            {
-                explanation: "Next, we check [3,4]. Its first element (3) is > the second element of [1,2] which is 2, so it doesn't conflict.",
-                actions: function() {
-                    // Draw arrow from first pair to third pair
-                    createArrow("pair1", "pair3", "arrow2");
-                }
-            },
-            {
-                explanation: "Therefore, our maximum chain is [1,2] and [3,4]. We've selected 2 pairs that don't conflict with each other, forming the maximum possible chain.",
-                actions: function() {
-                    // Highlight the third pair as selected
-                    const thirdPair = document.getElementById("pair3");
-                    thirdPair.style.backgroundColor = "#FF4800";
-                    thirdPair.style.transform = "scale(1.2)";
-                    thirdPair.style.color = "#FFFFFF";
-                    
-                    // Update arrow style
-                    const arrow2 = document.getElementById("arrow2");
-                    arrow2.style.backgroundColor = "#FF4800";
-                }
-            }
-        ];
-
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        // Example data
+        const originalPairs = [[1, 3], [7, 9], [4, 5], [2, 3], [5, 7], [6, 8]];
         let currentStep = 0;
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const explanationText = document.getElementById('explanation-text');
-        const animationArea = document.getElementById('animation-area');
-        const timelinePoints = document.querySelectorAll('.timeline-point');
-
-        // Initialize animation
-        function init() {
-            // Create pairs
-            pairs.forEach(pair => {
-                const pairElement = document.createElement('div');
-                pairElement.id = pair.id;
-                pairElement.className = 'pair';
-                pairElement.textContent = pair.value;
-                pairElement.style.left = pair.x + 'px';
-                pairElement.style.top = pair.y + 'px';
-                pairElement.style.opacity = 0;
-                animationArea.appendChild(pairElement);
-            });
-            
-            // Set first step
-            goToStep(0);
-        }
-
-        function goToStep(step) {
-            if (step >= 0 && step < animationSteps.length) {
-                currentStep = step;
-                
-                // Update explanation
-                explanationText.textContent = animationSteps[step].explanation;
-                
-                // Execute step actions
-                animationSteps[step].actions();
-                
-                // Update timeline
-                timelinePoints.forEach((point, index) => {
-                    if (index === step) {
-                        point.classList.add('active');
-                    } else {
-                        point.classList.remove('active');
-                    }
-                });
-                
-                // Update button states
-                prevBtn.disabled = step === 0;
-                nextBtn.disabled = step === animationSteps.length - 1;
+        
+        const steps = [
+            {
+                title: "Initial Pairs",
+                pairs: [[1, 3], [7, 9], [4, 5], [2, 3], [5, 7], [6, 8]],
+                sorted: false,
+                selected: [],
+                currentEnd: null,
+                description: "Original pairs before sorting"
+            },
+            {
+                title: "After Sorting by End Value",
+                pairs: [[1, 3], [2, 3], [4, 5], [5, 7], [6, 8], [7, 9]],
+                sorted: true,
+                selected: [],
+                currentEnd: null,
+                description: "Pairs sorted by their ending values"
+            },
+            {
+                title: "Select First Pair",
+                pairs: [[1, 3], [2, 3], [4, 5], [5, 7], [6, 8], [7, 9]],
+                sorted: true,
+                selected: [0],
+                currentEnd: 3,
+                description: "Start with first pair [1,3], current_end = 3"
+            },
+            {
+                title: "Check Pair [2,3]",
+                pairs: [[1, 3], [2, 3], [4, 5], [5, 7], [6, 8], [7, 9]],
+                sorted: true,
+                selected: [0],
+                currentEnd: 3,
+                checking: 1,
+                description: "2 ≤ 3, cannot extend chain"
+            },
+            {
+                title: "Check Pair [4,5]",
+                pairs: [[1, 3], [2, 3], [4, 5], [5, 7], [6, 8], [7, 9]],
+                sorted: true,
+                selected: [0],
+                currentEnd: 3,
+                checking: 2,
+                description: "4 > 3, can extend chain"
+            },
+            {
+                title: "Select Pair [4,5]",
+                pairs: [[1, 3], [2, 3], [4, 5], [5, 7], [6, 8], [7, 9]],
+                sorted: true,
+                selected: [0, 2],
+                currentEnd: 5,
+                description: "Add [4,5] to chain, current_end = 5"
+            },
+            {
+                title: "Check Pair [5,7]",
+                pairs: [[1, 3], [2, 3], [4, 5], [5, 7], [6, 8], [7, 9]],
+                sorted: true,
+                selected: [0, 2],
+                currentEnd: 5,
+                checking: 3,
+                description: "5 ≤ 5, cannot extend chain"
+            },
+            {
+                title: "Check Pair [6,8]",
+                pairs: [[1, 3], [2, 3], [4, 5], [5, 7], [6, 8], [7, 9]],
+                sorted: true,
+                selected: [0, 2],
+                currentEnd: 5,
+                checking: 4,
+                description: "6 > 5, can extend chain"
+            },
+            {
+                title: "Select Pair [6,8]",
+                pairs: [[1, 3], [2, 3], [4, 5], [5, 7], [6, 8], [7, 9]],
+                sorted: true,
+                selected: [0, 2, 4],
+                currentEnd: 8,
+                description: "Add [6,8] to chain, current_end = 8"
+            },
+            {
+                title: "Check Pair [7,9]",
+                pairs: [[1, 3], [2, 3], [4, 5], [5, 7], [6, 8], [7, 9]],
+                sorted: true,
+                selected: [0, 2, 4],
+                currentEnd: 8,
+                checking: 5,
+                description: "7 ≤ 8, cannot extend chain"
+            },
+            {
+                title: "Final Result",
+                pairs: [[1, 3], [2, 3], [4, 5], [5, 7], [6, 8], [7, 9]],
+                sorted: true,
+                selected: [0, 2, 4],
+                currentEnd: 8,
+                description: "Longest chain: [1,3] → [4,5] → [6,8], Length = 3"
             }
-        }
-
-        function nextStep() {
-            if (currentStep < animationSteps.length - 1) {
-                goToStep(currentStep + 1);
-            }
-        }
-
-        function prevStep() {
-            if (currentStep > 0) {
-                goToStep(currentStep - 1);
-            }
-        }
-
-        function createArrow(fromId, toId, arrowId) {
-            // Remove existing arrow if any
-            const existingArrow = document.getElementById(arrowId);
-            if (existingArrow) {
-                existingArrow.remove();
-            }
+        ];
+        
+        function drawVisualization() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            const from = document.getElementById(fromId);
-            const to = document.getElementById(toId);
+            const step = steps[currentStep];
+            const pairWidth = 120;
+            const pairHeight = 60;
+            const spacing = 20;
+            const startX = (canvas.width - (step.pairs.length * (pairWidth + spacing) - spacing)) / 2;
+            const startY = 200;
             
-            const fromRect = from.getBoundingClientRect();
-            const toRect = to.getBoundingClientRect();
-            const containerRect = animationArea.getBoundingClientRect();
+            // Title
+            ctx.fillStyle = '#1c1d20';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(step.title, canvas.width / 2, 50);
             
-            const fromX = fromRect.left + fromRect.width - containerRect.left;
-            const fromY = fromRect.top + fromRect.height/2 - containerRect.top;
-            const toX = toRect.left - containerRect.left;
-            const toY = toRect.top + toRect.height/2 - containerRect.top;
+            // Description
+            ctx.font = '16px Arial';
+            ctx.fillText(step.description, canvas.width / 2, 100);
             
-            const distance = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
-            const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
-            
-            const arrow = document.createElement('div');
-            arrow.id = arrowId;
-            arrow.className = 'arrow';
-            arrow.style.left = `${fromX}px`;
-            arrow.style.top = `${fromY}px`;
-            arrow.style.width = `${distance}px`;
-            arrow.style.transform = `rotate(${angle}deg)`;
-            arrow.style.opacity = 1;
-            
-            animationArea.appendChild(arrow);
-        }
-
-        function resetAnimation() {
-            // Clear any existing arrows
-            const arrows = document.querySelectorAll('.arrow');
-            arrows.forEach(arrow => arrow.remove());
-            
-            // Reset pairs
-            pairs.forEach(pair => {
-                const elem = document.getElementById(pair.id);
-                if (elem) {
-                    elem.style.opacity = 0;
-                    elem.style.backgroundColor = "#FD9F78";
-                    elem.style.transform = "scale(1)";
-                    elem.style.color = "#000000";
+            // Draw pairs
+            step.pairs.forEach((pair, index) => {
+                const x = startX + index * (pairWidth + spacing);
+                const y = startY;
+                
+                // Determine colors
+                let bgColor = 'white';
+                let borderColor = '#1c1d20';
+                let textColor = '#1c1d20';
+                
+                if (step.selected && step.selected.includes(index)) {
+                    bgColor = '#ff4800';
+                    textColor = 'white';
+                    borderColor = '#ff4800';
+                } else if (step.checking === index) {
+                    bgColor = '#ffccb3';
+                    borderColor = '#ff4800';
                 }
+                
+                // Draw rectangle
+                ctx.fillStyle = bgColor;
+                ctx.fillRect(x, y, pairWidth, pairHeight);
+                ctx.strokeStyle = borderColor;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x, y, pairWidth, pairHeight);
+                
+                // Draw pair text
+                ctx.fillStyle = textColor;
+                ctx.font = 'bold 18px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`[${pair[0]}, ${pair[1]}]`, x + pairWidth/2, y + pairHeight/2 + 6);
             });
+            
+            // Draw arrows between selected pairs
+            if (step.selected && step.selected.length > 1) {
+                ctx.strokeStyle = '#ff4800';
+                ctx.lineWidth = 3;
+                
+                for (let i = 0; i < step.selected.length - 1; i++) {
+                    const fromIndex = step.selected[i];
+                    const toIndex = step.selected[i + 1];
+                    
+                    const fromX = startX + fromIndex * (pairWidth + spacing) + pairWidth;
+                    const fromY = startY + pairHeight / 2;
+                    const toX = startX + toIndex * (pairWidth + spacing);
+                    const toY = startY + pairHeight / 2;
+                    
+                    // Draw arrow
+                    ctx.beginPath();
+                    ctx.moveTo(fromX + 10, fromY);
+                    ctx.lineTo(toX - 10, toY);
+                    ctx.stroke();
+                    
+                    // Arrow head
+                    const headSize = 8;
+                    ctx.beginPath();
+                    ctx.moveTo(toX - 10, toY);
+                    ctx.lineTo(toX - 10 - headSize, toY - headSize/2);
+                    ctx.lineTo(toX - 10 - headSize, toY + headSize/2);
+                    ctx.closePath();
+                    ctx.fillStyle = '#ff4800';
+                    ctx.fill();
+                }
+            }
+            
+            // Show current_end if exists
+            if (step.currentEnd !== null) {
+                ctx.fillStyle = '#1c1d20';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`current_end = ${step.currentEnd}`, canvas.width / 2, 350);
+            }
+            
+            // Step counter
+            ctx.font = '14px Arial';
+            ctx.fillText(`Step ${currentStep + 1} of ${steps.length}`, canvas.width / 2, canvas.height - 80);
         }
-
-        // Add event listeners
-        prevBtn.addEventListener('click', prevStep);
-        nextBtn.addEventListener('click', nextStep);
-
-        // Initialize
-        init();
+        
+        function updateButtons() {
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                drawVisualization();
+                updateButtons();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                drawVisualization();
+                updateButtons();
+            }
+        });
+        
+        // Initial draw
+        drawVisualization();
+        updateButtons();
     </script>
 </body>
 </html>
