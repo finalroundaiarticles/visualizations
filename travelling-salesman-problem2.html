@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DP Bitmask State Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1, h2 {
+            color: #FF4800;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .city-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+        }
+
+        .city {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: #000000;
+            border: 2px solid #FF4800;
+            position: relative;
+        }
+
+        .city.visited {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            animation: pulse 1s;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(255, 72, 0, 0.7);
+            }
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 0 0 10px rgba(255, 72, 0, 0);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(255, 72, 0, 0);
+            }
+        }
+
+        .binary-representation {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+
+        .bit {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            margin: 0 5px;
+            transition: all 0.3s;
+        }
+
+        .bit.active {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+
+        .bitmask-value {
+            text-align: center;
+            font-size: 24px;
+            margin: 20px 0;
+        }
+
+        .bitmask-explanation {
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .table-container {
+            margin: 30px 0;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #000000;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+
+        tr:nth-child(even) {
+            background-color: #FD9F78;
+            opacity: 0.7;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .nav-button:hover {
+            background-color: #FD9F78;
+            color: #000000;
+        }
+
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .step-indicator {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .highlight {
+            color: #FF4800;
+            font-weight: bold;
+        }
+
+        .explanation {
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DP Bitmask State Visualization</h1>
+        
+        <div class="explanation" id="explanation-1">
+            <p>Dynamic Programming with bitmasks is a powerful technique for solving problems where we need to keep track of subsets of elements. Let's visualize a 4-city traveling salesman problem example.</p>
+            <p>We have 4 cities labeled 0, 1, 2, and 3. The bitmask helps us track which cities we have visited.</p>
+        </div>
+
+        <div class="explanation hidden" id="explanation-2">
+            <p>A bitmask is a binary representation where each bit represents whether we've visited a particular city (1) or not (0).</p>
+            <p>For example, bitmask <span class="highlight">1011</span> means:</p>
+            <ul>
+                <li>Rightmost bit (0th position): 1 → City 0 is visited</li>
+                <li>2nd bit from right (1st position): 1 → City 1 is visited</li>
+                <li>3rd bit from right (2nd position): 0 → City 2 is NOT visited</li>
+                <li>Leftmost bit (3rd position): 1 → City 3 is visited</li>
+            </ul>
+        </div>
+
+        <div class="explanation hidden" id="explanation-3">
+            <p>Let's build the bitmask step by step as we visit cities.</p>
+            <p>Initially, we haven't visited any cities, so our bitmask is <span class="highlight">0000</span> (decimal value: 0).</p>
+        </div>
+        
+        <div class="explanation hidden" id="explanation-4">
+            <p>Now, let's visit City 0. We set the 0th bit to 1, making our bitmask <span class="highlight">0001</span> (decimal value: 1).</p>
+        </div>
+        
+        <div class="explanation hidden" id="explanation-5">
+            <p>Next, let's also visit City 1. We set the 1st bit to 1, making our bitmask <span class="highlight">0011</span> (decimal value: 3).</p>
+        </div>
+        
+        <div class="explanation hidden" id="explanation-6">
+            <p>Let's skip City 2 for now and visit City 3. We set the 3rd bit to 1, making our bitmask <span class="highlight">1011</span> (decimal value: 11).</p>
+            <p>This bitmask <span class="highlight">1011</span> represents that we have visited cities 0, 1, and 3, but not city 2.</p>
+        </div>
+        
+        <div class="explanation hidden" id="explanation-7">
+            <p>In the DP approach for TSP, we define dp[mask][i] as:</p>
+            <p>"The minimum cost to visit all cities in the mask and end at city i"</p>
+            <p>Let's look at a sample DP table for our 4-city example:</p>
+        </div>
+
+        <div id="city-visualization">
+            <div class="city-container">
+                <div class="city" id="city-0">0</div>
+                <div class="city" id="city-1">1</div>
+                <div class="city" id="city-2">2</div>
+                <div class="city" id="city-3">3</div>
+            </div>
+
+            <div class="binary-representation">
+                <div class="bit" id="bit-3">0</div>
+                <div class="bit" id="bit-2">0</div>
+                <div class="bit" id="bit-1">0</div>
+                <div class="bit" id="bit-0">0</div>
+            </div>
+
+            <div class="bitmask-value">
+                Bitmask: <span id="binary-value">0000</span> (Decimal: <span id="decimal-value">0</span>)
+            </div>
+
+            <div class="bitmask-explanation" id="mask-explanation">
+                This bitmask represents that we haven't visited any cities yet.
+            </div>
+        </div>
+
+        <div class="table-container hidden" id="dp-table-container">
+            <h2>DP Table: dp[mask][end_city]</h2>
+            <table id="dp-table">
+                <thead>
+                    <tr>
+                        <th>Mask (Binary)</th>
+                        <th>Visited Cities</th>
+                        <th>End at City 0</th>
+                        <th>End at City 1</th>
+                        <th>End at City 2</th>
+                        <th>End at City 3</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>0001 (1)</td>
+                        <td>{0}</td>
+                        <td>0</td>
+                        <td>∞</td>
+                        <td>∞</td>
+                        <td>∞</td>
+                    </tr>
+                    <tr>
+                        <td>0011 (3)</td>
+                        <td>{0,1}</td>
+                        <td>cost(1→0)</td>
+                        <td>cost(0→1)</td>
+                        <td>∞</td>
+                        <td>∞</td>
+                    </tr>
+                    <tr>
+                        <td>1011 (11)</td>
+                        <td>{0,1,3}</td>
+                        <td>min costs</td>
+                        <td>min costs</td>
+                        <td>∞</td>
+                        <td>min costs</td>
+                    </tr>
+                    <tr>
+                        <td>1111 (15)</td>
+                        <td>{0,1,2,3}</td>
+                        <td>final cost</td>
+                        <td>final cost</td>
+                        <td>final cost</td>
+                        <td>final cost</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="button-container">
+            <button id="prev-btn" class="nav-button" disabled>Previous</button>
+            <button id="next-btn" class="nav-button">Next</button>
+        </div>
+        
+        <div class="step-indicator">
+            Step <span id="current-step">1</span> of <span id="total-steps">7</span>
+        </div>
+    </div>
+
+    <script>
+        const totalSteps = 7;
+        let currentStep = 1;
+        
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const currentStepElement = document.getElementById('current-step');
+        const binaryValueElement = document.getElementById('binary-value');
+        const decimalValueElement = document.getElementById('decimal-value');
+        const maskExplanationElement = document.getElementById('mask-explanation');
+        const dpTableContainer = document.getElementById('dp-table-container');
+        
+        function updateStepIndicator() {
+            currentStepElement.textContent = currentStep;
+            
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === totalSteps;
+            
+            // Hide all explanations
+            for (let i = 1; i <= totalSteps; i++) {
+                const explanationElement = document.getElementById(`explanation-${i}`);
+                if (explanationElement) {
+                    explanationElement.classList.add('hidden');
+                }
+            }
+            
+            // Show current explanation
+            const currentExplanation = document.getElementById(`explanation-${currentStep}`);
+            if (currentExplanation) {
+                currentExplanation.classList.remove('hidden');
+            }
+        }
+        
+        function resetCities() {
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`city-${i}`).classList.remove('visited');
+                document.getElementById(`bit-${i}`).classList.remove('active');
+                document.getElementById(`bit-${i}`).textContent = '0';
+            }
+        }
+        
+        function updateVisualization() {
+            resetCities();
+            
+            switch(currentStep) {
+                case 1:
+                case 2:
+                    // Initial state - no cities visited
+                    binaryValueElement.textContent = '0000';
+                    decimalValueElement.textContent = '0';
+                    maskExplanationElement.textContent = "This bitmask represents that we haven't visited any cities yet.";
+                    dpTableContainer.classList.add('hidden');
+                    break;
+                case 3:
+                    // Initial state - no cities visited
+                    binaryValueElement.textContent = '0000';
+                    decimalValueElement.textContent = '0';
+                    maskExplanationElement.textContent = "This bitmask represents that we haven't visited any cities yet.";
+                    dpTableContainer.classList.add('hidden');
+                    break;
+                case 4:
+                    // Visit city 0
+                    document.getElementById('city-0').classList.add('visited');
+                    document.getElementById('bit-0').classList.add('active');
+                    document.getElementById('bit-0').textContent = '1';
+                    binaryValueElement.textContent = '0001';
+                    decimalValueElement.textContent = '1';
+                    maskExplanationElement.textContent = "This bitmask represents that we have visited city 0.";
+                    dpTableContainer.classList.add('hidden');
+                    break;
+                case 5:
+                    // Visit cities 0 and 1
+                    document.getElementById('city-0').classList.add('visited');
+                    document.getElementById('city-1').classList.add('visited');
+                    document.getElementById('bit-0').classList.add('active');
+                    document.getElementById('bit-1').classList.add('active');
+                    document.getElementById('bit-0').textContent = '1';
+                    document.getElementById('bit-1').textContent = '1';
+                    binaryValueElement.textContent = '0011';
+                    decimalValueElement.textContent = '3';
+                    maskExplanationElement.textContent = "This bitmask represents that we have visited cities 0 and 1.";
+                    dpTableContainer.classList.add('hidden');
+                    break;
+                case 6:
+                    // Visit cities 0, 1, and 3
+                    document.getElementById('city-0').classList.add('visited');
+                    document.getElementById('city-1').classList.add('visited');
+                    document.getElementById('city-3').classList.add('visited');
+                    document.getElementById('bit-0').classList.add('active');
+                    document.getElementById('bit-1').classList.add('active');
+                    document.getElementById('bit-3').classList.add('active');
+                    document.getElementById('bit-0').textContent = '1';
+                    document.getElementById('bit-1').textContent = '1';
+                    document.getElementById('bit-3').textContent = '1';
+                    binaryValueElement.textContent = '1011';
+                    decimalValueElement.textContent = '11';
+                    maskExplanationElement.textContent = "This bitmask (1011) represents that we have visited cities 0, 1, and 3, but not city 2.";
+                    dpTableContainer.classList.add('hidden');
+                    break;
+                case 7:
+                    // Show DP table
+                    document.getElementById('city-0').classList.add('visited');
+                    document.getElementById('city-1').classList.add('visited');
+                    document.getElementById('city-3').classList.add('visited');
+                    document.getElementById('bit-0').classList.add('active');
+                    document.getElementById('bit-1').classList.add('active');
+                    document.getElementById('bit-3').classList.add('active');
+                    document.getElementById('bit-0').textContent = '1';
+                    document.getElementById('bit-1').textContent = '1';
+                    document.getElementById('bit-3').textContent = '1';
+                    binaryValueElement.textContent = '1011';
+                    decimalValueElement.textContent = '11';
+                    maskExplanationElement.textContent = "In a DP table, we track minimum costs to visit subsets of cities and end at specific cities.";
+                    dpTableContainer.classList.remove('hidden');
+                    break;
+            }
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStepIndicator();
+                updateVisualization();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateStepIndicator();
+                updateVisualization();
+            }
+        });
+        
+        // Initialize
+        updateStepIndicator();
+        updateVisualization();
+    </script>
+</body>
+</html>
