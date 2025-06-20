@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Topological Sort Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .explanation {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .visualization {
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            min-height: 500px;
+        }
+        .step-counter {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #FF4800;
+        }
+        .graph-container {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+        }
+        .node {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            position: relative;
+            margin: 10px;
+            transition: all 0.5s ease;
+        }
+        .node.processed {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .node.current {
+            box-shadow: 0 0 10px #FF4800;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.2);
+        }
+        .edge {
+            position: absolute;
+            background-color: #000000;
+            height: 2px;
+            transform-origin: 0 0;
+            z-index: -1;
+        }
+        .edge-arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 10px solid #000000;
+            transform-origin: 50% 50%;
+            z-index: -1;
+        }
+        .info-panel {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+        }
+        .info-box {
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+            padding: 10px;
+            width: 30%;
+        }
+        .info-box h3 {
+            color: #FF4800;
+            margin-top: 0;
+            border-bottom: 1px solid #FD9F78;
+            padding-bottom: 5px;
+        }
+        .queue-item, .in-degree-item, .completion-time-item {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .queue-item.active {
+            background-color: #FD9F78;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .highlight {
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .indegree-value {
+            position: absolute;
+            top: -20px;
+            right: -10px;
+            background-color: #FFFFFF;
+            color: #000000;
+            border: 1px solid #FD9F78;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Topological Sort Visualization</h1>
+        
+        <div class="explanation">
+            <p>Topological sorting is used for scheduling jobs or tasks when some jobs must be completed before others can begin. This visualization shows how to determine the order of executing 5 jobs (A, B, C, D, E) with dependencies between them.</p>
+        </div>
+        
+        <div class="visualization">
+            <div class="step-counter">Step: <span id="step-number">1</span> of 10</div>
+            
+            <div class="graph-container" id="graph">
+                <!-- Nodes and edges will be created by JavaScript -->
+            </div>
+            
+            <div class="info-panel">
+                <div class="info-box">
+                    <h3>Queue</h3>
+                    <div id="queue-info"></div>
+                </div>
+                
+                <div class="info-box">
+                    <h3>In-Degree</h3>
+                    <div id="in-degree-info"></div>
+                </div>
+                
+                <div class="info-box">
+                    <h3>Completion Times</h3>
+                    <div id="completion-times-info"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button id="prev-button" class="nav-button" disabled>Previous</button>
+            <button id="next-button" class="nav-button">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Define the graph and visualization state
+        const jobs = ['A', 'B', 'C', 'D', 'E'];
+        const edges = [
+            { from: 'A', to: 'B' },
+            { from: 'A', to: 'C' },
+            { from: 'B', to: 'D' },
+            { from: 'C', to: 'D' },
+            { from: 'D', to: 'E' }
+        ];
+        
+        // Node positions for visualization
+        const nodePositions = {
+            'A': { x: 100, y: 100 },
+            'B': { x: 250, y: 50 },
+            'C': { x: 250, y: 150 },
+            'D': { x: 400, y: 100 },
+            'E': { x: 550, y: 100 }
+        };
+
+        // Steps for the visualization
+        const steps = [
+            {
+                description: "Initialize the graph and calculate in-degrees",
+                queue: [],
+                inDegree: { A: 0, B: 1, C: 1, D: 2, E: 1 },
+                completionTimes: { A: 0, B: 0, C: 0, D: 0, E: 0 },
+                processedNodes: [],
+                currentNode: null,
+                highlightEdges: []
+            },
+            {
+                description: "Find nodes with in-degree 0 and add to queue",
+                queue: ['A'],
+                inDegree: { A: 0, B: 1, C: 1, D: 2, E: 1 },
+                completionTimes: { A: 0, B: 0, C: 0, D: 0, E: 0 },
+                processedNodes: [],
+                currentNode: null,
+                highlightEdges: []
+            },
+            {
+                description: "Process node A",
+                queue: [],
+                inDegree: { A: 0, B: 1, C: 1, D: 2, E: 1 },
+                completionTimes: { A: 1, B: 0, C: 0, D: 0, E: 0 },
+                processedNodes: [],
+                currentNode: 'A',
+                highlightEdges: ['A-B', 'A-C']
+            },
+            {
+                description: "Reduce in-degree of B and C, add them to queue",
+                queue: ['B', 'C'],
+                inDegree: { A: 0, B: 0, C: 0, D: 2, E: 1 },
+                completionTimes: { A: 1, B: 0, C: 0, D: 0, E: 0 },
+                processedNodes: ['A'],
+                currentNode: null,
+                highlightEdges: []
+            },
+            {
+                description: "Process node B",
+                queue: ['C'],
+                inDegree: { A: 0, B: 0, C: 0, D: 2, E: 1 },
+                completionTimes: { A: 1, B: 2, C: 0, D: 0, E: 0 },
+                processedNodes: ['A'],
+                currentNode: 'B',
+                highlightEdges: ['B-D']
+            },
+            {
+                description: "Reduce in-degree of D",
+                queue: ['C'],
+                inDegree: { A: 0, B: 0, C: 0, D: 1, E: 1 },
+                completionTimes: { A: 1, B: 2, C: 0, D: 0, E: 0 },
+                processedNodes: ['A', 'B'],
+                currentNode: null,
+                highlightEdges: []
+            },
+            {
+                description: "Process node C",
+                queue: [],
+                inDegree: { A: 0, B: 0, C: 0, D: 1, E: 1 },
+                completionTimes: { A: 1, B: 2, C: 3, D: 0, E: 0 },
+                processedNodes: ['A', 'B'],
+                currentNode: 'C',
+                highlightEdges: ['C-D']
+            },
+            {
+                description: "Reduce in-degree of D, add it to queue",
+                queue: ['D'],
+                inDegree: { A: 0, B: 0, C: 0, D: 0, E: 1 },
+                completionTimes: { A: 1, B: 2, C: 3, D: 0, E: 0 },
+                processedNodes: ['A', 'B', 'C'],
+                currentNode: null,
+                highlightEdges: []
+            },
+            {
+                description: "Process node D",
+                queue: [],
+                inDegree: { A: 0, B: 0, C: 0, D: 0, E: 1 },
+                completionTimes: { A: 1, B: 2, C: 3, D: 4, E: 0 },
+                processedNodes: ['A', 'B', 'C'],
+                currentNode: 'D',
+                highlightEdges: ['D-E']
+            },
+            {
+                description: "Reduce in-degree of E, add it to queue",
+                queue: ['E'],
+                inDegree: { A: 0, B: 0, C: 0, D: 0, E: 0 },
+                completionTimes: { A: 1, B: 2, C: 3, D: 4, E: 0 },
+                processedNodes: ['A', 'B', 'C', 'D'],
+                currentNode: null,
+                highlightEdges: []
+            },
+            {
+                description: "Process node E",
+                queue: [],
+                inDegree: { A: 0, B: 0, C: 0, D: 0, E: 0 },
+                completionTimes: { A: 1, B: 2, C: 3, D: 4, E: 5 },
+                processedNodes: ['A', 'B', 'C', 'D'],
+                currentNode: 'E',
+                highlightEdges: []
+            },
+            {
+                description: "Topological sort complete",
+                queue: [],
+                inDegree: { A: 0, B: 0, C: 0, D: 0, E: 0 },
+                completionTimes: { A: 1, B: 2, C: 3, D: 4, E: 5 },
+                processedNodes: ['A', 'B', 'C', 'D', 'E'],
+                currentNode: null,
+                highlightEdges: []
+            }
+        ];
+
+        let currentStepIndex = 0;
+        const totalSteps = steps.length;
+
+        // Initialize the visualization
+        function initializeVisualization() {
+            createGraph();
+            updateVisualization();
+        }
+
+        // Create the graph with nodes and edges
+        function createGraph() {
+            const graphContainer = document.getElementById('graph');
+            graphContainer.innerHTML = '';
+
+            // Create nodes
+            jobs.forEach(job => {
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.id = `node-${job}`;
+                node.textContent = job;
+                node.style.left = `${nodePositions[job].x}px`;
+                node.style.top = `${nodePositions[job].y}px`;
+                
+                // Add in-degree indicator
+                const inDegreeIndicator = document.createElement('div');
+                inDegreeIndicator.className = 'indegree-value';
+                inDegreeIndicator.id = `indegree-${job}`;
+                inDegreeIndicator.textContent = '0';
+                node.appendChild(inDegreeIndicator);
+                
+                graphContainer.appendChild(node);
+            });
+
+            // Create edges
+            edges.forEach(edge => {
+                const fromNode = document.getElementById(`node-${edge.from}`);
+                const toNode = document.getElementById(`node-${edge.to}`);
+                
+                const fromRect = fromNode.getBoundingClientRect();
+                const toRect = toNode.getBoundingClientRect();
+                
+                // Calculate positions relative to the graph container
+                const graphRect = graphContainer.getBoundingClientRect();
+                
+                const fromX = nodePositions[edge.from].x + 25;
+                const fromY = nodePositions[edge.from].y + 25;
+                const toX = nodePositions[edge.to].x + 25;
+                const toY = nodePositions[edge.to].y + 25;
+                
+                // Calculate the length and angle of the edge
+                const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+                const angle = Math.atan2(toY - fromY, toX - fromX);
+                
+                // Create the edge line
+                const edgeLine = document.createElement('div');
+                edgeLine.className = 'edge';
+                edgeLine.id = `edge-${edge.from}-${edge.to}`;
+                edgeLine.style.width = `${length - 50}px`;
+                edgeLine.style.left = `${fromX}px`;
+                edgeLine.style.top = `${fromY}px`;
+                edgeLine.style.transform = `rotate(${angle}rad)`;
+                
+                // Create the arrow at the end of the edge
+                const arrowHead = document.createElement('div');
+                arrowHead.className = 'edge-arrow';
+                arrowHead.style.left = `${toX - 5}px`;
+                arrowHead.style.top = `${toY - 10}px`;
+                arrowHead.style.transform = `rotate(${angle + Math.PI/2}rad)`;
+                
+                graphContainer.appendChild(edgeLine);
+                graphContainer.appendChild(arrowHead);
+            });
+        }
+
+        // Update the visualization based on the current step
+        function updateVisualization() {
+            const currentStep = steps[currentStepIndex];
+            
+            // Update step counter
+            document.getElementById('step-number').textContent = currentStepIndex + 1;
+            
+            // Update buttons
+            document.getElementById('prev-button').disabled = currentStepIndex === 0;
+            document.getElementById('next-button').disabled = currentStepIndex === totalSteps - 1;
+            
+            // Update node states
+            jobs.forEach(job => {
+                const node = document.getElementById(`node-${job}`);
+                node.classList.remove('processed', 'current');
+                
+                if (currentStep.processedNodes.includes(job)) {
+                    node.classList.add('processed');
+                }
+                
+                if (currentStep.currentNode === job) {
+                    node.classList.add('current');
+                }
+                
+                // Update in-degree indicators
+                document.getElementById(`indegree-${job}`).textContent = currentStep.inDegree[job];
+            });
+            
+            // Update edge highlighting
+            edges.forEach(edge => {
+                const edgeId = `edge-${edge.from}-${edge.to}`;
+                const edgeElement = document.getElementById(edgeId);
+                
+                if (edgeElement) {
+                    if (currentStep.highlightEdges.includes(`${edge.from}-${edge.to}`)) {
+                        edgeElement.style.backgroundColor = '#FF4800';
+                        edgeElement.style.height = '4px';
+                        edgeElement.classList.add('highlight');
+                    } else {
+                        edgeElement.style.backgroundColor = '#000000';
+                        edgeElement.style.height = '2px';
+                        edgeElement.classList.remove('highlight');
+                    }
+                }
+            });
+            
+            // Update queue information
+            const queueInfo = document.getElementById('queue-info');
+            queueInfo.innerHTML = '';
+            
+            if (currentStep.queue.length === 0) {
+                const emptyItem = document.createElement('div');
+                emptyItem.className = 'queue-item';
+                emptyItem.textContent = 'Empty';
+                queueInfo.appendChild(emptyItem);
+            } else {
+                currentStep.queue.forEach(job => {
+                    const queueItem = document.createElement('div');
+                    queueItem.className = 'queue-item';
+                    queueItem.textContent = `Job ${job}`;
+                    queueInfo.appendChild(queueItem);
+                });
+            }
+            
+            // Update in-degree information
+            const inDegreeInfo = document.getElementById('in-degree-info');
+            inDegreeInfo.innerHTML = '';
+            
+            jobs.forEach(job => {
+                const inDegreeItem = document.createElement('div');
+                inDegreeItem.className = 'in-degree-item';
+                inDegreeItem.textContent = `Job ${job}: ${currentStep.inDegree[job]}`;
+                inDegreeInfo.appendChild(inDegreeItem);
+            });
+            
+            // Update completion times information
+            const completionTimesInfo = document.getElementById('completion-times-info');
+            completionTimesInfo.innerHTML = '';
+            
+            jobs.forEach(job => {
+                const completionTimeItem = document.createElement('div');
+                completionTimeItem.className = 'completion-time-item';
+                const time = currentStep.completionTimes[job];
+                completionTimeItem.textContent = `Job ${job}: ${time > 0 ? time : 'Not completed'}`;
+                completionTimesInfo.appendChild(completionTimeItem);
+            });
+        }
+
+        // Event listeners for navigation buttons
+        document.getElementById('prev-button').addEventListener('click', () => {
+            if (currentStepIndex > 0) {
+                currentStepIndex--;
+                updateVisualization();
+            }
+        });
+
+        document.getElementById('next-button').addEventListener('click', () => {
+            if (currentStepIndex < totalSteps - 1) {
+                currentStepIndex++;
+                updateVisualization();
+            }
+        });
+
+        // Initialize visualization when the page loads
+        window.addEventListener('load', initializeVisualization);
+    </script>
+</body>
+</html>
