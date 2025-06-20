@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kruskal's Algorithm Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        
+        p {
+            color: #000000;
+            text-align: center;
+            max-width: 800px;
+            margin-bottom: 20px;
+        }
+        
+        .visualization-container {
+            position: relative;
+            width: 800px;
+            height: 500px;
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .step {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        
+        .step.active {
+            opacity: 1;
+        }
+        
+        .graph {
+            position: relative;
+            width: 400px;
+            height: 300px;
+        }
+        
+        .node {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #000000;
+        }
+        
+        .edge {
+            position: absolute;
+            background-color: #000000;
+            height: 2px;
+            transform-origin: left center;
+        }
+        
+        .edge-label {
+            position: absolute;
+            background-color: #FFFFFF;
+            color: #000000;
+            padding: 2px 5px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+        
+        .edge.selected {
+            background-color: #FF4800;
+            height: 3px;
+        }
+        
+        .step-description {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #000000;
+            text-align: center;
+            padding: 0 20px;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Kruskal's Algorithm Visualization</h1>
+    <p>Kruskal's algorithm is a greedy algorithm that finds a minimum spanning tree for a connected weighted graph. It works by sorting all the edges from low weight to high weight, then adding the lowest weight edge to the spanning tree if it doesn't create a cycle.</p>
+    
+    <div class="visualization-container">
+        <div class="step" id="step1">
+            <div class="graph">
+                <!-- Nodes -->
+                <div class="node" style="top: 50px; left: 180px;">A</div>
+                <div class="node" style="top: 150px; left: 80px;">B</div>
+                <div class="node" style="top: 150px; left: 280px;">C</div>
+                <div class="node" style="top: 250px; left: 180px;">D</div>
+                
+                <!-- Edges -->
+                <div class="edge" style="top: 70px; left: 190px; width: 120px; transform: rotate(135deg);">
+                    <div class="edge-label" style="top: -10px; left: 50px;">1</div>
+                </div>
+                <div class="edge" style="top: 150px; left: 100px; width: 180px;">
+                    <div class="edge-label" style="top: -15px; left: 80px;">2</div>
+                </div>
+                <div class="edge" style="top: 170px; left: 95px; width: 120px; transform: rotate(45deg);">
+                    <div class="edge-label" style="top: -10px; left: 50px;">3</div>
+                </div>
+                <div class="edge" style="top: 70px; left: 190px; width: 180px; transform: rotate(90deg);">
+                    <div class="edge-label" style="top: -10px; left: 80px;">4</div>
+                </div>
+                <div class="edge" style="top: 170px; left: 285px; width: 120px; transform: rotate(135deg);">
+                    <div class="edge-label" style="top: -10px; left: 50px;">5</div>
+                </div>
+                <div class="edge" style="top: 150px; left: 290px; width: 120px; transform: rotate(90deg);">
+                    <div class="edge-label" style="top: -10px; left: 50px;">6</div>
+                </div>
+            </div>
+            <div class="step-description">
+                Initial graph with sorted edges: A-B(1), B-C(2), B-D(3), A-D(4), C-D(5), A-C(6)
+            </div>
+        </div>
+        
+        <div class="step" id="step2">
+            <div class="graph">
+                <!-- Nodes -->
+                <div class="node" style="top: 50px; left: 180px;">A</div>
+                <div class="node" style="top: 150px; left: 80px;">B</div>
+                <div class="node" style="top: 150px; left: 280px;">C</div>
+                <div class="node" style="top: 250px; left: 180px;">D</div>
+                
+                <!-- Edges -->
+                <div class="edge selected" style="top: 70px; left: 190px; width: 120px; transform: rotate(135deg);">
+                    <div class="edge-label" style="top: -10px; left: 50px;">1</div>
+                </div>
+                <div class="edge" style="top: 150px; left: 100px; width: 180px;">
+                    <div class="edge-label" style="top: -15px; left: 80px;">2</div>
+                </div>
+                <div class="edge" style="top: 170px; left: 95px; width: 120px; transform: rotate(45deg);">
+                    <div class="edge-label" style="top: -10px; left: 50px;">3</div>
+                </div>
+                <div class="edge" style="top: 70px; left: 190px; width: 180px; transform: rotate(90deg);">
+                    <div class="edge-label" style="top: -10px; left: 80px;">4</div>
+                </div>
+                <div class="edge" style="top: 170px; left: 285px; width: 120px; transform: rotate(135deg);">
+                    <div class="edge-label" style="top: -10px; left: 50px;">5</div>
+                </div>
+                <div class="edge" style="top: 150px; left: 290px; width: 120px; transform: rotate(90deg);">
+                    <div class="edge-label" style="top: -10px; left: 50px;">6</div>
+                </div>
+            </div>
+            <div class="step-description">
+                Step 1: Add edge A-B with weight 1 to the MST
+            </div>
+        </div>
+        
+        <div class="step" id="step3">
+            <div class="graph">
+                <!-- Nodes -->
+                <div class="node" style="top: 50px; left: 180px;">A</div>
+                <div class="node" style="top: 150px; left: 80px;">B</div>
+                <div class="node" style="top: 150px; left: 280px;">C</div>
+                <div class="node" style="top: 250px; left: 180px;">D</div>
+                
+                <!-- Edges -->
+                <div class="edge selected" style="top: 70px; left: 190px; width: 120px; transform: rotate(135deg);">
+                    <div class="edge-label" style="top: -10px; left: 50px;">1</div>
+                </div>
+                <div class="edge selected" style="top: 150px; left: 100px; width: 180px;">
+                    <div class="edge-label" style="top: -15px; left: 80px;">2</div>
+                </div>
+                <div class="edge" style="top: 170px; left: 95px; width: 120px; transform: rotate(45deg);">
+                    <div class="edge-label" style="top: -10px; left: 50px;">3</div>
+                </div>
+                <div class="edge" style="top: 70px; left: 190px; width: 180px; transform: rotate(90deg);">
+                    <div class="edge-label" style="top: -10px; left: 80px;">4</div>
+                </div>
+                <div class="edge" style="top: 170px; left: 285px; width: 120px; transform: rotate(135deg);">
+                    <div class="edge-label" style="top: -10px; left: 50px;">5</div>
+                </div>
+                <div class="edge" style="top: 150px; left: 290px; width: 120px; transform: rotate(90deg);">
+                    <div class="edge-label" style="top: -10px; left: 50px;">6</div>
+                </div>
+            </div>
+            <div class="step-description">
+                Step 2: Add edge B-C with weight 2 to the MST
+            </div>
+        </div>
+        
+        <div class="step" id="step4">
+            <div class="graph">
+                <!-- Nodes -->
+                <div class="node" style="top: 50px; left: 180px;">A</div>
+                <div class="node" style="top: 150px; left: 80px;">B</div>
+                <div class="node" style="top: 150px; left: 280px;">C</div>
+                <div class="node" style="top: 250px; left: 180px;">D</div>
+                
+                <!-- Edges -->
+                <div class="edge selected" style="top: 70px; left: 190px; width: 120px; transform: rotate(135deg);">
+                    <div class="edge-label" style="top: -10px; left: 50px;">1</div>
+                </div>
+                <div class="edge selected" style="top: 150px; left: 100px; width: 180px;">
+                    <div class="edge-label" style="top: -15px; left: 80px;">2</div>
+                </div>
+                <div class="edge" style="top: 170px; left: 95px; width: 120px; transform: rotate(45deg);">
+                    <div class="edge-label" style="top: -10px; left: 50px;">3</div>
+                </div>
+                <div class="edge selected" style="top: 70px; left: 190px; width: 180px; transform: rotate(90deg);">
+                    <div class="edge-label" style="top: -10px; left: 80px;">4</div>
+                </div>
+                <div class="edge" style="top: 170px; left: 285px; width: 120px; transform: rotate(135deg);">
+                    <div class="edge-label" style="top: -10px; left: 50px;">5</div>
+                </div>
+                <div class="edge" style="top: 150px; left: 290px; width: 120px; transform: rotate(90deg);">
+                    <div class="edge-label" style="top: -10px; left: 50px;">6</div>
+                </div>
+            </div>
+            <div class="step-description">
+                Final MST: Add edge A-D with weight 4. (Note: B-D with weight 3 would create a cycle, so we skip it)
+            </div>
+        </div>
+    </div>
+    
+    <div class="navigation">
+        <button class="nav-button" id="prevBtn" disabled>Previous</button>
+        <button class="nav-button" id="nextBtn">Next</button>
+    </div>
+    
+    <div class="step-indicator">Step <span id="currentStep">1</span> of 4</div>
+    
+    <script>
+        const steps = document.querySelectorAll('.step');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const currentStepEl = document.getElementById('currentStep');
+        
+        let currentStep = 0;
+        
+        function showStep(index) {
+            steps.forEach((step, i) => {
+                if (i === index) {
+                    step.classList.add('active');
+                } else {
+                    step.classList.remove('active');
+                }
+            });
+            
+            currentStepEl.textContent = index + 1;
+            
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === steps.length - 1;
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                showStep(currentStep);
+            }
+        });
+        
+        // Initialize
+        showStep(currentStep);
+    </script>
+</body>
+</html>
