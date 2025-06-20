@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shortest Path Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        .explanation {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+            color: #000000;
+        }
+        
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            border: 2px solid #FD9F78;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        .step-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            margin: 0 5px;
+            cursor: pointer;
+        }
+        
+        .step-dot.active {
+            background-color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Directed Graph Shortest Path Visualization</h1>
+        
+        <div class="explanation" id="explanation">
+            Let's explore how to find the shortest path in a directed graph from vertex A to vertex D.
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="graphCanvas"></canvas>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator"></div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prevBtn">Previous</button>
+            <button class="nav-button" id="nextBtn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const explanation = document.getElementById('explanation');
+        const stepIndicator = document.getElementById('stepIndicator');
+        
+        // Set canvas dimensions to match its display size
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // Graph data
+        const vertices = {
+            A: { x: 150, y: 200 },
+            B: { x: 350, y: 100 },
+            C: { x: 350, y: 300 },
+            D: { x: 550, y: 200 }
+        };
+        
+        const edges = [
+            { from: 'A', to: 'B', weight: 4, highlighted: false },
+            { from: 'A', to: 'C', weight: 2, highlighted: false },
+            { from: 'C', to: 'B', weight: -3, highlighted: false },
+            { from: 'B', to: 'D', weight: 3, highlighted: false },
+            { from: 'C', to: 'D', weight: 4, highlighted: false }
+        ];
+        
+        // The shortest path is A→C→B→D
+        const shortestPath = ['A', 'C', 'B', 'D'];
+        
+        // Animation steps
+        const steps = [
+            {
+                text: "This is a directed graph with 4 vertices (A, B, C, D) and 5 edges with different weights. We want to find the shortest path from A to D.",
+                highlightedEdges: [],
+                highlightedVertices: []
+            },
+            {
+                text: "Let's examine the possible paths from A. We can go directly to B with weight 4 or to C with weight 2.",
+                highlightedEdges: [{from: 'A', to: 'B'}, {from: 'A', to: 'C'}],
+                highlightedVertices: ['A']
+            },
+            {
+                text: "Starting with A→C (weight 2) which is cheaper than A→B (weight 4).",
+                highlightedEdges: [{from: 'A', to: 'C'}],
+                highlightedVertices: ['A', 'C']
+            },
+            {
+                text: "From C, we can go to B with weight -3 or to D with weight 4.",
+                highlightedEdges: [{from: 'A', to: 'C'}, {from: 'C', to: 'B'}, {from: 'C', to: 'D'}],
+                highlightedVertices: ['A', 'C']
+            },
+            {
+                text: "Let's go from C→B (weight -3). Total path weight so far: 2 + (-3) = -1.",
+                highlightedEdges: [{from: 'A', to: 'C'}, {from: 'C', to: 'B'}],
+                highlightedVertices: ['A', 'C', 'B']
+            },
+            {
+                text: "From B, we can only go to D with weight 3.",
+                highlightedEdges: [{from: 'A', to: 'C'}, {from: 'C', to: 'B'}, {from: 'B', to: 'D'}],
+                highlightedVertices: ['A', 'C', 'B']
+            },
+            {
+                text: "So we go B→D (weight 3). Total path weight: 2 + (-3) + 3 = 2.",
+                highlightedEdges: [{from: 'A', to: 'C'}, {from: 'C', to: 'B'}, {from: 'B', to: 'D'}],
+                highlightedVertices: ['A', 'C', 'B', 'D']
+            },
+            {
+                text: "Another path would be A→C→D with weight 2 + 4 = 6, which is higher than our current best path (2).",
+                highlightedEdges: [{from: 'A', to: 'C'}, {from: 'C', to: 'D'}],
+                highlightedVertices: ['A', 'C', 'D']
+            },
+            {
+                text: "The path A→B→D has weight 4 + 3 = 7, which is also higher than our best path (2).",
+                highlightedEdges: [{from: 'A', to: 'B'}, {from: 'B', to: 'D'}],
+                highlightedVertices: ['A', 'B', 'D']
+            },
+            {
+                text: "The shortest path from A to D is therefore A→C→B→D with a total weight of 2.",
+                highlightedEdges: [{from: 'A', to: 'C'}, {from: 'C', to: 'B'}, {from: 'B', to: 'D'}],
+                highlightedVertices: ['A', 'C', 'B', 'D']
+            }
+        ];
+        
+        let currentStep = 0;
+        
+        // Initialize step indicators
+        function initStepIndicators() {
+            stepIndicator.innerHTML = '';
+            for (let i = 0; i < steps.length; i++) {
+                const dot = document.createElement('div');
+                dot.className = i === currentStep ? 'step-dot active' : 'step-dot';
+                dot.addEventListener('click', () => {
+                    currentStep = i;
+                    updateUI();
+                });
+                stepIndicator.appendChild(dot);
+            }
+        }
+        
+        // Draw a vertex
+        function drawVertex(x, y, label, isHighlighted) {
+            ctx.beginPath();
+            ctx.arc(x, y, 25, 0, Math.PI * 2);
+            ctx.fillStyle = isHighlighted ? '#FF4800' : '#FD9F78';
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, x, y);
+        }
+        
+        // Draw an edge with arrow and weight
+        function drawEdge(fromX, fromY, toX, toY, weight, isHighlighted) {
+            // Calculate the direction vector
+            const dx = toX - fromX;
+            const dy = toY - fromY;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            
+            // Normalize the direction vector
+            const unitDx = dx / length;
+            const unitDy = dy / length;
+            
+            // Calculate the starting and ending points (adjusted for the vertex circles)
+            const startX = fromX + unitDx * 25;
+            const startY = fromY + unitDy * 25;
+            const endX = toX - unitDx * 25;
+            const endY = toY - unitDy * 25;
+            
+            // Draw the line
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = isHighlighted ? '#FF4800' : '#000000';
+            ctx.lineWidth = isHighlighted ? 3 : 2;
+            ctx.stroke();
+            
+            // Draw the arrow head
+            const arrowSize = 10;
+            const angle = Math.atan2(dy, dx);
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(
+                endX - arrowSize * Math.cos(angle - Math.PI / 6),
+                endY - arrowSize * Math.sin(angle - Math.PI / 6)
+            );
+            ctx.lineTo(
+                endX - arrowSize * Math.cos(angle + Math.PI / 6),
+                endY - arrowSize * Math.sin(angle + Math.PI / 6)
+            );
+            ctx.closePath();
+            ctx.fillStyle = isHighlighted ? '#FF4800' : '#000000';
+            ctx.fill();
+            
+            // Draw the weight
+            // Calculate position for the weight (perpendicular to the edge)
+            const midX = (startX + endX) / 2;
+            const midY = (startY + endY) / 2;
+            const perpX = -unitDy * 20; // Perpendicular offset
+            const perpY = unitDx * 20;
+            
+            ctx.fillStyle = '#000000';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Add a white background for the weight text
+            const weightText = weight.toString();
+            const textWidth = ctx.measureText(weightText).width + 10;
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(midX + perpX - textWidth/2, midY + perpY - 12, textWidth, 24);
+            
+            ctx.fillStyle = isHighlighted ? '#FF4800' : '#000000';
+            ctx.fillText(weightText, midX + perpX, midY + perpY);
+        }
+        
+        // Draw the graph
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges
+            edges.forEach(edge => {
+                const isHighlighted = steps[currentStep].highlightedEdges.some(
+                    e => e.from === edge.from && e.to === edge.to
+                );
+                
+                drawEdge(
+                    vertices[edge.from].x,
+                    vertices[edge.from].y,
+                    vertices[edge.to].x,
+                    vertices[edge.to].y,
+                    edge.weight,
+                    isHighlighted
+                );
+            });
+            
+            // Draw vertices
+            for (const [label, coords] of Object.entries(vertices)) {
+                const isHighlighted = steps[currentStep].highlightedVertices.includes(label);
+                drawVertex(coords.x, coords.y, label, isHighlighted);
+            }
+        }
+        
+        function updateUI() {
+            // Update the explanation text
+            explanation.textContent = steps[currentStep].text;
+            
+            // Draw the graph
+            drawGraph();
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+            
+            // Update step indicators
+            const dots = document.querySelectorAll('.step-dot');
+            dots.forEach((dot, index) => {
+                dot.className = index === currentStep ? 'step-dot active' : 'step-dot';
+            });
+        }
+        
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateUI();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateUI();
+            }
+        });
+        
+        // Initialize
+        initStepIndicators();
+        updateUI();
+    </script>
+</body>
+</html>
