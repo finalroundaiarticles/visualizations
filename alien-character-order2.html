@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Topological Sort Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .topo-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            margin-bottom: 20px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        .graph {
+            width: 100%;
+            height: 60%;
+            position: relative;
+        }
+        .node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            position: absolute;
+            transition: all 0.5s ease;
+        }
+        .node.visited {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .node.processed {
+            background-color: #000000;
+            color: #FFFFFF;
+        }
+        .edge {
+            position: absolute;
+            background-color: #000000;
+            height: 2px;
+            transform-origin: 0 0;
+            transition: all 0.5s ease;
+        }
+        .edge.used {
+            background-color: #FF4800;
+        }
+        .status {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding: 10px;
+            border-top: 1px solid #FD9F78;
+        }
+        .queue, .result {
+            width: 45%;
+            padding: 10px;
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+        }
+        .queue h3, .result h3 {
+            margin-top: 0;
+            color: #FF4800;
+        }
+        .item {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            margin: 5px;
+            background-color: #FD9F78;
+            color: #000000;
+            text-align: center;
+            line-height: 30px;
+            border-radius: 5px;
+        }
+        .explanation {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #FD9F78;
+            border-radius: 5px;
+            color: #000000;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Topological Sort Animation</h1>
+        <div class="topo-container">
+            <div class="graph" id="graph"></div>
+            <div class="status">
+                <div class="queue">
+                    <h3>Queue</h3>
+                    <div id="queue-content"></div>
+                </div>
+                <div class="result">
+                    <h3>Result</h3>
+                    <div id="result-content"></div>
+                </div>
+            </div>
+            <div class="explanation" id="explanation">
+                Click "Next" to start the Topological Sort animation.
+            </div>
+        </div>
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Graph data - adjacency list for "wertf"
+        const graph = {
+            'w': ['e', 'r'],
+            'e': ['r', 't'],
+            'r': ['t', 'f'],
+            't': ['f'],
+            'f': []
+        };
+
+        // Nodes with positions
+        const nodes = {
+            'w': { x: 100, y: 70 },
+            'e': { x: 250, y: 40 },
+            'r': { x: 350, y: 100 },
+            't': { x: 500, y: 70 },
+            'f': { x: 650, y: 70 }
+        };
+
+        // Edges between nodes
+        const edges = [
+            { from: 'w', to: 'e' },
+            { from: 'w', to: 'r' },
+            { from: 'e', to: 'r' },
+            { from: 'e', to: 't' },
+            { from: 'r', to: 't' },
+            { from: 'r', to: 'f' },
+            { from: 't', to: 'f' }
+        ];
+
+        // In-degree for each node (number of edges coming into the node)
+        const inDegree = {
+            'w': 0,
+            'e': 1,
+            'r': 2,
+            't': 2,
+            'f': 2
+        };
+
+        // Animation steps
+        const steps = [
+            {
+                title: "Initial State",
+                description: "We start with our directed graph. For a topological sort, we need to find an ordering where for each edge (u,v), node u comes before node v in the ordering.",
+                nodeStates: {},
+                edgeStates: {},
+                queue: [],
+                result: ""
+            },
+            {
+                title: "Find nodes with no incoming edges",
+                description: "To start, we identify nodes with no incoming edges (in-degree = 0). We add these to our queue. In this case, only 'w' has in-degree 0.",
+                nodeStates: { 'w': 'visited' },
+                edgeStates: {},
+                queue: ['w'],
+                result: ""
+            },
+            {
+                title: "Process node 'w'",
+                description: "We remove 'w' from the queue and add it to our result. Then we reduce the in-degree of all its neighbors ('e' and 'r').",
+                nodeStates: { 'w': 'processed' },
+                edgeStates: { 'w-e': 'used', 'w-r': 'used' },
+                queue: [],
+                result: "w",
+                inDegreeChange: { 'e': 0, 'r': 1 }
+            },
+            {
+                title: "Add new nodes with zero in-degree",
+                description: "After processing 'w', node 'e' now has in-degree 0, so we add it to the queue.",
+                nodeStates: { 'w': 'processed', 'e': 'visited' },
+                edgeStates: { 'w-e': 'used', 'w-r': 'used' },
+                queue: ['e'],
+                result: "w"
+            },
+            {
+                title: "Process node 'e'",
+                description: "We remove 'e' from the queue and add it to our result. Then we reduce the in-degree of its neighbors ('r' and 't').",
+                nodeStates: { 'w': 'processed', 'e': 'processed' },
+                edgeStates: { 'w-e': 'used', 'w-r': 'used', 'e-r': 'used', 'e-t': 'used' },
+                queue: [],
+                result: "we",
+                inDegreeChange: { 'r': 0, 't': 1 }
+            },
+            {
+                title: "Add new nodes with zero in-degree",
+                description: "After processing 'e', node 'r' now has in-degree 0, so we add it to the queue.",
+                nodeStates: { 'w': 'processed', 'e': 'processed', 'r': 'visited' },
+                edgeStates: { 'w-e': 'used', 'w-r': 'used', 'e-r': 'used', 'e-t': 'used' },
+                queue: ['r'],
+                result: "we"
+            },
+            {
+                title: "Process node 'r'",
+                description: "We remove 'r' from the queue and add it to our result. Then we reduce the in-degree of its neighbors ('t' and 'f').",
+                nodeStates: { 'w': 'processed', 'e': 'processed', 'r': 'processed' },
+                edgeStates: { 'w-e': 'used', 'w-r': 'used', 'e-r': 'used', 'e-t': 'used', 'r-t': 'used', 'r-f': 'used' },
+                queue: [],
+                result: "wer",
+                inDegreeChange: { 't': 0, 'f': 1 }
+            },
+            {
+                title: "Add new nodes with zero in-degree",
+                description: "After processing 'r', node 't' now has in-degree 0, so we add it to the queue.",
+                nodeStates: { 'w': 'processed', 'e': 'processed', 'r': 'processed', 't': 'visited' },
+                edgeStates: { 'w-e': 'used', 'w-r': 'used', 'e-r': 'used', 'e-t': 'used', 'r-t': 'used', 'r-f': 'used' },
+                queue: ['t'],
+                result: "wer"
+            },
+            {
+                title: "Process node 't'",
+                description: "We remove 't' from the queue and add it to our result. Then we reduce the in-degree of its neighbor ('f').",
+                nodeStates: { 'w': 'processed', 'e': 'processed', 'r': 'processed', 't': 'processed' },
+                edgeStates: { 'w-e': 'used', 'w-r': 'used', 'e-r': 'used', 'e-t': 'used', 'r-t': 'used', 'r-f': 'used', 't-f': 'used' },
+                queue: [],
+                result: "wert",
+                inDegreeChange: { 'f': 0 }
+            },
+            {
+                title: "Add new nodes with zero in-degree",
+                description: "After processing 't', node 'f' now has in-degree 0, so we add it to the queue.",
+                nodeStates: { 'w': 'processed', 'e': 'processed', 'r': 'processed', 't': 'processed', 'f': 'visited' },
+                edgeStates: { 'w-e': 'used', 'w-r': 'used', 'e-r': 'used', 'e-t': 'used', 'r-t': 'used', 'r-f': 'used', 't-f': 'used' },
+                queue: ['f'],
+                result: "wert"
+            },
+            {
+                title: "Process node 'f'",
+                description: "We remove 'f' from the queue and add it to our result. There are no more nodes to process.",
+                nodeStates: { 'w': 'processed', 'e': 'processed', 'r': 'processed', 't': 'processed', 'f': 'processed' },
+                edgeStates: { 'w-e': 'used', 'w-r': 'used', 'e-r': 'used', 'e-t': 'used', 'r-t': 'used', 'r-f': 'used', 't-f': 'used' },
+                queue: [],
+                result: "wertf"
+            },
+            {
+                title: "Topological Sort Complete",
+                description: "All nodes have been processed. The final topological ordering is 'wertf'. This ordering ensures that for each edge (u,v) in the original graph, u comes before v in our result.",
+                nodeStates: { 'w': 'processed', 'e': 'processed', 'r': 'processed', 't': 'processed', 'f': 'processed' },
+                edgeStates: { 'w-e': 'used', 'w-r': 'used', 'e-r': 'used', 'e-t': 'used', 'r-t': 'used', 'r-f': 'used', 't-f': 'used' },
+                queue: [],
+                result: "wertf"
+            }
+        ];
+
+        // Animation state
+        let currentStep = 0;
+        let currentInDegree = { ...inDegree };
+
+        // DOM elements
+        const graphElement = document.getElementById("graph");
+        const queueElement = document.getElementById("queue-content");
+        const resultElement = document.getElementById("result-content");
+        const explanationElement = document.getElementById("explanation");
+        const prevBtn = document.getElementById("prevBtn");
+        const nextBtn = document.getElementById("nextBtn");
+
+        // Initialize the graph
+        function initGraph() {
+            // Create nodes
+            for (const [nodeId, position] of Object.entries(nodes)) {
+                const nodeElement = document.createElement("div");
+                nodeElement.className = "node";
+                nodeElement.id = `node-${nodeId}`;
+                nodeElement.innerText = nodeId;
+                nodeElement.style.left = `${position.x}px`;
+                nodeElement.style.top = `${position.y}px`;
+                graphElement.appendChild(nodeElement);
+            }
+
+            // Create edges
+            for (const edge of edges) {
+                const from = nodes[edge.from];
+                const to = nodes[edge.to];
+                
+                const edgeElement = document.createElement("div");
+                edgeElement.className = "edge";
+                edgeElement.id = `edge-${edge.from}-${edge.to}`;
+                
+                const dx = to.x - from.x;
+                const dy = to.y - from.y;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                edgeElement.style.width = `${length}px`;
+                edgeElement.style.left = `${from.x + 20}px`;
+                edgeElement.style.top = `${from.y + 20}px`;
+                edgeElement.style.transform = `rotate(${angle}deg)`;
+                
+                graphElement.appendChild(edgeElement);
+            }
+        }
+
+        // Update the visualization based on the current step
+        function updateVisualization() {
+            const step = steps[currentStep];
+            
+            // Update node states
+            for (const [nodeId, nodeElement] of Object.entries(document.querySelectorAll(".node"))) {
+                nodeElement.className = "node";
+                const id = nodeId.split("-")[1];
+                if (step.nodeStates[id]) {
+                    nodeElement.classList.add(step.nodeStates[id]);
+                }
+            }
+            
+            // Update edge states
+            for (const edge of edges) {
+                const edgeId = `${edge.from}-${edge.to}`;
+                const edgeElement = document.getElementById(`edge-${edgeId}`);
+                edgeElement.className = "edge";
+                if (step.edgeStates[edgeId]) {
+                    edgeElement.classList.add(step.edgeStates[edgeId]);
+                }
+            }
+            
+            // Update queue
+            queueElement.innerHTML = "";
+            step.queue.forEach(item => {
+                const itemElement = document.createElement("div");
+                itemElement.className = "item";
+                itemElement.innerText = item;
+                queueElement.appendChild(itemElement);
+            });
+            
+            // Update result
+            resultElement.innerHTML = "";
+            for (let i = 0; i < step.result.length; i++) {
+                const itemElement = document.createElement("div");
+                itemElement.className = "item";
+                itemElement.innerText = step.result[i];
+                resultElement.appendChild(itemElement);
+            }
+            
+            // Update explanation
+            explanationElement.innerHTML = `<strong>${step.title}</strong>: ${step.description}`;
+
+            // Update in-degree if needed
+            if (step.inDegreeChange) {
+                for (const [node, value] of Object.entries(step.inDegreeChange)) {
+                    currentInDegree[node] = value;
+                }
+            }
+            
+            // Update buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+
+        // Handle button clicks
+        prevBtn.addEventListener("click", () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        });
+
+        nextBtn.addEventListener("click", () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+
+        // Initialize the visualization
+        initGraph();
+        updateVisualization();
+    </script>
+</body>
+</html>
