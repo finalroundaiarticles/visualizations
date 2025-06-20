@@ -3,391 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Knight's BFS Traversal</title>
+    <title>Cycle Detection Visualization</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #FFFFFF;
-            color: #000000;
             margin: 0;
             padding: 20px;
+            background-color: white;
         }
         
-        h1 {
-            color: #FF4800;
-            margin-bottom: 20px;
-        }
-        
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            max-width: 800px;
-        }
-        
-        .chessboard {
-            display: grid;
-            grid-template-columns: repeat(6, 80px);
-            grid-template-rows: repeat(6, 80px);
-            gap: 2px;
-            margin: 20px 0;
-        }
-        
-        .cell {
-            width: 80px;
-            height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            font-weight: bold;
-            border: 1px solid #000000;
-            position: relative;
-            transition: background-color 0.3s ease;
-        }
-        
-        .light {
-            background-color: #FFFFFF;
-        }
-        
-        .dark {
-            background-color: #FD9F78;
-        }
-        
-        .knight {
-            color: #FF4800;
-            font-size: 36px;
-        }
-        
-        .target {
-            color: #FF4800;
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border: 3px solid #FF4800;
-        }
-        
-        .highlighted {
-            background-color: #FF4800;
-            color: #FFFFFF;
-        }
-        
-        .highlighted.dark {
-            background-color: #FF4800;
-        }
-        
-        .step-number {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            font-size: 14px;
-            color: #000000;
+        #canvas {
+            border: 2px solid #1c1d20;
+            background-color: white;
+            display: block;
+            margin: 20px auto;
         }
         
         .controls {
-            display: flex;
-            gap: 20px;
+            text-align: center;
             margin: 20px 0;
         }
         
         button {
-            padding: 10px 20px;
-            background-color: #FF4800;
-            color: #FFFFFF;
+            background-color: #ff4800;
+            color: white;
             border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            padding: 12px 24px;
+            margin: 0 10px;
+            font-family: Arial, sans-serif;
             font-size: 16px;
-            transition: background-color 0.3s ease;
+            cursor: pointer;
+            border-radius: 5px;
         }
         
         button:hover {
-            background-color: #FD9F78;
+            background-color: #e63f00;
         }
         
         button:disabled {
-            background-color: #FD9F78;
-            opacity: 0.5;
+            background-color: #1c1d20;
             cursor: not-allowed;
         }
         
-        .explanation {
+        .info {
+            text-align: center;
             margin: 20px 0;
-            padding: 15px;
-            border: 1px solid #FD9F78;
-            border-radius: 5px;
-            max-width: 600px;
-            line-height: 1.5;
-        }
-        
-        .step-indicator {
-            color: #FF4800;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-        
-        .knight-coords {
-            position: absolute;
-            bottom: 5px;
-            left: 5px;
-            font-size: 12px;
-            color: #000000;
+            font-size: 18px;
+            color: #1c1d20;
         }
     </style>
 </head>
 <body>
-    <h1>Knight's BFS Traversal Visualization</h1>
+    <div class="info">
+        <div id="stepInfo">Step 1: Initialize in-degrees</div>
+        <div id="statusInfo">Graph with cycle: 0→1→2→0</div>
+    </div>
     
-    <div class="container">
-        <div class="explanation">
-            <p>This animation shows how a knight can find the shortest path on a chessboard using Breadth-First Search (BFS). Starting from position (4, 5), we want to reach target position (1, 1) using the knight's L-shaped movement.</p>
-            <p>Each cell will be labeled with the minimum number of steps needed to reach it from the starting position.</p>
-        </div>
-        
-        <div class="step-indicator">Step <span id="currentStep">0</span> of <span id="totalSteps">0</span></div>
-        
-        <div class="chessboard" id="chessboard"></div>
-        
-        <div class="controls">
-            <button id="prevBtn">Previous</button>
-            <button id="nextBtn">Next</button>
-        </div>
-        
-        <div class="explanation" id="currentExplanation"></div>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    
+    <div class="controls">
+        <button id="prevBtn">Previous</button>
+        <button id="nextBtn">Next</button>
     </div>
 
     <script>
-        // Constants
-        const BOARD_SIZE = 6;
-        const START_ROW = 4;
-        const START_COL = 5;
-        const TARGET_ROW = 1;
-        const TARGET_COL = 1;
-        
-        // Knight's moves (8 possible moves)
-        const KNIGHT_MOVES = [
-            [-2, -1], [-2, 1], [-1, -2], [-1, 2],
-            [1, -2], [1, 2], [2, -1], [2, 1]
-        ];
-        
-        // Store animation steps
-        let animationSteps = [];
-        let currentStepIndex = 0;
-        
-        // DOM elements
-        const chessboard = document.getElementById('chessboard');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
-        const currentStepEl = document.getElementById('currentStep');
-        const totalStepsEl = document.getElementById('totalSteps');
-        const currentExplanationEl = document.getElementById('currentExplanation');
+        const stepInfo = document.getElementById('stepInfo');
         
-        // Initialize the chessboard
-        function initializeChessboard() {
-            chessboard.innerHTML = '';
+        // Graph with cycle: [[1], [2], [0]]
+        const graph = [[1], [2], [0]];
+        const nodePositions = [
+            {x: 200, y: 300, label: '0'},
+            {x: 400, y: 150, label: '1'}, 
+            {x: 600, y: 300, label: '2'}
+        ];
+        
+        let currentStep = 0;
+        let inDegrees = [0, 0, 0];
+        let queue = [];
+        let processedCount = 0;
+        let processedNodes = new Set();
+        
+        const steps = [
+            {
+                description: "Step 1: Initialize in-degrees",
+                inDegrees: [0, 0, 0],
+                queue: [],
+                processedNodes: new Set(),
+                processedCount: 0
+            },
+            {
+                description: "Step 2: Calculate in-degrees (0→1, 1→2, 2→0)",
+                inDegrees: [1, 1, 1],
+                queue: [],
+                processedNodes: new Set(),
+                processedCount: 0
+            },
+            {
+                description: "Step 3: No nodes with in-degree 0 - queue is empty",
+                inDegrees: [1, 1, 1],
+                queue: [],
+                processedNodes: new Set(),
+                processedCount: 0
+            },
+            {
+                description: "Step 4: Cycle detected! Processed 0 nodes ≠ 3 nodes",
+                inDegrees: [1, 1, 1],
+                queue: [],
+                processedNodes: new Set(),
+                processedCount: 0
+            }
+        ];
+        
+        function drawArrow(fromX, fromY, toX, toY) {
+            const headLength = 15;
+            const angle = Math.atan2(toY - fromY, toX - fromX);
             
-            // Create 6x6 chessboard
-            for (let row = 0; row < BOARD_SIZE; row++) {
-                for (let col = 0; col < BOARD_SIZE; col++) {
-                    const cell = document.createElement('div');
-                    cell.className = `cell ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
-                    cell.id = `cell-${row}-${col}`;
-                    
-                    // Add coordinates
-                    const coords = document.createElement('div');
-                    coords.className = 'knight-coords';
-                    coords.textContent = `(${row},${col})`;
-                    cell.appendChild(coords);
-                    
-                    chessboard.appendChild(cell);
+            // Adjust endpoints to node boundaries
+            const nodeRadius = 30;
+            const adjustedFromX = fromX + Math.cos(angle) * nodeRadius;
+            const adjustedFromY = fromY + Math.sin(angle) * nodeRadius;
+            const adjustedToX = toX - Math.cos(angle) * nodeRadius;
+            const adjustedToY = toY - Math.sin(angle) * nodeRadius;
+            
+            ctx.strokeStyle = '#1c1d20';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(adjustedFromX, adjustedFromY);
+            ctx.lineTo(adjustedToX, adjustedToY);
+            ctx.stroke();
+            
+            // Arrow head
+            ctx.beginPath();
+            ctx.moveTo(adjustedToX, adjustedToY);
+            ctx.lineTo(
+                adjustedToX - headLength * Math.cos(angle - Math.PI / 6),
+                adjustedToY - headLength * Math.sin(angle - Math.PI / 6)
+            );
+            ctx.moveTo(adjustedToX, adjustedToY);
+            ctx.lineTo(
+                adjustedToX - headLength * Math.cos(angle + Math.PI / 6),
+                adjustedToY - headLength * Math.sin(angle + Math.PI / 6)
+            );
+            ctx.stroke();
+        }
+        
+        function drawNode(x, y, label, inDegree, inQueue, processed) {
+            ctx.beginPath();
+            ctx.arc(x, y, 30, 0, 2 * Math.PI);
+            
+            if (processed) {
+                ctx.fillStyle = '#ff4800';
+            } else if (inQueue) {
+                ctx.fillStyle = '#ffaa80';
+            } else {
+                ctx.fillStyle = 'white';
+            }
+            ctx.fill();
+            
+            ctx.strokeStyle = '#1c1d20';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // Draw label
+            ctx.fillStyle = processed ? 'white' : '#1c1d20';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, x, y);
+            
+            // Draw in-degree
+            ctx.fillStyle = '#1c1d20';
+            ctx.font = '14px Arial';
+            ctx.fillText(`in: ${inDegree}`, x, y + 50);
+        }
+        
+        function drawQueue() {
+            ctx.fillStyle = '#1c1d20';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(`Queue: [${queue.join(', ')}]`, 50, 50);
+            ctx.fillText(`Processed: ${processedCount}`, 50, 80);
+        }
+        
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const step = steps[currentStep];
+            inDegrees = [...step.inDegrees];
+            queue = [...step.queue];
+            processedNodes = new Set(step.processedNodes);
+            processedCount = step.processedCount;
+            
+            // Draw edges
+            for (let i = 0; i < graph.length; i++) {
+                for (let neighbor of graph[i]) {
+                    drawArrow(
+                        nodePositions[i].x, 
+                        nodePositions[i].y,
+                        nodePositions[neighbor].x, 
+                        nodePositions[neighbor].y
+                    );
                 }
             }
-        }
-        
-        // BFS Algorithm to find shortest path
-        function bfs() {
-            // Reset animation steps
-            animationSteps = [];
             
-            // Add initial step showing the starting position and target
-            animationSteps.push({
-                type: 'initial',
-                knightPosition: [START_ROW, START_COL],
-                targetPosition: [TARGET_ROW, TARGET_COL],
-                explanation: "We start with the knight at position (4, 5) and want to reach the target at position (1, 1). We'll use BFS to find the shortest path."
-            });
-            
-            // Initialize BFS data structures
-            const queue = [];
-            const visited = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(false));
-            const distance = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(-1));
-            
-            // Start BFS
-            queue.push([START_ROW, START_COL]);
-            visited[START_ROW][START_COL] = true;
-            distance[START_ROW][START_COL] = 0;
-            
-            let foundTarget = false;
-            let visitOrder = [];
-            
-            while (queue.length > 0 && !foundTarget) {
-                const [row, col] = queue.shift();
-                
-                // Add step for current position
-                visitOrder.push([row, col]);
-                
-                // Try all possible knight moves
-                for (const [dr, dc] of KNIGHT_MOVES) {
-                    const newRow = row + dr;
-                    const newCol = col + dc;
-                    
-                    // Check if the move is valid and not visited
-                    if (isValid(newRow, newCol) && !visited[newRow][newCol]) {
-                        queue.push([newRow, newCol]);
-                        visited[newRow][newCol] = true;
-                        distance[newRow][newCol] = distance[row][col] + 1;
-                        
-                        // Add step for exploring this position
-                        animationSteps.push({
-                            type: 'explore',
-                            from: [row, col],
-                            to: [newRow, newCol],
-                            distance: distance[newRow][newCol],
-                            visited: JSON.parse(JSON.stringify(visited)),
-                            distances: JSON.parse(JSON.stringify(distance)),
-                            explanation: `Exploring from (${row}, ${col}) to (${newRow}, ${newCol}). This takes ${distance[newRow][newCol]} step(s) from the start.`
-                        });
-                        
-                        // Check if target is found
-                        if (newRow === TARGET_ROW && newCol === TARGET_COL) {
-                            foundTarget = true;
-                            break;
-                        }
-                    }
-                }
+            // Draw nodes
+            for (let i = 0; i < nodePositions.length; i++) {
+                const pos = nodePositions[i];
+                drawNode(
+                    pos.x, 
+                    pos.y, 
+                    pos.label, 
+                    inDegrees[i],
+                    queue.includes(i),
+                    processedNodes.has(i)
+                );
             }
             
-            // Final step showing all distances
-            animationSteps.push({
-                type: 'final',
-                distances: JSON.parse(JSON.stringify(distance)),
-                explanation: `The BFS traversal is complete! The minimum number of steps required for the knight to reach position (${TARGET_ROW}, ${TARGET_COL}) from (${START_ROW}, ${START_COL}) is ${distance[TARGET_ROW][TARGET_COL]}.`
-            });
+            drawQueue();
+            stepInfo.textContent = step.description;
             
-            // Update UI
-            totalStepsEl.textContent = animationSteps.length;
-            currentStepIndex = 0;
-            updateStepButtons();
-            renderStep(currentStepIndex);
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
         }
         
-        // Check if a position is valid
-        function isValid(row, col) {
-            return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
-        }
-        
-        // Render a specific step
-        function renderStep(stepIndex) {
-            // Reset all cells
-            for (let row = 0; row < BOARD_SIZE; row++) {
-                for (let col = 0; col < BOARD_SIZE; col++) {
-                    const cell = document.getElementById(`cell-${row}-${col}`);
-                    cell.innerHTML = `<div class="knight-coords">(${row},${col})</div>`;
-                    cell.classList.remove('highlighted');
-                }
-            }
-            
-            const step = animationSteps[stepIndex];
-            currentExplanationEl.textContent = step.explanation;
-            
-            if (step.type === 'initial') {
-                // Mark start position with knight
-                const startCell = document.getElementById(`cell-${step.knightPosition[0]}-${step.knightPosition[1]}`);
-                startCell.innerHTML += '<div class="knight">♞</div>';
-                
-                // Mark target position
-                const targetCell = document.getElementById(`cell-${step.targetPosition[0]}-${step.targetPosition[1]}`);
-                targetCell.innerHTML += '<div class="target"></div>';
-                
-            } else if (step.type === 'explore') {
-                // Show the knight at the "from" position
-                const fromCell = document.getElementById(`cell-${step.from[0]}-${step.from[1]}`);
-                fromCell.classList.add('highlighted');
-                
-                // Show the destination cell
-                const toCell = document.getElementById(`cell-${step.to[0]}-${step.to[1]}`);
-                toCell.classList.add('highlighted');
-                toCell.innerHTML += `<div class="step-number">${step.distance}</div>`;
-                
-                // Mark target position
-                const targetCell = document.getElementById(`cell-${TARGET_ROW}-${TARGET_COL}`);
-                targetCell.innerHTML += '<div class="target"></div>';
-                
-                // Show all visited cells with their distances
-                for (let row = 0; row < BOARD_SIZE; row++) {
-                    for (let col = 0; col < BOARD_SIZE; col++) {
-                        if (step.distances[row][col] !== -1 && !(row === step.to[0] && col === step.to[1]) && !(row === step.from[0] && col === step.from[1])) {
-                            const cell = document.getElementById(`cell-${row}-${col}`);
-                            if (!cell.querySelector('.step-number')) {
-                                cell.innerHTML += `<div class="step-number">${step.distances[row][col]}</div>`;
-                            }
-                        }
-                    }
-                }
-                
-            } else if (step.type === 'final') {
-                // Show all distances
-                for (let row = 0; row < BOARD_SIZE; row++) {
-                    for (let col = 0; col < BOARD_SIZE; col++) {
-                        if (step.distances[row][col] !== -1) {
-                            const cell = document.getElementById(`cell-${row}-${col}`);
-                            cell.innerHTML += `<div class="step-number">${step.distances[row][col]}</div>`;
-                        }
-                    }
-                }
-                
-                // Highlight the path from start to target
-                const startCell = document.getElementById(`cell-${START_ROW}-${START_COL}`);
-                startCell.classList.add('highlighted');
-                
-                const targetCell = document.getElementById(`cell-${TARGET_ROW}-${TARGET_COL}`);
-                targetCell.classList.add('highlighted');
-                targetCell.innerHTML += '<div class="target"></div>';
-            }
-            
-            currentStepEl.textContent = stepIndex + 1;
-        }
-        
-        // Update step buttons
-        function updateStepButtons() {
-            prevBtn.disabled = currentStepIndex <= 0;
-            nextBtn.disabled = currentStepIndex >= animationSteps.length - 1;
-        }
-        
-        // Event listeners
         prevBtn.addEventListener('click', () => {
-            if (currentStepIndex > 0) {
-                currentStepIndex--;
-                renderStep(currentStepIndex);
-                updateStepButtons();
+            if (currentStep > 0) {
+                currentStep--;
+                render();
             }
         });
         
         nextBtn.addEventListener('click', () => {
-            if (currentStepIndex < animationSteps.length - 1) {
-                currentStepIndex++;
-                renderStep(currentStepIndex);
-                updateStepButtons();
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                render();
             }
         });
         
-        // Initialize
-        initializeChessboard();
-        bfs();
+        render();
     </script>
 </body>
 </html>
