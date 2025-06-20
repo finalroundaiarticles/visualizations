@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dependency Graph Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1, h2 {
+            color: #000000;
+            text-align: center;
+        }
+        .container {
+            width: 800px;
+            margin: 20px auto;
+        }
+        .graph-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            margin: 30px 0;
+        }
+        .node {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            color: #FFFFFF;
+            background-color: #FF4800;
+            border: 3px solid #000000;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+        .node.highlight {
+            background-color: #FD9F78;
+            transform: scale(1.2);
+        }
+        .edge {
+            position: absolute;
+            background-color: #000000;
+            height: 3px;
+            transform-origin: 0 0;
+            z-index: -1;
+        }
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 12px solid #000000;
+            transform-origin: 50% 100%;
+            z-index: -1;
+        }
+        .edge.highlight {
+            background-color: #FF4800;
+            height: 4px;
+        }
+        .arrow.highlight {
+            border-bottom-color: #FF4800;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            background-color: #FFFFFF;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .nav-button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .step-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            margin: 0 5px;
+            cursor: pointer;
+        }
+        .step-dot.active {
+            background-color: #FF4800;
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dependency Graph Animation</h1>
+        
+        <div class="graph-container" id="graphContainer">
+            <!-- Nodes -->
+            <div class="node" id="node0" style="left: 375px; top: 50px;">0</div>
+            <div class="node" id="node1" style="left: 200px; top: 200px;">1</div>
+            <div class="node" id="node2" style="left: 550px; top: 200px;">2</div>
+            <div class="node" id="node3" style="left: 375px; top: 350px;">3</div>
+            
+            <!-- Edges will be created by JavaScript -->
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <h2>Welcome to Dependency Graph Tutorial</h2>
+            <p>A dependency graph is a directed graph that represents dependencies among elements. Each node represents an element, and each edge represents a dependency relationship.</p>
+            <p>Click "Next" to start the animation and learn about this dependency graph step by step.</p>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prevBtn" disabled>Previous</button>
+            <button class="nav-button" id="nextBtn">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">
+            <!-- Step dots will be added by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const nodes = {
+                node0: document.getElementById('node0'),
+                node1: document.getElementById('node1'),
+                node2: document.getElementById('node2'),
+                node3: document.getElementById('node3')
+            };
+
+            const graphContainer = document.getElementById('graphContainer');
+            const explanation = document.getElementById('explanation');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const stepIndicator = document.getElementById('stepIndicator');
+            
+            // Define edges
+            const edges = [
+                { from: 'node0', to: 'node1' },
+                { from: 'node0', to: 'node2' },
+                { from: 'node1', to: 'node3' },
+                { from: 'node2', to: 'node3' }
+            ];
+            
+            // Create edges and arrows visually
+            function createEdges() {
+                edges.forEach(edge => {
+                    const fromNode = document.getElementById(edge.from);
+                    const toNode = document.getElementById(edge.to);
+                    
+                    const fromX = fromNode.offsetLeft + fromNode.offsetWidth / 2;
+                    const fromY = fromNode.offsetTop + fromNode.offsetHeight / 2;
+                    const toX = toNode.offsetLeft + toNode.offsetWidth / 2;
+                    const toY = toNode.offsetTop + toNode.offsetHeight / 2;
+                    
+                    // Calculate length and angle
+                    const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+                    const angle = Math.atan2(toY - fromY, toX - fromX);
+                    
+                    // Adjust start and end points to account for node radius
+                    const nodeRadius = 25; // Half of node width
+                    const adjustedFromX = fromX + nodeRadius * Math.cos(angle);
+                    const adjustedFromY = fromY + nodeRadius * Math.sin(angle);
+                    const adjustedLength = length - 2 * nodeRadius;
+                    
+                    // Create line
+                    const edgeElement = document.createElement('div');
+                    edgeElement.className = 'edge';
+                    edgeElement.id = `edge-${edge.from}-${edge.to}`;
+                    edgeElement.style.width = `${adjustedLength}px`;
+                    edgeElement.style.left = `${adjustedFromX}px`;
+                    edgeElement.style.top = `${adjustedFromY}px`;
+                    edgeElement.style.transform = `rotate(${angle}rad)`;
+                    
+                    // Create arrow
+                    const arrowElement = document.createElement('div');
+                    arrowElement.className = 'arrow';
+                    arrowElement.id = `arrow-${edge.from}-${edge.to}`;
+                    arrowElement.style.left = `${toX - 8}px`;
+                    arrowElement.style.top = `${toY - 12}px`;
+                    arrowElement.style.transform = `rotate(${angle + Math.PI/2}rad)`;
+                    
+                    graphContainer.appendChild(edgeElement);
+                    graphContainer.appendChild(arrowElement);
+                });
+            }
+            
+            // Create edges on load
+            createEdges();
+            
+            // Animation steps
+            const steps = [
+                {
+                    title: "Understanding Dependency Graphs",
+                    content: "A dependency graph shows relationships between components where one depends on another. In this example, we have 4 nodes (0, 1, 2, 3) with specific dependencies between them.",
+                    highlight: []
+                },
+                {
+                    title: "Node 0: Starting Point",
+                    content: "Node 0 is our starting point. It doesn't depend on any other node, but other nodes depend on it. This makes it a source node or root node in our dependency graph.",
+                    highlight: ["node0"]
+                },
+                {
+                    title: "Node 0 Dependencies",
+                    content: "Node 0 has dependencies to Node 1 and Node 2. This means both Node 1 and Node 2 depend on Node 0 and would require Node 0 to be processed first.",
+                    highlight: ["node0", "node1", "node2", "edge-node0-node1", "arrow-node0-node1", "edge-node0-node2", "arrow-node0-node2"]
+                },
+                {
+                    title: "First Dependency Path: 0→1→3",
+                    content: "Following the first path: Node 1 depends on Node 0, and Node 3 depends on Node 1. This creates a dependency chain 0→1→3, meaning we need to process them in that order.",
+                    highlight: ["node0", "node1", "node3", "edge-node0-node1", "arrow-node0-node1", "edge-node1-node3", "arrow-node1-node3"]
+                },
+                {
+                    title: "Second Dependency Path: 0→2→3",
+                    content: "Following the second path: Node 2 depends on Node 0, and Node 3 depends on Node 2. This creates another dependency chain 0→2→3.",
+                    highlight: ["node0", "node2", "node3", "edge-node0-node2", "arrow-node0-node2", "edge-node2-node3", "arrow-node2-node3"]
+                },
+                {
+                    title: "Node 3: The Sink Node",
+                    content: "Node 3 depends on both Node 1 and Node 2. It doesn't have any dependencies pointing outward, which makes it a sink node or a leaf node in our dependency graph.",
+                    highlight: ["node3", "edge-node1-node3", "arrow-node1-node3", "edge-node2-node3", "arrow-node2-node3"]
+                },
+                {
+                    title: "The Complete Dependency Graph",
+                    content: "Looking at the entire graph, we can see that Node 0 is the starting point, Nodes 1 and 2 depend on Node 0, and Node 3 depends on both Nodes 1 and 2. This forms a diamond-shaped dependency structure.",
+                    highlight: ["node0", "node1", "node2", "node3", "edge-node0-node1", "arrow-node0-node1", "edge-node0-node2", "arrow-node0-node2", "edge-node1-node3", "arrow-node1-node3", "edge-node2-node3", "arrow-node2-node3"]
+                },
+                {
+                    title: "Practical Applications",
+                    content: "Dependency graphs are used in various fields: in software builds to determine compilation order, in task scheduling to establish task sequences, and in package management to resolve installation dependencies.",
+                    highlight: []
+                }
+            ];
+            
+            // Create step indicators
+            steps.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.className = 'step-dot';
+                if (index === 0) dot.classList.add('active');
+                dot.addEventListener('click', () => goToStep(index));
+                stepIndicator.appendChild(dot);
+            });
+            
+            let currentStep = 0;
+            
+            // Update the UI for the current step
+            function updateStep() {
+                // Clear all highlights
+                document.querySelectorAll('.highlight').forEach(el => {
+                    el.classList.remove('highlight');
+                });
+                
+                // Apply new highlights
+                const step = steps[currentStep];
+                step.highlight.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) element.classList.add('highlight');
+                });
+                
+                // Update explanation
+                explanation.innerHTML = `<h2>${step.title}</h2><p>${step.content}</p>`;
+                
+                // Update navigation buttons
+                prevBtn.disabled = currentStep === 0;
+                nextBtn.disabled = currentStep === steps.length - 1;
+                
+                // Update step indicators
+                document.querySelectorAll('.step-dot').forEach((dot, index) => {
+                    dot.classList.toggle('active', index === currentStep);
+                });
+            }
+            
+            // Go to a specific step
+            function goToStep(stepIndex) {
+                currentStep = stepIndex;
+                updateStep();
+            }
+            
+            // Navigation event listeners
+            prevBtn.addEventListener('click', function() {
+                if (currentStep > 0) {
+                    currentStep--;
+                    updateStep();
+                }
+            });
+            
+            nextBtn.addEventListener('click', function() {
+                if (currentStep < steps.length - 1) {
+                    currentStep++;
+                    updateStep();
+                }
+            });
+            
+            // Initialize first step
+            updateStep();
+        });
+    </script>
+</body>
+</html>
