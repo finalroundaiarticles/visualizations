@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TSP City Network Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        canvas {
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            margin: 0 auto;
+            display: block;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: rgba(253, 159, 120, 0.1);
+            border-left: 4px solid #FD9F78;
+            border-radius: 4px;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .matrix-container {
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        table {
+            border-collapse: collapse;
+            margin: 0 auto;
+        }
+        th, td {
+            border: 1px solid #FD9F78;
+            padding: 8px 15px;
+            text-align: center;
+        }
+        th {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>TSP City Network Visualization</h1>
+        
+        <div class="matrix-container">
+            <h3>Distance Matrix</h3>
+            <table>
+                <tr>
+                    <th></th>
+                    <th>A</th>
+                    <th>B</th>
+                    <th>C</th>
+                    <th>D</th>
+                </tr>
+                <tr>
+                    <th>A</th>
+                    <td>0</td>
+                    <td>10</td>
+                    <td>15</td>
+                    <td>20</td>
+                </tr>
+                <tr>
+                    <th>B</th>
+                    <td>10</td>
+                    <td>0</td>
+                    <td>35</td>
+                    <td>25</td>
+                </tr>
+                <tr>
+                    <th>C</th>
+                    <td>15</td>
+                    <td>35</td>
+                    <td>0</td>
+                    <td>30</td>
+                </tr>
+                <tr>
+                    <th>D</th>
+                    <td>20</td>
+                    <td>25</td>
+                    <td>30</td>
+                    <td>0</td>
+                </tr>
+            </table>
+        </div>
+        
+        <canvas id="tspCanvas" width="700" height="500"></canvas>
+        
+        <div class="explanation" id="explanation">
+            <p>This visualization shows a Traveling Salesperson Problem (TSP) with 4 cities (A, B, C, D). The cities are represented as nodes, and the distances between them are shown as directed edges.</p>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('tspCanvas');
+        const ctx = canvas.getContext('2d');
+        const explanation = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        // City coordinates
+        const cities = {
+            A: { x: 150, y: 150 },
+            B: { x: 550, y: 150 },
+            C: { x: 150, y: 350 },
+            D: { x: 550, y: 350 }
+        };
+        
+        // Distance matrix
+        const distances = {
+            A: { A: 0, B: 10, C: 15, D: 20 },
+            B: { A: 10, B: 0, C: 35, D: 25 },
+            C: { A: 15, B: 35, C: 0, D: 30 },
+            D: { A: 20, B: 25, C: 30, D: 0 }
+        };
+        
+        // Define all possible TSP paths (starting and ending at A)
+        const allPaths = [
+            ['A', 'B', 'C', 'D', 'A'],
+            ['A', 'B', 'D', 'C', 'A'],
+            ['A', 'C', 'B', 'D', 'A'],
+            ['A', 'C', 'D', 'B', 'A'],
+            ['A', 'D', 'B', 'C', 'A'],
+            ['A', 'D', 'C', 'B', 'A']
+        ];
+        
+        // Calculate path distances
+        const pathDistances = allPaths.map(path => {
+            let distance = 0;
+            for (let i = 0; i < path.length - 1; i++) {
+                distance += distances[path[i]][path[i + 1]];
+            }
+            return { path, distance };
+        });
+        
+        // Find optimal path
+        const optimalPath = pathDistances.reduce((min, p) => 
+            p.distance < min.distance ? p : min, pathDistances[0]);
+        
+        // Animation states
+        const states = [
+            {
+                title: "Initial Network",
+                description: "This is a network of 4 cities (A, B, C, D). Each city is connected to every other city with a specific distance between them. The TSP aims to find the shortest route that visits each city exactly once and returns to the starting city.",
+                render: () => {
+                    drawCities();
+                    drawAllEdges();
+                }
+            },
+            {
+                title: "Possible Paths",
+                description: "There are multiple possible paths to visit all cities. For 4 cities, there are 6 possible routes (starting and ending at city A). We need to find which one has the minimum total distance.",
+                render: () => {
+                    drawCities();
+                    drawAllEdges();
+                    highlightPossiblePaths();
+                }
+            },
+            {
+                title: "Path 1: A → B → C → D → A",
+                description: `Path: A → B → C → D → A\nDistance: A→B (10) + B→C (35) + C→D (30) + D→A (20) = 95 units`,
+                render: () => {
+                    drawCities();
+                    drawAllEdges(0.2);
+                    highlightPath(allPaths[0], false);
+                }
+            },
+            {
+                title: "Path 2: A → B → D → C → A",
+                description: `Path: A → B → D → C → A\nDistance: A→B (10) + B→D (25) + D→C (30) + C→A (15) = 80 units`,
+                render: () => {
+                    drawCities();
+                    drawAllEdges(0.2);
+                    highlightPath(allPaths[1], false);
+                }
+            },
+            {
+                title: "Path 3: A → C → B → D → A",
+                description: `Path: A → C → B → D → A\nDistance: A→C (15) + C→B (35) + B→D (25) + D→A (20) = 95 units`,
+                render: () => {
+                    drawCities();
+                    drawAllEdges(0.2);
+                    highlightPath(allPaths[2], false);
+                }
+            },
+            {
+                title: "Path 4: A → C → D → B → A",
+                description: `Path: A → C → D → B → A\nDistance: A→C (15) + C→D (30) + D→B (25) + B→A (10) = 80 units`,
+                render: () => {
+                    drawCities();
+                    drawAllEdges(0.2);
+                    highlightPath(allPaths[3], false);
+                }
+            },
+            {
+                title: "Path 5: A → D → B → C → A",
+                description: `Path: A → D → B → C → A\nDistance: A→D (20) + D→B (25) + B→C (35) + C→A (15) = 95 units`,
+                render: () => {
+                    drawCities();
+                    drawAllEdges(0.2);
+                    highlightPath(allPaths[4], false);
+                }
+            },
+            {
+                title: "Path 6: A → D → C → B → A",
+                description: `Path: A → D → C → B → A\nDistance: A→D (20) + D→C (30) + C→B (35) + B→A (10) = 95 units`,
+                render: () => {
+                    drawCities();
+                    drawAllEdges(0.2);
+                    highlightPath(allPaths[5], false);
+                }
+            },
+            {
+                title: "Optimal Solution",
+                description: `The optimal paths with the shortest distance are:\n1. A → B → D → C → A (80 units)\n2. A → C → D → B → A (80 units)\n\nBoth have the same total distance of 80 units, making them equally optimal solutions to this TSP instance.`,
+                render: () => {
+                    drawCities();
+                    drawAllEdges(0.1);
+                    // Highlight both optimal paths
+                    highlightPath(['A', 'B', 'D', 'C', 'A'], true);
+                }
+            }
+        ];
+        
+        let currentState = 0;
+        
+        // Draw city node
+        function drawCity(city, label) {
+            ctx.beginPath();
+            ctx.arc(city.x, city.y, 30, 0, 2 * Math.PI);
+            ctx.fillStyle = '#FD9F78';
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#FF4800';
+            ctx.stroke();
+            
+            ctx.font = 'bold 20px Arial';
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, city.x, city.y);
+        }
+        
+        // Draw all cities
+        function drawCities() {
+            Object.keys(cities).forEach(label => {
+                drawCity(cities[label], label);
+            });
+        }
+        
+        // Draw edge with arrow
+        function drawEdge(from, to, weight, opacity = 1) {
+            const fromCity = cities[from];
+            const toCity = cities[to];
+            
+            // Calculate angle for arrow
+            const angle = Math.atan2(toCity.y - fromCity.y, toCity.x - fromCity.x);
+            
+            // Calculate points to start and end the line (on the circle edges)
+            const startX = fromCity.x + 30 * Math.cos(angle);
+            const startY = fromCity.y + 30 * Math.sin(angle);
+            const endX = toCity.x - 30 * Math.cos(angle);
+            const endY = toCity.y - 30 * Math.sin(angle);
+            
+            // Draw line
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = `rgba(0, 0, 0, ${opacity})`;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw arrowhead
+            const arrowSize = 10;
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(
+                endX - arrowSize * Math.cos(angle - Math.PI / 6),
+                endY - arrowSize * Math.sin(angle - Math.PI / 6)
+            );
+            ctx.lineTo(
+                endX - arrowSize * Math.cos(angle + Math.PI / 6),
+                endY - arrowSize * Math.sin(angle + Math.PI / 6)
+            );
+            ctx.closePath();
+            ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
+            ctx.fill();
+            
+            // Draw weight
+            const midX = (fromCity.x + toCity.x) / 2;
+            const midY = (fromCity.y + toCity.y) / 2;
+            const offsetX = 15 * Math.sin(angle);
+            const offsetY = -15 * Math.cos(angle);
+            
+            ctx.font = 'bold 16px Arial';
+            ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(weight, midX + offsetX, midY + offsetY);
+        }
+        
+        // Draw all edges
+        function drawAllEdges(opacity = 1) {
+            Object.keys(cities).forEach(from => {
+                Object.keys(cities).forEach(to => {
+                    if (from !== to) {
+                        drawEdge(from, to, distances[from][to], opacity);
+                    }
+                });
+            });
+        }
+        
+        // Highlight a specific path
+        function highlightPath(path, isOptimal) {
+            const color = isOptimal ? '#FF4800' : '#FD9F78';
+            
+            for (let i = 0; i < path.length - 1; i++) {
+                const from = path[i];
+                const to = path[i + 1];
+                const fromCity = cities[from];
+                const toCity = cities[to];
+                
+                const angle = Math.atan2(toCity.y - fromCity.y, toCity.x - fromCity.x);
+                const startX = fromCity.x + 30 * Math.cos(angle);
+                const startY = fromCity.y + 30 * Math.sin(angle);
+                const endX = toCity.x - 30 * Math.cos(angle);
+                const endY = toCity.y - 30 * Math.sin(angle);
+                
+                // Draw highlighted line
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 4;
+                ctx.stroke();
+                
+                // Draw arrowhead
+                const arrowSize = 12;
+                ctx.beginPath();
+                ctx.moveTo(endX, endY);
+                ctx.lineTo(
+                    endX - arrowSize * Math.cos(angle - Math.PI / 6),
+                    endY - arrowSize * Math.sin(angle - Math.PI / 6)
+                );
+                ctx.lineTo(
+                    endX - arrowSize * Math.cos(angle + Math.PI / 6),
+                    endY - arrowSize * Math.sin(angle + Math.PI / 6)
+                );
+                ctx.closePath();
+                ctx.fillStyle = color;
+                ctx.fill();
+                
+                // Draw weight
+                const midX = (fromCity.x + toCity.x) / 2;
+                const midY = (fromCity.y + toCity.y) / 2;
+                const offsetX = 15 * Math.sin(angle);
+                const offsetY = -15 * Math.cos(angle);
+                
+                ctx.font = 'bold 16px Arial';
+                ctx.fillStyle = color;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(distances[from][to], midX + offsetX, midY + offsetY);
+            }
+            
+            // Calculate total distance
+            let totalDistance = 0;
+            for (let i = 0; i < path.length - 1; i++) {
+                totalDistance += distances[path[i]][path[i + 1]];
+            }
+            
+            // Show total distance
+            ctx.font = 'bold 18px Arial';
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`Total Distance: ${totalDistance} units`, canvas.width / 2, 30);
+        }
+        
+        function highlightPossiblePaths() {
+            ctx.font = 'bold 18px Arial';
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText("6 possible paths (starting and ending at A)", canvas.width / 2, 30);
+            
+            const paths = [
+                "A → B → C → D → A",
+                "A → B → D → C → A",
+                "A → C → B → D → A",
+                "A → C → D → B → A",
+                "A → D → B → C → A",
+                "A → D → C → B → A"
+            ];
+            
+            let y = 70;
+            paths.forEach(path => {
+                ctx.fillText(path, canvas.width / 2, y);
+                y += 25;
+            });
+        }
+        
+        // Update canvas based on current state
+        function updateCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const state = states[currentState];
+            state.render();
+            
+            // Update explanation
+            explanation.innerHTML = `<h3>${state.title}</h3><p>${state.description.replace(/\n/g, '<br>')}</p>`;
+            
+            // Update buttons
+            prevBtn.disabled = currentState === 0;
+            nextBtn.disabled = currentState === states.length - 1;
+        }
+        
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentState > 0) {
+                currentState--;
+                updateCanvas();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentState < states.length - 1) {
+                currentState++;
+                updateCanvas();
+            }
+        });
+        
+        // Initial render
+        updateCanvas();
+    </script>
+</body>
+</html>
