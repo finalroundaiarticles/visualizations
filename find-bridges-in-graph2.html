@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bridge in Graph</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            margin-bottom: 30px;
+            border: 1px solid #FD9F78;
+            border-radius: 10px;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .explanation {
+            text-align: left;
+            margin-bottom: 30px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #FFF;
+            border: 1px solid #FD9F78;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+        
+        .normal-edge {
+            background-color: #000000;
+        }
+        
+        .bridge-edge {
+            background-color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bridge in a Graph</h1>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color normal-edge"></div>
+                <span>Normal Edge</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color bridge-edge"></div>
+                <span>Bridge Edge</span>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="graphCanvas"></canvas>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <p>A bridge in a graph is an edge whose removal increases the number of connected components in the graph.</p>
+            <p>In this example, we have a graph with 4 nodes (0, 1, 2, 3) and edges: (0,1), (1,2), (2,0), and (1,3).</p>
+            <p>The edge (1,3) is a bridge because if we remove it, node 3 will be disconnected from the rest of the graph.</p>
+            <p>Notice that edges (0,1), (1,2), and (2,0) form a cycle, which means none of them is a bridge. Removing any one of these edges will not disconnect the graph.</p>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const explanation = document.getElementById('explanation');
+        
+        // Set canvas size
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // Define colors
+        const nodeColor = '#000000';
+        const nodeTextColor = '#FFFFFF';
+        const normalEdgeColor = '#000000';
+        const bridgeEdgeColor = '#FF4800';
+        const highlightColor = '#FD9F78';
+        
+        // Define nodes
+        const nodes = [
+            { id: 0, x: 0.2, y: 0.5, label: '0' },
+            { id: 1, x: 0.4, y: 0.3, label: '1' },
+            { id: 2, x: 0.6, y: 0.5, label: '2' },
+            { id: 3, x: 0.8, y: 0.3, label: '3' }
+        ];
+        
+        // Define edges
+        const edges = [
+            { source: 0, target: 1, isBridge: false },
+            { source: 1, target: 2, isBridge: false },
+            { source: 2, target: 0, isBridge: false },
+            { source: 1, target: 3, isBridge: true }
+        ];
+        
+        // Animation states
+        const states = [
+            {
+                description: "<p>Let's understand what a bridge is in a graph.</p><p>A bridge is an edge whose removal increases the number of connected components in the graph.</p><p>Here we have a graph with 4 nodes (0, 1, 2, 3).</p>",
+                highlightNodes: [],
+                highlightEdges: [],
+                showBridge: false
+            },
+            {
+                description: "<p>This graph has 4 edges: (0,1), (1,2), (2,0), and (1,3).</p><p>Notice that nodes 0, 1, and 2 form a cycle, which means they're strongly connected.</p>",
+                highlightNodes: [0, 1, 2],
+                highlightEdges: [0, 1, 2],
+                showBridge: false
+            },
+            {
+                description: "<p>Node 3 is connected to the rest of the graph only through node 1 with the edge (1,3).</p><p>This makes the edge (1,3) special.</p>",
+                highlightNodes: [1, 3],
+                highlightEdges: [3],
+                showBridge: false
+            },
+            {
+                description: "<p>The edge (1,3) is a bridge because if we remove it, node 3 will be disconnected from the rest of the graph.</p><p>It's the only path from node 3 to any other node in the graph.</p>",
+                highlightNodes: [1, 3],
+                highlightEdges: [3],
+                showBridge: true
+            },
+            {
+                description: "<p>In contrast, removing any other edge (0,1), (1,2), or (2,0) won't disconnect the graph because there are alternative paths.</p><p>For example, if we remove edge (0,1), nodes 0 and 1 can still reach each other through node 2.</p>",
+                highlightNodes: [0, 1, 2],
+                highlightEdges: [1, 2],
+                showBridge: true
+            },
+            {
+                description: "<p>In conclusion, a bridge in a graph is an edge that, if removed, would increase the number of connected components.</p><p>In our example, edge (1,3) is a bridge because removing it would disconnect node 3 from the rest of the graph.</p>",
+                highlightNodes: [],
+                highlightEdges: [],
+                showBridge: true
+            }
+        ];
+        
+        let currentState = 0;
+        
+        // Draw the graph
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const state = states[currentState];
+            
+            // Draw edges
+            edges.forEach((edge, index) => {
+                const source = nodes[edge.source];
+                const target = nodes[edge.target];
+                const sx = source.x * canvas.width;
+                const sy = source.y * canvas.height;
+                const tx = target.x * canvas.width;
+                const ty = target.y * canvas.height;
+                
+                ctx.beginPath();
+                ctx.moveTo(sx, sy);
+                ctx.lineTo(tx, ty);
+                
+                if (state.showBridge && edge.isBridge) {
+                    ctx.strokeStyle = bridgeEdgeColor;
+                    ctx.lineWidth = 4;
+                } else if (state.highlightEdges.includes(index)) {
+                    ctx.strokeStyle = highlightColor;
+                    ctx.lineWidth = 4;
+                } else {
+                    ctx.strokeStyle = normalEdgeColor;
+                    ctx.lineWidth = 2;
+                }
+                
+                ctx.stroke();
+            });
+            
+            // Draw nodes
+            nodes.forEach(node => {
+                const x = node.x * canvas.width;
+                const y = node.y * canvas.height;
+                const radius = 20;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                
+                if (state.highlightNodes.includes(node.id)) {
+                    ctx.fillStyle = highlightColor;
+                } else {
+                    ctx.fillStyle = nodeColor;
+                }
+                
+                ctx.fill();
+                
+                // Draw node labels
+                ctx.fillStyle = nodeTextColor;
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node.label, x, y);
+            });
+        }
+        
+        // Update explanation
+        function updateExplanation() {
+            explanation.innerHTML = states[currentState].description;
+        }
+        
+        // Update buttons
+        function updateButtons() {
+            prevBtn.disabled = currentState === 0;
+            nextBtn.disabled = currentState === states.length - 1;
+        }
+        
+        // Next state
+        function nextState() {
+            if (currentState < states.length - 1) {
+                currentState++;
+                drawGraph();
+                updateExplanation();
+                updateButtons();
+            }
+        }
+        
+        // Previous state
+        function prevState() {
+            if (currentState > 0) {
+                currentState--;
+                drawGraph();
+                updateExplanation();
+                updateButtons();
+            }
+        }
+        
+        // Event listeners
+        nextBtn.addEventListener('click', nextState);
+        prevBtn.addEventListener('click', prevState);
+        
+        // Initialize
+        drawGraph();
+        updateExplanation();
+        updateButtons();
+    </script>
+</body>
+</html>
