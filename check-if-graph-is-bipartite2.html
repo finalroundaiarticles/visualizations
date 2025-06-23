@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Coloring Process Using BFS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        #canvas-container {
+            width: 600px;
+            height: 400px;
+            position: relative;
+            margin-bottom: 20px;
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        .explanation {
+            width: 100%;
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #000000;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            margin: 0 10px;
+            display: flex;
+            align-items: center;
+            color: #000000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Graph Coloring Process Using BFS</h1>
+        
+        <div id="canvas-container">
+            <canvas id="graphCanvas" width="600" height="400"></canvas>
+        </div>
+        
+        <div class="explanation" id="step-explanation">
+            Welcome to Graph Coloring using BFS! Click "Next" to start the visualization.
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <div class="step-indicator">Step <span id="currentStep">0</span>/<span id="totalSteps">5</span></div>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        // Graph structure and animation state
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepExplanation = document.getElementById('step-explanation');
+        const currentStepElement = document.getElementById('currentStep');
+        
+        // Graph setup
+        const nodes = [
+            { id: 0, x: 300, y: 100, color: null, label: 'A' },
+            { id: 1, x: 150, y: 200, color: null, label: 'B' },
+            { id: 2, x: 450, y: 200, color: null, label: 'C' },
+            { id: 3, x: 100, y: 300, color: null, label: 'D' },
+            { id: 4, x: 200, y: 300, color: null, label: 'E' },
+            { id: 5, x: 400, y: 300, color: null, label: 'F' },
+            { id: 6, x: 500, y: 300, color: null, label: 'G' }
+        ];
+        
+        const edges = [
+            { source: 0, target: 1 },
+            { source: 0, target: 2 },
+            { source: 1, target: 3 },
+            { source: 1, target: 4 },
+            { source: 2, target: 5 },
+            { source: 2, target: 6 },
+            { source: 1, target: 2 },
+            { source: 3, target: 4 },
+            { source: 5, target: 6 }
+        ];
+        
+        // Colors for graph coloring
+        const colors = ['#FF4800', '#FD9F78', '#000000', '#3498db'];
+        
+        // Animation state
+        let currentStep = 0;
+        const totalSteps = 6;
+        
+        // BFS steps for coloring
+        const steps = [
+            {
+                title: "Initial Graph",
+                description: "This is our initial graph with 7 vertices (A-G). We'll use BFS to color it so that no adjacent vertices have the same color.",
+                action: () => {}
+            },
+            {
+                title: "Start Coloring",
+                description: "We start with vertex A and assign it color 0 (orange). This is our first color in the BFS process.",
+                action: () => {
+                    nodes[0].color = 0; // Color the starting node (A)
+                }
+            },
+            {
+                title: "Color First Level Neighbors",
+                description: "Now we visit all neighbors of A (vertices B and C) and color them with color 1 (light orange), as they can't have the same color as A.",
+                action: () => {
+                    nodes[1].color = 1; // B
+                    nodes[2].color = 1; // C
+                }
+            },
+            {
+                title: "Process Second Level - Part 1",
+                description: "We continue BFS and visit neighbors of B (vertices D and E). Since they're adjacent to B (color 1), we give them color 0 (orange).",
+                action: () => {
+                    nodes[3].color = 0; // D
+                    nodes[4].color = 0; // E
+                }
+            },
+            {
+                title: "Process Second Level - Part 2",
+                description: "Next, we process neighbors of C (vertices F and G). Since they're adjacent to C (color 1), we give them color 0 (orange).",
+                action: () => {
+                    nodes[5].color = 0; // F
+                    nodes[6].color = 0; // G
+                }
+            },
+            {
+                title: "Completed Graph Coloring",
+                description: "The graph coloring is complete! We've used only 2 colors for this graph. BFS ensures we use the minimum number of colors needed for a bipartite graph.",
+                action: () => {}
+            }
+        ];
+        
+        // Draw graph function
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#000000';
+            
+            for (const edge of edges) {
+                const source = nodes[edge.source];
+                const target = nodes[edge.target];
+                
+                ctx.beginPath();
+                ctx.moveTo(source.x, source.y);
+                ctx.lineTo(target.x, target.y);
+                ctx.stroke();
+            }
+            
+            // Draw nodes
+            for (const node of nodes) {
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 25, 0, Math.PI * 2);
+                
+                if (node.color !== null) {
+                    ctx.fillStyle = colors[node.color];
+                } else {
+                    ctx.fillStyle = '#FFFFFF';
+                }
+                
+                ctx.fill();
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Draw node label
+                ctx.fillStyle = node.color === 0 ? '#FFFFFF' : '#000000';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node.label, node.x, node.y);
+            }
+        }
+        
+        // Initialize
+        function init() {
+            updateStep();
+            drawGraph();
+        }
+        
+        // Update step
+        function updateStep() {
+            currentStepElement.textContent = currentStep;
+            
+            // Update buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps;
+            
+            // Update explanation
+            stepExplanation.innerHTML = `<strong>${steps[currentStep].title}</strong>: ${steps[currentStep].description}`;
+        }
+        
+        // Next step
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                steps[currentStep].action();
+                currentStep++;
+                updateStep();
+                drawGraph();
+            }
+        });
+        
+        // Previous step
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                
+                // Reset all node colors
+                nodes.forEach(node => node.color = null);
+                
+                // Apply all actions up to the current step
+                for (let i = 0; i <= currentStep; i++) {
+                    steps[i].action();
+                }
+                
+                updateStep();
+                drawGraph();
+            }
+        });
+        
+        // Initialize
+        init();
+    </script>
+</body>
+</html>
