@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strongly Connected Components in a Directed Graph</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .explanation {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        
+        canvas {
+            border: 2px solid #FD9F78;
+            border-radius: 5px;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Strongly Connected Components (SCCs) in a Directed Graph</h1>
+        
+        <div class="explanation" id="explanation">
+            Welcome to this visualization of Strongly Connected Components (SCCs) in a directed graph!
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="graphCanvas" width="600" height="400"></canvas>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">Step 1 of 4</div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Graph nodes positions
+        const nodes = [
+            { id: 0, x: 150, y: 150, color: '#FFFFFF', sccColor: '#FF4800' },
+            { id: 1, x: 300, y: 100, color: '#FFFFFF', sccColor: '#FF4800' },
+            { id: 2, x: 450, y: 150, color: '#FFFFFF', sccColor: '#FF4800' },
+            { id: 3, x: 300, y: 250, color: '#FFFFFF', sccColor: '#FD9F78' },
+            { id: 4, x: 450, y: 300, color: '#FFFFFF', sccColor: '#000000' }
+        ];
+        
+        // Graph edges
+        const edges = [
+            { from: 0, to: 1 },
+            { from: 1, to: 2 },
+            { from: 2, to: 0 },
+            { from: 2, to: 3 },
+            { from: 3, to: 4 }
+        ];
+        
+        // Animation state
+        let currentStep = 1;
+        const totalSteps = 4;
+        
+        // Update buttons state
+        function updateButtons() {
+            document.getElementById('prevBtn').disabled = currentStep === 1;
+            document.getElementById('nextBtn').disabled = currentStep === totalSteps;
+            document.getElementById('stepIndicator').textContent = `Step ${currentStep} of ${totalSteps}`;
+        }
+        
+        // Content for each step
+        const stepContent = [
+            "Welcome to this visualization of Strongly Connected Components (SCCs) in a directed graph! We'll explore a directed graph with 5 vertices (labeled 0-4) and identify its SCCs.",
+            
+            "In a directed graph, a Strongly Connected Component (SCC) is a group of vertices where there is a path from each vertex to every other vertex in the group. Let's see the original graph structure first.",
+            
+            "This graph has three SCCs. The first SCC (shown in orange) contains vertices 0, 1, and 2. Notice how you can reach any vertex from any other vertex within this component.",
+            
+            "The second SCC (shown in light orange) contains only vertex 3, and the third SCC (shown in black) contains only vertex 4. Each of these is a single-vertex SCC because they don't form strongly connected subgraphs with other vertices."
+        ];
+        
+        // Draw arrow function
+        function drawArrow(fromX, fromY, toX, toY, color) {
+            const headSize = 10;
+            const angle = Math.atan2(toY - fromY, toX - fromX);
+            
+            // Calculate end points that stop at the node boundary
+            const nodeRadius = 25;
+            const dx = toX - fromX;
+            const dy = toY - fromY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            const endX = fromX + dx * (distance - nodeRadius) / distance;
+            const endY = fromY + dy * (distance - nodeRadius) / distance;
+            
+            // Draw line
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw arrowhead
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(
+                endX - headSize * Math.cos(angle - Math.PI / 6),
+                endY - headSize * Math.sin(angle - Math.PI / 6)
+            );
+            ctx.lineTo(
+                endX - headSize * Math.cos(angle + Math.PI / 6),
+                endY - headSize * Math.sin(angle + Math.PI / 6)
+            );
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+        
+        // Draw the graph
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges first so they appear behind nodes
+            edges.forEach(edge => {
+                const fromNode = nodes.find(n => n.id === edge.from);
+                const toNode = nodes.find(n => n.id === edge.to);
+                drawArrow(fromNode.x, fromNode.y, toNode.x, toNode.y, '#000000');
+            });
+            
+            // Draw nodes
+            nodes.forEach(node => {
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 25, 0, Math.PI * 2);
+                
+                // Color nodes based on step
+                if (currentStep >= 3) {
+                    ctx.fillStyle = node.sccColor;
+                } else {
+                    ctx.fillStyle = node.color;
+                }
+                
+                ctx.strokeStyle = '#FF4800';
+                ctx.lineWidth = 2;
+                ctx.fill();
+                ctx.stroke();
+                
+                // Add node labels
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node.id, node.x, node.y);
+            });
+            
+            // Update explanation
+            document.getElementById('explanation').textContent = stepContent[currentStep - 1];
+        }
+        
+        // Event listeners for navigation
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateButtons();
+                drawGraph();
+            }
+        });
+        
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateButtons();
+                drawGraph();
+            }
+        });
+        
+        // Initial render
+        updateButtons();
+        drawGraph();
+    </script>
+</body>
+</html>
