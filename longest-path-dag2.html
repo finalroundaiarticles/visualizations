@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Topological Sort Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            margin: 20px auto;
+        }
+        .explanation {
+            margin-bottom: 20px;
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        #canvasContainer {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        canvas {
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .step-counter {
+            text-align: center;
+            font-size: 18px;
+            margin: 15px 0;
+            color: #FF4800;
+            font-weight: bold;
+        }
+        .status {
+            text-align: center;
+            padding: 10px;
+            background-color: #FD9F78;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Topological Sort Visualization</h1>
+        
+        <div class="explanation">
+            <p>Topological sorting is used for directed acyclic graphs (DAGs) to create a linear ordering of vertices where for each directed edge (u, v), vertex u comes before vertex v in the ordering.</p>
+            <p>This visualization shows a step-by-step process of topological sorting on a sample graph, highlighting how vertices are processed in order [0, 1, 2, 3, 4, 5].</p>
+        </div>
+        
+        <div class="step-counter">Step: <span id="stepCount">0</span> of 6</div>
+        
+        <div id="canvasContainer">
+            <canvas id="graphCanvas" width="700" height="400"></canvas>
+        </div>
+        
+        <div id="status" class="status">
+            Starting topological sort...
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const stepCountEl = document.getElementById('stepCount');
+        const statusEl = document.getElementById('status');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        // Graph setup
+        const vertices = [
+            { id: 0, x: 100, y: 200, distance: Infinity },
+            { id: 1, x: 200, y: 100, distance: Infinity },
+            { id: 2, x: 300, y: 200, distance: Infinity },
+            { id: 3, x: 400, y: 100, distance: Infinity },
+            { id: 4, x: 500, y: 200, distance: Infinity },
+            { id: 5, x: 600, y: 100, distance: Infinity }
+        ];
+        
+        const edges = [
+            { from: 0, to: 1, weight: 5 },
+            { from: 0, to: 2, weight: 3 },
+            { from: 1, to: 3, weight: 6 },
+            { from: 2, to: 3, weight: 7 },
+            { from: 2, to: 4, weight: 4 },
+            { from: 3, to: 4, weight: -1 },
+            { from: 3, to: 5, weight: 2 },
+            { from: 4, to: 5, weight: 5 }
+        ];
+        
+        // Animation state
+        let currentStep = 0;
+        const topologicalOrder = [0, 1, 2, 3, 4, 5];
+        const steps = [
+            { 
+                active: null, 
+                completed: [], 
+                distances: [0, Infinity, Infinity, Infinity, Infinity, Infinity],
+                message: "Initial state: Source vertex 0 has distance 0, all others Infinity"
+            },
+            { 
+                active: 0, 
+                completed: [0], 
+                distances: [0, 5, 3, Infinity, Infinity, Infinity],
+                message: "Processing vertex 0: Updated distances of neighbors 1 (∞→5) and 2 (∞→3)"
+            },
+            { 
+                active: 1, 
+                completed: [0, 1], 
+                distances: [0, 5, 3, 11, Infinity, Infinity],
+                message: "Processing vertex 1: Updated distance of neighbor 3 (∞→11)"
+            },
+            { 
+                active: 2, 
+                completed: [0, 1, 2], 
+                distances: [0, 5, 3, 10, 7, Infinity],
+                message: "Processing vertex 2: Updated distances of neighbors 3 (11→10) and 4 (∞→7)"
+            },
+            { 
+                active: 3, 
+                completed: [0, 1, 2, 3], 
+                distances: [0, 5, 3, 10, 6, 12],
+                message: "Processing vertex 3: Updated distances of neighbors 4 (7→6) and 5 (∞→12)"
+            },
+            { 
+                active: 4, 
+                completed: [0, 1, 2, 3, 4], 
+                distances: [0, 5, 3, 10, 6, 11],
+                message: "Processing vertex 4: Updated distance of neighbor 5 (12→11)"
+            },
+            { 
+                active: 5, 
+                completed: [0, 1, 2, 3, 4, 5], 
+                distances: [0, 5, 3, 10, 6, 11],
+                message: "Topological sort complete! Final distances: [0, 5, 3, 10, 6, 11]"
+            }
+        ];
+        
+        // Draw the graph
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges
+            for (const edge of edges) {
+                const fromVertex = vertices[edge.from];
+                const toVertex = vertices[edge.to];
+                
+                ctx.beginPath();
+                ctx.moveTo(fromVertex.x, fromVertex.y);
+                ctx.lineTo(toVertex.x, toVertex.y);
+                
+                // Check if this edge is being processed in the current step
+                const isActiveEdge = 
+                    currentStep > 0 && 
+                    steps[currentStep].active === edge.from && 
+                    !steps[currentStep-1].completed.includes(edge.to);
+                
+                if (isActiveEdge) {
+                    ctx.strokeStyle = '#FF4800';
+                    ctx.lineWidth = 3;
+                } else {
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 1;
+                }
+                
+                ctx.stroke();
+                
+                // Draw edge weight
+                const midX = (fromVertex.x + toVertex.x) / 2;
+                const midY = (fromVertex.y + toVertex.y) / 2 - 10;
+                
+                ctx.fillStyle = '#000000';
+                ctx.font = '14px Arial';
+                ctx.fillText(edge.weight, midX, midY);
+                
+                // Draw arrow
+                const angle = Math.atan2(toVertex.y - fromVertex.y, toVertex.x - fromVertex.x);
+                const arrowSize = 10;
+                
+                ctx.beginPath();
+                ctx.moveTo(
+                    toVertex.x - arrowSize * Math.cos(angle) - arrowSize * Math.sin(angle),
+                    toVertex.y - arrowSize * Math.sin(angle) + arrowSize * Math.cos(angle)
+                );
+                ctx.lineTo(toVertex.x - arrowSize * Math.cos(angle), toVertex.y - arrowSize * Math.sin(angle));
+                ctx.lineTo(
+                    toVertex.x - arrowSize * Math.cos(angle) + arrowSize * Math.sin(angle),
+                    toVertex.y - arrowSize * Math.sin(angle) - arrowSize * Math.cos(angle)
+                );
+                ctx.fillStyle = isActiveEdge ? '#FF4800' : '#000000';
+                ctx.fill();
+            }
+            
+            // Draw vertices
+            for (let i = 0; i < vertices.length; i++) {
+                const vertex = vertices[i];
+                const step = steps[currentStep];
+                
+                ctx.beginPath();
+                ctx.arc(vertex.x, vertex.y, 25, 0, Math.PI * 2);
+                
+                // Determine vertex status and color
+                if (step.active === i) {
+                    ctx.fillStyle = '#FF4800'; // Active vertex
+                } else if (step.completed.includes(i)) {
+                    ctx.fillStyle = '#FD9F78'; // Completed vertex
+                } else {
+                    ctx.fillStyle = '#FFFFFF'; // Unprocessed vertex
+                }
+                
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#000000';
+                ctx.stroke();
+                
+                // Draw vertex ID
+                ctx.fillStyle = step.active === i ? '#FFFFFF' : '#000000';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(vertex.id, vertex.x, vertex.y);
+                
+                // Draw distance value
+                const distance = step.distances[i];
+                const distText = distance === Infinity ? '∞' : distance.toString();
+                ctx.fillStyle = '#000000';
+                ctx.font = '14px Arial';
+                ctx.fillText(`d=${distText}`, vertex.x, vertex.y + 40);
+            }
+            
+            // Draw topological order
+            ctx.fillStyle = '#FF4800';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText("Topological Order: [0, 1, 2, 3, 4, 5]", 20, 30);
+            
+            // Update step counter and status
+            stepCountEl.textContent = currentStep;
+            statusEl.textContent = steps[currentStep].message;
+        }
+        
+        // Event listeners for buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                drawGraph();
+                nextBtn.disabled = false;
+                if (currentStep === 0) {
+                    prevBtn.disabled = true;
+                }
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                drawGraph();
+                prevBtn.disabled = false;
+                if (currentStep === steps.length - 1) {
+                    nextBtn.disabled = true;
+                }
+            }
+        });
+        
+        // Initialize
+        drawGraph();
+        prevBtn.disabled = true;
+    </script>
+</body>
+</html>
