@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graphs With and Without Bridges</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .graph-container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .graph-box {
+            width: 45%;
+            min-width: 400px;
+            background-color: #FFFFFF;
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .graph-title {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #FFFFFF;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .explanation h2 {
+            color: #FF4800;
+            margin-bottom: 15px;
+        }
+        
+        .explanation p {
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        
+        .highlight {
+            color: #FF4800;
+            font-weight: bold;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            gap: 20px;
+        }
+        
+        .nav-button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .slide {
+            display: none;
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        .dot-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .dot {
+            height: 15px;
+            width: 15px;
+            margin: 0 5px;
+            background-color: #FD9F78;
+            border-radius: 50%;
+            display: inline-block;
+            transition: background-color 0.3s;
+            cursor: pointer;
+        }
+        
+        .dot.active {
+            background-color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Graphs With and Without Bridges</h1>
+        
+        <div class="slide active" id="slide1">
+            <div class="graph-container">
+                <div class="graph-box">
+                    <div class="graph-title">Graph With Bridges</div>
+                    <canvas id="graphWithBridges" width="400" height="300"></canvas>
+                </div>
+                <div class="graph-box">
+                    <div class="graph-title">Graph Without Bridges</div>
+                    <canvas id="graphWithoutBridges" width="400" height="300"></canvas>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <h2>What is a Bridge in a Graph?</h2>
+                <p>A <span class="highlight">bridge</span> is an edge in a graph whose removal increases the number of connected components. In other words, it's an edge that, if removed, would break the graph into more disconnected parts.</p>
+                <p>In the left graph, <span class="highlight">every edge is a bridge</span>. If you remove any edge, the graph gets disconnected into two separate parts.</p>
+                <p>In the right graph (triangle), <span class="highlight">no edge is a bridge</span>. If you remove any single edge, the graph still remains connected because there's an alternate path between any two vertices.</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide2">
+            <div class="graph-container">
+                <div class="graph-box">
+                    <div class="graph-title">Bridge Removal Demonstration</div>
+                    <canvas id="bridgeRemovalDemo" width="400" height="300"></canvas>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <h2>What Happens When a Bridge is Removed?</h2>
+                <p>In this animation, we demonstrate what happens when a bridge is removed from a graph.</p>
+                <p>Initially, all vertices are connected. When the bridge (highlighted in red) is removed, the graph is split into two disconnected components.</p>
+                <p>This illustrates why bridges are critical edges in a graph - they are the only connection between different parts of the graph.</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide3">
+            <div class="graph-container">
+                <div class="graph-box">
+                    <div class="graph-title">Non-Bridge Removal Demonstration</div>
+                    <canvas id="nonBridgeRemovalDemo" width="400" height="300"></canvas>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <h2>What Happens When a Non-Bridge is Removed?</h2>
+                <p>In this animation, we demonstrate what happens when a non-bridge edge is removed from a graph.</p>
+                <p>In the triangle graph, when we remove any edge (highlighted in red), the remaining two edges still provide a path between all vertices.</p>
+                <p>This shows why none of the edges in a cycle are bridges - there's always an alternative path between any two vertices.</p>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prevBtn">Previous</button>
+            <button class="nav-button" id="nextBtn">Next</button>
+        </div>
+        
+        <div class="dot-container">
+            <span class="dot active" onclick="currentSlide(1)"></span>
+            <span class="dot" onclick="currentSlide(2)"></span>
+            <span class="dot" onclick="currentSlide(3)"></span>
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const withBridgesCanvas = document.getElementById('graphWithBridges');
+        const withoutBridgesCanvas = document.getElementById('graphWithoutBridges');
+        const bridgeRemovalCanvas = document.getElementById('bridgeRemovalDemo');
+        const nonBridgeRemovalCanvas = document.getElementById('nonBridgeRemovalDemo');
+        
+        const withBridgesCtx = withBridgesCanvas.getContext('2d');
+        const withoutBridgesCtx = withoutBridgesCanvas.getContext('2d');
+        const bridgeRemovalCtx = bridgeRemovalCanvas.getContext('2d');
+        const nonBridgeRemovalCtx = nonBridgeRemovalCanvas.getContext('2d');
+        
+        // Colors
+        const primaryColor = '#FF4800';
+        const secondaryColor = '#FD9F78';
+        const blackColor = '#000000';
+        const whiteColor = '#FFFFFF';
+        
+        // Node positions for the graph with bridges (path graph)
+        const pathNodes = [
+            { x: 100, y: 150, label: '0' },
+            { x: 200, y: 150, label: '1' },
+            { x: 300, y: 150, label: '2' },
+            { x: 400, y: 150, label: '3' }
+        ];
+        
+        // Edges for the path graph
+        const pathEdges = [
+            { source: 0, target: 1 },
+            { source: 1, target: 2 },
+            { source: 2, target: 3 }
+        ];
+        
+        // Node positions for the graph without bridges (cycle graph)
+        const cycleNodes = [
+            { x: 200, y: 100, label: '0' },
+            { x: 150, y: 200, label: '1' },
+            { x: 250, y: 200, label: '2' }
+        ];
+        
+        // Edges for the cycle graph
+        const cycleEdges = [
+            { source: 0, target: 1 },
+            { source: 1, target: 2 },
+            { source: 2, target: 0 }
+        ];
+        
+        // Draw a node
+        function drawNode(ctx, x, y, label, isHighlighted = false) {
+            ctx.beginPath();
+            ctx.arc(x, y, 20, 0, Math.PI * 2);
+            ctx.fillStyle = isHighlighted ? secondaryColor : whiteColor;
+            ctx.fill();
+            ctx.strokeStyle = primaryColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = blackColor;
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, x, y);
+        }
+        
+        // Draw an edge
+        function drawEdge(ctx, x1, y1, x2, y2, isHighlighted = false) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = isHighlighted ? 'red' : primaryColor;
+            ctx.lineWidth = isHighlighted ? 4 : 2;
+            ctx.stroke();
+        }
+        
+        // Draw the graph with bridges (path graph)
+        function drawPathGraph(ctx, highlightEdge = -1) {
+            ctx.clearRect(0, 0, withBridgesCanvas.width, withBridgesCanvas.height);
+            
+            // Draw edges
+            for (let i = 0; i < pathEdges.length; i++) {
+                const edge = pathEdges[i];
+                const source = pathNodes[edge.source];
+                const target = pathNodes[edge.target];
+                drawEdge(ctx, source.x, source.y, target.x, target.y, i === highlightEdge);
+            }
+            
+            // Draw nodes
+            for (const node of pathNodes) {
+                drawNode(ctx, node.x, node.y, node.label);
+            }
+        }
+        
+        // Draw the graph without bridges (cycle graph)
+        function drawCycleGraph(ctx, highlightEdge = -1) {
+            ctx.clearRect(0, 0, withoutBridgesCanvas.width, withoutBridgesCanvas.height);
+            
+            // Draw edges
+            for (let i = 0; i < cycleEdges.length; i++) {
+                const edge = cycleEdges[i];
+                const source = cycleNodes[edge.source];
+                const target = cycleNodes[edge.target];
+                drawEdge(ctx, source.x, source.y, target.x, target.y, i === highlightEdge);
+            }
+            
+            // Draw nodes
+            for (const node of cycleNodes) {
+                drawNode(ctx, node.x, node.y, node.label);
+            }
+        }
+        
+        // Bridge removal demonstration
+        function animateBridgeRemoval() {
+            let step = 0;
+            const totalSteps = 3;
+            const animationDuration = 1500;
+            
+            function animate() {
+                bridgeRemovalCtx.clearRect(0, 0, bridgeRemovalCanvas.width, bridgeRemovalCanvas.height);
+                
+                if (step === 0) {
+                    // Initial state - highlight the bridge
+                    for (let i = 0; i < pathEdges.length; i++) {
+                        const edge = pathEdges[i];
+                        const source = pathNodes[edge.source];
+                        const target = pathNodes[edge.target];
+                        drawEdge(bridgeRemovalCtx, source.x, source.y, target.x, target.y, i === 1);
+                    }
+                    
+                    for (const node of pathNodes) {
+                        drawNode(bridgeRemovalCtx, node.x, node.y, node.label);
+                    }
+                } 
+                else if (step === 1) {
+                    // Show bridge being removed
+                    for (let i = 0; i < pathEdges.length; i++) {
+                        if (i !== 1) {
+                            const edge = pathEdges[i];
+                            const source = pathNodes[edge.source];
+                            const target = pathNodes[edge.target];
+                            drawEdge(bridgeRemovalCtx, source.x, source.y, target.x, target.y);
+                        }
+                    }
+                    
+                    for (const node of pathNodes) {
+                        drawNode(bridgeRemovalCtx, node.x, node.y, node.label);
+                    }
+                }
+                else if (step === 2) {
+                    // Show the disconnected components
+                    for (let i = 0; i < pathEdges.length; i++) {
+                        if (i !== 1) {
+                            const edge = pathEdges[i];
+                            const source = pathNodes[edge.source];
+                            const target = pathNodes[edge.target];
+                            drawEdge(bridgeRemovalCtx, source.x, source.y, target.x, target.y);
+                        }
+                    }
+                    
+                    // First component
+                    drawNode(bridgeRemovalCtx, pathNodes[0].x, pathNodes[0].y, pathNodes[0].label, true);
+                    drawNode(bridgeRemovalCtx, pathNodes[1].x, pathNodes[1].y, pathNodes[1].label, true);
+                    
+                    // Second component
+                    drawNode(bridgeRemovalCtx, pathNodes[2].x, pathNodes[2].y, pathNodes[2].label, false);
+                    drawNode(bridgeRemovalCtx, pathNodes[3].x, pathNodes[3].y, pathNodes[3].label, false);
+                    
+                    // Add text to show disconnected components
+                    bridgeRemovalCtx.fillStyle = primaryColor;
+                    bridgeRemovalCtx.font = '16px Arial';
+                    bridgeRemovalCtx.textAlign = 'center';
+                    bridgeRemovalCtx.fillText('Disconnected!', 250, 50);
+                }
+                
+                step = (step + 1) % totalSteps;
+                setTimeout(animate, animationDuration);
+            }
+            
+            animate();
+        }
+        
+        // Non-bridge removal demonstration
+        function animateNonBridgeRemoval() {
+            let step = 0;
+            const totalSteps = 3;
+            const animationDuration = 1500;
+            
+            function animate() {
+                nonBridgeRemovalCtx.clearRect(0, 0, nonBridgeRemovalCanvas.width, nonBridgeRemovalCanvas.height);
+                
+                if (step === 0) {
+                    // Initial state - highlight the non-bridge
+                    for (let i = 0; i < cycleEdges.length; i++) {
+                        const edge = cycleEdges[i];
+                        const source = cycleNodes[edge.source];
+                        const target = cycleNodes[edge.target];
+                        drawEdge(nonBridgeRemovalCtx, source.x, source.y, target.x, target.y, i === 0);
+                    }
+                    
+                    for (const node of cycleNodes) {
+                        drawNode(nonBridgeRemovalCtx, node.x, node.y, node.label);
+                    }
+                } 
+                else if (step === 1) {
+                    // Show edge being removed
+                    for (let i = 0; i < cycleEdges.length; i++) {
+                        if (i !== 0) {
+                            const edge = cycleEdges[i];
+                            const source = cycleNodes[edge.source];
+                            const target = cycleNodes[edge.target];
+                            drawEdge(nonBridgeRemovalCtx, source.x, source.y, target.x, target.y);
+                        }
+                    }
+                    
+                    for (const node of cycleNodes) {
+                        drawNode(nonBridgeRemovalCtx, node.x, node.y, node.label);
+                    }
+                }
+                else if (step === 2) {
+                    // Show the still connected graph
+                    for (let i = 0; i < cycleEdges.length; i++) {
+                        if (i !== 0) {
+                            const edge = cycleEdges[i];
+                            const source = cycleNodes[edge.source];
+                            const target = cycleNodes[edge.target];
+                            drawEdge(nonBridgeRemovalCtx, source.x, source.y, target.x, target.y);
+                        }
+                    }
+                    
+                    for (const node of cycleNodes) {
+                        drawNode(nonBridgeRemovalCtx, node.x, node.y, node.label);
+                    }
+                    
+                    // Add text to show connected components
+                    nonBridgeRemovalCtx.fillStyle = primaryColor;
+                    nonBridgeRemovalCtx.font = '16px Arial';
+                    nonBridgeRemovalCtx.textAlign = 'center';
+                    nonBridgeRemovalCtx.fillText('Still Connected!', 200, 50);
+                }
+                
+                step = (step + 1) % totalSteps;
+                setTimeout(animate, animationDuration);
+            }
+            
+            animate();
+        }
+        
+        // Initial draw
+        drawPathGraph(withBridgesCtx);
+        drawCycleGraph(withoutBridgesCtx);
+        
+        // Slide navigation
+        let currentSlideIndex = 1;
+        const slides = document.querySelectorAll('.slide');
+        const dots = document.querySelectorAll('.dot');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        function showSlide(n) {
+            if (n > slides.length) {
+                currentSlideIndex = 1;
+            }
+            if (n < 1) {
+                currentSlideIndex = slides.length;
+            }
+            
+            // Hide all slides
+            for (let i = 0; i < slides.length; i++) {
+                slides[i].classList.remove('active');
+                dots[i].classList.remove('active');
+            }
+            
+            // Show the current slide
+            slides[currentSlideIndex - 1].classList.add('active');
+            dots[currentSlideIndex - 1].classList.add('active');
+            
+            // Start animations for specific slides
+            if (currentSlideIndex === 2) {
+                animateBridgeRemoval();
+            }
+            else if (currentSlideIndex === 3) {
+                animateNonBridgeRemoval();
+            }
+        }
+
+        function moveSlide(n) {
+            showSlide(currentSlideIndex += n);
+        }
+
+        function currentSlide(n) {
+            showSlide(currentSlideIndex = n);
+        }
+
+        prevBtn.addEventListener('click', () => moveSlide(-1));
+        nextBtn.addEventListener('click', () => moveSlide(1));
+        
+        // Initialize the first slide
+        showSlide(currentSlideIndex);
+    </script>
+</body>
+</html>
