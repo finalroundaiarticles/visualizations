@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Negative Cycle Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #FFF;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            color: #000000;
+        }
+        
+        #canvas {
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            background-color: #FFFFFF;
+        }
+        
+        .highlight {
+            color: #FF4800;
+            font-weight: bold;
+        }
+        
+        .step-counter {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+            color: #000000;
+        }
+        
+        .total-weight {
+            font-size: 24px;
+            text-align: center;
+            margin: 20px 0;
+            color: #000000;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Negative Cycle Visualization</h1>
+    
+    <div class="container">
+        <div class="explanation" id="explanation">
+            A negative cycle in a graph is a cycle whose total weight sum is negative. Let's visualize this with a simple example cycle A → B → C → A with weights 1, -3, and 1 respectively.
+        </div>
+        
+        <canvas id="canvas" width="800" height="400"></canvas>
+        
+        <div class="total-weight" id="totalWeight">Total Weight: <span class="highlight">-1</span></div>
+        
+        <div class="step-counter" id="stepCounter">Step 0/3</div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prevButton" disabled>Previous</button>
+            <button class="nav-button" id="nextButton">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+        const stepCounter = document.getElementById('stepCounter');
+        const explanation = document.getElementById('explanation');
+        const totalWeight = document.getElementById('totalWeight');
+        
+        // Colors
+        const primaryColor = '#FF4800';
+        const secondaryColor = '#FD9F78';
+        const blackColor = '#000000';
+        const whiteColor = '#FFFFFF';
+        
+        // Nodes
+        const nodeRadius = 30;
+        const nodes = [
+            { id: 'A', x: 150, y: 200 },
+            { id: 'B', x: 400, y: 100 },
+            { id: 'C', x: 650, y: 200 }
+        ];
+        
+        // Edges
+        const edges = [
+            { from: 0, to: 1, weight: 1, label: '+1', angle: -Math.PI/6 },
+            { from: 1, to: 2, weight: -3, label: '-3', angle: -Math.PI/6 },
+            { from: 2, to: 0, weight: 1, label: '+1', angle: Math.PI + Math.PI/6 }
+        ];
+        
+        let currentStep = 0;
+        const totalSteps = 3;
+        let animationActive = false;
+        let currentPathWeight = 0;
+        
+        // Explanations for each step
+        const explanations = [
+            "A negative cycle in a graph is a cycle whose total weight sum is negative. Let's visualize this with a simple example cycle A → B → C → A with weights 1, -3, and 1 respectively.",
+            "Step 1: Move from node A to node B with a weight of +1. Current path weight: +1",
+            "Step 2: Move from node B to node C with a weight of -3. Current path weight: 1 + (-3) = -2",
+            "Step 3: Move from node C back to node A with a weight of +1. Final path weight: -2 + 1 = -1. Since this is negative, we have a negative cycle!"
+        ];
+        
+        // Function to draw a node
+        function drawNode(node, highlighted = false) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, nodeRadius, 0, 2 * Math.PI);
+            ctx.fillStyle = highlighted ? secondaryColor : whiteColor;
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = highlighted ? primaryColor : blackColor;
+            ctx.stroke();
+            
+            ctx.font = 'bold 24px Arial';
+            ctx.fillStyle = blackColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.id, node.x, node.y);
+        }
+        
+        // Function to draw an edge
+        function drawEdge(edge, highlighted = false) {
+            const fromNode = nodes[edge.from];
+            const toNode = nodes[edge.to];
+            
+            // Calculate the direction vector
+            const dx = toNode.x - fromNode.x;
+            const dy = toNode.y - fromNode.y;
+            const len = Math.sqrt(dx * dx + dy * dy);
+            
+            // Normalize direction vector
+            const nx = dx / len;
+            const ny = dy / len;
+            
+            // Start and end points adjusted for node radius
+            const startX = fromNode.x + nodeRadius * nx;
+            const startY = fromNode.y + nodeRadius * ny;
+            const endX = toNode.x - nodeRadius * nx;
+            const endY = toNode.y - nodeRadius * ny;
+            
+            // Draw the edge line
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.lineWidth = highlighted ? 5 : 3;
+            ctx.strokeStyle = highlighted ? primaryColor : blackColor;
+            ctx.stroke();
+            
+            // Draw the arrowhead
+            const arrowSize = 15;
+            const angle = Math.atan2(dy, dx);
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(endX - arrowSize * Math.cos(angle - Math.PI/6), endY - arrowSize * Math.sin(angle - Math.PI/6));
+            ctx.lineTo(endX - arrowSize * Math.cos(angle + Math.PI/6), endY - arrowSize * Math.sin(angle + Math.PI/6));
+            ctx.closePath();
+            ctx.fillStyle = highlighted ? primaryColor : blackColor;
+            ctx.fill();
+            
+            // Draw the weight label
+            const labelX = (fromNode.x + toNode.x) / 2 + 30 * Math.cos(edge.angle);
+            const labelY = (fromNode.y + toNode.y) / 2 + 30 * Math.sin(edge.angle);
+            ctx.font = 'bold 20px Arial';
+            ctx.fillStyle = highlighted ? primaryColor : blackColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(edge.label, labelX, labelY);
+            
+            // Draw a background for the weight label
+            if (highlighted) {
+                const textMetrics = ctx.measureText(edge.label);
+                const textWidth = textMetrics.width;
+                const textHeight = 20; // Approximate height
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.fillRect(labelX - textWidth/2 - 5, labelY - textHeight/2 - 5, textWidth + 10, textHeight + 10);
+                ctx.fillStyle = primaryColor;
+                ctx.fillText(edge.label, labelX, labelY);
+            }
+        }
+        
+        // Function to draw the graph
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw all edges
+            edges.forEach((edge, index) => {
+                const highlighted = currentStep > 0 && index === currentStep - 1;
+                drawEdge(edge, highlighted);
+            });
+            
+            // Draw all nodes
+            nodes.forEach((node, index) => {
+                const highlighted = (currentStep > 0 && index === edges[currentStep - 1].from) || 
+                                   (currentStep > 0 && index === edges[currentStep - 1].to);
+                drawNode(node, highlighted);
+            });
+        }
+        
+        // Update the explanation and controls
+        function updateStep() {
+            stepCounter.textContent = `Step ${currentStep}/${totalSteps}`;
+            explanation.textContent = explanations[currentStep];
+            
+            prevButton.disabled = currentStep === 0;
+            nextButton.disabled = currentStep === totalSteps;
+            
+            if (currentStep === totalSteps) {
+                totalWeight.style.display = 'block';
+            } else {
+                totalWeight.style.display = 'none';
+            }
+            
+            drawGraph();
+        }
+        
+        // Initialize
+        drawGraph();
+        
+        // Handle next button click
+        nextButton.addEventListener('click', () => {
+            if (currentStep < totalSteps && !animationActive) {
+                currentStep++;
+                if (currentStep > 0 && currentStep <= edges.length) {
+                    currentPathWeight += edges[currentStep - 1].weight;
+                }
+                updateStep();
+            }
+        });
+        
+        // Handle previous button click
+        prevButton.addEventListener('click', () => {
+            if (currentStep > 0 && !animationActive) {
+                if (currentStep > 0 && currentStep <= edges.length) {
+                    currentPathWeight -= edges[currentStep - 1].weight;
+                }
+                currentStep--;
+                updateStep();
+            }
+        });
+        
+        // Initialize the first step
+        updateStep();
+    </script>
+</body>
+</html>
