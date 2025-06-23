@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kosaraju's Algorithm Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .panels {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .panel {
+            width: 30%;
+            min-width: 300px;
+            margin: 10px auto;
+            background-color: #FFFFFF;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .panel-title {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: 5px;
+        }
+        
+        .description {
+            background-color: #FFFFFF;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stack-container {
+            width: 80px;
+            height: 200px;
+            border: 2px solid #FF4800;
+            margin: 10px auto;
+            position: relative;
+            background-color: #FFFFFF;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .stack-element {
+            width: 40px;
+            height: 40px;
+            background-color: #FD9F78;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 5px auto;
+            font-weight: bold;
+        }
+        
+        .stack-label {
+            text-align: center;
+            font-weight: bold;
+            color: #FF4800;
+            margin-top: 5px;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin: 15px 0;
+            font-weight: bold;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Kosaraju's Algorithm Visualization</h1>
+        
+        <div class="description">
+            <p>Kosaraju's algorithm finds Strongly Connected Components (SCCs) in a directed graph. An SCC is a portion of a graph where every vertex is reachable from every other vertex within that component.</p>
+            <p>The algorithm works in three main steps:</p>
+            <ol>
+                <li>Perform DFS on the original graph to compute finish times and build a stack</li>
+                <li>Create the transpose graph by reversing all edges</li>
+                <li>Perform DFS on the transpose graph in order of the stack to find SCCs</li>
+            </ol>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">Step 1: Original Graph with DFS</div>
+        
+        <div class="panels">
+            <div class="panel">
+                <div class="panel-title">Original Graph</div>
+                <canvas id="originalCanvas" width="280" height="280"></canvas>
+                <div class="stack-container" id="stackContainer"></div>
+                <div class="stack-label">DFS Stack</div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">Transpose Graph</div>
+                <canvas id="transposeCanvas" width="280" height="280"></canvas>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">SCCs Discovered</div>
+                <canvas id="sccCanvas" width="280" height="280"></canvas>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prevBtn" disabled>Previous</button>
+            <button class="nav-button" id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Graph structure
+        const graph = {
+            nodes: [
+                { id: 'A', x: 140, y: 50 },
+                { id: 'B', x: 50, y: 120 },
+                { id: 'C', x: 230, y: 120 },
+                { id: 'D', x: 140, y: 190 },
+                { id: 'E', x: 50, y: 230 },
+                { id: 'F', x: 230, y: 230 }
+            ],
+            edges: [
+                { from: 'A', to: 'B' },
+                { from: 'B', to: 'C' },
+                { from: 'C', to: 'A' },
+                { from: 'C', to: 'D' },
+                { from: 'D', to: 'E' },
+                { from: 'E', to: 'F' },
+                { from: 'F', to: 'D' }
+            ]
+        };
+
+        // Define SCCs
+        const sccs = [
+            ['A', 'B', 'C'],
+            ['D', 'E', 'F']
+        ];
+
+        // Animation state
+        let currentStep = 0;
+        const totalSteps = 14;
+        let finishTimes = {};
+        let stack = [];
+        let dfsVisited = new Set();
+        let currentSCCs = [];
+
+        // Get canvas contexts
+        const originalCanvas = document.getElementById('originalCanvas');
+        const transposeCanvas = document.getElementById('transposeCanvas');
+        const sccCanvas = document.getElementById('sccCanvas');
+        const originalCtx = originalCanvas.getContext('2d');
+        const transposeCtx = transposeCanvas.getContext('2d');
+        const sccCtx = sccCanvas.getContext('2d');
+
+        // Get navigation elements
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        const stackContainer = document.getElementById('stackContainer');
+
+        // Helper functions
+        function drawNode(ctx, node, color = '#FD9F78', textColor = '#000000', finishTime = null) {
+            // Draw node circle
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 20, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = '#FF4800';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw node label
+            ctx.fillStyle = textColor;
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.id, node.x, node.y);
+            
+            // Draw finish time if provided
+            if (finishTime !== null) {
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(node.x + 15, node.y - 15, 12, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#FF4800';
+                ctx.stroke();
+                
+                ctx.fillStyle = '#FF4800';
+                ctx.font = '12px Arial';
+                ctx.fillText(finishTime, node.x + 15, node.y - 15);
+            }
+        }
+
+        function drawEdge(ctx, fromNode, toNode, color = '#FF4800', dashed = false) {
+            const headLen = 10;
+            const dx = toNode.x - fromNode.x;
+            const dy = toNode.y - fromNode.y;
+            const angle = Math.atan2(dy, dx);
+            
+            // Calculate points to avoid drawing over nodes
+            const startX = fromNode.x + Math.cos(angle) * 20;
+            const startY = fromNode.y + Math.sin(angle) * 20;
+            const endX = toNode.x - Math.cos(angle) * 20;
+            const endY = toNode.y - Math.sin(angle) * 20;
+            
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            
+            if (dashed) {
+                ctx.setLineDash([5, 3]);
+            } else {
+                ctx.setLineDash([]);
+            }
+            
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw arrowhead
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(endX - headLen * Math.cos(angle - Math.PI/6), endY - headLen * Math.sin(angle - Math.PI/6));
+            ctx.lineTo(endX - headLen * Math.cos(angle + Math.PI/6), endY - headLen * Math.sin(angle + Math.PI/6));
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+            
+            ctx.setLineDash([]);
+        }
+
+        function findNodeById(id) {
+            return graph.nodes.find(node => node.id === id);
+        }
+
+        function updateStack() {
+            stackContainer.innerHTML = '';
+            stack.forEach((nodeId, index) => {
+                const element = document.createElement('div');
+                element.className = 'stack-element';
+                element.textContent = nodeId;
+                stackContainer.appendChild(element);
+            });
+        }
+
+        function clearCanvas(ctx) {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        }
+
+        function drawGraph(ctx, isTranspose = false, highlightEdges = [], highlightNodes = [], dfsFinished = []) {
+            clearCanvas(ctx);
+            
+            // Draw edges
+            graph.edges.forEach(edge => {
+                const fromNode = findNodeById(edge.from);
+                const toNode = findNodeById(edge.to);
+                
+                let fromId = edge.from;
+                let toId = edge.to;
+                
+                if (isTranspose) {
+                    // Swap for transpose
+                    fromId = edge.to;
+                    toId = edge.from;
+                }
+                
+                const isHighlighted = highlightEdges.some(e => 
+                    (e.from === fromId && e.to === toId));
+                
+                drawEdge(
+                    ctx, 
+                    findNodeById(fromId), 
+                    findNodeById(toId), 
+                    isHighlighted ? '#000000' : '#FF4800'
+                );
+            });
+            
+            // Draw nodes
+            graph.nodes.forEach(node => {
+                const isVisited = dfsVisited.has(node.id);
+                const isFinished = dfsFinished.includes(node.id);
+                const isHighlighted = highlightNodes.includes(node.id);
+                
+                let nodeColor = '#FD9F78';
+                if (isHighlighted) nodeColor = '#FF4800';
+                else if (isVisited && !isFinished) nodeColor = '#FD9F78';
+                else if (isFinished) nodeColor = '#CCCCCC';
+                
+                drawNode(
+                    ctx, 
+                    node, 
+                    nodeColor,
+                    isHighlighted ? '#FFFFFF' : '#000000',
+                    finishTimes[node.id] || null
+                );
+            });
+        }
+
+        function drawSCCs() {
+            clearCanvas(sccCtx);
+            
+            // Draw edges
+            graph.edges.forEach(edge => {
+                const fromNode = findNodeById(edge.from);
+                const toNode = findNodeById(edge.to);
+                
+                // Check if both nodes are in the same SCC
+                const sccIndex = currentSCCs.findIndex(scc => 
+                    scc.includes(edge.from) && scc.includes(edge.to));
+                
+                if (sccIndex !== -1) {
+                    drawEdge(sccCtx, fromNode, toNode, getSccColor(sccIndex));
+                } else {
+                    // Draw gray for edges not in an SCC
+                    drawEdge(sccCtx, fromNode, toNode, '#CCCCCC', true);
+                }
+            });
+            
+            // Draw nodes
+            graph.nodes.forEach(node => {
+                const sccIndex = currentSCCs.findIndex(scc => scc.includes(node.id));
+                if (sccIndex !== -1) {
+                    drawNode(sccCtx, node, getSccColor(sccIndex), '#FFFFFF');
+                } else {
+                    drawNode(sccCtx, node, '#CCCCCC', '#000000');
+                }
+            });
+        }
+
+        function getSccColor(index) {
+            const colors = ['#FF4800', '#FD9F78', '#000000', '#FF8C44'];
+            return colors[index % colors.length];
+        }
+
+        function updateStep() {
+            // Update navigation buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps;
+            
+            // Clear canvases
+            clearCanvas(originalCtx);
+            clearCanvas(transposeCtx);
+            clearCanvas(sccCtx);
+            
+            // Reset state for new step rendering
+            let highlightNodes = [];
+            let highlightEdges = [];
+            let dfsFinished = [];
+            
+            // Render based on current step
+            if (currentStep === 0) {
+                // Initial state
+                stepIndicator.textContent = "Step 1: Original Graph with DFS";
+                drawGraph(originalCtx);
+                stack = [];
+                updateStack();
+                dfsVisited = new Set();
+                finishTimes = {};
+                currentSCCs = [];
+            } 
+            else if (currentStep === 1) {
+                // Start DFS on node A
+                stepIndicator.textContent = "Step 1: DFS from node A";
+                highlightNodes = ['A'];
+                dfsVisited.add('A');
+                drawGraph(originalCtx, false, highlightEdges, highlightNodes);
+                updateStack();
+            }
+            else if (currentStep === 2) {
+                // Visit B from A
+                stepIndicator.textContent = "Step 1: DFS visits B from A";
+                highlightNodes = ['B'];
+                highlightEdges = [{ from: 'A', to: 'B' }];
+                dfsVisited.add('B');
+                drawGraph(originalCtx, false, highlightEdges, highlightNodes, []);
+                updateStack();
+            }
+            else if (currentStep === 3) {
+                // Visit C from B
+                stepIndicator.textContent = "Step 1: DFS visits C from B";
+                highlightNodes = ['C'];
+                highlightEdges = [{ from: 'B', to: 'C' }];
+                dfsVisited.add('C');
+                drawGraph(originalCtx, false, highlightEdges, highlightNodes, []);
+                updateStack();
+            }
+            else if (currentStep === 4) {
+                // C visits A but A is already visited, so visit D
+                stepIndicator.textContent = "Step 1: C visits D (A is already visited)";
+                highlightNodes = ['D'];
+                highlightEdges = [{ from: 'C', to: 'D' }];
+                dfsVisited.add('D');
+                drawGraph(originalCtx, false, highlightEdges, highlightNodes, []);
+                updateStack();
+            }
+            else if (currentStep === 5) {
+                // Visit E from D
+                stepIndicator.textContent = "Step 1: DFS visits E from D";
+                highlightNodes = ['E'];
+                highlightEdges = [{ from: 'D', to: 'E' }];
+                dfsVisited.add('E');
+                drawGraph(originalCtx, false, highlightEdges, highlightNodes, []);
+                updateStack();
+            }
+            else if (currentStep === 6) {
+                // Visit F from E
+                stepIndicator.textContent = "Step 1: DFS visits F from E";
+                highlightNodes = ['F'];
+                highlightEdges = [{ from: 'E', to: 'F' }];
+                dfsVisited.add('F');
+                drawGraph(originalCtx, false, highlightEdges, highlightNodes, []);
+                updateStack();
+            }
+            else if (currentStep === 7) {
+                // F visits D, but it's already visited, so finish F
+                stepIndicator.textContent = "Step 1: Finish F (Push to stack)";
+                finishTimes['F'] = 1;
+                stack.push('F');
+                dfsFinished = ['F'];
+                drawGraph(originalCtx, false, [], [], dfsFinished);
+                updateStack();
+            }
+            else if (currentStep === 8) {
+                // Finish E
+                stepIndicator.textContent = "Step 1: Finish E (Push to stack)";
+                finishTimes['F'] = 1;
+                finishTimes['E'] = 2;
+                stack.push('E');
+                dfsFinished = ['F', 'E'];
+                drawGraph(originalCtx, false, [], [], dfsFinished);
+                updateStack();
+            }
+            else if (currentStep === 9) {
+                // Finish D
+                stepIndicator.textContent = "Step 1: Finish D (Push to stack)";
+                finishTimes['F'] = 1;
+                finishTimes['E'] = 2;
+                finishTimes['D'] = 3;
+                stack.push('D');
+                dfsFinished = ['F', 'E', 'D'];
+                drawGraph(originalCtx, false, [], [], dfsFinished);
+                updateStack();
+            }
+            else if (currentStep === 10) {
+                // Finish C
+                stepIndicator.textContent = "Step 1: Finish C (Push to stack)";
+                finishTimes['F'] = 1;
+                finishTimes['E'] = 2;
+                finishTimes['D'] = 3;
+                finishTimes['C'] = 4;
+                stack.push('C');
+                dfsFinished = ['F', 'E', 'D', 'C'];
+                drawGraph(originalCtx, false, [], [], dfsFinished);
+                updateStack();
+            }
+            else if (currentStep === 11) {
+                // Finish B
+                stepIndicator.textContent = "Step 1: Finish B (Push to stack)";
+                finishTimes['F'] = 1;
+                finishTimes['E'] = 2;
+                finishTimes['D'] = 3;
+                finishTimes['C'] = 4;
+                finishTimes['B'] = 5;
+                stack.push('B');
+                dfsFinished = ['F', 'E', 'D', 'C', 'B'];
+                drawGraph(originalCtx, false, [], [], dfsFinished);
+                updateStack();
+            }
+            else if (currentStep === 12) {
+                // Finish A and complete first DFS
+                stepIndicator.textContent = "Step 1: Finish A (Push to stack) - First DFS Complete";
+                finishTimes['F'] = 1;
+                finishTimes['E'] = 2;
+                finishTimes['D'] = 3;
+                finishTimes['C'] = 4;
+                finishTimes['B'] = 5;
+                finishTimes['A'] = 6;
+                stack.push('A');
+                dfsFinished = ['F', 'E', 'D', 'C', 'B', 'A'];
+                drawGraph(originalCtx, false, [], [], dfsFinished);
+                updateStack();
+                
+                // Draw transpose graph
+                drawGraph(transposeCtx, true);
+            }
+            else if (currentStep === 13) {
+                // Second DFS on transpose - First SCC
+                stepIndicator.textContent = "Step 2: Second DFS on Transpose Graph - First SCC Found";
+                finishTimes['F'] = 1;
+                finishTimes['E'] = 2;
+                finishTimes['D'] = 3;
+                finishTimes['C'] = 4;
+                finishTimes['B'] = 5;
+                finishTimes['A'] = 6;
+                dfsFinished = ['F', 'E', 'D', 'C', 'B', 'A'];
+                drawGraph(originalCtx, false, [], [], dfsFinished);
+                
+                // Draw transpose with highlight
+                highlightNodes = ['A', 'B', 'C'];
+                drawGraph(transposeCtx, true, [], highlightNodes);
+                
+                // Show first SCC
+                currentSCCs = [['A', 'B', 'C']];
+                drawSCCs();
+            }
+            else if (currentStep === 14) {
+                // Second DFS - All SCCs found
+                stepIndicator.textContent = "Step 3: All Strongly Connected Components Discovered";
+                finishTimes['F'] = 1;
+                finishTimes['E'] = 2;
+                finishTimes['D'] = 3;
+                finishTimes['C'] = 4;
+                finishTimes['B'] = 5;
+                finishTimes['A'] = 6;
+                dfsFinished = ['F', 'E', 'D', 'C', 'B', 'A'];
+                drawGraph(originalCtx, false, [], [], dfsFinished);
+                
+                // Draw transpose with all highlights
+                highlightNodes = ['A', 'B', 'C', 'D', 'E', 'F'];
+                drawGraph(transposeCtx, true, [], highlightNodes);
+                
+                // Show all SCCs
+                currentSCCs = [['A', 'B', 'C'], ['D', 'E', 'F']];
+                drawSCCs();
+            }
+        }
+
+        // Event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateStep();
+            }
+        });
+
+        // Initialize visualization
+        updateStep();
+    </script>
+</body>
+</html>
