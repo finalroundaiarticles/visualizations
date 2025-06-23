@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake and Ladders Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .board-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(10, 60px);
+            grid-template-rows: repeat(10, 60px);
+            gap: 2px;
+            border: 3px solid #000000;
+            background-color: #FD9F78;
+        }
+        .cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #FFFFFF;
+            border: 1px solid #000000;
+            font-weight: bold;
+            position: relative;
+        }
+        .cell.highlight-start {
+            background-color: #FD9F78;
+        }
+        .cell.highlight-end {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            background-color: #FFFFFF;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .step-indicator {
+            color: #FF4800;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Snake and Ladders Board Layout</h1>
+        
+        <div class="step-indicator">Step <span id="currentStep">1</span> of <span id="totalSteps">4</span></div>
+        
+        <div class="board-container">
+            <div class="board" id="board">
+                <!-- Board cells will be created by JavaScript -->
+            </div>
+            <canvas id="boardCanvas"></canvas>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <!-- Explanation will be updated by JavaScript -->
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prevBtn" disabled>Previous</button>
+            <button class="nav-btn" id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize variables
+        let currentStep = 1;
+        const totalSteps = 4;
+        const board = document.getElementById('board');
+        const canvas = document.getElementById('boardCanvas');
+        const ctx = canvas.getContext('2d');
+        const explanation = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const currentStepElement = document.getElementById('currentStep');
+        const totalStepsElement = document.getElementById('totalSteps');
+        
+        // Set total steps
+        totalStepsElement.textContent = totalSteps;
+        
+        // Snake and ladder positions
+        const ladders = [
+            {start: 1, end: 38},
+            {start: 4, end: 14},
+            {start: 9, end: 31},
+            {start: 21, end: 42},
+            {start: 28, end: 84},
+            {start: 51, end: 67},
+            {start: 72, end: 91},
+            {start: 80, end: 99}
+        ];
+        
+        const snakes = [
+            {start: 17, end: 7},
+            {start: 54, end: 34},
+            {start: 62, end: 19},
+            {start: 64, end: 60},
+            {start: 87, end: 36},
+            {start: 93, end: 73},
+            {start: 95, end: 75},
+            {start: 98, end: 79}
+        ];
+
+        // Create board
+        function createBoard() {
+            board.innerHTML = '';
+            // Create cells in reverse order for rows (bottom to top)
+            for (let row = 9; row >= 0; row--) {
+                for (let col = 0; col < 10; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    
+                    // Calculate cell number (snake and ladders style with alternating directions)
+                    let cellNum;
+                    if (row % 2 === 0) {
+                        // Even rows go left to right
+                        cellNum = (9 - row) * 10 + col + 1;
+                    } else {
+                        // Odd rows go right to left
+                        cellNum = (9 - row) * 10 + (10 - col);
+                    }
+                    
+                    cell.textContent = cellNum;
+                    cell.id = `cell-${cellNum}`;
+                    
+                    // Highlight start and end
+                    if (cellNum === 1) {
+                        cell.classList.add('highlight-start');
+                    } else if (cellNum === 100) {
+                        cell.classList.add('highlight-end');
+                    }
+                    
+                    board.appendChild(cell);
+                }
+            }
+            
+            // Set canvas size to match board size
+            canvas.width = board.offsetWidth;
+            canvas.height = board.offsetHeight;
+            canvas.style.width = `${board.offsetWidth}px`;
+            canvas.style.height = `${board.offsetHeight}px`;
+        }
+        
+        // Get cell position
+        function getCellPosition(cellNum) {
+            const cell = document.getElementById(`cell-${cellNum}`);
+            if (!cell) return null;
+            
+            const rect = cell.getBoundingClientRect();
+            const boardRect = board.getBoundingClientRect();
+            
+            return {
+                x: rect.left - boardRect.left + rect.width / 2,
+                y: rect.top - boardRect.top + rect.height / 2
+            };
+        }
+        
+        // Draw ladder
+        function drawLadder(start, end, color = '#008000') {
+            const startPos = getCellPosition(start);
+            const endPos = getCellPosition(end);
+            
+            if (!startPos || !endPos) return;
+            
+            // Draw ladder rails
+            const railWidth = 5;
+            const railGap = 10;
+            const angle = Math.atan2(endPos.y - startPos.y, endPos.x - startPos.x);
+            const perpAngle = angle + Math.PI/2;
+            
+            // First rail
+            ctx.beginPath();
+            ctx.moveTo(
+                startPos.x + Math.cos(perpAngle) * railGap/2,
+                startPos.y + Math.sin(perpAngle) * railGap/2
+            );
+            ctx.lineTo(
+                endPos.x + Math.cos(perpAngle) * railGap/2,
+                endPos.y + Math.sin(perpAngle) * railGap/2
+            );
+            ctx.lineWidth = railWidth;
+            ctx.strokeStyle = color;
+            ctx.stroke();
+            
+            // Second rail
+            ctx.beginPath();
+            ctx.moveTo(
+                startPos.x - Math.cos(perpAngle) * railGap/2,
+                startPos.y - Math.sin(perpAngle) * railGap/2
+            );
+            ctx.lineTo(
+                endPos.x - Math.cos(perpAngle) * railGap/2,
+                endPos.y - Math.sin(perpAngle) * railGap/2
+            );
+            ctx.lineWidth = railWidth;
+            ctx.strokeStyle = color;
+            ctx.stroke();
+            
+            // Draw rungs
+            const distance = Math.sqrt(
+                Math.pow(endPos.x - startPos.x, 2) + 
+                Math.pow(endPos.y - startPos.y, 2)
+            );
+            const steps = Math.max(2, Math.floor(distance / 30));
+            
+            for (let i = 1; i < steps; i++) {
+                const t = i / steps;
+                const x1 = startPos.x * (1 - t) + endPos.x * t + Math.cos(perpAngle) * railGap/2;
+                const y1 = startPos.y * (1 - t) + endPos.y * t + Math.sin(perpAngle) * railGap/2;
+                const x2 = startPos.x * (1 - t) + endPos.x * t - Math.cos(perpAngle) * railGap/2;
+                const y2 = startPos.y * (1 - t) + endPos.y * t - Math.sin(perpAngle) * railGap/2;
+                
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = color;
+                ctx.stroke();
+            }
+        }
+        
+        // Draw snake
+        function drawSnake(start, end, color = '#FF4800') {
+            const startPos = getCellPosition(start);
+            const endPos = getCellPosition(end);
+            
+            if (!startPos || !endPos) return;
+            
+            // Draw snake body as a curved line
+            ctx.beginPath();
+            
+            // Calculate control points for a curved snake
+            const midX = (startPos.x + endPos.x) / 2;
+            const midY = (startPos.y + endPos.y) / 2;
+            const distance = Math.sqrt(
+                Math.pow(endPos.x - startPos.x, 2) + 
+                Math.pow(endPos.y - startPos.y, 2)
+            );
+            
+            // Create an "S" shape
+            const controlX1 = midX + distance / 4;
+            const controlY1 = midY - distance / 4;
+            const controlX2 = midX - distance / 4;
+            const controlY2 = midY + distance / 4;
+            
+            ctx.moveTo(startPos.x, startPos.y);
+            ctx.bezierCurveTo(
+                controlX1, controlY1,
+                controlX2, controlY2,
+                endPos.x, endPos.y
+            );
+            
+            ctx.lineWidth = 8;
+            ctx.strokeStyle = color;
+            ctx.stroke();
+            
+            // Draw snake head
+            ctx.beginPath();
+            ctx.arc(endPos.x, endPos.y, 8, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            
+            // Draw snake tail
+            ctx.beginPath();
+            ctx.arc(startPos.x, startPos.y, 6, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+        
+        // Draw the board with snakes and ladders
+        function drawBoard(step) {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (step >= 2) {
+                // Draw ladders
+                ladders.forEach(ladder => {
+                    drawLadder(ladder.start, ladder.end, '#008000');
+                });
+            }
+            
+            if (step >= 3) {
+                // Draw snakes
+                snakes.forEach(snake => {
+                    drawSnake(snake.start, snake.end, '#FF4800');
+                });
+            }
+        }
+        
+        // Update explanation based on current step
+        function updateExplanation(step) {
+            let content = '';
+            
+            switch(step) {
+                case 1:
+                    content = `<h3>Basic Board Layout</h3>
+                    <p>This is a standard Snake and Ladders board with 100 cells numbered from 1 to 100.</p>
+                    <p>The board is read from bottom to top, with even-numbered rows going left to right and odd-numbered rows going right to left.</p>
+                    <p>The starting position (cell 1) is highlighted in orange and the finishing position (cell 100) is highlighted in red.</p>`;
+                    break;
+                case 2:
+                    content = `<h3>Ladders</h3>
+                    <p>Ladders help players advance faster. When a player lands on a cell that has the bottom of a ladder, they climb up to the cell at the top of the ladder.</p>
+                    <p><strong>Ladder positions:</strong> 1→38, 4→14, 9→31, 21→42, 28→84, 51→67, 72→91, 80→99</p>
+                    <p>The longest ladder is from cell 28 to cell 84, allowing a player to advance 56 cells in one move!</p>`;
+                    break;
+                case 3:
+                    content = `<h3>Snakes</h3>
+                    <p>Snakes are obstacles that move players backward. When a player lands on a cell that has a snake's head, they slide down to the cell with the snake's tail.</p>
+                    <p><strong>Snake positions:</strong> 17→7, 54→34, 62→19, 64→60, 87→36, 93→73, 95→75, 98→79</p>
+                    <p>The longest snake is from cell 87 to cell 36, causing a player to go back 51 cells!</p>`;
+                    break;
+                case 4:
+                    content = `<h3>Complete Snake and Ladders Board</h3>
+                    <p>The complete board shows all snakes and ladders that affect gameplay.</p>
+                    <p>Players typically roll a die to determine how many cells to move forward.</p>
+                    <p>The first player to reach or exceed cell 100 wins the game.</p>
+                    <p>Notice how some snakes (like the one at cell 98) can be particularly frustrating when you're close to winning!</p>`;
+                    break;
+            }
+            
+            explanation.innerHTML = content;
+        }
+        
+        // Handle next button click
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateStep();
+            }
+        });
+        
+        // Handle previous button click
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStep();
+            }
+        });
+        
+        // Update the current step display and controls
+        function updateStep() {
+            currentStepElement.textContent = currentStep;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === totalSteps;
+            
+            // Update visualization
+            drawBoard(currentStep);
+            updateExplanation(currentStep);
+        }
+        
+        // Initialize board
+        function initialize() {
+            createBoard();
+            updateStep();
+            
+            // Redraw when window resizes
+            window.addEventListener('resize', () => {
+                canvas.width = board.offsetWidth;
+                canvas.height = board.offsetHeight;
+                canvas.style.width = `${board.offsetWidth}px`;
+                canvas.style.height = `${board.offsetHeight}px`;
+                drawBoard(currentStep);
+            });
+        }
+        
+        // Start the visualization
+        initialize();
+    </script>
+</body>
+</html>
