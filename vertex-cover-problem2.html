@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greedy Vertex Cover Algorithm Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .animation-container {
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #FFFFFF;
+            position: relative;
+            height: 400px;
+        }
+        #canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .explanation {
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-counter {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Greedy Vertex Cover Algorithm</h1>
+        
+        <div class="explanation" id="explanation">
+            A vertex cover is a set of vertices that covers all edges in a graph. The greedy approach picks edges and adds both endpoints to the cover.
+        </div>
+        
+        <div class="animation-container">
+            <canvas id="canvas"></canvas>
+        </div>
+        
+        <div class="step-counter" id="step-counter">Step 1 of 6</div>
+        
+        <div class="controls">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const explanationBox = document.getElementById('explanation');
+        const stepCounter = document.getElementById('step-counter');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        
+        // Set canvas dimensions
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // Graph data
+        const vertices = [
+            { id: 0, x: canvas.width * 0.2, y: canvas.height * 0.3, label: 'A', inCover: false },
+            { id: 1, x: canvas.width * 0.5, y: canvas.height * 0.15, label: 'B', inCover: false },
+            { id: 2, x: canvas.width * 0.8, y: canvas.height * 0.3, label: 'C', inCover: false },
+            { id: 3, x: canvas.width * 0.2, y: canvas.height * 0.7, label: 'D', inCover: false },
+            { id: 4, x: canvas.width * 0.5, y: canvas.height * 0.85, label: 'E', inCover: false },
+            { id: 5, x: canvas.width * 0.8, y: canvas.height * 0.7, label: 'F', inCover: false }
+        ];
+        
+        const edges = [
+            { from: 0, to: 1, covered: false },
+            { from: 1, to: 2, covered: false },
+            { from: 0, to: 3, covered: false },
+            { from: 1, to: 4, covered: false },
+            { from: 2, to: 5, covered: false },
+            { from: 3, to: 4, covered: false },
+            { from: 4, to: 5, covered: false }
+        ];
+        
+        let currentStep = 0;
+        
+        const steps = [
+            {
+                title: "Initial Graph",
+                explanation: "This is our initial graph. We need to find a vertex cover - a set of vertices that covers all edges in the graph."
+            },
+            {
+                title: "Step 1: Select First Edge",
+                explanation: "We select an uncovered edge (A-B) and add both endpoints to our vertex cover.",
+                action: () => {
+                    vertices[0].inCover = true; // A
+                    vertices[1].inCover = true; // B
+                    edges[0].covered = true; // A-B
+                    edges[1].covered = true; // B-C
+                    edges[2].covered = true; // A-D
+                    edges[3].covered = true; // B-E
+                }
+            },
+            {
+                title: "Step 2: Update Covered Edges",
+                explanation: "The vertices A and B cover all edges connected to them. Notice that 4 of our 7 edges are now covered."
+            },
+            {
+                title: "Step 3: Select Another Edge",
+                explanation: "We select another uncovered edge (C-F) and add both endpoints to our vertex cover.",
+                action: () => {
+                    vertices[2].inCover = true; // C
+                    vertices[5].inCover = true; // F
+                    edges[4].covered = true; // C-F
+                    edges[6].covered = true; // E-F
+                }
+            },
+            {
+                title: "Step 4: Update Covered Edges",
+                explanation: "The vertices C and F cover their connected edges. Now 6 of our 7 edges are covered."
+            },
+            {
+                title: "Step 5: Final Edge Selection",
+                explanation: "We select the last uncovered edge (D-E) and add both endpoints to our vertex cover.",
+                action: () => {
+                    vertices[3].inCover = true; // D
+                    vertices[4].inCover = true; // E
+                    edges[5].covered = true; // D-E
+                }
+            },
+            {
+                title: "Final Result",
+                explanation: "All edges are now covered. Our vertex cover includes vertices A, B, C, D, E, and F. Note that this might not be the minimum vertex cover, but the greedy approach gives us a valid solution."
+            }
+        ];
+        
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges
+            edges.forEach(edge => {
+                const from = vertices[edge.from];
+                const to = vertices[edge.to];
+                
+                ctx.beginPath();
+                ctx.moveTo(from.x, from.y);
+                ctx.lineTo(to.x, to.y);
+                
+                if (edge.covered) {
+                    ctx.strokeStyle = '#FD9F78'; // Covered edge color
+                    ctx.lineWidth = 3;
+                } else {
+                    ctx.strokeStyle = '#000000'; // Uncovered edge color
+                    ctx.lineWidth = 2;
+                }
+                
+                ctx.stroke();
+            });
+            
+            // Draw vertices
+            vertices.forEach(vertex => {
+                ctx.beginPath();
+                ctx.arc(vertex.x, vertex.y, 20, 0, Math.PI * 2);
+                
+                if (vertex.inCover) {
+                    ctx.fillStyle = '#FF4800'; // Vertex in cover
+                } else {
+                    ctx.fillStyle = '#FFFFFF'; // Vertex not in cover
+                }
+                
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+                ctx.fill();
+                ctx.stroke();
+                
+                // Draw vertex label
+                ctx.fillStyle = vertex.inCover ? '#FFFFFF' : '#000000';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(vertex.label, vertex.x, vertex.y);
+            });
+        }
+        
+        function updateStep(newStep) {
+            if (newStep >= 0 && newStep < steps.length) {
+                currentStep = newStep;
+                
+                // Execute step action if defined
+                if (steps[currentStep].action) {
+                    steps[currentStep].action();
+                }
+                
+                // Update explanation
+                explanationBox.innerHTML = `<strong>${steps[currentStep].title}</strong>: ${steps[currentStep].explanation}`;
+                
+                // Update step counter
+                stepCounter.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+                
+                // Update button states
+                prevBtn.disabled = currentStep === 0;
+                nextBtn.disabled = currentStep === steps.length - 1;
+                
+                // Redraw the graph
+                drawGraph();
+            }
+        }
+        
+        // Initialize
+        updateStep(0);
+        
+        // Event listeners for buttons
+        prevBtn.addEventListener('click', () => {
+            // Reset the state if going back
+            resetGraphState();
+            updateStep(currentStep - 1);
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            updateStep(currentStep + 1);
+        });
+        
+        function resetGraphState() {
+            // Reset all vertices and edges
+            vertices.forEach(v => v.inCover = false);
+            edges.forEach(e => e.covered = false);
+            
+            // Reapply all actions up to the new step
+            for (let i = 0; i <= currentStep - 2; i++) {
+                if (steps[i].action) {
+                    steps[i].action();
+                }
+            }
+        }
+        
+        // Adjust vertex positions when canvas is resized
+        function updateVertexPositions() {
+            vertices[0].x = canvas.width * 0.2;
+            vertices[0].y = canvas.height * 0.3;
+            
+            vertices[1].x = canvas.width * 0.5;
+            vertices[1].y = canvas.height * 0.15;
+            
+            vertices[2].x = canvas.width * 0.8;
+            vertices[2].y = canvas.height * 0.3;
+            
+            vertices[3].x = canvas.width * 0.2;
+            vertices[3].y = canvas.height * 0.7;
+            
+            vertices[4].x = canvas.width * 0.5;
+            vertices[4].y = canvas.height * 0.85;
+            
+            vertices[5].x = canvas.width * 0.8;
+            vertices[5].y = canvas.height * 0.7;
+            
+            drawGraph();
+        }
+        
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            updateVertexPositions();
+        });
+    </script>
+</body>
+</html>
