@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Jug Operations Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .jug-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            margin-top: 20px;
+            gap: 100px;
+        }
+        
+        .jug {
+            position: relative;
+            border: 3px solid #000000;
+            border-top: none;
+            width: 100px;
+            height: 200px;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            border-bottom-left-radius: 5px;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .jug-label {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #000000;
+        }
+        
+        .water {
+            width: 100%;
+            background-color: #FD9F78;
+            transition: height 1s ease-in-out;
+        }
+        
+        .water-level {
+            position: absolute;
+            left: -30px;
+            color: #000000;
+            font-weight: bold;
+        }
+        
+        .step-info {
+            margin: 40px 0;
+            padding: 15px;
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 18px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .jug-measurements {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column-reverse;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+        
+        .measurement {
+            width: 100%;
+            border-top: 1px dashed #000000;
+            position: relative;
+        }
+        
+        .measurement-label {
+            position: absolute;
+            right: -25px;
+            top: -10px;
+            font-size: 12px;
+        }
+        
+        .step-counter {
+            font-weight: bold;
+            color: #FF4800;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Water Jug Problem Visualization</h1>
+        <div class="step-counter">Step <span id="current-step">1</span> of 8</div>
+        <div class="step-info" id="step-info">
+            Initial state: Both jugs are empty. We need to measure exactly 4L using a 3L and a 5L jug.
+        </div>
+        
+        <div class="jug-container">
+            <div class="jug-wrapper">
+                <div class="jug" id="jug-3L">
+                    <div class="water" id="water-3L" style="height: 0%"></div>
+                    <div class="jug-measurements">
+                        <div class="measurement" style="height: 33.33%">
+                            <span class="measurement-label">1L</span>
+                        </div>
+                        <div class="measurement" style="height: 66.66%">
+                            <span class="measurement-label">2L</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="jug-label">3L Jug: <span id="jug-3L-level">0L</span></div>
+            </div>
+            
+            <div class="jug-wrapper">
+                <div class="jug" id="jug-5L">
+                    <div class="water" id="water-5L" style="height: 0%"></div>
+                    <div class="jug-measurements">
+                        <div class="measurement" style="height: 20%">
+                            <span class="measurement-label">1L</span>
+                        </div>
+                        <div class="measurement" style="height: 40%">
+                            <span class="measurement-label">2L</span>
+                        </div>
+                        <div class="measurement" style="height: 60%">
+                            <span class="measurement-label">3L</span>
+                        </div>
+                        <div class="measurement" style="height: 80%">
+                            <span class="measurement-label">4L</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="jug-label">5L Jug: <span id="jug-5L-level">0L</span></div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const steps = [
+            {
+                jug3L: 0,
+                jug5L: 0,
+                info: "Initial state: Both jugs are empty. We need to measure exactly 4L using a 3L and a 5L jug."
+            },
+            {
+                jug3L: 0,
+                jug5L: 5,
+                info: "Step 1: Fill the 5L jug completely."
+            },
+            {
+                jug3L: 3,
+                jug5L: 2,
+                info: "Step 2: Pour water from the 5L jug to fill the 3L jug. Now 5L jug has 2L left."
+            },
+            {
+                jug3L: 0,
+                jug5L: 2,
+                info: "Step 3: Empty the 3L jug completely."
+            },
+            {
+                jug3L: 2,
+                jug5L: 0,
+                info: "Step 4: Pour all 2L from the 5L jug into the 3L jug."
+            },
+            {
+                jug3L: 2,
+                jug5L: 5,
+                info: "Step 5: Fill the 5L jug completely again."
+            },
+            {
+                jug3L: 3,
+                jug5L: 4,
+                info: "Step 6: Pour water from the 5L jug to fill the 3L jug. Since the 3L jug already has 2L, it only needs 1L more. This leaves 4L in the 5L jug."
+            },
+            {
+                jug3L: 0,
+                jug5L: 4,
+                info: "Final state: We now have exactly 4L in the 5L jug, which was our goal! Problem solved!"
+            }
+        ];
+        
+        let currentStep = 0;
+        const jug3LWater = document.getElementById('water-3L');
+        const jug5LWater = document.getElementById('water-5L');
+        const jug3LLevel = document.getElementById('jug-3L-level');
+        const jug5LLevel = document.getElementById('jug-5L-level');
+        const stepInfo = document.getElementById('step-info');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepCounter = document.getElementById('current-step');
+        
+        function updateJugs() {
+            const step = steps[currentStep];
+            
+            // Update 3L jug
+            jug3LWater.style.height = (step.jug3L / 3 * 100) + '%';
+            jug3LLevel.textContent = step.jug3L + 'L';
+            
+            // Update 5L jug
+            jug5LWater.style.height = (step.jug5L / 5 * 100) + '%';
+            jug5LLevel.textContent = step.jug5L + 'L';
+            
+            // Update step info
+            stepInfo.textContent = step.info;
+            
+            // Update step counter
+            stepCounter.textContent = currentStep + 1;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateJugs();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateJugs();
+            }
+        });
+        
+        // Initialize
+        updateJugs();
+    </script>
+</body>
+</html>
