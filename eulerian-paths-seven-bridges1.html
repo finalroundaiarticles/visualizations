@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Königsberg Seven Bridges Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            position: relative;
+        }
+        .visualization {
+            border: 2px solid #000000;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            height: 500px;
+            background-color: #FFFFFF;
+        }
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .slide.active {
+            opacity: 1;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            width: 100%;
+        }
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .explanation {
+            margin-top: 10px;
+            text-align: center;
+            color: #000000;
+            padding: 0 20px;
+        }
+        .map {
+            position: relative;
+            width: 90%;
+            height: 80%;
+            max-width: 600px;
+        }
+        .river {
+            position: absolute;
+            background-color: #7EC0EE;
+            height: 100px;
+            width: 70%;
+            left: 15%;
+            top: 45%;
+            z-index: 1;
+        }
+        .vertical-river {
+            position: absolute;
+            background-color: #7EC0EE;
+            height: 60%;
+            width: 100px;
+            left: 45%;
+            top: 20%;
+            z-index: 1;
+        }
+        .island {
+            position: absolute;
+            background-color: #8BC34A;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            z-index: 2;
+            border: 2px solid #000000;
+        }
+        .bridge {
+            position: absolute;
+            background-color: #FF4800;
+            z-index: 3;
+            transform-origin: center;
+            border: 2px solid #000000;
+        }
+        .land-label {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px;
+            border-radius: 5px;
+            font-weight: bold;
+            z-index: 4;
+            border: 1px solid #000000;
+        }
+        .path {
+            position: absolute;
+            background-color: #FD9F78;
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .step-counter {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Königsberg Seven Bridges Problem</h1>
+    <div class="container">
+        <div class="visualization">
+            <div class="step-counter">Step <span id="current-step">1</span> of <span id="total-steps">5</span></div>
+            
+            <!-- Slide 1: Introduction -->
+            <div class="slide active" id="slide1">
+                <h2>The Königsberg Bridges Problem</h2>
+                <p>In the 18th century, the city of Königsberg (now Kaliningrad, Russia) had seven bridges connecting four land areas separated by the Pregel River.</p>
+                <p>The puzzle was: Could a person walk through the city crossing each bridge exactly once?</p>
+                <p>This famous problem was solved by Leonhard Euler in 1736, leading to the birth of graph theory.</p>
+            </div>
+            
+            <!-- Slide 2: The Map -->
+            <div class="slide" id="slide2">
+                <div class="map">
+                    <div class="river"></div>
+                    <div class="vertical-river"></div>
+                    
+                    <!-- Land areas -->
+                    <div class="island" style="top: 40%; left: 40%;">Island C</div>
+                    <div class="land-label" style="top: 10%; left: 30%;">Area A (North)</div>
+                    <div class="land-label" style="top: 10%; left: 60%;">Area B (East)</div>
+                    <div class="land-label" style="bottom: 10%; left: 40%;">Area D (South)</div>
+                    
+                    <!-- Bridges -->
+                    <div class="bridge" style="width: 80px; height: 15px; top: 45%; left: 25%; transform: rotate(-30deg);"></div>
+                    <div class="bridge" style="width: 80px; height: 15px; top: 40%; left: 35%; transform: rotate(30deg);"></div>
+                    <div class="bridge" style="width: 80px; height: 15px; top: 45%; left: 52%; transform: rotate(30deg);"></div>
+                    <div class="bridge" style="width: 80px; height: 15px; top: 40%; left: 62%; transform: rotate(-30deg);"></div>
+                    <div class="bridge" style="width: 15px; height: 60px; top: 50%; left: 45%;"></div>
+                    <div class="bridge" style="width: 60px; height: 15px; top: 60%; left: 35%; transform: rotate(-30deg);"></div>
+                    <div class="bridge" style="width: 60px; height: 15px; top: 60%; left: 55%; transform: rotate(30deg);"></div>
+                </div>
+                <div class="explanation">
+                    <p>The original layout of Königsberg with its seven bridges connecting four land areas.</p>
+                </div>
+            </div>
+            
+            <!-- Slide 3: The Graph Representation -->
+            <div class="slide" id="slide3">
+                <div class="map">
+                    <svg width="100%" height="100%" viewBox="0 0 600 400">
+                        <!-- Land areas as nodes -->
+                        <circle cx="300" cy="200" r="40" fill="#8BC34A" stroke="#000000" stroke-width="2"/>
+                        <circle cx="150" cy="100" r="40" fill="#8BC34A" stroke="#000000" stroke-width="2"/>
+                        <circle cx="450" cy="100" r="40" fill="#8BC34A" stroke="#000000" stroke-width="2"/>
+                        <circle cx="300" cy="300" r="40" fill="#8BC34A" stroke="#000000" stroke-width="2"/>
+                        
+                        <!-- Labels -->
+                        <text x="300" y="205" font-size="20" text-anchor="middle" font-weight="bold">C</text>
+                        <text x="150" y="105" font-size="20" text-anchor="middle" font-weight="bold">A</text>
+                        <text x="450" y="105" font-size="20" text-anchor="middle" font-weight="bold">B</text>
+                        <text x="300" y="305" font-size="20" text-anchor="middle" font-weight="bold">D</text>
+                        
+                        <!-- Bridges as edges -->
+                        <line x1="180" y1="120" x2="270" y2="180" stroke="#FF4800" stroke-width="5"/>
+                        <line x1="170" y1="130" x2="280" y2="190" stroke="#FF4800" stroke-width="5"/>
+                        <line x1="420" y1="120" x2="330" y2="180" stroke="#FF4800" stroke-width="5"/>
+                        <line x1="430" y1="130" x2="320" y2="190" stroke="#FF4800" stroke-width="5"/>
+                        <line x1="300" y1="240" x2="300" y2="260" stroke="#FF4800" stroke-width="5"/>
+                        <line x1="270" y1="280" x2="210" y2="130" stroke="#FF4800" stroke-width="5" transform="rotate(15, 240, 200)"/>
+                        <line x1="330" y1="280" x2="390" y2="130" stroke="#FF4800" stroke-width="5" transform="rotate(-15, 360, 200)"/>
+                    </svg>
+                </div>
+                <div class="explanation">
+                    <p>In Euler's approach, land areas become nodes (points) and bridges become edges (lines).</p>
+                    <p>The problem transforms into: Can we trace this graph with a single continuous line without lifting our pen, using each edge exactly once?</p>
+                </div>
+            </div>
+            
+            <!-- Slide 4: The Degree of Nodes -->
+            <div class="slide" id="slide4">
+                <div class="map">
+                    <svg width="100%" height="100%" viewBox="0 0 600 400">
+                        <!-- Land areas as nodes -->
+                        <circle cx="300" cy="200" r="40" fill="#8BC34A" stroke="#000000" stroke-width="2"/>
+                        <circle cx="150" cy="100" r="40" fill="#8BC34A" stroke="#000000" stroke-width="2"/>
+                        <circle cx="450" cy="100" r="40" fill="#8BC34A" stroke="#000000" stroke-width="2"/>
+                        <circle cx="300" cy="300" r="40" fill="#8BC34A" stroke="#000000" stroke-width="2"/>
+                        
+                        <!-- Labels with degrees -->
+                        <text x="300" y="195" font-size="20" text-anchor="middle" font-weight="bold">C</text>
+                        <text x="300" y="220" font-size="16" text-anchor="middle" fill="#FF4800">Degree: 5</text>
+                        
+                        <text x="150" y="95" font-size="20" text-anchor="middle" font-weight="bold">A</text>
+                        <text x="150" y="120" font-size="16" text-anchor="middle" fill="#FF4800">Degree: 3</text>
+                        
+                        <text x="450" y="95" font-size="20" text-anchor="middle" font-weight="bold">B</text>
+                        <text x="450" y="120" font-size="16" text-anchor="middle" fill="#FF4800">Degree: 3</text>
+                        
+                        <text x="300" y="295" font-size="20" text-anchor="middle" font-weight="bold">D</text>
+                        <text x="300" y="320" font-size="16" text-anchor="middle" fill="#FF4800">Degree: 3</text>
+                        
+                        <!-- Bridges as edges -->
+                        <line x1="180" y1="120" x2="270" y2="180" stroke="#FF4800" stroke-width="5"/>
+                        <line x1="170" y1="130" x2="280" y2="190" stroke="#FF4800" stroke-width="5"/>
+                        <line x1="420" y1="120" x2="330" y2="180" stroke="#FF4800" stroke-width="5"/>
+                        <line x1="430" y1="130" x2="320" y2="190" stroke="#FF4800" stroke-width="5"/>
+                        <line x1="300" y1="240" x2="300" y2="260" stroke="#FF4800" stroke-width="5"/>
+                        <line x1="270" y1="280" x2="210" y2="130" stroke="#FF4800" stroke-width="5" transform="rotate(15, 240, 200)"/>
+                        <line x1="330" y1="280" x2="390" y2="130" stroke="#FF4800" stroke-width="5" transform="rotate(-15, 360, 200)"/>
+                    </svg>
+                </div>
+                <div class="explanation">
+                    <p>Euler observed that the <b>degree</b> of a node (number of edges connected to it) is crucial.</p>
+                    <p>In our problem, all four nodes have odd degrees (3 or 5 bridges connected to each land area).</p>
+                    <p>Euler proved: A graph can be traversed using each edge exactly once only if it has either 0 or 2 nodes with odd degrees.</p>
+                </div>
+            </div>
+            
+            <!-- Slide 5: The Conclusion -->
+            <div class="slide" id="slide5">
+                <h2>The Solution: Impossible!</h2>
+                <p>Since all four land areas have an odd number of bridges connected to them, it's <b>impossible</b> to walk through the city crossing each bridge exactly once.</p>
+                <p>This was Euler's conclusion in 1736, establishing the first theorem in graph theory.</p>
+                <p>For such a walk to be possible, at most two land areas could have an odd number of bridges.</p>
+                <div style="margin-top: 20px; padding: 10px; border: 2px solid #FF4800; border-radius: 5px;">
+                    <p><b>Euler's Theorem:</b> A connected graph has an Eulerian path (traversing each edge exactly once) if and only if it has either 0 or 2 vertices with odd degree.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
+            <button class="nav-btn" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const currentStepSpan = document.getElementById('current-step');
+        const totalStepsSpan = document.getElementById('total-steps');
+        
+        let currentSlide = 0;
+        const totalSlides = slides.length;
+        
+        totalStepsSpan.textContent = totalSlides;
+        
+        function showSlide(index) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[index].classList.add('active');
+            currentStepSpan.textContent = index + 1;
+            
+            // Update button states
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === totalSlides - 1;
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        });
+        
+        // Initialize
+        showSlide(currentSlide);
+    </script>
+</body>
+</html>
