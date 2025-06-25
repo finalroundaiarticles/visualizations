@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DFS Execution Flow</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .step-container {
+            margin-top: 20px;
+            padding: 20px;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+        }
+        .graph-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        canvas {
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+        }
+        .info-panel {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .info-box {
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 5px;
+            min-width: 200px;
+        }
+        .step-indicator {
+            text-align: center;
+            color: #FF4800;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .explanation {
+            margin-top: 20px;
+            padding: 10px;
+            border-left: 4px solid #FF4800;
+            background-color: rgba(253, 159, 120, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DFS Execution Flow Visualization</h1>
+        
+        <div class="step-container">
+            <div class="step-indicator">
+                Step <span id="currentStep">1</span> of <span id="totalSteps">8</span>
+            </div>
+            
+            <div class="graph-container">
+                <canvas id="graphCanvas" width="500" height="300"></canvas>
+            </div>
+            
+            <div class="info-panel">
+                <div class="info-box">
+                    <h3>Visited Array</h3>
+                    <div id="visitedArray"></div>
+                </div>
+                <div class="info-box">
+                    <h3>Current Path</h3>
+                    <div id="currentPath"></div>
+                </div>
+                <div class="info-box">
+                    <h3>Current Weight</h3>
+                    <div id="currentWeight"></div>
+                </div>
+            </div>
+            
+            <div class="explanation" id="explanation"></div>
+            
+            <div class="navigation">
+                <button id="prevBtn">Previous</button>
+                <button id="nextBtn">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Graph structure and DFS steps
+        const steps = [
+            {
+                visited: [true, false, false, false],
+                path: [0],
+                weight: 0,
+                explanation: "Starting DFS from vertex 0. Mark vertex 0 as visited and add it to the current path."
+            },
+            {
+                visited: [true, true, false, false],
+                path: [0, 1],
+                weight: 3,
+                explanation: "Explore neighbor vertex 1 from vertex 0. Mark vertex 1 as visited and add it to the path. Current path weight is 3."
+            },
+            {
+                visited: [true, true, false, false],
+                path: [0, 1],
+                weight: 3,
+                explanation: "Vertex 1 has no unvisited neighbors. We've reached a dead end and need to backtrack."
+            },
+            {
+                visited: [true, true, false, false],
+                path: [0],
+                weight: 0,
+                explanation: "Backtracking to vertex 0 by removing vertex 1 from the path. Resetting path weight to 0."
+            },
+            {
+                visited: [true, true, true, false],
+                path: [0, 2],
+                weight: 5,
+                explanation: "Explore neighbor vertex 2 from vertex 0. Mark vertex 2 as visited and add it to the path. Current path weight is 5."
+            },
+            {
+                visited: [true, true, true, true],
+                path: [0, 2, 3],
+                weight: 8,
+                explanation: "Explore neighbor vertex 3 from vertex 2. Mark vertex 3 as visited and add it to the path. Current path weight is 8."
+            },
+            {
+                visited: [true, true, true, true],
+                path: [0, 2, 3],
+                weight: 8,
+                highlight: true,
+                explanation: "We've found the path from vertex 0 to vertex 3 with a total weight of 8! The path is 0→2→3."
+            },
+            {
+                visited: [true, true, true, true],
+                path: [0, 2, 3],
+                weight: 8,
+                highlight: true,
+                finalStep: true,
+                explanation: "DFS exploration complete. The path from vertex 0 to vertex 3 is 0→2→3 with a total weight of 8."
+            }
+        ];
+
+        // Graph parameters
+        const vertices = [
+            {id: 0, x: 100, y: 150, label: "0"},
+            {id: 1, x: 250, y: 80, label: "1"},
+            {id: 2, x: 250, y: 220, label: "2"},
+            {id: 3, x: 400, y: 150, label: "3"}
+        ];
+
+        const edges = [
+            {source: 0, target: 1, weight: 3},
+            {source: 0, target: 2, weight: 5},
+            {source: 1, target: 3, weight: 7},
+            {source: 2, target: 3, weight: 3}
+        ];
+
+        // Initialize state
+        let currentStepIndex = 0;
+        
+        // DOM elements
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const currentStepEl = document.getElementById('currentStep');
+        const totalStepsEl = document.getElementById('totalSteps');
+        const visitedArrayEl = document.getElementById('visitedArray');
+        const currentPathEl = document.getElementById('currentPath');
+        const currentWeightEl = document.getElementById('currentWeight');
+        const explanationEl = document.getElementById('explanation');
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set total steps
+        totalStepsEl.textContent = steps.length;
+
+        // Event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentStepIndex > 0) {
+                currentStepIndex--;
+                updateUI();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStepIndex < steps.length - 1) {
+                currentStepIndex++;
+                updateUI();
+            }
+        });
+
+        // Function to update UI based on current step
+        function updateUI() {
+            const step = steps[currentStepIndex];
+            
+            // Update step indicator
+            currentStepEl.textContent = currentStepIndex + 1;
+            
+            // Update navigation buttons
+            prevBtn.disabled = currentStepIndex === 0;
+            nextBtn.disabled = currentStepIndex === steps.length - 1;
+            
+            // Update info panels
+            visitedArrayEl.innerHTML = formatVisitedArray(step.visited);
+            currentPathEl.innerHTML = formatPath(step.path);
+            currentWeightEl.innerHTML = `${step.weight}`;
+            explanationEl.innerHTML = step.explanation;
+            
+            // Draw the graph
+            drawGraph(step);
+        }
+
+        // Format visited array for display
+        function formatVisitedArray(visited) {
+            let html = '<table style="width: 100%; text-align: center;"><tr>';
+            for (let i = 0; i < visited.length; i++) {
+                html += `<td style="padding: 5px; border: 1px solid #FD9F78;">${i}</td>`;
+            }
+            html += '</tr><tr>';
+            for (let i = 0; i < visited.length; i++) {
+                const bgColor = visited[i] ? '#FF4800' : '#FFFFFF';
+                const textColor = visited[i] ? '#FFFFFF' : '#000000';
+                html += `<td style="padding: 5px; border: 1px solid #FD9F78; background-color: ${bgColor}; color: ${textColor};">${visited[i] ? 'true' : 'false'}</td>`;
+            }
+            html += '</tr></table>';
+            return html;
+        }
+
+        // Format path for display
+        function formatPath(path) {
+            if (path.length === 0) return "Empty";
+            return path.join(' → ');
+        }
+
+        // Draw the graph based on current step
+        function drawGraph(step) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges
+            edges.forEach(edge => {
+                const source = vertices.find(v => v.id === edge.source);
+                const target = vertices.find(v => v.id === edge.target);
+                
+                // Check if this edge is part of the current path
+                const isInPath = isEdgeInPath(edge, step.path);
+                
+                // Draw edge
+                ctx.beginPath();
+                ctx.moveTo(source.x, source.y);
+                ctx.lineTo(target.x, target.y);
+                ctx.strokeStyle = isInPath ? '#FF4800' : '#FD9F78';
+                ctx.lineWidth = isInPath ? 3 : 1;
+                ctx.stroke();
+                
+                // Draw weight
+                const midX = (source.x + target.x) / 2;
+                const midY = (source.y + target.y) / 2;
+                ctx.fillStyle = '#000000';
+                ctx.font = '14px Arial';
+                ctx.fillText(edge.weight.toString(), midX, midY - 10);
+            });
+            
+            // Draw vertices
+            vertices.forEach(vertex => {
+                const isVisited = step.visited[vertex.id];
+                const isInPath = step.path.includes(vertex.id);
+                const isCurrentVertex = step.path[step.path.length - 1] === vertex.id;
+                
+                // Determine vertex color based on state
+                let fillColor = '#FFFFFF';
+                if (isCurrentVertex) {
+                    fillColor = '#FF4800';
+                } else if (isInPath) {
+                    fillColor = '#FD9F78';
+                } else if (isVisited) {
+                    fillColor = 'rgba(253, 159, 120, 0.5)';
+                }
+                
+                // Draw vertex
+                ctx.beginPath();
+                ctx.arc(vertex.x, vertex.y, 20, 0, 2 * Math.PI);
+                ctx.fillStyle = fillColor;
+                ctx.fill();
+                ctx.strokeStyle = '#FF4800';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Draw vertex label
+                ctx.fillStyle = isCurrentVertex ? '#FFFFFF' : '#000000';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(vertex.label, vertex.x, vertex.y);
+            });
+            
+            // Add highlight effect for final path
+            if (step.highlight) {
+                ctx.save();
+                ctx.globalAlpha = 0.5 + 0.5 * Math.sin(Date.now() / 200);
+                
+                // Highlight the final path
+                for (let i = 0; i < step.path.length - 1; i++) {
+                    const source = vertices.find(v => v.id === step.path[i]);
+                    const target = vertices.find(v => v.id === step.path[i + 1]);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(source.x, source.y);
+                    ctx.lineTo(target.x, target.y);
+                    ctx.strokeStyle = '#FF4800';
+                    ctx.lineWidth = 5;
+                    ctx.stroke();
+                }
+                
+                ctx.restore();
+            }
+        }
+
+        // Check if an edge is part of the current path
+        function isEdgeInPath(edge, path) {
+            for (let i = 0; i < path.length - 1; i++) {
+                if ((path[i] === edge.source && path[i+1] === edge.target) || 
+                    (path[i] === edge.target && path[i+1] === edge.source)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Animation loop for dynamic effects
+        function animate() {
+            drawGraph(steps[currentStepIndex]);
+            requestAnimationFrame(animate);
+        }
+
+        // Initialize UI
+        updateUI();
+        animate();
+    </script>
+</body>
+</html>
