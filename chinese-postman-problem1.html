@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eulerian Circuit Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            margin-bottom: 20px;
+        }
+        
+        .description {
+            margin-bottom: 20px;
+            text-align: left;
+            padding: 0 20px;
+        }
+        
+        #graphCanvas {
+            border: 2px solid #FD9F78;
+            margin: 0 auto;
+            display: block;
+            background-color: #FFFFFF;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .info-box {
+            background-color: #FD9F78;
+            color: #000000;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .step-counter {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Eulerian Circuit Example</h1>
+        
+        <div class="description">
+            <p>An Eulerian Circuit is a path in a graph that visits every edge exactly once and returns to the starting vertex. For a graph to have an Eulerian Circuit, all vertices must have an even degree (number of edges connected to it).</p>
+            <p>This animation shows a simple graph where all vertices have even degrees, and demonstrates an Eulerian circuit traversal.</p>
+        </div>
+        
+        <canvas id="graphCanvas" width="600" height="400"></canvas>
+        
+        <div class="step-counter">Step: <span id="stepCount">0</span> of <span id="totalSteps">0</span></div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+            <button id="resetBtn">Reset</button>
+        </div>
+        
+        <div class="info-box" id="infoBox">
+            <p>Click "Next" to start the animation and see the Eulerian Circuit in action!</p>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const infoBox = document.getElementById('infoBox');
+        const stepCount = document.getElementById('stepCount');
+        const totalSteps = document.getElementById('totalSteps');
+        
+        // Define colors
+        const primaryColor = '#FF4800';
+        const secondaryColor = '#FD9F78';
+        const blackColor = '#000000';
+        const whiteColor = '#FFFFFF';
+        
+        // Graph properties
+        const vertices = [
+            { x: 300, y: 100, label: 'A' },
+            { x: 450, y: 200, label: 'B' },
+            { x: 300, y: 300, label: 'C' },
+            { x: 150, y: 200, label: 'D' }
+        ];
+        
+        const edges = [
+            { from: 0, to: 1, id: 0 },
+            { from: 1, to: 2, id: 1 },
+            { from: 2, to: 3, id: 2 },
+            { from: 3, to: 0, id: 3 },
+            { from: 0, to: 2, id: 4 }
+        ];
+        
+        // Eulerian circuit path - visiting each edge exactly once and returning to start
+        const eulerianPath = [
+            { edge: 0, from: 0, to: 1 },
+            { edge: 1, from: 1, to: 2 },
+            { edge: 4, from: 2, to: 0 },
+            { edge: 3, from: 0, to: 3 },
+            { edge: 2, from: 3, to: 2 }
+        ];
+        
+        // Animation state
+        let currentStep = 0;
+        let visited = [];
+        const totalAnimationSteps = eulerianPath.length;
+        totalSteps.textContent = totalAnimationSteps;
+        
+        // Draw functions
+        function drawVertex(x, y, label, highlighted = false) {
+            ctx.beginPath();
+            ctx.arc(x, y, 25, 0, Math.PI * 2);
+            ctx.fillStyle = highlighted ? primaryColor : secondaryColor;
+            ctx.fill();
+            
+            ctx.strokeStyle = blackColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = whiteColor;
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, x, y);
+        }
+        
+        function drawEdge(from, to, highlighted = false, completed = false, direction = null) {
+            const fromVertex = vertices[from];
+            const toVertex = vertices[to];
+            
+            // Calculate the angle between the two vertices
+            const angle = Math.atan2(toVertex.y - fromVertex.y, toVertex.x - fromVertex.x);
+            
+            // Calculate the points where the line should start and end (on the vertex circles)
+            const radius = 25; // vertex radius
+            const startX = fromVertex.x + radius * Math.cos(angle);
+            const startY = fromVertex.y + radius * Math.sin(angle);
+            const endX = toVertex.x - radius * Math.cos(angle);
+            const endY = toVertex.y - radius * Math.sin(angle);
+            
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            
+            if (highlighted) {
+                ctx.strokeStyle = primaryColor;
+                ctx.lineWidth = 4;
+            } else if (completed) {
+                ctx.strokeStyle = secondaryColor;
+                ctx.lineWidth = 3;
+            } else {
+                ctx.strokeStyle = blackColor;
+                ctx.lineWidth = 2;
+            }
+            
+            ctx.stroke();
+            
+            // Draw arrow if direction is provided
+            if (direction) {
+                const headLength = 15;
+                const headAngle = direction === 'forward' ? angle : angle + Math.PI;
+                
+                // Position the arrow in the middle of the edge
+                const arrowX = (startX + endX) / 2;
+                const arrowY = (startY + endY) / 2;
+                
+                ctx.beginPath();
+                ctx.moveTo(arrowX, arrowY);
+                ctx.lineTo(
+                    arrowX - headLength * Math.cos(headAngle - Math.PI / 6),
+                    arrowY - headLength * Math.sin(headAngle - Math.PI / 6)
+                );
+                ctx.moveTo(arrowX, arrowY);
+                ctx.lineTo(
+                    arrowX - headLength * Math.cos(headAngle + Math.PI / 6),
+                    arrowY - headLength * Math.sin(headAngle + Math.PI / 6)
+                );
+                ctx.strokeStyle = primaryColor;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+        }
+        
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw all edges first (so they're under the vertices)
+            edges.forEach((edge, index) => {
+                const isVisited = visited.some(v => v.edge === index);
+                const isCurrentStep = currentStep > 0 && eulerianPath[currentStep - 1].edge === index;
+                
+                drawEdge(
+                    edge.from,
+                    edge.to,
+                    isCurrentStep,
+                    isVisited && !isCurrentStep
+                );
+            });
+            
+            // If we're in the middle of an animation, draw the active edge with direction
+            if (currentStep > 0) {
+                const currentPathStep = eulerianPath[currentStep - 1];
+                drawEdge(
+                    currentPathStep.from,
+                    currentPathStep.to,
+                    true,
+                    false,
+                    'forward'
+                );
+            }
+            
+            // Draw all vertices
+            vertices.forEach((vertex, index) => {
+                const isHighlighted = currentStep > 0 && 
+                    (eulerianPath[currentStep - 1].from === index || 
+                     eulerianPath[currentStep - 1].to === index);
+                
+                drawVertex(vertex.x, vertex.y, vertex.label, isHighlighted);
+            });
+            
+            // Draw labels for the edges
+            edges.forEach((edge, index) => {
+                const fromVertex = vertices[edge.from];
+                const toVertex = vertices[edge.to];
+                
+                const midX = (fromVertex.x + toVertex.x) / 2;
+                const midY = (fromVertex.y + toVertex.y) / 2;
+                
+                // Offset the labels a bit
+                let offsetX = 0;
+                let offsetY = 0;
+                
+                if (edge.from === 0 && edge.to === 2) {
+                    offsetY = -15;
+                }
+                
+                ctx.fillStyle = blackColor;
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`${index + 1}`, midX + offsetX, midY + offsetY);
+            });
+        }
+        
+        function updateInfoBox() {
+            if (currentStep === 0) {
+                infoBox.innerHTML = '<p>Click "Next" to start the animation and see the Eulerian Circuit in action!</p>';
+            } else {
+                const currentPathStep = eulerianPath[currentStep - 1];
+                const fromVertex = vertices[currentPathStep.from].label;
+                const toVertex = vertices[currentPathStep.to].label;
+                const edgeNumber = currentPathStep.edge + 1;
+                
+                infoBox.innerHTML = `
+                    <p>Step ${currentStep}: Moving from vertex ${fromVertex} to vertex ${toVertex} using edge ${edgeNumber}.</p>
+                    <p>Notice that we're traversing each edge exactly once, and the circuit will eventually return to the starting vertex.</p>
+                `;
+                
+                if (currentStep === eulerianPath.length) {
+                    infoBox.innerHTML += '<p><strong>Complete!</strong> We've traversed all edges exactly once and returned to our starting vertex, completing the Eulerian Circuit!</p>';
+                }
+            }
+        }
+        
+        function nextStep() {
+            if (currentStep < eulerianPath.length) {
+                currentStep++;
+                visited.push(eulerianPath[currentStep - 1]);
+                updateButtons();
+                drawGraph();
+                updateInfoBox();
+                stepCount.textContent = currentStep;
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                visited.pop();
+                updateButtons();
+                drawGraph();
+                updateInfoBox();
+                stepCount.textContent = currentStep;
+            }
+        }
+        
+        function resetAnimation() {
+            currentStep = 0;
+            visited = [];
+            updateButtons();
+            drawGraph();
+            updateInfoBox();
+            stepCount.textContent = currentStep;
+        }
+        
+        function updateButtons() {
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === eulerianPath.length;
+        }
+        
+        // Event listeners
+        nextBtn.addEventListener('click', nextStep);
+        prevBtn.addEventListener('click', prevStep);
+        resetBtn.addEventListener('click', resetAnimation);
+        
+        // Initialize
+        drawGraph();
+        updateInfoBox();
+        updateButtons();
+    </script>
+</body>
+</html>
