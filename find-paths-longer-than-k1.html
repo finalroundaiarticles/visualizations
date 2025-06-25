@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Directed Graph Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .canvas-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        canvas {
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 0 15px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Directed Graph Visualization</h1>
+        
+        <div class="explanation">
+            <p>A directed graph consists of vertices (nodes) connected by directed edges (arrows). Each edge can have a weight, representing a cost, distance, or any value associated with moving from one vertex to another.</p>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="graphCanvas" width="700" height="400"></canvas>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #000000;"></div>
+                <span>Vertex</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FF4800;"></div>
+                <span>Regular Edge</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #00AA00;"></div>
+                <span>Highlighted Path</span>
+            </div>
+        </div>
+        
+        <div class="explanation" id="current-explanation">
+            <p>This directed graph has 4 vertices (0, 1, 2, 3) with weighted edges between them. The weights represent the cost of traveling along that edge.</p>
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn">Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const explanationEl = document.getElementById('current-explanation');
+        
+        // Define vertices
+        const vertices = [
+            { id: 0, x: 150, y: 200, label: "0" },
+            { id: 1, x: 350, y: 100, label: "1" },
+            { id: 2, x: 350, y: 300, label: "2" },
+            { id: 3, x: 550, y: 200, label: "3" }
+        ];
+        
+        // Define edges
+        const edges = [
+            { from: 0, to: 1, weight: 4 },
+            { from: 0, to: 2, weight: 2 },
+            { from: 1, to: 3, weight: 3 },
+            { from: 2, to: 3, weight: 6 }
+        ];
+        
+        // Animation steps
+        const steps = [
+            {
+                name: "initial",
+                explanation: "This directed graph has 4 vertices (0, 1, 2, 3) with weighted edges between them. The weights represent the cost of traveling along that edge.",
+                highlightEdges: [],
+                highlightVertices: []
+            },
+            {
+                name: "showEdges",
+                explanation: "Each edge has a weight: Edge 0→1 has weight 4, Edge 0→2 has weight 2, Edge 1→3 has weight 3, and Edge 2→3 has weight 6.",
+                highlightEdges: [0, 1, 2, 3],
+                highlightVertices: []
+            },
+            {
+                name: "path1",
+                explanation: "One possible path from vertex 0 to vertex 3 is 0→1→3. The total weight of this path is 4 + 3 = 7.",
+                highlightEdges: [0, 2],
+                highlightVertices: [0, 1, 3]
+            },
+            {
+                name: "path2",
+                explanation: "Another path from vertex 0 to vertex 3 is 0→2→3. The total weight of this path is 2 + 6 = 8.",
+                highlightEdges: [1, 3],
+                highlightVertices: [0, 2, 3]
+            },
+            {
+                name: "comparison",
+                explanation: "When comparing the two paths: 0→1→3 has a total weight of 7, while 0→2→3 has a total weight of 8. The path with the lower total weight (0→1→3) would be the shorter or more efficient path.",
+                highlightEdges: [],
+                highlightVertices: []
+            }
+        ];
+        
+        let currentStep = 0;
+        
+        function drawVertex(vertex, isHighlighted = false) {
+            ctx.beginPath();
+            ctx.arc(vertex.x, vertex.y, 30, 0, 2 * Math.PI);
+            ctx.fillStyle = isHighlighted ? '#FD9F78' : '#FFFFFF';
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+            
+            ctx.fillStyle = '#000000';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(vertex.label, vertex.x, vertex.y);
+        }
+        
+        function drawEdge(edge, isHighlighted = false) {
+            const fromVertex = vertices.find(v => v.id === edge.from);
+            const toVertex = vertices.find(v => v.id === edge.to);
+            
+            // Calculate direction vector
+            const dx = toVertex.x - fromVertex.x;
+            const dy = toVertex.y - fromVertex.y;
+            
+            // Normalize and scale to ensure arrow starts and ends outside the circles
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const normalizedDx = dx / length;
+            const normalizedDy = dy / length;
+            
+            const startX = fromVertex.x + normalizedDx * 30;
+            const startY = fromVertex.y + normalizedDy * 30;
+            const endX = toVertex.x - normalizedDx * 30;
+            const endY = toVertex.y - normalizedDy * 30;
+            
+            // Draw the line
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = isHighlighted ? '#00AA00' : '#FF4800';
+            ctx.lineWidth = isHighlighted ? 4 : 2;
+            ctx.stroke();
+            
+            // Draw the arrowhead
+            const arrowSize = 10;
+            const angle = Math.atan2(dy, dx);
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(
+                endX - arrowSize * Math.cos(angle - Math.PI / 6),
+                endY - arrowSize * Math.sin(angle - Math.PI / 6)
+            );
+            ctx.lineTo(
+                endX - arrowSize * Math.cos(angle + Math.PI / 6),
+                endY - arrowSize * Math.sin(angle + Math.PI / 6)
+            );
+            ctx.closePath();
+            ctx.fillStyle = isHighlighted ? '#00AA00' : '#FF4800';
+            ctx.fill();
+            
+            // Draw the weight
+            const midX = (startX + endX) / 2;
+            const midY = (startY + endY) / 2;
+            
+            // Offset the weight text so it doesn't overlap the edge
+            const offsetX = -normalizedDy * 20;
+            const offsetY = normalizedDx * 20;
+            
+            ctx.fillStyle = '#000000';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(edge.weight.toString(), midX + offsetX, midY + offsetY);
+        }
+        
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Get current step
+            const step = steps[currentStep];
+            
+            // Draw all edges first (so they appear behind vertices)
+            edges.forEach((edge, index) => {
+                const isHighlighted = step.highlightEdges.includes(index);
+                drawEdge(edge, isHighlighted);
+            });
+            
+            // Then draw all vertices
+            vertices.forEach(vertex => {
+                const isHighlighted = step.highlightVertices.includes(vertex.id);
+                drawVertex(vertex, isHighlighted);
+            });
+            
+            // Update explanation
+            explanationEl.innerHTML = `<p>${step.explanation}</p>`;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                draw();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                draw();
+            }
+        });
+        
+        // Initialize the visualization
+        draw();
+    </script>
+</body>
+</html>
