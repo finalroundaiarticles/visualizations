@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BFS State Exploration Graph Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin-top: 20px;
+        }
+        
+        .explanation {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #000000;
+        }
+        
+        .animation-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .jugs-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+        }
+        
+        .jug {
+            position: relative;
+            width: 100px;
+            height: 150px;
+            border: 2px solid #000000;
+            border-top: none;
+            margin: 0 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+        
+        .water {
+            background-color: #FF4800;
+            transition: height 1s ease;
+        }
+        
+        .jug-label {
+            text-align: center;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        
+        .jug-capacity {
+            text-align: center;
+            font-size: 0.8em;
+            color: #666;
+        }
+        
+        .operation {
+            text-align: center;
+            font-weight: bold;
+            color: #FF4800;
+            margin: 20px 0;
+            font-size: 1.2em;
+        }
+        
+        .graph-container {
+            width: 100%;
+            height: 200px;
+            margin-top: 30px;
+            position: relative;
+        }
+        
+        .node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #FD9F78;
+            border: 2px solid #FF4800;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            transition: all 0.5s ease;
+            opacity: 0.5;
+        }
+        
+        .node.active {
+            background-color: #FF4800;
+            opacity: 1;
+            transform: scale(1.1);
+            color: white;
+        }
+        
+        .edge {
+            position: absolute;
+            background-color: #FF4800;
+            height: 2px;
+            transform-origin: left center;
+            opacity: 0.5;
+            transition: opacity 0.5s ease;
+        }
+        
+        .edge.active {
+            opacity: 1;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .state-info {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <h1>BFS State Exploration Graph</h1>
+    
+    <div class="container">
+        <div class="explanation">
+            <p>This animation demonstrates a Breadth-First Search (BFS) state exploration for the water jug problem. We have two jugs with capacities of 3 and 5 liters, and we perform various operations (fill, empty, pour) to navigate through different states. Each state is represented as (x,y) where x is the amount of water in the 3-liter jug and y is the amount in the 5-liter jug.</p>
+        </div>
+        
+        <div class="animation-container">
+            <div class="jugs-container">
+                <div class="jug-wrapper">
+                    <div class="jug" id="jug1">
+                        <div class="water" id="water1"></div>
+                    </div>
+                    <div class="jug-label">3-Liter Jug</div>
+                    <div class="jug-capacity" id="jug1-amount">0/3</div>
+                </div>
+                
+                <div class="jug-wrapper">
+                    <div class="jug" id="jug2">
+                        <div class="water" id="water2"></div>
+                    </div>
+                    <div class="jug-label">5-Liter Jug</div>
+                    <div class="jug-capacity" id="jug2-amount">0/5</div>
+                </div>
+            </div>
+            
+            <div class="operation" id="operation-text">Initial State</div>
+            
+            <div class="graph-container" id="graph"></div>
+            
+            <div class="state-info" id="state-info">Current State: (3,5)</div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="nav-button" id="prev-btn" disabled>Previous</button>
+            <button class="nav-button" id="next-btn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Define the states and operations
+            const states = [
+                { jug1: 3, jug2: 5, label: "(3,5)", operation: "Initial State" },
+                { jug1: 0, jug2: 5, label: "(0,5)", operation: "Empty 3-liter jug" },
+                { jug1: 3, jug2: 2, label: "(3,2)", operation: "Pour from 5-liter to 3-liter jug" },
+                { jug1: 0, jug2: 2, label: "(0,2)", operation: "Empty 3-liter jug" },
+                { jug1: 2, jug2: 0, label: "(2,0)", operation: "Pour from 5-liter to 3-liter jug" },
+                { jug1: 2, jug2: 5, label: "(2,5)", operation: "Fill 5-liter jug" },
+                { jug1: 0, jug2: 4, label: "(0,4)", operation: "Pour from 3-liter to 5-liter jug" }
+            ];
+            
+            // Graph layout
+            const nodePositions = [
+                { x: 370, y: 30 },  // (3,5)
+                { x: 270, y: 80 },  // (0,5)
+                { x: 470, y: 80 },  // (3,2)
+                { x: 220, y: 130 }, // (0,2)
+                { x: 370, y: 130 }, // (2,0)
+                { x: 520, y: 130 }, // (2,5)
+                { x: 370, y: 180 }  // (0,4)
+            ];
+            
+            const edges = [
+                { from: 0, to: 1 },
+                { from: 0, to: 2 },
+                { from: 2, to: 3 },
+                { from: 3, to: 4 },
+                { from: 4, to: 5 },
+                { from: 5, to: 6 }
+            ];
+            
+            // Elements
+            const water1 = document.getElementById('water1');
+            const water2 = document.getElementById('water2');
+            const jug1Amount = document.getElementById('jug1-amount');
+            const jug2Amount = document.getElementById('jug2-amount');
+            const operationText = document.getElementById('operation-text');
+            const stateInfo = document.getElementById('state-info');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const graphContainer = document.getElementById('graph');
+            
+            let currentStep = 0;
+            
+            // Create nodes
+            states.forEach((state, index) => {
+                const node = document.createElement('div');
+                node.className = 'node';
+                if (index === 0) node.classList.add('active');
+                node.style.left = `${nodePositions[index].x}px`;
+                node.style.top = `${nodePositions[index].y}px`;
+                node.textContent = state.label;
+                node.id = `node-${index}`;
+                graphContainer.appendChild(node);
+            });
+            
+            // Create edges
+            edges.forEach((edge, index) => {
+                const fromNode = nodePositions[edge.from];
+                const toNode = nodePositions[edge.to];
+                
+                const dx = toNode.x - fromNode.x;
+                const dy = toNode.y - fromNode.y;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                const edgeElem = document.createElement('div');
+                edgeElem.className = 'edge';
+                if (index === 0) edgeElem.classList.add('active');
+                edgeElem.style.width = `${length}px`;
+                edgeElem.style.left = `${fromNode.x + 30}px`; // Adjust for node center
+                edgeElem.style.top = `${fromNode.y + 30}px`;
+                edgeElem.style.transform = `rotate(${angle}deg)`;
+                edgeElem.id = `edge-${index}`;
+                graphContainer.appendChild(edgeElem);
+            });
+            
+            // Update the water jugs
+            function updateJugs(step) {
+                const state = states[step];
+                
+                // Update water height based on amount
+                const jug1Height = (state.jug1 / 3) * 150;
+                const jug2Height = (state.jug2 / 5) * 150;
+                
+                water1.style.height = `${jug1Height}px`;
+                water2.style.height = `${jug2Height}px`;
+                
+                jug1Amount.textContent = `${state.jug1}/3`;
+                jug2Amount.textContent = `${state.jug2}/5`;
+                
+                operationText.textContent = state.operation;
+                stateInfo.textContent = `Current State: ${state.label}`;
+                
+                // Update graph nodes
+                document.querySelectorAll('.node').forEach((node, index) => {
+                    if (index === step) {
+                        node.classList.add('active');
+                    } else {
+                        node.classList.remove('active');
+                    }
+                });
+                
+                // Update graph edges
+                document.querySelectorAll('.edge').forEach((edge, index) => {
+                    if (index === step - 1) {
+                        edge.classList.add('active');
+                    } else {
+                        edge.classList.remove('active');
+                    }
+                });
+                
+                // Update button states
+                prevBtn.disabled = step === 0;
+                nextBtn.disabled = step === states.length - 1;
+            }
+            
+            // Initialize
+            updateJugs(currentStep);
+            
+            // Event listeners
+            prevBtn.addEventListener('click', function() {
+                if (currentStep > 0) {
+                    currentStep--;
+                    updateJugs(currentStep);
+                }
+            });
+            
+            nextBtn.addEventListener('click', function() {
+                if (currentStep < states.length - 1) {
+                    currentStep++;
+                    updateJugs(currentStep);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
