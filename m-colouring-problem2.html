@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtracking Decision Tree</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .explanation {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .animation-container {
+            width: 100%;
+            height: 500px;
+            position: relative;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        #step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #000000;
+        }
+        
+        .vertex {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            border: 2px solid #000000;
+            transition: all 0.5s ease;
+        }
+        
+        .edge {
+            position: absolute;
+            background-color: #000000;
+            height: 3px;
+            transform-origin: 0 0;
+            transition: all 0.5s ease;
+        }
+        
+        .tree-node {
+            width: 60px;
+            height: 60px;
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            border: 2px solid #000000;
+            font-weight: bold;
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+        
+        .tree-edge {
+            position: absolute;
+            background-color: #000000;
+            height: 2px;
+            transform-origin: 0 0;
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+        
+        .highlight {
+            box-shadow: 0 0 15px 5px #FF4800;
+        }
+        
+        .conflict {
+            box-shadow: 0 0 15px 5px red;
+        }
+        
+        .success {
+            box-shadow: 0 0 15px 5px green;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Backtracking Decision Tree</h1>
+        
+        <div class="explanation">
+            <p>This animation demonstrates the backtracking process for coloring a simple 3-vertex graph using only 2 colors (red and blue). The goal is to color each vertex so that no adjacent vertices have the same color.</p>
+            <p>The decision tree shows different color assignments and backtracking when conflicts occur. Follow the steps to see how the algorithm explores possibilities until finding a valid solution.</p>
+        </div>
+        
+        <div class="animation-container" id="animation">
+            <!-- Elements will be added by JavaScript -->
+        </div>
+        
+        <div class="navigation">
+            <button id="prev-btn" class="nav-button">Previous</button>
+            <button id="next-btn" class="nav-button">Next</button>
+        </div>
+        
+        <div id="step-indicator">Step 1 of 10: Setting up the graph problem</div>
+    </div>
+
+    <script>
+        // Animation state
+        let currentStep = 0;
+        const totalSteps = 10;
+        
+        // Get elements
+        const animationContainer = document.getElementById('animation');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepIndicator = document.getElementById('step-indicator');
+        
+        // Description for each step
+        const stepDescriptions = [
+            "Step 1 of 10: Setting up the graph problem",
+            "Step 2 of 10: Starting with vertex 1 - assigning red color",
+            "Step 3 of 10: Moving to vertex 2 - trying red color",
+            "Step 4 of 10: Conflict detected! Vertices 1 and 2 are adjacent",
+            "Step 5 of 10: Backtracking and trying blue color for vertex 2",
+            "Step 6 of 10: Moving to vertex 3 - trying red color",
+            "Step 7 of 10: Conflict detected! Vertices 2 and 3 are adjacent",
+            "Step 8 of 10: Backtracking and trying blue color for vertex 3",
+            "Step 9 of 10: Conflict detected! Vertices 1 and 3 are adjacent",
+            "Step 10 of 10: No valid coloring possible with 2 colors for this graph"
+        ];
+        
+        // Create the graph and decision tree
+        function setupAnimation() {
+            // Create original graph
+            createVertex("v1", 150, 100, "1");
+            createVertex("v2", 250, 200, "2");
+            createVertex("v3", 150, 300, "3");
+            
+            createEdge("e1-2", 150, 100, 250, 200);
+            createEdge("e2-3", 250, 200, 150, 300);
+            createEdge("e1-3", 150, 100, 150, 300);
+            
+            // Decision tree nodes (initially hidden with opacity 0)
+            createTreeNode("n1", 500, 100, "1:R", "#FF4800");
+            
+            createTreeNode("n2-1", 425, 180, "2:R", "#FF4800");
+            createTreeNode("n2-2", 575, 180, "2:B", "#0048FF");
+            
+            createTreeNode("n3-1", 500, 260, "3:R", "#FF4800");
+            createTreeNode("n3-2", 650, 260, "3:B", "#0048FF");
+            
+            // Decision tree edges
+            createTreeEdge("te1-21", 500, 100, 425, 180);
+            createTreeEdge("te1-22", 500, 100, 575, 180);
+            createTreeEdge("te22-31", 575, 180, 500, 260);
+            createTreeEdge("te22-32", 575, 180, 650, 260);
+            
+            updateNavButtons();
+        }
+        
+        // Create a vertex in the graph
+        function createVertex(id, x, y, label) {
+            const vertex = document.createElement('div');
+            vertex.id = id;
+            vertex.className = 'vertex';
+            vertex.style.left = `${x}px`;
+            vertex.style.top = `${y}px`;
+            vertex.style.backgroundColor = '#FFFFFF';
+            vertex.innerText = label;
+            animationContainer.appendChild(vertex);
+            return vertex;
+        }
+        
+        // Create an edge in the graph
+        function createEdge(id, x1, y1, x2, y2) {
+            const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+            
+            const edge = document.createElement('div');
+            edge.id = id;
+            edge.className = 'edge';
+            edge.style.width = `${length}px`;
+            edge.style.left = `${x1}px`;
+            edge.style.top = `${y1}px`;
+            edge.style.transform = `rotate(${angle}deg)`;
+            animationContainer.appendChild(edge);
+            return edge;
+        }
+        
+        // Create a tree node
+        function createTreeNode(id, x, y, label, color) {
+            const node = document.createElement('div');
+            node.id = id;
+            node.className = 'tree-node';
+            node.style.left = `${x}px`;
+            node.style.top = `${y}px`;
+            node.style.backgroundColor = color;
+            node.style.color = '#FFFFFF';
+            node.innerText = label;
+            animationContainer.appendChild(node);
+            return node;
+        }
+        
+        // Create a tree edge
+        function createTreeEdge(id, x1, y1, x2, y2) {
+            const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+            
+            const edge = document.createElement('div');
+            edge.id = id;
+            edge.className = 'tree-edge';
+            edge.style.width = `${length}px`;
+            edge.style.left = `${x1}px`;
+            edge.style.top = `${y1}px`;
+            edge.style.transform = `rotate(${angle}deg)`;
+            animationContainer.appendChild(edge);
+            return edge;
+        }
+        
+        // Reset all highlights
+        function resetHighlights() {
+            const elements = document.querySelectorAll('.highlight, .conflict, .success');
+            elements.forEach(el => {
+                el.classList.remove('highlight', 'conflict', 'success');
+            });
+        }
+        
+        // Handle animation steps
+        function handleStep() {
+            resetHighlights();
+            
+            switch(currentStep) {
+                case 0: // Initial state
+                    document.getElementById('v1').style.backgroundColor = '#FFFFFF';
+                    document.getElementById('v2').style.backgroundColor = '#FFFFFF';
+                    document.getElementById('v3').style.backgroundColor = '#FFFFFF';
+                    break;
+                    
+                case 1: // Assign red to vertex 1
+                    document.getElementById('v1').style.backgroundColor = '#FF4800';
+                    document.getElementById('v1').classList.add('highlight');
+                    document.getElementById('n1').style.opacity = 1;
+                    break;
+                    
+                case 2: // Try red for vertex 2
+                    document.getElementById('v2').style.backgroundColor = '#FF4800';
+                    document.getElementById('v2').classList.add('highlight');
+                    document.getElementById('te1-21').style.opacity = 1;
+                    document.getElementById('n2-1').style.opacity = 1;
+                    break;
+                    
+                case 3: // Conflict at vertex 2
+                    document.getElementById('e1-2').classList.add('highlight');
+                    document.getElementById('v1').classList.add('conflict');
+                    document.getElementById('v2').classList.add('conflict');
+                    document.getElementById('n2-1').classList.add('conflict');
+                    break;
+                    
+                case 4: // Backtrack and try blue for vertex 2
+                    document.getElementById('v2').style.backgroundColor = '#0048FF';
+                    document.getElementById('v2').classList.add('highlight');
+                    document.getElementById('e1-2').classList.remove('highlight');
+                    document.getElementById('v1').classList.remove('conflict');
+                    document.getElementById('v2').classList.remove('conflict');
+                    document.getElementById('n2-1').classList.remove('conflict');
+                    document.getElementById('te1-22').style.opacity = 1;
+                    document.getElementById('n2-2').style.opacity = 1;
+                    break;
+                    
+                case 5: // Try red for vertex 3
+                    document.getElementById('v3').style.backgroundColor = '#FF4800';
+                    document.getElementById('v3').classList.add('highlight');
+                    document.getElementById('te22-31').style.opacity = 1;
+                    document.getElementById('n3-1').style.opacity = 1;
+                    break;
+                    
+                case 6: // Conflict at vertex 3
+                    document.getElementById('e2-3').classList.add('highlight');
+                    document.getElementById('v2').classList.add('conflict');
+                    document.getElementById('v3').classList.add('conflict');
+                    document.getElementById('n3-1').classList.add('conflict');
+                    break;
+                    
+                case 7: // Backtrack and try blue for vertex 3
+                    document.getElementById('v3').style.backgroundColor = '#0048FF';
+                    document.getElementById('v3').classList.add('highlight');
+                    document.getElementById('e2-3').classList.remove('highlight');
+                    document.getElementById('v2').classList.remove('conflict');
+                    document.getElementById('v3').classList.remove('conflict');
+                    document.getElementById('n3-1').classList.remove('conflict');
+                    document.getElementById('te22-32').style.opacity = 1;
+                    document.getElementById('n3-2').style.opacity = 1;
+                    break;
+                    
+                case 8: // Conflict with vertex 1 and 3
+                    document.getElementById('e1-3').classList.add('highlight');
+                    document.getElementById('v1').classList.add('conflict');
+                    document.getElementById('v3').classList.add('conflict');
+                    document.getElementById('n3-2').classList.add('conflict');
+                    break;
+                    
+                case 9: // No solution
+                    document.getElementById('v1').style.backgroundColor = '#FFFFFF';
+                    document.getElementById('v2').style.backgroundColor = '#FFFFFF';
+                    document.getElementById('v3').style.backgroundColor = '#FFFFFF';
+                    document.getElementById('e1-3').classList.remove('highlight');
+                    document.getElementById('v1').classList.remove('conflict');
+                    document.getElementById('v3').classList.remove('conflict');
+                    document.getElementById('n3-2').classList.remove('conflict');
+                    
+                    // Show that this graph needs at least 3 colors
+                    document.getElementById('v1').style.backgroundColor = '#FF4800';
+                    document.getElementById('v2').style.backgroundColor = '#0048FF';
+                    document.getElementById('v3').style.backgroundColor = '#00CC00';
+                    
+                    document.getElementById('v1').classList.add('success');
+                    document.getElementById('v2').classList.add('success');
+                    document.getElementById('v3').classList.add('success');
+                    break;
+            }
+            
+            stepIndicator.textContent = stepDescriptions[currentStep];
+            updateNavButtons();
+        }
+        
+        // Next button handler
+        function nextStep() {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                handleStep();
+            }
+        }
+        
+        // Previous button handler
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                handleStep();
+            }
+        }
+        
+        // Update navigation buttons
+        function updateNavButtons() {
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+        }
+        
+        // Event listeners
+        prevBtn.addEventListener('click', prevStep);
+        nextBtn.addEventListener('click', nextStep);
+        
+        // Initialize animation
+        setupAnimation();
+        handleStep();
+    </script>
+</body>
+</html>
