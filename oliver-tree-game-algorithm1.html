@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DFS Timing Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 800px;
+            max-width: 100%;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+        }
+        .explanation {
+            margin-bottom: 20px;
+            color: #000000;
+            line-height: 1.6;
+        }
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            margin: 20px 0;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        canvas {
+            background-color: #FFFFFF;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 18px;
+            color: #000000;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DFS Timing Visualization</h1>
+        
+        <div class="explanation">
+            <p>Depth-First Search (DFS) is a graph traversal algorithm that explores as far as possible along each branch before backtracking. This visualization shows the entry and exit times for each node in a tree during DFS traversal.</p>
+            <p>When we visit a node, we mark its entry time. After exploring all its children, we mark its exit time. These times help us understand the structure of the traversal and are useful in various algorithms.</p>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="dfsCanvas" width="800" height="500"></canvas>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">Step 0: Initial Tree</div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FF4800;"></div>
+                <span>Current Node</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FD9F78;"></div>
+                <span>Visited Node</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #000000;"></div>
+                <span>Unvisited Node</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('dfsCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        
+        // Tree structure
+        const tree = {
+            nodes: [
+                { id: 1, x: 400, y: 80, children: [2, 5], entry: 1, exit: 10, visited: false, entryShown: false, exitShown: false },
+                { id: 2, x: 250, y: 180, children: [3, 4], entry: 2, exit: 7, visited: false, entryShown: false, exitShown: false },
+                { id: 3, x: 180, y: 280, children: [], entry: 3, exit: 4, visited: false, entryShown: false, exitShown: false },
+                { id: 4, x: 320, y: 280, children: [], entry: 5, exit: 6, visited: false, entryShown: false, exitShown: false },
+                { id: 5, x: 550, y: 180, children: [6], entry: 8, exit: 9, visited: false, entryShown: false, exitShown: false },
+                { id: 6, x: 550, y: 280, children: [], entry: null, exit: null, visited: false, entryShown: false, exitShown: false }
+            ],
+            edges: []
+        };
+        
+        // Calculate edges from children information
+        tree.nodes.forEach(node => {
+            node.children.forEach(childId => {
+                const childNode = tree.nodes.find(n => n.id === childId);
+                if (childNode) {
+                    tree.edges.push({
+                        from: node.id,
+                        to: childId,
+                        x1: node.x,
+                        y1: node.y,
+                        x2: childNode.x,
+                        y2: childNode.y,
+                        animated: false
+                    });
+                }
+            });
+        });
+        
+        // DFS steps for animation
+        const dfsSteps = [
+            { type: 'initial', description: 'Initial Tree' },
+            { type: 'visit', nodeId: 1, description: 'Visit node 1, entry time = 1' },
+            { type: 'edge', from: 1, to: 2, description: 'Move from node 1 to node 2' },
+            { type: 'visit', nodeId: 2, description: 'Visit node 2, entry time = 2' },
+            { type: 'edge', from: 2, to: 3, description: 'Move from node 2 to node 3' },
+            { type: 'visit', nodeId: 3, description: 'Visit node 3, entry time = 3' },
+            { type: 'exit', nodeId: 3, description: 'Exit node 3, exit time = 4' },
+            { type: 'edge', from: 3, to: 2, description: 'Backtrack from node 3 to node 2' },
+            { type: 'edge', from: 2, to: 4, description: 'Move from node 2 to node 4' },
+            { type: 'visit', nodeId: 4, description: 'Visit node 4, entry time = 5' },
+            { type: 'exit', nodeId: 4, description: 'Exit node 4, exit time = 6' },
+            { type: 'edge', from: 4, to: 2, description: 'Backtrack from node 4 to node 2' },
+            { type: 'exit', nodeId: 2, description: 'Exit node 2, exit time = 7' },
+            { type: 'edge', from: 2, to: 1, description: 'Backtrack from node 2 to node 1' },
+            { type: 'edge', from: 1, to: 5, description: 'Move from node 1 to node 5' },
+            { type: 'visit', nodeId: 5, description: 'Visit node 5, entry time = 8' },
+            { type: 'exit', nodeId: 5, description: 'Exit node 5, exit time = 9' },
+            { type: 'edge', from: 5, to: 1, description: 'Backtrack from node 5 to node 1' },
+            { type: 'exit', nodeId: 1, description: 'Exit node 1, exit time = 10' },
+            { type: 'complete', description: 'DFS Traversal Complete' }
+        ];
+        
+        let currentStep = 0;
+        
+        // Draw the tree
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges
+            tree.edges.forEach(edge => {
+                ctx.beginPath();
+                ctx.moveTo(edge.x1, edge.y1);
+                ctx.lineTo(edge.x2, edge.y2);
+                
+                if (edge.animated) {
+                    ctx.strokeStyle = '#FF4800';
+                    ctx.lineWidth = 3;
+                } else {
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 2;
+                }
+                
+                ctx.stroke();
+                
+                // Draw arrow
+                if (edge.animated) {
+                    drawArrow(edge.x1, edge.y1, edge.x2, edge.y2, '#FF4800');
+                }
+            });
+            
+            // Draw nodes
+            tree.nodes.forEach(node => {
+                // Node circle
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 30, 0, Math.PI * 2);
+                
+                if (node.current) {
+                    ctx.fillStyle = '#FF4800';
+                } else if (node.visited) {
+                    ctx.fillStyle = '#FD9F78';
+                } else {
+                    ctx.fillStyle = '#000000';
+                }
+                
+                ctx.fill();
+                
+                // Node ID
+                ctx.font = 'bold 18px Arial';
+                ctx.fillStyle = '#FFFFFF';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node.id, node.x, node.y);
+                
+                // Entry time
+                if (node.entryShown && node.entry !== null) {
+                    ctx.font = '14px Arial';
+                    ctx.fillStyle = '#000000';
+                    ctx.fillText(`Entry: ${node.entry}`, node.x, node.y + 45);
+                }
+                
+                // Exit time
+                if (node.exitShown && node.exit !== null) {
+                    ctx.font = '14px Arial';
+                    ctx.fillStyle = '#000000';
+                    ctx.fillText(`Exit: ${node.exit}`, node.x, node.y + 65);
+                }
+            });
+        }
+        
+        function drawArrow(fromX, fromY, toX, toY, color) {
+            const headlen = 15;
+            const dx = toX - fromX;
+            const dy = toY - fromY;
+            const angle = Math.atan2(dy, dx);
+            
+            // Calculate point on the circle edge
+            const r = 30; // radius of node
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const ratio = (dist - r) / dist;
+            
+            const endX = fromX + dx * ratio;
+            const endY = fromY + dy * ratio;
+            
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(endX - headlen * Math.cos(angle - Math.PI / 6), endY - headlen * Math.sin(angle - Math.PI / 6));
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(endX - headlen * Math.cos(angle + Math.PI / 6), endY - headlen * Math.sin(angle + Math.PI / 6));
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+        
+        // Initialize the animation
+        function init() {
+            drawTree();
+            updateControls();
+        }
+        
+        // Handle next button click
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < dfsSteps.length - 1) {
+                currentStep++;
+                applyStep(currentStep);
+                updateControls();
+            }
+        });
+        
+        // Handle previous button click
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                resetState();
+                for (let i = 0; i <= currentStep; i++) {
+                    applyStep(i);
+                }
+                updateControls();
+            }
+        });
+        
+        // Apply a step in the animation
+        function applyStep(stepIndex) {
+            const step = dfsSteps[stepIndex];
+            stepIndicator.textContent = `Step ${stepIndex}: ${step.description}`;
+            
+            // Reset current node
+            tree.nodes.forEach(node => {
+                node.current = false;
+            });
+            
+            // Reset animated edges
+            tree.edges.forEach(edge => {
+                edge.animated = false;
+            });
+            
+            switch (step.type) {
+                case 'visit':
+                    const visitNode = tree.nodes.find(node => node.id === step.nodeId);
+                    if (visitNode) {
+                        visitNode.visited = true;
+                        visitNode.current = true;
+                        visitNode.entryShown = true;
+                    }
+                    break;
+                case 'exit':
+                    const exitNode = tree.nodes.find(node => node.id === step.nodeId);
+                    if (exitNode) {
+                        exitNode.current = true;
+                        exitNode.exitShown = true;
+                    }
+                    break;
+                case 'edge':
+                    const edge = tree.edges.find(e => e.from === step.from && e.to === step.to);
+                    if (edge) {
+                        edge.animated = true;
+                    }
+                    const fromNode = tree.nodes.find(node => node.id === step.from);
+                    const toNode = tree.nodes.find(node => node.id === step.to);
+                    if (fromNode) fromNode.current = false;
+                    if (toNode) toNode.current = true;
+                    break;
+            }
+            
+            drawTree();
+        }
+        
+        // Reset state for going back
+        function resetState() {
+            tree.nodes.forEach(node => {
+                node.visited = false;
+                node.current = false;
+                node.entryShown = false;
+                node.exitShown = false;
+            });
+            
+            tree.edges.forEach(edge => {
+                edge.animated = false;
+            });
+        }
+        
+        // Update button states
+        function updateControls() {
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === dfsSteps.length - 1;
+        }
+        
+        // Initialize the visualization
+        init();
+    </script>
+</body>
+</html>
