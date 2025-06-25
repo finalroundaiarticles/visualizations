@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Coloring Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+        
+        canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #FFFFFF;
+        }
+        
+        .steps-container {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        
+        .step {
+            display: none;
+            background-color: #FFFFFF;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            color: #000000;
+        }
+        
+        .step.active {
+            display: block;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .color-item {
+            display: flex;
+            align-items: center;
+            margin: 0 15px;
+        }
+        
+        .color-box {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            border: 1px solid #000000;
+        }
+        
+        .color1 {
+            background-color: #FF4800;
+        }
+        
+        .color2 {
+            background-color: #FD9F78;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Graph Coloring Example</h1>
+        
+        <div class="legend">
+            <div class="color-item">
+                <div class="color-box color1"></div>
+                <span>Color 1</span>
+            </div>
+            <div class="color-item">
+                <div class="color-box color2"></div>
+                <span>Color 2</span>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="graphCanvas" width="800" height="400"></canvas>
+        </div>
+        
+        <div class="steps-container">
+            <div class="step active" id="step1">
+                <h3>Step 1: Initial Graph</h3>
+                <p>Here's our graph with 4 vertices (0, 1, 2, 3). The graph has the following connections:</p>
+                <ul>
+                    <li>Vertex 0 connects to vertices 1 and 2</li>
+                    <li>Vertex 1 connects to vertices 0 and 3</li>
+                    <li>Vertex 2 connects to vertex 0</li>
+                    <li>Vertex 3 connects to vertex 1</li>
+                </ul>
+            </div>
+            
+            <div class="step" id="step2">
+                <h3>Step 2: Color Vertex 0</h3>
+                <p>We assign Color 1 (orange) to Vertex 0. This is our starting point.</p>
+            </div>
+            
+            <div class="step" id="step3">
+                <h3>Step 3: Color Vertex 1</h3>
+                <p>Vertex 1 is connected to Vertex 0, so it can't have the same color. We assign Color 2 (light orange) to Vertex 1.</p>
+            </div>
+            
+            <div class="step" id="step4">
+                <h3>Step 4: Color Vertex 2</h3>
+                <p>Vertex 2 is connected to Vertex 0, so it can't have the same color as Vertex 0. We assign Color 2 (light orange) to Vertex 2.</p>
+            </div>
+            
+            <div class="step" id="step5">
+                <h3>Step 5: Color Vertex 3</h3>
+                <p>Vertex 3 is connected to Vertex 1, so it can't have the same color as Vertex 1. We assign Color 1 (orange) to Vertex 3.</p>
+            </div>
+            
+            <div class="step" id="step6">
+                <h3>Final Graph Coloring</h3>
+                <p>The graph has been properly colored with just 2 colors:</p>
+                <ul>
+                    <li>Vertex 0: Color 1 (orange)</li>
+                    <li>Vertex 1: Color 2 (light orange)</li>
+                    <li>Vertex 2: Color 2 (light orange)</li>
+                    <li>Vertex 3: Color 1 (orange)</li>
+                </ul>
+                <p>No adjacent vertices have the same color, which is the goal of graph coloring.</p>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prevBtn" disabled>Previous</button>
+            <button class="nav-btn" id="nextBtn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const steps = document.querySelectorAll('.step');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        let currentStep = 0;
+        const totalSteps = steps.length;
+        
+        // Graph vertices positions
+        const vertices = [
+            { id: 0, x: 400, y: 100, color: null },
+            { id: 1, x: 200, y: 250, color: null },
+            { id: 2, x: 600, y: 250, color: null },
+            { id: 3, x: 200, y: 350, color: null }
+        ];
+        
+        // Graph edges
+        const edges = [
+            { from: 0, to: 1 },
+            { from: 0, to: 2 },
+            { from: 1, to: 3 }
+        ];
+        
+        // Colors
+        const colors = {
+            1: '#FF4800', // Color 1 (orange)
+            2: '#FD9F78'  // Color 2 (light orange)
+        };
+        
+        // Function to draw the graph
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            edges.forEach(edge => {
+                const from = vertices[edge.from];
+                const to = vertices[edge.to];
+                
+                ctx.beginPath();
+                ctx.moveTo(from.x, from.y);
+                ctx.lineTo(to.x, to.y);
+                ctx.stroke();
+            });
+            
+            // Draw vertices
+            vertices.forEach(vertex => {
+                // Draw vertex circle
+                ctx.beginPath();
+                ctx.arc(vertex.x, vertex.y, 30, 0, Math.PI * 2);
+                
+                if (vertex.color) {
+                    ctx.fillStyle = colors[vertex.color];
+                } else {
+                    ctx.fillStyle = '#FFFFFF';
+                }
+                
+                ctx.fill();
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Draw vertex label
+                ctx.fillStyle = '#000000';
+                ctx.font = 'bold 20px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(vertex.id, vertex.x, vertex.y);
+            });
+        }
+        
+        // Update the graph based on the current step
+        function updateGraph() {
+            // Reset all vertex colors
+            vertices.forEach(v => v.color = null);
+            
+            if (currentStep >= 1) {
+                // Step 2: Color vertex 0
+                vertices[0].color = 1;
+            }
+            
+            if (currentStep >= 2) {
+                // Step 3: Color vertex 1
+                vertices[1].color = 2;
+            }
+            
+            if (currentStep >= 3) {
+                // Step 4: Color vertex 2
+                vertices[2].color = 2;
+            }
+            
+            if (currentStep >= 4) {
+                // Step 5: Color vertex 3
+                vertices[3].color = 1;
+            }
+            
+            drawGraph();
+        }
+        
+        // Function to show the current step
+        function showStep() {
+            steps.forEach((step, index) => {
+                if (index === currentStep) {
+                    step.classList.add('active');
+                } else {
+                    step.classList.remove('active');
+                }
+            });
+            
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+            
+            updateGraph();
+        }
+        
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                showStep();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                showStep();
+            }
+        });
+        
+        // Initialize
+        drawGraph();
+        showStep();
+        
+        // Add animation for the transitions
+        let animationFrameId;
+        function animate() {
+            drawGraph();
+            animationFrameId = requestAnimationFrame(animate);
+        }
+        
+        animate();
+    </script>
+</body>
+</html>
