@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Triangle Finding Optimization Technique</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            position: relative;
+            height: 400px;
+        }
+        canvas {
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .explanation {
+            background-color: #FFFFFF;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            color: #000000;
+        }
+        .highlight {
+            color: #FF4800;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Triangle Finding Optimization Technique</h1>
+        <div class="explanation">
+            <p id="step-explanation">This animation demonstrates how an optimized algorithm finds triangles in a graph by checking common neighbors between vertices.</p>
+        </div>
+        <div class="canvas-container">
+            <canvas id="graphCanvas" width="700" height="400"></canvas>
+        </div>
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const explanation = document.getElementById('step-explanation');
+
+        // Graph structure and positions
+        const vertices = [
+            { id: 0, x: 350, y: 100, label: "0", adjacencyList: [1, 2, 3] },
+            { id: 1, x: 200, y: 250, label: "1", adjacencyList: [0, 2, 3] },
+            { id: 2, x: 500, y: 250, label: "2", adjacencyList: [0, 1, 3] },
+            { id: 3, x: 350, y: 350, label: "3", adjacencyList: [0, 1, 2] }
+        ];
+
+        // Animation states
+        const states = [
+            {
+                text: "We have a graph with 4 vertices (0, 1, 2, 3) where each vertex is connected to all others. Let's find triangles using an optimization technique.",
+                highlightVertices: [],
+                highlightEdges: [],
+                highlightTriangles: []
+            },
+            {
+                text: "First, we represent the graph using adjacency lists. For each vertex, we store its neighbors:",
+                highlightVertices: [0, 1, 2, 3],
+                highlightEdges: [],
+                highlightTriangles: [],
+                showAdjacencyList: true
+            },
+            {
+                text: "To find triangles, we examine edges and look for common neighbors. Let's start with edge (1,2).",
+                highlightVertices: [1, 2],
+                highlightEdges: [{from: 1, to: 2}],
+                highlightTriangles: []
+            },
+            {
+                text: "For edge (1,2), we check if vertices 1 and 2 have common neighbors. We compare their adjacency lists.",
+                highlightVertices: [1, 2],
+                highlightEdges: [{from: 1, to: 2}],
+                highlightTriangles: [],
+                showComparison: true
+            },
+            {
+                text: "We find that vertex 0 is a common neighbor of both 1 and 2. This forms a triangle!",
+                highlightVertices: [0, 1, 2],
+                highlightEdges: [{from: 1, to: 2}, {from: 1, to: 0}, {from: 2, to: 0}],
+                highlightTriangles: [{vertices: [0, 1, 2]}]
+            },
+            {
+                text: "Similarly, vertex 3 is also a common neighbor of both 1 and 2. This forms another triangle!",
+                highlightVertices: [1, 2, 3],
+                highlightEdges: [{from: 1, to: 2}, {from: 1, to: 3}, {from: 2, to: 3}],
+                highlightTriangles: [{vertices: [1, 2, 3]}]
+            },
+            {
+                text: "By checking just one edge (1,2) and finding common neighbors, we discovered two triangles: (0,1,2) and (1,2,3).",
+                highlightVertices: [0, 1, 2, 3],
+                highlightEdges: [{from: 1, to: 2}],
+                highlightTriangles: [{vertices: [0, 1, 2]}, {vertices: [1, 2, 3]}]
+            },
+            {
+                text: "We could continue with other edges to find all triangles. This optimization is efficient because we only need to check common neighbors once per edge.",
+                highlightVertices: [0, 1, 2, 3],
+                highlightEdges: [],
+                highlightTriangles: [{vertices: [0, 1, 2]}, {vertices: [1, 2, 3]}, {vertices: [0, 1, 3]}, {vertices: [0, 2, 3]}]
+            }
+        ];
+
+        let currentState = 0;
+
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges first
+            for (let i = 0; i < vertices.length; i++) {
+                for (let j of vertices[i].adjacencyList) {
+                    if (j > i) { // Avoid drawing edges twice
+                        drawEdge(vertices[i], vertices[j], '#FD9F78', 2);
+                    }
+                }
+            }
+
+            // Draw highlighted edges
+            const state = states[currentState];
+            if (state.highlightEdges) {
+                for (const edge of state.highlightEdges) {
+                    const from = vertices.find(v => v.id === edge.from);
+                    const to = vertices.find(v => v.id === edge.to);
+                    drawEdge(from, to, '#FF4800', 4);
+                }
+            }
+
+            // Draw highlighted triangles
+            if (state.highlightTriangles) {
+                for (const triangle of state.highlightTriangles) {
+                    drawTriangle(triangle.vertices);
+                }
+            }
+
+            // Draw vertices
+            for (const vertex of vertices) {
+                const isHighlighted = state.highlightVertices && state.highlightVertices.includes(vertex.id);
+                drawVertex(vertex, isHighlighted);
+            }
+
+            // Show adjacency list if needed
+            if (state.showAdjacencyList) {
+                drawAdjacencyList();
+            }
+
+            // Show comparison if needed
+            if (state.showComparison) {
+                drawComparison();
+            }
+        }
+
+        function drawVertex(vertex, highlighted) {
+            const radius = 25;
+            
+            // Draw circle
+            ctx.beginPath();
+            ctx.arc(vertex.x, vertex.y, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = highlighted ? '#FF4800' : '#FFFFFF';
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = highlighted ? '#FF4800' : '#FD9F78';
+            ctx.stroke();
+            
+            // Draw label
+            ctx.font = '18px Arial';
+            ctx.fillStyle = highlighted ? '#FFFFFF' : '#000000';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(vertex.label, vertex.x, vertex.y);
+        }
+
+        function drawEdge(from, to, color, width) {
+            ctx.beginPath();
+            ctx.moveTo(from.x, from.y);
+            ctx.lineTo(to.x, to.y);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.stroke();
+        }
+
+        function drawTriangle(vertexIds) {
+            const triangleVertices = vertexIds.map(id => vertices.find(v => v.id === id));
+            
+            ctx.beginPath();
+            ctx.moveTo(triangleVertices[0].x, triangleVertices[0].y);
+            ctx.lineTo(triangleVertices[1].x, triangleVertices[1].y);
+            ctx.lineTo(triangleVertices[2].x, triangleVertices[2].y);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(253, 159, 120, 0.2)';
+            ctx.fill();
+        }
+
+        function drawAdjacencyList() {
+            ctx.fillStyle = '#000000';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'left';
+            
+            let y = 50;
+            for (const vertex of vertices) {
+                const neighbors = vertex.adjacencyList.join(', ');
+                ctx.fillText(`Vertex ${vertex.id} → [${neighbors}]`, 50, y);
+                y += 25;
+            }
+        }
+
+        function drawComparison() {
+            ctx.fillStyle = '#000000';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'left';
+            
+            ctx.fillText("Adjacency List of Vertex 1: [0, 2, 3]", 50, 50);
+            ctx.fillText("Adjacency List of Vertex 2: [0, 1, 3]", 50, 75);
+            ctx.fillText("Common Neighbors: [0, 3]", 50, 110);
+            
+            ctx.fillStyle = '#FF4800';
+            ctx.fillText("0", 296, 50);
+            ctx.fillText("3", 310, 50);
+            ctx.fillText("0", 296, 75);
+            ctx.fillText("3", 310, 75);
+            ctx.fillText("0, 3", 180, 110);
+        }
+
+        function updateState() {
+            explanation.textContent = states[currentState].text;
+            drawGraph();
+            
+            prevBtn.disabled = currentState === 0;
+            nextBtn.disabled = currentState === states.length - 1;
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentState > 0) {
+                currentState--;
+                updateState();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentState < states.length - 1) {
+                currentState++;
+                updateState();
+            }
+        });
+
+        // Initialize
+        updateState();
+    </script>
+</body>
+</html>
