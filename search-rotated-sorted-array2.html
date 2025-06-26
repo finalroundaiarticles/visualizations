@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search in Rotated Array</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        #animation-container {
+            width: 100%;
+            height: 500px;
+            position: relative;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .array-element {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 5px;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .index {
+            width: 40px;
+            height: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 5px;
+            color: #FF4800;
+            font-size: 14px;
+        }
+        
+        .highlight {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .highlight-mid {
+            background-color: #FD9F78;
+            color: #FFFFFF;
+        }
+        
+        .explanation-box {
+            padding: 15px;
+            background-color: rgba(253, 159, 120, 0.1);
+            border-left: 4px solid #FF4800;
+            margin: 15px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .decision-tree {
+            width: 100%;
+            height: 300px;
+            position: relative;
+            margin-top: 20px;
+        }
+        
+        .node {
+            position: absolute;
+            width: 120px;
+            height: 60px;
+            background-color: #FFFFFF;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 12px;
+            padding: 5px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .node.active {
+            opacity: 1;
+        }
+        
+        .edge {
+            position: absolute;
+            height: 2px;
+            background-color: #FD9F78;
+            transform-origin: 0% 0%;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .edge.active {
+            opacity: 1;
+        }
+        
+        .edge-label {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 11px;
+            color: #FF4800;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .edge-label.active {
+            opacity: 1;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #FF4800;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Search in Rotated Array</h1>
+        
+        <div id="animation-container">
+            <div class="array-container">
+                <div class="index">0</div>
+                <div class="index">1</div>
+                <div class="index">2</div>
+                <div class="index">3</div>
+                <div class="index">4</div>
+                <div class="index">5</div>
+                <div class="index">6</div>
+            </div>
+            <div class="array-container">
+                <div class="array-element">4</div>
+                <div class="array-element">5</div>
+                <div class="array-element">6</div>
+                <div class="array-element">7</div>
+                <div class="array-element">0</div>
+                <div class="array-element">1</div>
+                <div class="array-element">2</div>
+            </div>
+            
+            <div class="explanation-box" id="explanation">
+                Welcome to Binary Search in Rotated Array! We're searching for target = 0 in the rotated array [4, 5, 6, 7, 0, 1, 2].
+            </div>
+            
+            <div class="decision-tree" id="decision-tree"></div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="step-indicator">Step 1 of 5</div>
+    </div>
+    
+    <script>
+        // Setup variables
+        const array = [4, 5, 6, 7, 0, 1, 2];
+        const target = 0;
+        let currentStep = 0;
+        
+        // Steps for the animation
+        const steps = [
+            {
+                title: "Initial Array",
+                explanation: "We have a rotated sorted array [4, 5, 6, 7, 0, 1, 2] and we want to find target = 0. Let's use binary search with some modifications to handle the rotation.",
+                left: 0,
+                right: 6,
+                mid: null,
+                highlight: []
+            },
+            {
+                title: "First Iteration",
+                explanation: "We calculate mid = (0 + 6) / 2 = 3. The middle element is 7. Since arr[left]=4 ≤ arr[mid]=7, the left half is sorted. But our target=0 is not in the range [4, 7], so we search the right half.",
+                left: 0,
+                right: 6,
+                mid: 3,
+                highlight: [3],
+                decision: "Is arr[left] ≤ arr[mid]? Yes, left half is sorted. Is target in range [arr[left], arr[mid]]? No, search right half.",
+                leftHalf: [0, 1, 2, 3],
+                rightHalf: [4, 5, 6],
+                nextHalf: [4, 5, 6]
+            },
+            {
+                title: "Second Iteration",
+                explanation: "Our new search space is [0, 1, 2]. We calculate mid = (4 + 6) / 2 = 5. The middle element is 1. Since arr[left]=0 ≤ arr[mid]=1, the left half is sorted. Our target=0 is in the range [0, 1], so we search the left half.",
+                left: 4,
+                right: 6,
+                mid: 5,
+                highlight: [5],
+                decision: "Is arr[left] ≤ arr[mid]? Yes, left half is sorted. Is target in range [arr[left], arr[mid]]? Yes, search left half.",
+                leftHalf: [4, 5],
+                rightHalf: [6],
+                nextHalf: [4, 5]
+            },
+            {
+                title: "Third Iteration",
+                explanation: "Our new search space is [0, 1]. We calculate mid = (4 + 5) / 2 = 4. The middle element is 0, which is our target! We found the target at index 4.",
+                left: 4,
+                right: 5,
+                mid: 4,
+                highlight: [4],
+                decision: "Middle element equals target! We found target=0 at index 4.",
+                leftHalf: [4],
+                rightHalf: [5],
+                nextHalf: []
+            },
+            {
+                title: "Search Complete",
+                explanation: "Binary search complete! We found target=0 at index 4. The decision tree shows how we navigated through the rotated array by determining which half was sorted and whether our target was in that sorted half.",
+                left: 4,
+                right: 4,
+                mid: 4,
+                highlight: [4],
+                decision: "Search complete! Target found at index 4."
+            }
+        ];
+        
+        // Node positions for decision tree
+        const nodePositions = [
+            { x: 350, y: 30 },  // Root
+            { x: 150, y: 120 }, // Level 1, left
+            { x: 550, y: 120 }, // Level 1, right
+            { x: 450, y: 210 }, // Level 2, left
+            { x: 650, y: 210 }, // Level 2, right
+            { x: 550, y: 280 }  // Level 3, target found
+        ];
+        
+        // Create decision tree nodes
+        const decisionTree = document.getElementById('decision-tree');
+        const nodes = [
+            { text: "Array [4,5,6,7,0,1,2]<br>left=0, right=6<br>mid=3 (value=7)" },
+            { text: "Left half [4,5,6,7] is sorted<br>Target=0 not in range [4,7]" },
+            { text: "Search right half<br>[0,1,2]<br>left=4, right=6" },
+            { text: "Left half [0,1] is sorted<br>Target=0 in range [0,1]" },
+            { text: "Search left half<br>[0]<br>left=4, right=5" },
+            { text: "Mid=4 (value=0)<br>Target Found!" }
+        ];
+        
+        // Create edges between nodes
+        const edges = [
+            { from: 0, to: 1, label: "Check if left half is sorted", angle: -30 },
+            { from: 1, to: 2, label: "Target not in left half", angle: 0 },
+            { from: 2, to: 3, label: "Check if left half is sorted", angle: -30 },
+            { from: 3, to: 4, label: "Target in left half", angle: 0 },
+            { from: 4, to: 5, label: "Check middle element", angle: -30 }
+        ];
+        
+        // Create nodes
+        nodes.forEach((node, i) => {
+            const nodeElement = document.createElement('div');
+            nodeElement.className = 'node';
+            nodeElement.innerHTML = node.text;
+            nodeElement.style.left = nodePositions[i].x + 'px';
+            nodeElement.style.top = nodePositions[i].y + 'px';
+            decisionTree.appendChild(nodeElement);
+        });
+        
+        // Create edges
+        edges.forEach((edge, i) => {
+            const fromPos = nodePositions[edge.from];
+            const toPos = nodePositions[edge.to];
+            
+            // Calculate edge length and angle
+            const dx = toPos.x - fromPos.x;
+            const dy = toPos.y - fromPos.y;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            
+            // Create edge
+            const edgeElement = document.createElement('div');
+            edgeElement.className = 'edge';
+            edgeElement.style.width = length + 'px';
+            edgeElement.style.left = fromPos.x + 60 + 'px';
+            edgeElement.style.top = fromPos.y + 30 + 'px';
+            edgeElement.style.transform = `rotate(${angle}deg)`;
+            decisionTree.appendChild(edgeElement);
+            
+            // Create edge label
+            const labelElement = document.createElement('div');
+            labelElement.className = 'edge-label';
+            labelElement.textContent = edge.label;
+            
+            // Position label at the middle of the edge
+            const midX = (fromPos.x + toPos.x) / 2;
+            const midY = (fromPos.y + toPos.y) / 2;
+            labelElement.style.left = midX + 'px';
+            labelElement.style.top = midY - 10 + 'px';
+            
+            decisionTree.appendChild(labelElement);
+        });
+        
+        // Get DOM elements
+        const nodeElements = document.querySelectorAll('.node');
+        const edgeElements = document.querySelectorAll('.edge');
+        const edgeLabelElements = document.querySelectorAll('.edge-label');
+        const arrayElements = document.querySelectorAll('.array-element');
+        const explanationBox = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepIndicator = document.getElementById('step-indicator');
+        
+        // Update the display based on current step
+        function updateDisplay() {
+            const step = steps[currentStep];
+            
+            // Update array visualization
+            arrayElements.forEach((el, i) => {
+                el.classList.remove('highlight', 'highlight-mid');
+                
+                if (step.mid === i) {
+                    el.classList.add('highlight-mid');
+                } else if (step.highlight.includes(i)) {
+                    el.classList.add('highlight');
+                }
+            });
+            
+            // Update explanation
+            explanationBox.textContent = step.explanation;
+            
+            // Update decision tree visibility
+            if (currentStep === 0) {
+                // No nodes or edges visible in first step
+            } else if (currentStep === 1) {
+                // Show first two nodes and first edge
+                nodeElements[0].classList.add('active');
+                nodeElements[1].classList.add('active');
+                nodeElements[2].classList.add('active');
+                edgeElements[0].classList.add('active');
+                edgeElements[1].classList.add('active');
+                edgeLabelElements[0].classList.add('active');
+                edgeLabelElements[1].classList.add('active');
+            } else if (currentStep === 2) {
+                // Show more nodes and edges
+                nodeElements[3].classList.add('active');
+                nodeElements[4].classList.add('active');
+                edgeElements[2].classList.add('active');
+                edgeElements[3].classList.add('active');
+                edgeLabelElements[2].classList.add('active');
+                edgeLabelElements[3].classList.add('active');
+            } else if (currentStep >= 3) {
+                // Show final node and edge
+                nodeElements[5].classList.add('active');
+                edgeElements[4].classList.add('active');
+                edgeLabelElements[4].classList.add('active');
+            }
+            
+            // Update step indicator
+            stepIndicator.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateDisplay();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateDisplay();
+            }
+        });
+        
+        // Initialize display
+        updateDisplay();
+    </script>
+</body>
+</html>
