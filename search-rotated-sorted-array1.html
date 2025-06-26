@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Array Rotation Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            display: flex;
+            justify-content: space-around;
+            width: 90%;
+            max-width: 1000px;
+            margin-bottom: 40px;
+        }
+        
+        .array-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .array-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #FF4800;
+        }
+        
+        .array {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .element {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #FF4800;
+            margin: 0 5px;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        
+        .active {
+            background-color: #FD9F78;
+        }
+        
+        .explanation {
+            width: 80%;
+            max-width: 800px;
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            background-color: #FFFFFF;
+        }
+        
+        .arrow {
+            position: relative;
+            width: 120px;
+            height: 60px;
+            margin: 0 auto;
+        }
+        
+        .arrow-line {
+            position: absolute;
+            top: 30px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: #FF4800;
+        }
+        
+        .arrow-head {
+            position: absolute;
+            top: 20px;
+            right: -10px;
+            width: 0;
+            height: 0;
+            border-left: 20px solid #FF4800;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+        }
+        
+        .rotation-point {
+            position: absolute;
+            top: -20px;
+            left: 70px;
+            color: #FF4800;
+            font-weight: bold;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .step-counter {
+            margin: 20px 0;
+            color: #000000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Array Rotation Visualization</h1>
+    
+    <div class="container">
+        <div class="array-container">
+            <div class="array-title">Original Sorted Array</div>
+            <div class="array" id="original-array">
+                <div class="element">1</div>
+                <div class="element">2</div>
+                <div class="element">3</div>
+                <div class="element">4</div>
+                <div class="element">5</div>
+                <div class="element">6</div>
+                <div class="element">7</div>
+            </div>
+        </div>
+        
+        <div class="array-container">
+            <div class="array-title">After Rotation</div>
+            <div class="array" id="rotated-array">
+                <div class="element">1</div>
+                <div class="element">2</div>
+                <div class="element">3</div>
+                <div class="element">4</div>
+                <div class="element">5</div>
+                <div class="element">6</div>
+                <div class="element">7</div>
+            </div>
+            <div class="arrow" id="arrow">
+                <div class="arrow-line"></div>
+                <div class="arrow-head"></div>
+                <div class="rotation-point">Rotation Point</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="explanation" id="explanation">
+        Welcome to Array Rotation Visualization! This interactive animation explains how array rotation works. Click "Next" to begin the step-by-step process.
+    </div>
+    
+    <div class="step-counter" id="step-counter">Step: 0/5</div>
+    
+    <div class="controls">
+        <button id="prev-btn" disabled>Previous</button>
+        <button id="next-btn">Next</button>
+    </div>
+    
+    <script>
+        const steps = [
+            {
+                explanation: "Welcome to Array Rotation Visualization! This interactive animation explains how array rotation works. Click \"Next\" to begin the step-by-step process.",
+                highlight: [],
+                rotated: [1, 2, 3, 4, 5, 6, 7],
+                showArrow: false
+            },
+            {
+                explanation: "In array rotation, we shift elements of an array by a certain number of positions. Here we have a sorted array with 7 elements.",
+                highlight: [0, 1, 2, 3, 4, 5, 6],
+                rotated: [1, 2, 3, 4, 5, 6, 7],
+                showArrow: false
+            },
+            {
+                explanation: "We're going to rotate this array at index 4. This means elements at indices 4, 5, and 6 will move to the front.",
+                highlight: [4, 5, 6],
+                rotated: [1, 2, 3, 4, 5, 6, 7],
+                showArrow: true
+            },
+            {
+                explanation: "After rotation, the elements [5, 6, 7] move to the beginning of the array.",
+                highlight: [0, 1, 2],
+                rotated: [5, 6, 7, 1, 2, 3, 4],
+                showArrow: true
+            },
+            {
+                explanation: "The elements [1, 2, 3, 4] move to the end. This gives us our final rotated array: [5, 6, 7, 1, 2, 3, 4].",
+                highlight: [3, 4, 5, 6],
+                rotated: [5, 6, 7, 1, 2, 3, 4],
+                showArrow: true
+            },
+            {
+                explanation: "The rotation is complete! This kind of rotation is useful in various algorithms and data structure operations, like searching in a rotated sorted array.",
+                highlight: [],
+                rotated: [5, 6, 7, 1, 2, 3, 4],
+                showArrow: true
+            }
+        ];
+        
+        let currentStep = 0;
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const explanation = document.getElementById('explanation');
+        const stepCounter = document.getElementById('step-counter');
+        const originalArray = document.getElementById('original-array');
+        const rotatedArray = document.getElementById('rotated-array');
+        const arrow = document.getElementById('arrow');
+        
+        function updateUI() {
+            // Update explanation
+            explanation.textContent = steps[currentStep].explanation;
+            
+            // Update step counter
+            stepCounter.textContent = `Step: ${currentStep}/${steps.length - 1}`;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+            
+            // Reset highlights
+            const originalElements = originalArray.querySelectorAll('.element');
+            const rotatedElements = rotatedArray.querySelectorAll('.element');
+            
+            originalElements.forEach(el => el.classList.remove('active'));
+            rotatedElements.forEach(el => el.classList.remove('active'));
+            
+            // Update rotated array
+            for (let i = 0; i < rotatedElements.length; i++) {
+                rotatedElements[i].textContent = steps[currentStep].rotated[i];
+            }
+            
+            // Set highlights
+            steps[currentStep].highlight.forEach(idx => {
+                if (currentStep <= 2) {
+                    originalElements[idx].classList.add('active');
+                } else {
+                    rotatedElements[idx].classList.add('active');
+                }
+            });
+            
+            // Show/hide arrow
+            arrow.style.visibility = steps[currentStep].showArrow ? 'visible' : 'hidden';
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateUI();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateUI();
+            }
+        });
+        
+        // Initial UI update
+        updateUI();
+    </script>
+</body>
+</html>
