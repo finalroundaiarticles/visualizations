@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trie Data Structure for Word Break</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 800px;
+            max-width: 100%;
+            position: relative;
+        }
+        
+        .slide {
+            display: none;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            background-color: #FFFFFF;
+            min-height: 400px;
+            position: relative;
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            color: #000000;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        #trie-canvas {
+            width: 100%;
+            height: 300px;
+            margin: 20px 0;
+        }
+        
+        .node {
+            fill: #FFFFFF;
+            stroke: #FF4800;
+            stroke-width: 2;
+        }
+        
+        .end-node {
+            fill: #FD9F78;
+            stroke: #FF4800;
+            stroke-width: 2;
+        }
+        
+        .link {
+            stroke: #000000;
+            stroke-width: 1.5;
+        }
+        
+        .node-text {
+            fill: #000000;
+            font-size: 14px;
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+        
+        .link-text {
+            fill: #FF4800;
+            font-size: 12px;
+            text-anchor: middle;
+        }
+        
+        .highlight {
+            animation: pulse 1s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            from { opacity: 0.7; }
+            to { opacity: 1; }
+        }
+        
+        .slide-counter {
+            text-align: center;
+            margin-top: 10px;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Trie Data Structure for Word Break</h1>
+    
+    <div class="container">
+        <div class="slide active" id="slide1">
+            <h2>What is a Trie?</h2>
+            <svg id="trie-canvas"></svg>
+            <div class="explanation">
+                <p>A <strong>Trie</strong> (pronounced "try") is a tree-like data structure used for storing a collection of strings. It's particularly useful for word-related problems like Word Break.</p>
+                <p>In this animation, we'll build a Trie for the word dictionary: <strong>["leet", "code"]</strong>.</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide2">
+            <h2>Building the Trie - Step 1</h2>
+            <svg id="trie-canvas2"></svg>
+            <div class="explanation">
+                <p>We start with an <strong>empty root node</strong>. This node doesn't contain any character but serves as the starting point of our Trie.</p>
+                <p>The root will connect to the first character of each word in our dictionary.</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide3">
+            <h2>Building the Trie - Adding "leet"</h2>
+            <svg id="trie-canvas3"></svg>
+            <div class="explanation">
+                <p>Let's add our first word: <strong>"leet"</strong>.</p>
+                <p>We add a node for each character: 'l', 'e', 'e', 't'.</p>
+                <p>The last node ('t') is marked as an <strong>end of word</strong> (highlighted in orange).</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide4">
+            <h2>Building the Trie - Adding "code"</h2>
+            <svg id="trie-canvas4"></svg>
+            <div class="explanation">
+                <p>Now we add our second word: <strong>"code"</strong>.</p>
+                <p>We add nodes for: 'c', 'o', 'd', 'e'.</p>
+                <p>Again, the last node ('e') is marked as an <strong>end of word</strong>.</p>
+                <p>Our Trie is now complete with both words from the dictionary!</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide5">
+            <h2>Using the Trie for Word Break</h2>
+            <svg id="trie-canvas5"></svg>
+            <div class="explanation">
+                <p>When solving the Word Break problem, we can use this Trie to efficiently check if a string can be broken into words from our dictionary.</p>
+                <p>For example, if we want to check "leetcode":</p>
+                <p>1. We start at the root and traverse the Trie following characters in "leetcode"</p>
+                <p>2. After "leet", we hit an end-of-word marker</p>
+                <p>3. We can then continue with "code" and find another end-of-word marker</p>
+                <p>This confirms "leetcode" can be broken into "leet" and "code"</p>
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+        
+        <div class="slide-counter">
+            <span id="current-slide">1</span> / <span id="total-slides">5</span>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Navigation functionality
+            const slides = document.querySelectorAll('.slide');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const currentSlideElement = document.getElementById('current-slide');
+            const totalSlidesElement = document.getElementById('total-slides');
+            
+            let currentSlideIndex = 0;
+            totalSlidesElement.textContent = slides.length;
+            
+            function updateSlide() {
+                slides.forEach((slide, index) => {
+                    if (index === currentSlideIndex) {
+                        slide.classList.add('active');
+                    } else {
+                        slide.classList.remove('active');
+                    }
+                });
+                
+                prevBtn.disabled = currentSlideIndex === 0;
+                nextBtn.disabled = currentSlideIndex === slides.length - 1;
+                currentSlideElement.textContent = currentSlideIndex + 1;
+                
+                drawTrieForSlide(currentSlideIndex + 1);
+            }
+            
+            prevBtn.addEventListener('click', function() {
+                if (currentSlideIndex > 0) {
+                    currentSlideIndex--;
+                    updateSlide();
+                }
+            });
+            
+            nextBtn.addEventListener('click', function() {
+                if (currentSlideIndex < slides.length - 1) {
+                    currentSlideIndex++;
+                    updateSlide();
+                }
+            });
+            
+            // SVG drawing functionality
+            function drawTrieForSlide(slideNumber) {
+                const canvasId = `trie-canvas${slideNumber > 1 ? slideNumber : ''}`;
+                const canvas = document.getElementById(canvasId);
+                
+                // Clear previous content
+                canvas.innerHTML = '';
+                
+                // Set SVG dimensions
+                const width = canvas.clientWidth;
+                const height = 300;
+                
+                if (slideNumber === 1) {
+                    // Slide 1: Concept illustration
+                    const centerX = width / 2;
+                    const topY = 50;
+                    
+                    // Create a simple trie visualization
+                    drawNode(canvas, centerX, topY, 'Root', false);
+                    
+                    setTimeout(() => {
+                        const letters = ['l', 'c'];
+                        const secondLevel = topY + 70;
+                        
+                        letters.forEach((letter, i) => {
+                            const x = centerX + (i === 0 ? -80 : 80);
+                            drawNode(canvas, x, secondLevel, letter, false);
+                            drawEdge(canvas, centerX, topY + 20, x, secondLevel - 20, '');
+                        });
+                        
+                        setTimeout(() => {
+                            const l2 = ['e', 'o'];
+                            const thirdLevel = secondLevel + 70;
+                            
+                            l2.forEach((letter, i) => {
+                                const startX = centerX + (i === 0 ? -80 : 80);
+                                const x = startX;
+                                drawNode(canvas, x, thirdLevel, letter, false);
+                                drawEdge(canvas, startX, secondLevel + 20, x, thirdLevel - 20, '');
+                            });
+                        }, 500);
+                    }, 500);
+                    
+                } else if (slideNumber === 2) {
+                    // Slide 2: Empty root
+                    const centerX = width / 2;
+                    const topY = 50;
+                    
+                    drawNode(canvas, centerX, topY, 'Root', false);
+                    
+                } else if (slideNumber === 3) {
+                    // Slide 3: Adding "leet"
+                    const centerX = width / 2;
+                    const topY = 50;
+                    const levelSpacing = 60;
+                    
+                    // Draw root
+                    drawNode(canvas, centerX, topY, 'Root', false);
+                    
+                    // Draw "leet"
+                    const word = "leet";
+                    let prevX = centerX;
+                    let prevY = topY;
+                    
+                    for (let i = 0; i < word.length; i++) {
+                        const y = topY + (i + 1) * levelSpacing;
+                        const isEnd = i === word.length - 1;
+                        
+                        drawNode(canvas, centerX, y, word[i], isEnd);
+                        drawEdge(canvas, prevX, prevY + 20, centerX, y - 20, '');
+                        
+                        prevY = y;
+                    }
+                    
+                } else if (slideNumber === 4) {
+                    // Slide 4: Complete Trie with "leet" and "code"
+                    const centerX = width / 2;
+                    const topY = 50;
+                    const levelSpacing = 60;
+                    const horizontalOffset = 100;
+                    
+                    // Draw root
+                    drawNode(canvas, centerX, topY, 'Root', false);
+                    
+                    // Draw "leet"
+                    const word1 = "leet";
+                    let prevX = centerX;
+                    let prevY = topY;
+                    
+                    for (let i = 0; i < word1.length; i++) {
+                        const y = topY + (i + 1) * levelSpacing;
+                        const x = centerX - horizontalOffset/2;
+                        const isEnd = i === word1.length - 1;
+                        
+                        if (i === 0) {
+                            drawNode(canvas, x, y, word1[i], isEnd);
+                            drawEdge(canvas, prevX, prevY + 20, x, y - 20, '');
+                            prevX = x;
+                        } else {
+                            drawNode(canvas, x, y, word1[i], isEnd);
+                            drawEdge(canvas, prevX, prevY + 20, x, y - 20, '');
+                        }
+                        
+                        prevY = y;
+                    }
+                    
+                    // Draw "code"
+                    const word2 = "code";
+                    prevX = centerX;
+                    prevY = topY;
+                    
+                    for (let i = 0; i < word2.length; i++) {
+                        const y = topY + (i + 1) * levelSpacing;
+                        const x = centerX + horizontalOffset/2;
+                        const isEnd = i === word2.length - 1;
+                        
+                        if (i === 0) {
+                            drawNode(canvas, x, y, word2[i], isEnd);
+                            drawEdge(canvas, prevX, prevY + 20, x, y - 20, '');
+                            prevX = x;
+                        } else {
+                            drawNode(canvas, x, y, word2[i], isEnd);
+                            drawEdge(canvas, prevX, prevY + 20, x, y - 20, '');
+                        }
+                        
+                        prevY = y;
+                    }
+                    
+                } else if (slideNumber === 5) {
+                    // Slide 5: Using the Trie for word break
+                    const centerX = width / 2;
+                    const topY = 30;
+                    const levelSpacing = 50;
+                    const horizontalOffset = 100;
+                    
+                    // Draw root
+                    drawNode(canvas, centerX, topY, 'Root', false);
+                    
+                    // Draw "leet"
+                    const word1 = "leet";
+                    let prevX = centerX;
+                    let prevY = topY;
+                    
+                    let leetEndX, leetEndY;
+                    
+                    for (let i = 0; i < word1.length; i++) {
+                        const y = topY + (i + 1) * levelSpacing;
+                        const x = centerX - horizontalOffset/2;
+                        const isEnd = i === word1.length - 1;
+                        
+                        if (i === 0) {
+                            drawNode(canvas, x, y, word1[i], isEnd, true);
+                            drawEdge(canvas, prevX, prevY + 20, x, y - 20, '', true);
+                            prevX = x;
+                        } else {
+                            drawNode(canvas, x, y, word1[i], isEnd, true);
+                            drawEdge(canvas, prevX, prevY + 20, x, y - 20, '', true);
+                        }
+                        
+                        prevY = y;
+                        
+                        if (isEnd) {
+                            leetEndX = x;
+                            leetEndY = y;
+                        }
+                    }
+                    
+                    // Draw "code"
+                    const word2 = "code";
+                    prevX = centerX;
+                    prevY = topY;
+                    
+                    setTimeout(() => {
+                        for (let i = 0; i < word2.length; i++) {
+                            const y = topY + (i + 1) * levelSpacing;
+                            const x = centerX + horizontalOffset/2;
+                            const isEnd = i === word2.length - 1;
+                            
+                            if (i === 0) {
+                                drawNode(canvas, x, y, word2[i], isEnd);
+                                drawEdge(canvas, prevX, prevY + 20, x, y - 20, '');
+                                prevX = x;
+                            } else {
+                                drawNode(canvas, x, y, word2[i], isEnd);
+                                drawEdge(canvas, prevX, prevY + 20, x, y - 20, '');
+                            }
+                            
+                            prevY = y;
+                        }
+                        
+                        // Add word break illustration
+                        setTimeout(() => {
+                            const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                            textElement.setAttribute('x', centerX);
+                            textElement.setAttribute('y', topY + 6 * levelSpacing);
+                            textElement.setAttribute('text-anchor', 'middle');
+                            textElement.setAttribute('fill', '#FF4800');
+                            textElement.setAttribute('font-weight', 'bold');
+                            textElement.textContent = '"leetcode" can be broken into "leet" + "code"';
+                            canvas.appendChild(textElement);
+                            
+                            // Highlight "code" path
+                            const nodes = canvas.querySelectorAll('circle');
+                            const paths = canvas.querySelectorAll('path');
+                            
+                            for (let i = 5; i < 9; i++) {
+                                if (nodes[i]) {
+                                    nodes[i].classList.add('highlight');
+                                }
+                            }
+                            
+                            for (let i = 5; i < 8; i++) {
+                                if (paths[i]) {
+                                    paths[i].classList.add('highlight');
+                                }
+                            }
+                        }, 1000);
+                    }, 1500);
+                }
+            }
+            
+            function drawNode(svg, x, y, text, isEndWord, highlight = false) {
+                const nodeGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', x);
+                circle.setAttribute('cy', y);
+                circle.setAttribute('r', 20);
+                circle.setAttribute('class', isEndWord ? 'end-node' : 'node');
+                if (highlight) circle.classList.add('highlight');
+                
+                const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                textElement.setAttribute('x', x);
+                textElement.setAttribute('y', y);
+                textElement.setAttribute('class', 'node-text');
+                textElement.textContent = text;
+                
+                nodeGroup.appendChild(circle);
+                nodeGroup.appendChild(textElement);
+                svg.appendChild(nodeGroup);
+                
+                if (isEndWord) {
+                    const endText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    endText.setAttribute('x', x + 30);
+                    endText.setAttribute('y', y);
+                    endText.setAttribute('fill', '#FF4800');
+                    endText.setAttribute('font-size', '10px');
+                    endText.textContent = "End of Word";
+                    svg.appendChild(endText);
+                }
+                
+                return nodeGroup;
+            }
+            
+            function drawEdge(svg, x1, y1, x2, y2, text, highlight = false) {
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', `M${x1},${y1} L${x2},${y2}`);
+                path.setAttribute('class', 'link');
+                if (highlight) path.classList.add('highlight');
+                
+                svg.appendChild(path);
+                
+                if (text) {
+                    const midX = (x1 + x2) / 2;
+                    const midY = (y1 + y2) / 2;
+                    
+                    const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    textElement.setAttribute('x', midX);
+                    textElement.setAttribute('y', midY);
+                    textElement.setAttribute('class', 'link-text');
+                    textElement.textContent = text;
+                    
+                    svg.appendChild(textElement);
+                }
+                
+                return path;
+            }
+            
+            // Initialize the first slide
+            updateSlide();
+        });
+    </script>
+</body>
+</html>
