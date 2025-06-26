@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Jug Problem - Graph Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .nav-button {
+            background-color: #ff4800;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .nav-button:hover {
+            background-color: #e63f00;
+        }
+
+        .nav-button:disabled {
+            background-color: #1c1d20;
+            cursor: not-allowed;
+        }
+
+        .graph-container {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #1c1d20;
+            position: relative;
+            background-color: white;
+            overflow: hidden;
+        }
+
+        .node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid #1c1d20;
+        }
+
+        .node.current {
+            background-color: #ff4800;
+            transform: scale(1.2);
+            box-shadow: 0 0 20px rgba(255, 72, 0, 0.5);
+        }
+
+        .node.visited {
+            background-color: #1c1d20;
+        }
+
+        .node.unvisited {
+            background-color: #cccccc;
+            color: #1c1d20;
+        }
+
+        .node.target {
+            background-color: #ff4800;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 72, 0, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 72, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 72, 0, 0); }
+        }
+
+        .edge {
+            position: absolute;
+            background-color: #1c1d20;
+            transform-origin: left center;
+            opacity: 0.3;
+            transition: opacity 0.3s ease;
+        }
+
+        .edge.active {
+            opacity: 1;
+            background-color: #ff4800;
+        }
+
+        .step-info {
+            text-align: center;
+            margin: 20px 0;
+            color: #1c1d20;
+            font-size: 18px;
+            min-height: 50px;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #1c1d20;
+            font-size: 14px;
+        }
+
+        .legend-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #1c1d20;
+        }
+
+        .target-info {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            color: #1c1d20;
+        }
+
+        .target-info h3 {
+            margin: 0 0 10px 0;
+            color: #ff4800;
+        }
+
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="target-info">
+            <h3>Water Jug Problem - Graph Traversal</h3>
+            <div>Each node represents a state (Jug1, Jug2). Target: 2 liters in either jug.</div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-circle" style="background-color: #cccccc; color: #1c1d20;"></div>
+                <span>Unvisited State</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-circle" style="background-color: #1c1d20;"></div>
+                <span>Visited State</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-circle" style="background-color: #ff4800;"></div>
+                <span>Current/Target State</span>
+            </div>
+        </div>
+
+        <div class="step-info">
+            <div id="stepDescription">Graph shows all possible states and transitions</div>
+        </div>
+
+        <div class="graph-container" id="graphContainer">
+        </div>
+
+        <div class="controls">
+            <button class="nav-button" id="prevBtn" onclick="previousStep()">Previous</button>
+            <button class="nav-button" id="nextBtn" onclick="nextStep()">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Water jug algorithm implementation
+        function optimizedWaterJug(jug1Capacity, jug2Capacity, target) {
+            const queue = [[0, 0, []]];
+            const visited = new Set();
+            const allStates = new Map();
+            const transitions = [];
+            
+            visited.add("0,0");
+            allStates.set("0,0", { jug1: 0, jug2: 0, step: 0 });
+            
+            let stepCounter = 1;
+            
+            while (queue.length > 0) {
+                const [jug1, jug2, path] = queue.shift();
+                
+                if (jug1 === target || jug2 === target) {
+                    return { 
+                        success: true, 
+                        steps: path, 
+                        allStates: allStates,
+                        transitions: transitions
+                    };
+                }
+                
+                const nextStates = [];
+                
+                if (jug1 < jug1Capacity) {
+                    nextStates.push([jug1Capacity, jug2, "Fill Jug 1"]);
+                }
+                if (jug2 < jug2Capacity) {
+                    nextStates.push([jug1, jug2Capacity, "Fill Jug 2"]);
+                }
+                if (jug1 > 0) {
+                    nextStates.push([0, jug2, "Empty Jug 1"]);
+                }
+                if (jug2 > 0) {
+                    nextStates.push([jug1, 0, "Empty Jug 2"]);
+                }
+                if (jug1 > 0 && jug2 < jug2Capacity) {
+                    const pourAmount = Math.min(jug1, jug2Capacity - jug2);
+                    nextStates.push([jug1 - pourAmount, jug2 + pourAmount, "Pour Jug 1 to Jug 2"]);
+                }
+                if (jug2 > 0 && jug1 < jug1Capacity) {
+                    const pourAmount = Math.min(jug2, jug1Capacity - jug1);
+                    nextStates.push([jug1 + pourAmount, jug2 - pourAmount, "Pour Jug 2 to Jug 1"]);
+                }
+                
+                for (const [nextJug1, nextJug2, action] of nextStates) {
+                    const state = `${nextJug1},${nextJug2}`;
+                    const fromState = `${jug1},${jug2}`;
+                    
+                    transitions.push({
+                        from: fromState,
+                        to: state,
+                        action: action
+                    });
+                    
+                    if (!visited.has(state)) {
+                        visited.add(state);
+                        allStates.set(state, { jug1: nextJug1, jug2: nextJug2, step: stepCounter++ });
+                        queue.push([nextJug1, nextJug2, [...path, { action, jug1: nextJug1, jug2: nextJug2 }]]);
+                    }
+                }
+            }
+            
+            return { 
+                success: false, 
+                steps: [], 
+                allStates: allStates,
+                transitions: transitions
+            };
+        }
+
+        // Solve the problem and get all states
+        const solution = optimizedWaterJug(4, 3, 2);
+        const solutionPath = [{ action: "Initial State", jug1: 0, jug2: 0 }, ...solution.steps];
+        let currentStep = 0;
+
+        // Create graph visualization
+        function createGraph() {
+            const container = document.getElementById('graphContainer');
+            const states = Array.from(solution.allStates.entries());
+            
+            // Position nodes in a grid-like pattern
+            states.forEach(([stateKey, stateData], index) => {
+                const [jug1, jug2] = stateKey.split(',').map(Number);
+                
+                // Position based on jug values for intuitive layout
+                const x = 50 + (jug1 * 120) + Math.random() * 40 - 20;
+                const y = 50 + (jug2 * 80) + Math.random() * 40 - 20;
+                
+                const node = document.createElement('div');
+                node.className = 'node unvisited';
+                node.id = `node-${stateKey}`;
+                node.style.left = x + 'px';
+                node.style.top = y + 'px';
+                node.innerHTML = `${jug1},${jug2}`;
+                
+                // Mark target states
+                if (jug1 === 2 || jug2 === 2) {
+                    node.classList.add('target');
+                }
+                
+                container.appendChild(node);
+            });
+
+            // Create edges (simplified - show main transitions)
+            solution.transitions.forEach((transition, index) => {
+                const fromNode = document.getElementById(`node-${transition.from}`);
+                const toNode = document.getElementById(`node-${transition.to}`);
+                
+                if (fromNode && toNode) {
+                    const fromRect = fromNode.getBoundingClientRect();
+                    const toRect = toNode.getBoundingClientRect();
+                    const containerRect = container.getBoundingClientRect();
+                    
+                    const fromX = fromRect.left - containerRect.left + 30;
+                    const fromY = fromRect.top - containerRect.top + 30;
+                    const toX = toRect.left - containerRect.left + 30;
+                    const toY = toRect.top - containerRect.top + 30;
+                    
+                    const dx = toX - fromX;
+                    const dy = toY - fromY;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    const edge = document.createElement('div');
+                    edge.className = 'edge';
+                    edge.id = `edge-${index}`;
+                    edge.style.left = fromX + 'px';
+                    edge.style.top = fromY + 'px';
+                    edge.style.width = length + 'px';
+                    edge.style.height = '2px';
+                    edge.style.transform = `rotate(${angle}deg)`;
+                    
+                    container.appendChild(edge);
+                }
+            });
+        }
+
+        function updateVisualization() {
+            // Reset all nodes
+            document.querySelectorAll('.node').forEach(node => {
+                node.classList.remove('current', 'visited');
+                node.classList.add('unvisited');
+                
+                // Keep target class for target nodes
+                const [jug1, jug2] = node.innerHTML.split(',').map(Number);
+                if (jug1 === 2 || jug2 === 2) {
+                    node.classList.add('target');
+                }
+            });
+
+            // Reset all edges
+            document.querySelectorAll('.edge').forEach(edge => {
+                edge.classList.remove('active');
+            });
+
+            // Mark visited nodes up to current step
+            for (let i = 0; i <= currentStep; i++) {
+                const state = solutionPath[i];
+                const stateKey = `${state.jug1},${state.jug2}`;
+                const node = document.getElementById(`node-${stateKey}`);
+                
+                if (node) {
+                    node.classList.remove('unvisited');
+                    if (i === currentStep) {
+                        node.classList.add('current');
+                    } else {
+                        node.classList.add('visited');
+                    }
+                }
+            }
+
+            // Highlight active edge
+            if (currentStep > 0) {
+                const prevState = solutionPath[currentStep - 1];
+                const currState = solutionPath[currentStep];
+                const fromKey = `${prevState.jug1},${prevState.jug2}`;
+                const toKey = `${currState.jug1},${currState.jug2}`;
+                
+                solution.transitions.forEach((transition, index) => {
+                    if (transition.from === fromKey && transition.to === toKey) {
+                        const edge = document.getElementById(`edge-${index}`);
+                        if (edge) {
+                            edge.classList.add('active');
+                        }
+                    }
+                });
+            }
+
+            // Update step description
+            const state = solutionPath[currentStep];
+            document.getElementById('stepDescription').textContent = 
+                `Step ${currentStep}: ${state.action} → State (${state.jug1}, ${state.jug2})`;
+
+            // Update buttons
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === solutionPath.length - 1;
+        }
+
+        function nextStep() {
+            if (currentStep < solutionPath.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        }
+
+        // Initialize
+        createGraph();
+        updateVisualization();
+    </script>
+</body>
+</html>
