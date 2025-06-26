@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merge Process Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .array-box {
+            margin: 0 20px;
+        }
+        .array-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #FF4800;
+        }
+        .array {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .element {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #FD9F78;
+            margin-right: 5px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .highlighted {
+            background-color: #FF4800;
+            color: white;
+        }
+        .result-array {
+            margin-top: 30px;
+        }
+        .step-display {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #FD9F78;
+            border-radius: 5px;
+            font-size: 18px;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-left: 5px solid #FF4800;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .nav-btn {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .counter {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #FF4800;
+        }
+        .pointer {
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 15px solid #FF4800;
+            margin: 0 auto;
+            transition: transform 0.3s ease;
+        }
+        .pointer-container {
+            display: flex;
+            justify-content: flex-start;
+            margin-bottom: 5px;
+        }
+        .merged-element {
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Merge Process Visualization</h1>
+        
+        <div class="explanation">
+            This visualization shows how two sorted arrays are merged while tracking the count until k=5. 
+            We'll see each comparison made during the merge process and track which element becomes the kth element.
+        </div>
+        
+        <div class="array-container">
+            <div class="array-box">
+                <div class="array-label">Array 1</div>
+                <div class="pointer-container" id="pointer1-container">
+                    <div class="pointer" id="pointer1" style="visibility: hidden;"></div>
+                </div>
+                <div class="array" id="array1">
+                    <div class="element">2</div>
+                    <div class="element">3</div>
+                    <div class="element">6</div>
+                    <div class="element">7</div>
+                    <div class="element">9</div>
+                </div>
+            </div>
+            
+            <div class="array-box">
+                <div class="array-label">Array 2</div>
+                <div class="pointer-container" id="pointer2-container">
+                    <div class="pointer" id="pointer2" style="visibility: hidden;"></div>
+                </div>
+                <div class="array" id="array2">
+                    <div class="element">1</div>
+                    <div class="element">4</div>
+                    <div class="element">8</div>
+                    <div class="element">10</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="counter" id="counter">Count: 0</div>
+        
+        <div class="array-container result-array">
+            <div class="array-box">
+                <div class="array-label">Merged Result (In Progress)</div>
+                <div class="array" id="result-array"></div>
+            </div>
+        </div>
+        
+        <div class="step-display" id="step-display">
+            Click "Next" to start the merge process visualization.
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
+            <button class="nav-btn" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Initial arrays
+        const array1 = [2, 3, 6, 7, 9];
+        const array2 = [1, 4, 8, 10];
+        const k = 5;
+        
+        // States for animation
+        let currentStep = 0;
+        let i = 0;
+        let j = 0;
+        let count = 0;
+        let mergedArray = [];
+        let kthElement = null;
+        let isFinished = false;
+        
+        // Define all steps in the merge process
+        const steps = [
+            {
+                description: "We start with two sorted arrays and need to find the kth element (k=5) in the merged array without actually merging them completely.",
+                action: "initialize"
+            },
+            {
+                description: "Compare first elements: 2 vs 1. 1 is smaller, so we take 1 from Array 2.",
+                action: "compare",
+                i: 0,
+                j: 0,
+                smaller: "array2"
+            },
+            {
+                description: "Count = 1. We've selected the 1st element of the merged array.",
+                action: "increment",
+                count: 1
+            },
+            {
+                description: "Compare next elements: 2 vs 4. 2 is smaller, so we take 2 from Array 1.",
+                action: "compare",
+                i: 0,
+                j: 1,
+                smaller: "array1"
+            },
+            {
+                description: "Count = 2. We've selected the 2nd element of the merged array.",
+                action: "increment",
+                count: 2
+            },
+            {
+                description: "Compare next elements: 3 vs 4. 3 is smaller, so we take 3 from Array 1.",
+                action: "compare",
+                i: 1,
+                j: 1,
+                smaller: "array1"
+            },
+            {
+                description: "Count = 3. We've selected the 3rd element of the merged array.",
+                action: "increment",
+                count: 3
+            },
+            {
+                description: "Compare next elements: 6 vs 4. 4 is smaller, so we take 4 from Array 2.",
+                action: "compare",
+                i: 2,
+                j: 1,
+                smaller: "array2"
+            },
+            {
+                description: "Count = 4. We've selected the 4th element of the merged array.",
+                action: "increment",
+                count: 4
+            },
+            {
+                description: "Compare next elements: 6 vs 8. 6 is smaller, so we take 6 from Array 1.",
+                action: "compare",
+                i: 2,
+                j: 2,
+                smaller: "array1"
+            },
+            {
+                description: "Count = 5. We've reached k=5, so the 5th element (6) is our answer!",
+                action: "foundK",
+                count: 5,
+                kthElement: 6
+            },
+            {
+                description: "The kth element (k=5) in the merged array is 6. We found this without fully merging the arrays!",
+                action: "finish"
+            }
+        ];
+        
+        // DOM Elements
+        const array1Elements = document.querySelectorAll('#array1 .element');
+        const array2Elements = document.querySelectorAll('#array2 .element');
+        const resultArrayEl = document.getElementById('result-array');
+        const stepDisplayEl = document.getElementById('step-display');
+        const counterEl = document.getElementById('counter');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const pointer1 = document.getElementById('pointer1');
+        const pointer2 = document.getElementById('pointer2');
+        
+        // Event Listeners
+        prevBtn.addEventListener('click', prevStep);
+        nextBtn.addEventListener('click', nextStep);
+        
+        // Initialize the result array visually
+        function initializeResultArray() {
+            resultArrayEl.innerHTML = '';
+            mergedArray = [];
+        }
+        
+        // Update the result array visually
+        function updateResultArray() {
+            resultArrayEl.innerHTML = '';
+            mergedArray.forEach(value => {
+                const element = document.createElement('div');
+                element.className = 'element';
+                element.textContent = value;
+                resultArrayEl.appendChild(element);
+            });
+        }
+        
+        // Position pointers
+        function positionPointer(pointer, index, containerID) {
+            const container = document.getElementById(containerID);
+            const elementWidth = 49; // element width + margin
+            pointer.style.visibility = 'visible';
+            pointer.style.transform = `translateX(${index * elementWidth + 20}px)`;
+        }
+        
+        // Reset highlights
+        function resetHighlights() {
+            array1Elements.forEach(el => el.classList.remove('highlighted', 'merged-element'));
+            array2Elements.forEach(el => el.classList.remove('highlighted', 'merged-element'));
+            
+            const resultElements = resultArrayEl.querySelectorAll('.element');
+            resultElements.forEach(el => el.classList.remove('highlighted'));
+        }
+        
+        // Render current step
+        function renderStep() {
+            resetHighlights();
+            
+            const step = steps[currentStep];
+            stepDisplayEl.textContent = step.description;
+            
+            switch(step.action) {
+                case 'initialize':
+                    initializeResultArray();
+                    i = 0;
+                    j = 0;
+                    count = 0;
+                    counterEl.textContent = `Count: ${count}`;
+                    pointer1.style.visibility = 'hidden';
+                    pointer2.style.visibility = 'hidden';
+                    break;
+                    
+                case 'compare':
+                    positionPointer(pointer1, step.i, 'pointer1-container');
+                    positionPointer(pointer2, step.j, 'pointer2-container');
+                    
+                    array1Elements[step.i].classList.add('highlighted');
+                    array2Elements[step.j].classList.add('highlighted');
+                    break;
+                    
+                case 'increment':
+                    count = step.count;
+                    counterEl.textContent = `Count: ${count}`;
+                    
+                    const prevStep = steps[currentStep - 1];
+                    if (prevStep.smaller === 'array1') {
+                        array1Elements[prevStep.i].classList.add('merged-element');
+                        mergedArray.push(array1[prevStep.i]);
+                        i = prevStep.i + 1;
+                    } else {
+                        array2Elements[prevStep.j].classList.add('merged-element');
+                        mergedArray.push(array2[prevStep.j]);
+                        j = prevStep.j + 1;
+                    }
+                    
+                    updateResultArray();
+                    const resultElements = resultArrayEl.querySelectorAll('.element');
+                    if (resultElements.length > 0) {
+                        resultElements[resultElements.length - 1].classList.add('highlighted');
+                    }
+                    break;
+                    
+                case 'foundK':
+                    count = step.count;
+                    counterEl.textContent = `Count: ${count}`;
+                    
+                    const prevStepK = steps[currentStep - 1];
+                    if (prevStepK.smaller === 'array1') {
+                        array1Elements[prevStepK.i].classList.add('merged-element');
+                        array1Elements[prevStepK.i].classList.add('highlighted');
+                        mergedArray.push(array1[prevStepK.i]);
+                        kthElement = array1[prevStepK.i];
+                    } else {
+                        array2Elements[prevStepK.j].classList.add('merged-element');
+                        array2Elements[prevStepK.j].classList.add('highlighted');
+                        mergedArray.push(array2[prevStepK.j]);
+                        kthElement = array2[prevStepK.j];
+                    }
+                    
+                    updateResultArray();
+                    const kResultElements = resultArrayEl.querySelectorAll('.element');
+                    if (kResultElements.length > 0) {
+                        kResultElements[kResultElements.length - 1].classList.add('highlighted');
+                    }
+                    break;
+                    
+                case 'finish':
+                    isFinished = true;
+                    break;
+            }
+            
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+        }
+        
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                renderStep();
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                renderStep();
+            }
+        }
+        
+        // Initialize
+        renderStep();
+    </script>
+</body>
+</html>
