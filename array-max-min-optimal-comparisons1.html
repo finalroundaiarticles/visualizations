@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brute Force Comparison Visualization</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        .array-element {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #000000;
+            margin: 0 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            position: relative;
+        }
+        .array-element.current {
+            background-color: #FD9F78;
+        }
+        .array-element.max {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .array-element.min {
+            background-color: #000000;
+            color: #FFFFFF;
+        }
+        .array-element.compared {
+            border-color: #FF4800;
+        }
+        .arrow {
+            position: absolute;
+            height: 2px;
+            background-color: #FF4800;
+            transform-origin: left center;
+            top: 25px;
+            z-index: 1;
+        }
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid #FF4800;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        .comparison-info {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 18px;
+        }
+        .counts {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .count-box {
+            padding: 10px 20px;
+            background-color: #FD9F78;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-left: 4px solid #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Brute Force Comparison Visualization</h1>
+        <div class="explanation">
+            This visualization shows how brute force comparison works for finding the maximum and minimum values in an array. Each step shows the comparisons being made.
+        </div>
+
+        <div class="array-container" id="arrayContainer"></div>
+        
+        <div class="comparison-info" id="comparisonInfo">
+            Click "Next" to start the visualization
+        </div>
+        
+        <div class="counts">
+            <div class="count-box">Max Comparisons: <span id="maxCount">0</span></div>
+            <div class="count-box">Min Comparisons: <span id="minCount">0</span></div>
+            <div class="count-box">Total Comparisons: <span id="totalCount">0</span></div>
+        </div>
+        
+        <div class="buttons">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const array = [3, 5, 1, 9, 2];
+            const arrayContainer = document.getElementById('arrayContainer');
+            const comparisonInfo = document.getElementById('comparisonInfo');
+            const maxCountEl = document.getElementById('maxCount');
+            const minCountEl = document.getElementById('minCount');
+            const totalCountEl = document.getElementById('totalCount');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            // Create array elements
+            array.forEach((num, index) => {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.textContent = num;
+                element.id = `element-${index}`;
+                arrayContainer.appendChild(element);
+            });
+
+            let currentStep = 0;
+            let maxComparisons = 0;
+            let minComparisons = 0;
+
+            // Define all steps of the visualization
+            const steps = [
+                {
+                    type: 'init',
+                    info: 'Starting with array [3, 5, 1, 9, 2]. Initial max and min are set to the first element (3).',
+                    max: 0,
+                    min: 0
+                },
+                // Max comparisons
+                {
+                    type: 'max',
+                    compare: [0, 1],
+                    info: 'Compare current max (3) with next element (5)',
+                    result: '5 > 3, so max becomes 5',
+                    max: 1
+                },
+                {
+                    type: 'max',
+                    compare: [1, 2],
+                    info: 'Compare current max (5) with next element (1)',
+                    result: '1 < 5, max remains 5',
+                    max: 1
+                },
+                {
+                    type: 'max',
+                    compare: [1, 3],
+                    info: 'Compare current max (5) with next element (9)',
+                    result: '9 > 5, so max becomes 9',
+                    max: 3
+                },
+                {
+                    type: 'max',
+                    compare: [3, 4],
+                    info: 'Compare current max (9) with next element (2)',
+                    result: '2 < 9, max remains 9',
+                    max: 3
+                },
+                // Min comparisons
+                {
+                    type: 'min',
+                    compare: [0, 1],
+                    info: 'Compare current min (3) with next element (5)',
+                    result: '5 > 3, min remains 3',
+                    min: 0
+                },
+                {
+                    type: 'min',
+                    compare: [0, 2],
+                    info: 'Compare current min (3) with next element (1)',
+                    result: '1 < 3, so min becomes 1',
+                    min: 2
+                },
+                {
+                    type: 'min',
+                    compare: [2, 3],
+                    info: 'Compare current min (1) with next element (9)',
+                    result: '9 > 1, min remains 1',
+                    min: 2
+                },
+                {
+                    type: 'min',
+                    compare: [2, 4],
+                    info: 'Compare current min (1) with next element (2)',
+                    result: '2 > 1, min remains 1',
+                    min: 2
+                },
+                {
+                    type: 'conclusion',
+                    info: 'Brute force comparison complete! Maximum value: 9, Minimum value: 1',
+                    max: 3,
+                    min: 2
+                }
+            ];
+
+            function updateVisualization() {
+                // Reset all elements
+                Array.from(arrayContainer.querySelectorAll('.array-element')).forEach(el => {
+                    el.className = 'array-element';
+                });
+                
+                // Remove any existing arrows
+                Array.from(document.querySelectorAll('.arrow')).forEach(arrow => arrow.remove());
+                
+                const step = steps[currentStep];
+                
+                if (step.type === 'init') {
+                    document.getElementById(`element-${step.max}`).classList.add('max');
+                    document.getElementById(`element-${step.min}`).classList.add('min');
+                } else if (step.type === 'max' || step.type === 'min') {
+                    // Highlight the elements being compared
+                    const [fromIndex, toIndex] = step.compare;
+                    const fromElement = document.getElementById(`element-${fromIndex}`);
+                    const toElement = document.getElementById(`element-${toIndex}`);
+                    
+                    fromElement.classList.add(step.type === 'max' ? 'max' : 'min');
+                    toElement.classList.add('compared');
+                    
+                    // Create arrow
+                    createArrow(fromElement, toElement);
+                    
+                    // Update counters
+                    if (step.type === 'max') {
+                        maxComparisons++;
+                    } else {
+                        minComparisons++;
+                    }
+                } else if (step.type === 'conclusion') {
+                    document.getElementById(`element-${step.max}`).classList.add('max');
+                    document.getElementById(`element-${step.min}`).classList.add('min');
+                }
+                
+                // Update info text
+                comparisonInfo.innerHTML = step.info;
+                if (step.result) {
+                    comparisonInfo.innerHTML += '<br>' + step.result;
+                }
+                
+                // Update counters display
+                maxCountEl.textContent = maxComparisons;
+                minCountEl.textContent = minComparisons;
+                totalCountEl.textContent = maxComparisons + minComparisons;
+                
+                // Update buttons
+                prevBtn.disabled = currentStep === 0;
+                nextBtn.disabled = currentStep === steps.length - 1;
+            }
+
+            function createArrow(fromElement, toElement) {
+                const fromRect = fromElement.getBoundingClientRect();
+                const toRect = toElement.getBoundingClientRect();
+                const containerRect = arrayContainer.getBoundingClientRect();
+
+                const arrow = document.createElement('div');
+                arrow.className = 'arrow';
+
+                const startX = fromRect.left + fromRect.width / 2 - containerRect.left;
+                const startY = fromRect.top + fromRect.height / 2 - containerRect.top;
+                const endX = toRect.left + toRect.width / 2 - containerRect.left;
+                const endY = toRect.top + toRect.height / 2 - containerRect.top;
+
+                const length = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+                const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
+
+                arrow.style.width = `${length}px`;
+                arrow.style.left = `${startX}px`;
+                arrow.style.top = `${startY}px`;
+                arrow.style.transform = `rotate(${angle}deg)`;
+
+                arrayContainer.appendChild(arrow);
+            }
+
+            nextBtn.addEventListener('click', function() {
+                if (currentStep < steps.length - 1) {
+                    currentStep++;
+                    updateVisualization();
+                }
+            });
+
+            prevBtn.addEventListener('click', function() {
+                if (currentStep > 0) {
+                    if (steps[currentStep].type === 'max') {
+                        maxComparisons--;
+                    } else if (steps[currentStep].type === 'min') {
+                        minComparisons--;
+                    }
+                    currentStep--;
+                    updateVisualization();
+                }
+            });
+
+            // Initialize
+            updateVisualization();
+        });
+    </script>
+</body>
+</html>
