@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linear Search Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .description {
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+        
+        .array-element {
+            width: 50px;
+            height: 50px;
+            margin: 0 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #000000;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 18px;
+            position: relative;
+        }
+        
+        .array-element .index {
+            position: absolute;
+            bottom: -25px;
+            font-size: 14px;
+            color: #000000;
+        }
+        
+        .current {
+            background-color: #FD9F78;
+            border-color: #FF4800;
+        }
+        
+        .found {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border-color: #FF4800;
+        }
+        
+        .checked {
+            background-color: #f0f0f0;
+        }
+        
+        .status {
+            text-align: center;
+            margin-bottom: 20px;
+            min-height: 50px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            gap: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .target-info {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        
+        .target-value {
+            color: #FF4800;
+            font-weight: bold;
+        }
+        
+        .result {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 40px;
+            gap: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+        
+        .current-color {
+            background-color: #FD9F78;
+            border: 1px solid #FF4800;
+        }
+        
+        .found-color {
+            background-color: #FF4800;
+        }
+        
+        .checked-color {
+            background-color: #f0f0f0;
+            border: 1px solid #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Linear Search Visualization</h1>
+        
+        <div class="description">
+            Linear search is a simple search algorithm that finds the position of a target value within a list by checking each element sequentially until a match is found or the list ends. This visualization demonstrates a linear search for the target value in an array.
+        </div>
+        
+        <div class="target-info">
+            Searching for target value: <span class="target-value">8</span> in array [5, 7, 7, 8, 8, 8, 10]
+        </div>
+        
+        <div class="array-container" id="arrayContainer"></div>
+        
+        <div class="status" id="status">Click "Next" to start the linear search.</div>
+        
+        <div class="result" id="result"></div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color current-color"></div>
+                <span>Current Element</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color found-color"></div>
+                <span>Found Target</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color checked-color"></div>
+                <span>Checked Element</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initial setup
+        const array = [5, 7, 7, 8, 8, 8, 10];
+        const target = 8;
+        let currentStep = -1;
+        let occurrences = [];
+        let steps = [];
+        
+        // Initialize the array visualization
+        function initializeArray() {
+            const arrayContainer = document.getElementById('arrayContainer');
+            arrayContainer.innerHTML = '';
+            
+            array.forEach((value, index) => {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.id = `element-${index}`;
+                element.textContent = value;
+                
+                const indexSpan = document.createElement('span');
+                indexSpan.className = 'index';
+                indexSpan.textContent = index;
+                
+                element.appendChild(indexSpan);
+                arrayContainer.appendChild(element);
+            });
+        }
+        
+        // Build steps for the animation
+        function buildSteps() {
+            // Initial state
+            steps.push({
+                index: -1,
+                message: "Starting linear search for target value: " + target
+            });
+            
+            // Check each element
+            for (let i = 0; i < array.length; i++) {
+                if (array[i] === target) {
+                    occurrences.push(i);
+                    if (occurrences.length === 1) {
+                        steps.push({
+                            index: i,
+                            found: true,
+                            message: `Found first occurrence of ${target} at index ${i}!`
+                        });
+                    } else {
+                        steps.push({
+                            index: i,
+                            found: true,
+                            message: `Found another occurrence of ${target} at index ${i}!`
+                        });
+                    }
+                } else {
+                    steps.push({
+                        index: i,
+                        found: false,
+                        message: `Checking index ${i}: Value ${array[i]} doesn't match target ${target}`
+                    });
+                }
+            }
+            
+            // Final step
+            if (occurrences.length > 0) {
+                steps.push({
+                    index: -1,
+                    complete: true,
+                    message: `Linear search complete! Found ${target} at ${occurrences.length} position(s): ${occurrences.join(', ')}`
+                });
+            } else {
+                steps.push({
+                    index: -1,
+                    complete: true,
+                    message: `Linear search complete! Target ${target} was not found in the array.`
+                });
+            }
+        }
+        
+        // Update the visualization based on the current step
+        function updateVisualization() {
+            const step = steps[currentStep];
+            const statusElement = document.getElementById('status');
+            
+            // Reset all elements
+            for (let i = 0; i < array.length; i++) {
+                const element = document.getElementById(`element-${i}`);
+                element.classList.remove('current', 'found');
+                
+                // Keep checked elements checked
+                if (i < step.index || (currentStep > 0 && i === steps[currentStep - 1].index)) {
+                    element.classList.add('checked');
+                }
+            }
+            
+            // Update current element
+            if (step.index >= 0) {
+                const currentElement = document.getElementById(`element-${step.index}`);
+                if (step.found) {
+                    currentElement.classList.add('found');
+                } else {
+                    currentElement.classList.add('current');
+                }
+            }
+            
+            // Update status message
+            statusElement.textContent = step.message;
+            
+            // Update result if search is complete
+            const resultElement = document.getElementById('result');
+            if (step.complete) {
+                if (occurrences.length > 0) {
+                    resultElement.textContent = `First occurrence: index ${occurrences[0]}, Last occurrence: index ${occurrences[occurrences.length - 1]}`;
+                } else {
+                    resultElement.textContent = 'Target not found in the array.';
+                }
+            } else {
+                resultElement.textContent = '';
+            }
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentStep <= 0;
+            document.getElementById('nextBtn').disabled = currentStep >= steps.length - 1;
+        }
+        
+        // Event handlers for next and previous buttons
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        }
+        
+        // Initialize the visualization
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeArray();
+            buildSteps();
+            currentStep = 0;
+            updateVisualization();
+            
+            document.getElementById('nextBtn').addEventListener('click', nextStep);
+            document.getElementById('prevBtn').addEventListener('click', prevStep);
+        });
+    </script>
+</body>
+</html>
