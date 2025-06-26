@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search for Optimal Allocation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            width: 800px;
+            position: relative;
+        }
+        .step {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        .step.active {
+            display: flex;
+        }
+        .search-range {
+            width: 700px;
+            height: 60px;
+            margin: 20px 0;
+            position: relative;
+            background-color: #FD9F78;
+            border-radius: 5px;
+        }
+        .search-pointer {
+            position: absolute;
+            width: 2px;
+            height: 80px;
+            background-color: #FF4800;
+            top: -10px;
+        }
+        .pointer-label {
+            position: absolute;
+            top: -30px;
+            transform: translateX(-50%);
+            font-weight: bold;
+            color: #000000;
+        }
+        .mid-pointer {
+            position: absolute;
+            width: 4px;
+            height: 80px;
+            background-color: #000000;
+            top: -10px;
+        }
+        .books-container {
+            display: flex;
+            justify-content: center;
+            margin: 40px 0;
+        }
+        .book {
+            width: 50px;
+            height: 80px;
+            background-color: #FD9F78;
+            margin: 0 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            position: relative;
+        }
+        .student {
+            width: 100px;
+            height: 120px;
+            margin: 10px;
+            position: relative;
+        }
+        .student-books {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .student-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #FD9F78;
+            border-radius: 5px;
+            color: #000000;
+            text-align: center;
+            font-size: 18px;
+            width: 100%;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 700px;
+            margin-top: 30px;
+        }
+        .nav-btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            text-align: center;
+            margin-top: 20px;
+            color: #FF4800;
+            font-weight: bold;
+        }
+        .student-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: bold;
+            color: #FF4800;
+        }
+        .allocation-result {
+            font-weight: bold;
+            font-size: 24px;
+            margin-top: 10px;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <h1>Binary Search for Optimal Allocation</h1>
+    
+    <div class="container">
+        <div class="step step1 active">
+            <div class="explanation">
+                We need to allocate 4 books [12, 34, 67, 90] to 2 students, minimizing the maximum pages any student gets.
+                Let's use binary search to find the optimal allocation!
+            </div>
+            <div class="books-container">
+                <div class="book">12</div>
+                <div class="book">34</div>
+                <div class="book">67</div>
+                <div class="book">90</div>
+            </div>
+            <div class="explanation">
+                First, we set our search range:
+                <br>Left = 90 (maximum of all books)
+                <br>Right = 203 (sum of all books)
+            </div>
+            <div class="search-range">
+                <div class="search-pointer" style="left: 0px;">
+                    <div class="pointer-label">Left: 90</div>
+                </div>
+                <div class="search-pointer" style="right: 0px;">
+                    <div class="pointer-label">Right: 203</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="step step2">
+            <div class="explanation">
+                We calculate mid = (90 + 203) / 2 = 146
+                <br>Can we allocate books so that no student gets more than 146 pages?
+            </div>
+            <div class="search-range">
+                <div class="search-pointer" style="left: 0px;">
+                    <div class="pointer-label">Left: 90</div>
+                </div>
+                <div class="search-pointer" style="right: 0px;">
+                    <div class="pointer-label">Right: 203</div>
+                </div>
+                <div class="mid-pointer" style="left: 50%;">
+                    <div class="pointer-label">Mid: 146</div>
+                </div>
+            </div>
+            <div class="student-container">
+                <div class="student-books">
+                    <div class="student">
+                        <div class="books-container">
+                            <div class="book">12</div>
+                            <div class="book">34</div>
+                            <div class="book">67</div>
+                        </div>
+                        <div class="student-label">Student 1: 113 pages</div>
+                    </div>
+                    <div class="student">
+                        <div class="books-container">
+                            <div class="book">90</div>
+                        </div>
+                        <div class="student-label">Student 2: 90 pages</div>
+                    </div>
+                </div>
+            </div>
+            <div class="explanation">
+                Yes, we can! Student 1 gets 113 pages (12+34+67) and Student 2 gets 90 pages.
+                <br>Since allocation is possible, we try a smaller value. Right = mid = 146.
+            </div>
+        </div>
+        
+        <div class="step step3">
+            <div class="explanation">
+                We calculate mid = (90 + 146) / 2 = 118
+                <br>Can we allocate books so that no student gets more than 118 pages?
+            </div>
+            <div class="search-range">
+                <div class="search-pointer" style="left: 0px;">
+                    <div class="pointer-label">Left: 90</div>
+                </div>
+                <div class="search-pointer" style="right: 50%;">
+                    <div class="pointer-label">Right: 146</div>
+                </div>
+                <div class="mid-pointer" style="left: 25%;">
+                    <div class="pointer-label">Mid: 118</div>
+                </div>
+            </div>
+            <div class="student-container">
+                <div class="student-books">
+                    <div class="student">
+                        <div class="books-container">
+                            <div class="book">12</div>
+                            <div class="book">34</div>
+                            <div class="book">67</div>
+                        </div>
+                        <div class="student-label">Student 1: 113 pages</div>
+                    </div>
+                    <div class="student">
+                        <div class="books-container">
+                            <div class="book">90</div>
+                        </div>
+                        <div class="student-label">Student 2: 90 pages</div>
+                    </div>
+                </div>
+            </div>
+            <div class="explanation">
+                Yes, we can! Student 1 gets 113 pages (12+34+67) and Student 2 gets 90 pages.
+                <br>Since allocation is possible, we try a smaller value. Right = mid = 118.
+            </div>
+        </div>
+        
+        <div class="step step4">
+            <div class="explanation">
+                We calculate mid = (90 + 118) / 2 = 104
+                <br>Can we allocate books so that no student gets more than 104 pages?
+            </div>
+            <div class="search-range">
+                <div class="search-pointer" style="left: 0px;">
+                    <div class="pointer-label">Left: 90</div>
+                </div>
+                <div class="search-pointer" style="right: 25%;">
+                    <div class="pointer-label">Right: 118</div>
+                </div>
+                <div class="mid-pointer" style="left: 12.5%;">
+                    <div class="pointer-label">Mid: 104</div>
+                </div>
+            </div>
+            <div class="student-container">
+                <div class="student-books">
+                    <div class="student">
+                        <div class="books-container">
+                            <div class="book">12</div>
+                            <div class="book">34</div>
+                        </div>
+                        <div class="student-label">Student 1: 46 pages</div>
+                    </div>
+                    <div class="student">
+                        <div class="books-container">
+                            <div class="book">67</div>
+                            <div class="book">90</div>
+                        </div>
+                        <div class="student-label">Student 2: 157 pages</div>
+                    </div>
+                </div>
+            </div>
+            <div class="explanation">
+                No, we can't! If Student 1 takes (12+34=46 pages), Student 2 must take (67+90=157 pages).
+                <br>Since 157 > 104, this allocation isn't possible.
+                <br>We need to try a larger value. Left = mid + 1 = 105.
+            </div>
+        </div>
+        
+        <div class="step step5">
+            <div class="explanation">
+                We calculate mid = (105 + 118) / 2 = 111
+                <br>Can we allocate books so that no student gets more than 111 pages?
+            </div>
+            <div class="search-range">
+                <div class="search-pointer" style="left: 13.4%;">
+                    <div class="pointer-label">Left: 105</div>
+                </div>
+                <div class="search-pointer" style="right: 25%;">
+                    <div class="pointer-label">Right: 118</div>
+                </div>
+                <div class="mid-pointer" style="left: 18.7%;">
+                    <div class="pointer-label">Mid: 111</div>
+                </div>
+            </div>
+            <div class="student-container">
+                <div class="student-books">
+                    <div class="student">
+                        <div class="books-container">
+                            <div class="book">12</div>
+                            <div class="book">34</div>
+                        </div>
+                        <div class="student-label">Student 1: 46 pages</div>
+                    </div>
+                    <div class="student">
+                        <div class="books-container">
+                            <div class="book">67</div>
+                            <div class="book">90</div>
+                        </div>
+                        <div class="student-label">Student 2: 157 pages</div>
+                    </div>
+                </div>
+            </div>
+            <div class="explanation">
+                No, we can't! If Student 1 takes (12+34=46 pages), Student 2 must take (67+90=157 pages).
+                <br>Since 157 > 111, this allocation isn't possible.
+                <br>We need to try a larger value. Left = mid + 1 = 112.
+            </div>
+        </div>
+        
+        <div class="step step6">
+            <div class="explanation">
+                We calculate mid = (112 + 118) / 2 = 115
+                <br>Can we allocate books so that no student gets more than 115 pages?
+            </div>
+            <div class="search-range">
+                <div class="search-pointer" style="left: 19.6%;">
+                    <div class="pointer-label">Left: 112</div>
+                </div>
+                <div class="search-pointer" style="right: 25%;">
+                    <div class="pointer-label">Right: 118</div>
+                </div>
+                <div class="mid-pointer" style="left: 22.3%;">
+                    <div class="pointer-label">Mid: 115</div>
+                </div>
+            </div>
+            <div class="student-container">
+                <div class="student-books">
+                    <div class="student">
+                        <div class="books-container">
+                            <div class="book">12</div>
+                            <div class="book">34</div>
+                            <div class="book">67</div>
+                        </div>
+                        <div class="student-label">Student 1: 113 pages</div>
+                    </div>
+                    <div class="student">
+                        <div class="books-container">
+                            <div class="book">90</div>
+                        </div>
+                        <div class="student-label">Student 2: 90 pages</div>
+                    </div>
+                </div>
+            </div>
+            <div class="explanation">
+                Yes, we can! Student 1 gets 113 pages (12+34+67) and Student 2 gets 90 pages.
+                <br>Since allocation is possible, we try a smaller value. Right = mid = 115.
+            </div>
+        </div>
+        
+        <div class="step step7">
+            <div class="explanation">
+                We calculate mid = (112 + 115) / 2 = 113
+                <br>Can we allocate books so that no student gets more than 113 pages?
+            </div>
+            <div class="search-range">
+                <div class="search-pointer" style="left: 19.6%;">
+                    <div class="pointer-label">Left: 112</div>
+                </div>
+                <div class="search-pointer" style="right: 22.3%;">
+                    <div class="pointer-label">Right: 115</div>
+                </div>
+                <div class="mid-pointer" style="left: 20.8%;">
+                    <div class="pointer-label">Mid: 113</div>
+                </div>
+            </div>
+            <div class="student-container">
+                <div class="student-books">
+                    <div class="student">
+                        <div class="books-container">
+                            <div class="book">12</div>
+                            <div class="book">34</div>
+                            <div class="book">67</div>
+                        </div>
+                        <div class="student-label">Student 1: 113 pages</div>
+                    </div>
+                    <div class="student">
+                        <div class="books-container">
+                            <div class="book">90</div>
+                        </div>
+                        <div class="student-label">Student 2: 90 pages</div>
+                    </div>
+                </div>
+            </div>
+            <div class="explanation">
+                Yes, we can! Student 1 gets 113 pages (12+34+67) and Student 2 gets 90 pages.
+                <br>Since allocation is possible, we try a smaller value. Right = mid = 113.
+            </div>
+        </div>
+        
+        <div class="step step8">
+            <div class="explanation">
+                We calculate mid = (112 + 113) / 2 = 112
+                <br>Can we allocate books so that no student gets more than 112 pages?
+            </div>
+            <div class="search-range">
+                <div class="search-pointer" style="left: 19.6%;">
+                    <div class="pointer-label">Left: 112</div>
+                </div>
+                <div class="search-pointer" style="right: 20.8%;">
+                    <div class="pointer-label">Right: 113</div>
+                </div>
+                <div class="mid-pointer" style="left: 19.6%;">
+                    <div class="pointer-label">Mid: 112</div>
+                </div>
+            </div>
+            <div class="student-container">
+                <div class="student-books">
+                    <div class="student">
+                        <div class="books-container">
+                            <div class="book">12</div>
+                            <div class="book">34</div>
+                        </div>
+                        <div class="student-label">Student 1: 46 pages</div>
+                    </div>
+                    <div class="student">
+                        <div class="books-container">
+                            <div class="book">67</div>
+                            <div class="book">90</div>
+                        </div>
+                        <div class="student-label">Student 2: 157 pages</div>
+                    </div>
+                </div>
+            </div>
+            <div class="explanation">
+                No, we can't! If Student 1 takes (12+34=46 pages), Student 2 must take (67+90=157 pages).
+                <br>Since 157 > 112, this allocation isn't possible.
+                <br>We need to try a larger value. Left = mid + 1 = 113.
+            </div>
+        </div>
+        
+        <div class="step step9">
+            <div class="explanation">
+                Since Left = 113 and Right = 113, our binary search converges to 113.
+            </div>
+            <div class="search-range">
+                <div class="search-pointer" style="left: 20.8%;">
+                    <div class="pointer-label">Left: 113</div>
+                </div>
+                <div class="search-pointer" style="right: 20.8%;">
+                    <div class="pointer-label">Right: 113</div>
+                </div>
+            </div>
+            <div class="student-container">
+                <div class="student-books">
+                    <div class="student">
+                        <div class="books-container">
+                            <div class="book">12</div>
+                            <div class="book">34</div>
+                            <div class="book">67</div>
+                        </div>
+                        <div class="student-label">Student 1: 113 pages</div>
+                    </div>
+                    <div class="student">
+                        <div class="books-container">
+                            <div class="book">90</div>
+                        </div>
+                        <div class="student-label">Student 2: 90 pages</div>
+                    </div>
+                </div>
+            </div>
+            <div class="explanation">
+                The optimal allocation is found! The minimum possible maximum load is 113 pages.
+            </div>
+            <div class="allocation-result">Final Result: 113</div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn prev-btn" disabled>Previous</button>
+            <button class="nav-btn next-btn">Next</button>
+        </div>
+        
+        <div class="step-indicator">Step 1 of 9</div>
+    </div>
+
+    <script>
+        const totalSteps = 9;
+        let currentStep = 1;
+        
+        const prevBtn = document.querySelector('.prev-btn');
+        const nextBtn = document.querySelector('.next-btn');
+        const stepIndicator = document.querySelector('.step-indicator');
+        
+        function updateStep() {
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+            });
+            
+            document.querySelector(`.step${currentStep}`).classList.add('active');
+            stepIndicator.textContent = `Step ${currentStep} of ${totalSteps}`;
+            
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === totalSteps;
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStep();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateStep();
+            }
+        });
+    </script>
+</body>
+</html>
