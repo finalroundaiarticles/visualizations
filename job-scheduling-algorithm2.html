@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greedy Algorithm Step-by-Step Execution</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .step-container {
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .step-title {
+            font-size: 20px;
+            color: #FF4800;
+            margin-bottom: 15px;
+        }
+        
+        .job-info {
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .timeline {
+            display: flex;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .time-slot {
+            width: 80px;
+            height: 80px;
+            border: 2px solid #FD9F78;
+            margin-right: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-radius: 8px;
+        }
+        
+        .time-slot-label {
+            position: absolute;
+            top: -25px;
+            font-weight: bold;
+        }
+        
+        .job-placed {
+            background-color: #FD9F78;
+            color: #000000;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+        }
+        
+        .job-current {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .job-id {
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .job-profit {
+            font-size: 14px;
+        }
+        
+        .job-list {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        
+        .job-item {
+            padding: 8px;
+            margin-bottom: 5px;
+            border-left: 3px solid #FD9F78;
+        }
+        
+        .job-item.sorted {
+            border-left: 3px solid #FF4800;
+            font-weight: bold;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin-top: 20px;
+            color: #FF4800;
+            font-weight: bold;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Greedy Algorithm for Job Scheduling</h1>
+        
+        <!-- Step 0: Introduction -->
+        <div class="step-container" id="step0">
+            <div class="step-title">Introduction to Job Scheduling Problem</div>
+            <p>We have jobs with:</p>
+            <ul>
+                <li>Job ID</li>
+                <li>Deadline (time slot by which job must be completed)</li>
+                <li>Profit earned when job is completed</li>
+            </ul>
+            <div class="job-list">
+                <div class="job-item">Job 1: (ID=1, Deadline=4, Profit=20)</div>
+                <div class="job-item">Job 2: (ID=2, Deadline=1, Profit=10)</div>
+                <div class="job-item">Job 3: (ID=3, Deadline=1, Profit=40)</div>
+                <div class="job-item">Job 4: (ID=4, Deadline=1, Profit=30)</div>
+            </div>
+            <p>The goal is to maximize profit by scheduling jobs in their time slots.</p>
+            <div class="explanation">
+                <strong>Greedy Approach:</strong> Sort jobs by profit in descending order, then place each job in the latest possible time slot before its deadline.
+            </div>
+        </div>
+        
+        <!-- Step 1: Sort jobs by profit -->
+        <div class="step-container" id="step1">
+            <div class="step-title">Step 1: Sort Jobs by Profit (Descending Order)</div>
+            <div class="job-list">
+                <div class="job-item sorted">Job 3: (ID=3, Deadline=1, Profit=40) ← Highest profit</div>
+                <div class="job-item sorted">Job 4: (ID=4, Deadline=1, Profit=30)</div>
+                <div class="job-item sorted">Job 1: (ID=1, Deadline=4, Profit=20)</div>
+                <div class="job-item sorted">Job 2: (ID=2, Deadline=1, Profit=10) ← Lowest profit</div>
+            </div>
+            <div class="explanation">
+                <strong>Sorting:</strong> We arrange jobs in descending order of profit to prioritize jobs with higher profit.
+            </div>
+        </div>
+        
+        <!-- Step 2: Initialize timeline -->
+        <div class="step-container" id="step2">
+            <div class="step-title">Step 2: Initialize Timeline</div>
+            <p>We create a timeline with slots equal to the maximum deadline (4):</p>
+            <div class="timeline">
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 1</div>
+                    <div>Empty</div>
+                </div>
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 2</div>
+                    <div>Empty</div>
+                </div>
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 3</div>
+                    <div>Empty</div>
+                </div>
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 4</div>
+                    <div>Empty</div>
+                </div>
+            </div>
+            <div class="explanation">
+                <strong>Timeline:</strong> Each job takes one unit of time, and we have 4 available time slots (derived from the maximum deadline).
+            </div>
+        </div>
+        
+        <!-- Step 3: Process Job 3 -->
+        <div class="step-container" id="step3">
+            <div class="step-title">Step 3: Process Job 3 (Highest Profit)</div>
+            <div class="job-info">Job 3: (ID=3, Deadline=1, Profit=40)</div>
+            <p>Try to place Job 3 at the latest slot before its deadline (Slot 1):</p>
+            <div class="timeline">
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 1</div>
+                    <div class="job-placed job-current">
+                        <div class="job-id">Job 3</div>
+                        <div class="job-profit">Profit: 40</div>
+                    </div>
+                </div>
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 2</div>
+                    <div>Empty</div>
+                </div>
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 3</div>
+                    <div>Empty</div>
+                </div>
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 4</div>
+                    <div>Empty</div>
+                </div>
+            </div>
+            <div class="explanation">
+                <strong>Action:</strong> Job 3 has deadline=1, so we can only place it in slot 1. The slot is available, so we assign Job 3 to slot 1.
+            </div>
+        </div>
+        
+        <!-- Step 4: Process Job 4 -->
+        <div class="step-container" id="step4">
+            <div class="step-title">Step 4: Process Job 4</div>
+            <div class="job-info">Job 4: (ID=4, Deadline=1, Profit=30)</div>
+            <p>Try to place Job 4 at the latest slot before its deadline (Slot 1):</p>
+            <div class="timeline">
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 1</div>
+                    <div class="job-placed">
+                        <div class="job-id">Job 3</div>
+                        <div class="job-profit">Profit: 40</div>
+                    </div>
+                </div>
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 2</div>
+                    <div>Empty</div>
+                </div>
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 3</div>
+                    <div>Empty</div>
+                </div>
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 4</div>
+                    <div>Empty</div>
+                </div>
+            </div>
+            <div class="explanation">
+                <strong>Action:</strong> Job 4 has deadline=1, but slot 1 is already occupied by Job 3. Job 4 cannot be scheduled and must be skipped.
+            </div>
+        </div>
+        
+        <!-- Step 5: Process Job 1 -->
+        <div class="step-container" id="step5">
+            <div class="step-title">Step 5: Process Job 1</div>
+            <div class="job-info">Job 1: (ID=1, Deadline=4, Profit=20)</div>
+            <p>Try to place Job 1 at the latest slot before its deadline (Slot 4):</p>
+            <div class="timeline">
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 1</div>
+                    <div class="job-placed">
+                        <div class="job-id">Job 3</div>
+                        <div class="job-profit">Profit: 40</div>
+                    </div>
+                </div>
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 2</div>
+                    <div>Empty</div>
+                </div>
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 3</div>
+                    <div>Empty</div>
+                </div>
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 4</div>
+                    <div class="job-placed job-current">
+                        <div class="job-id">Job 1</div>
+                        <div class="job-profit">Profit: 20</div>
+                    </div>
+                </div>
+            </div>
+            <div class="explanation">
+                <strong>Action:</strong> Job 1 has deadline=4, so we can place it in any slot from 1 to 4. Following our greedy approach, we place it in the latest possible slot (slot 4).
+            </div>
+        </div>
+        
+        <!-- Step 6: Process Job 2 -->
+        <div class="step-container" id="step6">
+            <div class="step-title">Step 6: Process Job 2</div>
+            <div class="job-info">Job 2: (ID=2, Deadline=1, Profit=10)</div>
+            <p>Try to place Job 2 at the latest slot before its deadline (Slot 1):</p>
+            <div class="timeline">
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 1</div>
+                    <div class="job-placed">
+                        <div class="job-id">Job 3</div>
+                        <div class="job-profit">Profit: 40</div>
+                    </div>
+                </div>
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 2</div>
+                    <div>Empty</div>
+                </div>
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 3</div>
+                    <div>Empty</div>
+                </div>
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 4</div>
+                    <div class="job-placed">
+                        <div class="job-id">Job 1</div>
+                        <div class="job-profit">Profit: 20</div>
+                    </div>
+                </div>
+            </div>
+            <div class="explanation">
+                <strong>Action:</strong> Job 2 has deadline=1, but slot 1 is already occupied by Job 3. Job 2 cannot be scheduled and must be skipped.
+            </div>
+        </div>
+        
+        <!-- Step 7: Final Schedule -->
+        <div class="step-container" id="step7">
+            <div class="step-title">Final Job Schedule</div>
+            <div class="timeline">
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 1</div>
+                    <div class="job-placed">
+                        <div class="job-id">Job 3</div>
+                        <div class="job-profit">Profit: 40</div>
+                    </div>
+                </div>
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 2</div>
+                    <div>Empty</div>
+                </div>
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 3</div>
+                    <div>Empty</div>
+                </div>
+                <div class="time-slot">
+                    <div class="time-slot-label">Slot 4</div>
+                    <div class="job-placed">
+                        <div class="job-id">Job 1</div>
+                        <div class="job-profit">Profit: 20</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <strong>Final Result:</strong>
+                <ul>
+                    <li>We were able to schedule Job 3 and Job 1</li>
+                    <li>Total profit = 40 + 20 = 60</li>
+                    <li>Job 4 and Job 2 could not be scheduled due to deadline constraints</li>
+                </ul>
+                <p>This demonstrates how the greedy algorithm prioritizes jobs with higher profits and places them in the latest possible time slots within their deadlines.</p>
+            </div>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">Step 1 of 8</div>
+        
+        <div class="nav-buttons">
+            <button class="nav-btn" id="prevBtn" disabled>Previous</button>
+            <button class="nav-btn" id="nextBtn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        let currentStep = 0;
+        const totalSteps = 8; // 0-indexed, so 0 to 7
+        
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        
+        // Initialize first step
+        showStep(currentStep);
+        updateButtonStates();
+        
+        // Event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                showStep(currentStep);
+                updateButtonStates();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                showStep(currentStep);
+                updateButtonStates();
+            }
+        });
+        
+        function showStep(stepNum) {
+            // Hide all steps
+            for (let i = 0; i < totalSteps; i++) {
+                const step = document.getElementById(`step${i}`);
+                if (step) {
+                    step.style.display = 'none';
+                }
+            }
+            
+            // Show current step
+            const currentStepElem = document.getElementById(`step${stepNum}`);
+            if (currentStepElem) {
+                currentStepElem.style.display = 'block';
+            }
+            
+            // Update step indicator
+            stepIndicator.textContent = `Step ${stepNum + 1} of ${totalSteps}`;
+        }
+        
+        function updateButtonStates() {
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+        }
+    </script>
+</body>
+</html>
