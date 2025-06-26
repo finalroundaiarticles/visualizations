@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Scheduling Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .job-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        .job-table th {
+            background-color: #FF4800;
+            color: white;
+            padding: 10px;
+        }
+        .job-table td {
+            border: 1px solid #FD9F78;
+            padding: 10px;
+            text-align: center;
+        }
+        .timeline {
+            position: relative;
+            height: 150px;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        .time-markers {
+            display: flex;
+            height: 30px;
+            border-bottom: 1px solid #FD9F78;
+        }
+        .time-marker {
+            flex: 1;
+            text-align: center;
+            border-right: 1px solid #FD9F78;
+            padding: 5px 0;
+            font-weight: bold;
+        }
+        .job-slot {
+            height: 120px;
+            display: flex;
+        }
+        .slot {
+            flex: 1;
+            border-right: 1px solid #FD9F78;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+            transition: background-color 0.5s;
+        }
+        .job-label {
+            display: block;
+            text-align: center;
+        }
+        .job-id {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        .job-profit {
+            font-size: 16px;
+        }
+        .explanation {
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        .btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #FD9F78;
+        }
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #FF4800;
+            font-weight: bold;
+        }
+        .highlight {
+            background-color: #FD9F78;
+        }
+        .highlight-profit {
+            color: #FF4800;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Job Scheduling Visualization</h1>
+        
+        <div class="explanation" id="explanation">
+            Job scheduling is about selecting jobs to maximize profit while respecting deadlines. Each job has an ID, deadline, and profit value.
+        </div>
+        
+        <table class="job-table">
+            <thead>
+                <tr>
+                    <th>Job ID</th>
+                    <th>Deadline</th>
+                    <th>Profit</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>4</td>
+                    <td>20</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>1</td>
+                    <td>10</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>1</td>
+                    <td>40</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>1</td>
+                    <td>30</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="timeline">
+            <div class="time-markers">
+                <div class="time-marker">t=1</div>
+                <div class="time-marker">t=2</div>
+                <div class="time-marker">t=3</div>
+                <div class="time-marker">t=4</div>
+            </div>
+            <div class="job-slot">
+                <div class="slot" id="slot1"></div>
+                <div class="slot" id="slot2"></div>
+                <div class="slot" id="slot3"></div>
+                <div class="slot" id="slot4"></div>
+            </div>
+        </div>
+        
+        <div id="profit-display">Total Profit: 0</div>
+        
+        <div class="controls">
+            <button class="btn" id="prevBtn" disabled>Previous</button>
+            <button class="btn" id="nextBtn">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">Step 1 of 4</div>
+    </div>
+
+    <script>
+        // Job data
+        const jobs = [
+            { id: 1, deadline: 4, profit: 20 },
+            { id: 2, deadline: 1, profit: 10 },
+            { id: 3, deadline: 1, profit: 40 },
+            { id: 4, deadline: 1, profit: 30 }
+        ];
+        
+        // Sort jobs by profit in decreasing order
+        const sortedJobs = [...jobs].sort((a, b) => b.profit - a.profit);
+        
+        // Steps for the animation
+        const steps = [
+            {
+                explanation: "First, we sort all jobs by profit in decreasing order: Job 3 ($40), Job 4 ($30), Job 1 ($20), and Job 2 ($10).",
+                highlightedSlots: [],
+                scheduledJobs: [],
+                profit: 0
+            },
+            {
+                explanation: "We first consider Job 3 with the highest profit ($40). Its deadline is 1, so we schedule it at time t=1.",
+                highlightedSlots: [0],
+                scheduledJobs: [{ slot: 0, job: sortedJobs[0] }],
+                profit: 40
+            },
+            {
+                explanation: "Next is Job 4 with profit $30. Its deadline is also 1, but t=1 is already occupied by Job 3. We cannot schedule Job 4.",
+                highlightedSlots: [0],
+                scheduledJobs: [{ slot: 0, job: sortedJobs[0] }],
+                profit: 40
+            },
+            {
+                explanation: "Now consider Job 1 with profit $20. Its deadline is 4, so we can schedule it at any time from t=1 to t=4. Since t=1 is occupied, we schedule it at t=2.",
+                highlightedSlots: [0, 1],
+                scheduledJobs: [
+                    { slot: 0, job: sortedJobs[0] },
+                    { slot: 1, job: sortedJobs[2] }
+                ],
+                profit: 60
+            }
+        ];
+        
+        let currentStep = 0;
+        const slots = document.querySelectorAll('.slot');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        const explanationDiv = document.getElementById('explanation');
+        const profitDisplay = document.getElementById('profit-display');
+        
+        // Initialize the visualization
+        updateVisualization();
+        
+        // Event listeners for the buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+        
+        function updateVisualization() {
+            // Update buttons state
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === steps.length - 1;
+            
+            // Update step indicator
+            stepIndicator.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+            
+            // Update explanation
+            explanationDiv.textContent = steps[currentStep].explanation;
+            
+            // Clear all slots
+            slots.forEach(slot => {
+                slot.innerHTML = '';
+                slot.classList.remove('highlight');
+            });
+            
+            // Highlight slots
+            steps[currentStep].highlightedSlots.forEach(slotIndex => {
+                slots[slotIndex].classList.add('highlight');
+            });
+            
+            // Add scheduled jobs
+            steps[currentStep].scheduledJobs.forEach(({ slot, job }) => {
+                slots[slot].innerHTML = `
+                    <div class="job-label">
+                        <div class="job-id">Job ${job.id}</div>
+                        <div class="job-profit">$${job.profit}</div>
+                    </div>
+                `;
+            });
+            
+            // Update profit display
+            profitDisplay.innerHTML = `Total Profit: <span class="highlight-profit">$${steps[currentStep].profit}</span>`;
+        }
+    </script>
+</body>
+</html>
