@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Allocation Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        .books-container {
+            display: flex;
+            justify-content: center;
+            margin: 40px 0;
+            width: 100%;
+        }
+        
+        .book {
+            width: 80px;
+            height: 120px;
+            margin: 0 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            border: 2px solid #000000;
+            font-weight: bold;
+            font-size: 18px;
+            transition: all 0.5s ease;
+            position: relative;
+            background-color: #FFFFFF;
+        }
+        
+        .student-container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        
+        .student {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            border-radius: 10px;
+            width: 45%;
+        }
+        
+        .student-1 {
+            background-color: rgba(255, 72, 0, 0.1);
+            border: 2px dashed #FF4800;
+        }
+        
+        .student-2 {
+            background-color: rgba(253, 159, 120, 0.1);
+            border: 2px dashed #FD9F78;
+        }
+        
+        .student-books {
+            display: flex;
+            min-height: 130px;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        
+        .student-total {
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .max-pages {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 20px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            width: 100%;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            background-color: rgba(0, 0, 0, 0.05);
+            max-width: 800px;
+            text-align: center;
+        }
+        
+        .page-number {
+            position: absolute;
+            bottom: -25px;
+            font-size: 14px;
+        }
+        
+        .highlight {
+            animation: pulse 1s ease-in-out;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Book Allocation Visualization</h1>
+        
+        <div class="explanation" id="explanation">
+            In book allocation, we need to distribute books among students so that the maximum number of pages assigned to any student is minimized.
+        </div>
+        
+        <div class="books-container" id="books-container">
+            <div class="book" id="book-0">
+                12
+                <div class="page-number">12 pages</div>
+            </div>
+            <div class="book" id="book-1">
+                34
+                <div class="page-number">34 pages</div>
+            </div>
+            <div class="book" id="book-2">
+                67
+                <div class="page-number">67 pages</div>
+            </div>
+            <div class="book" id="book-3">
+                90
+                <div class="page-number">90 pages</div>
+            </div>
+        </div>
+        
+        <div class="student-container">
+            <div class="student student-1">
+                <h3>Student 1</h3>
+                <div class="student-books" id="student1-books"></div>
+                <div class="student-total" id="student1-total">Total: 0 pages</div>
+            </div>
+            <div class="student student-2">
+                <h3>Student 2</h3>
+                <div class="student-books" id="student2-books"></div>
+                <div class="student-total" id="student2-total">Total: 0 pages</div>
+            </div>
+        </div>
+        
+        <div class="max-pages" id="max-pages">
+            Maximum Pages Assigned: 0
+        </div>
+        
+        <div class="controls">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        const books = [
+            { id: 0, pages: 12 },
+            { id: 1, pages: 34 },
+            { id: 2, pages: 67 },
+            { id: 3, pages: 90 }
+        ];
+        
+        const explanations = [
+            "In book allocation, we need to distribute books among students so that the maximum number of pages assigned to any student is minimized.",
+            "Let's start by allocating books to students. First, we'll assign book 1 with 12 pages to Student 1.",
+            "Next, we'll assign book 2 with 34 pages to Student 1.",
+            "Now, we'll assign book 3 with 67 pages to Student 1.",
+            "Finally, we'll assign book 4 with 90 pages to Student 2.",
+            "Let's calculate the total pages for each student: Student 1 has 113 pages (12+34+67) and Student 2 has 90 pages.",
+            "The maximum number of pages assigned is 113 (to Student 1). In this allocation, we've minimized the maximum load."
+        ];
+        
+        let currentStep = 0;
+        const totalSteps = explanations.length;
+        
+        const nextBtn = document.getElementById("next-btn");
+        const prevBtn = document.getElementById("prev-btn");
+        const explanationEl = document.getElementById("explanation");
+        const maxPagesEl = document.getElementById("max-pages");
+        const student1Books = document.getElementById("student1-books");
+        const student2Books = document.getElementById("student2-books");
+        const student1Total = document.getElementById("student1-total");
+        const student2Total = document.getElementById("student2-total");
+        
+        function updateUI() {
+            explanationEl.textContent = explanations[currentStep];
+            
+            // Reset all books
+            for (let i = 0; i < books.length; i++) {
+                const bookEl = document.getElementById(`book-${i}`);
+                bookEl.style.backgroundColor = "#FFFFFF";
+                bookEl.style.transform = "none";
+            }
+            
+            // Clear student books
+            student1Books.innerHTML = "";
+            student2Books.innerHTML = "";
+            student1Total.textContent = "Total: 0 pages";
+            student2Total.textContent = "Total: 0 pages";
+            maxPagesEl.style.opacity = "0";
+            
+            if (currentStep >= 1) {
+                // Move book 0 to student 1
+                const book0Clone = createBookElement(0, "#FF4800");
+                student1Books.appendChild(book0Clone);
+                document.getElementById(`book-0`).style.opacity = "0.3";
+                
+                student1Total.textContent = `Total: ${books[0].pages} pages`;
+            }
+            
+            if (currentStep >= 2) {
+                // Move book 1 to student 1
+                const book1Clone = createBookElement(1, "#FF4800");
+                student1Books.appendChild(book1Clone);
+                document.getElementById(`book-1`).style.opacity = "0.3";
+                
+                student1Total.textContent = `Total: ${books[0].pages + books[1].pages} pages`;
+            }
+            
+            if (currentStep >= 3) {
+                // Move book 2 to student 1
+                const book2Clone = createBookElement(2, "#FF4800");
+                student1Books.appendChild(book2Clone);
+                document.getElementById(`book-2`).style.opacity = "0.3";
+                
+                student1Total.textContent = `Total: ${books[0].pages + books[1].pages + books[2].pages} pages`;
+            }
+            
+            if (currentStep >= 4) {
+                // Move book 3 to student 2
+                const book3Clone = createBookElement(3, "#FD9F78");
+                student2Books.appendChild(book3Clone);
+                document.getElementById(`book-3`).style.opacity = "0.3";
+                
+                student2Total.textContent = `Total: ${books[3].pages} pages`;
+            }
+            
+            if (currentStep >= 5) {
+                const student1Pages = books[0].pages + books[1].pages + books[2].pages;
+                const student2Pages = books[3].pages;
+                
+                student1Total.classList.add("highlight");
+                student2Total.classList.add("highlight");
+                
+                setTimeout(() => {
+                    student1Total.classList.remove("highlight");
+                    student2Total.classList.remove("highlight");
+                }, 1000);
+            }
+            
+            if (currentStep >= 6) {
+                const student1Pages = books[0].pages + books[1].pages + books[2].pages;
+                const student2Pages = books[3].pages;
+                const maxPages = Math.max(student1Pages, student2Pages);
+                
+                maxPagesEl.textContent = `Maximum Pages Assigned: ${maxPages}`;
+                maxPagesEl.style.opacity = "1";
+                
+                // Highlight the student with max pages
+                if (student1Pages > student2Pages) {
+                    student1Total.style.color = "#FF4800";
+                    student1Total.style.fontWeight = "bold";
+                } else {
+                    student2Total.style.color = "#FF4800";
+                    student2Total.style.fontWeight = "bold";
+                }
+            }
+            
+            // Update buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps - 1;
+        }
+        
+        function createBookElement(bookId, color) {
+            const bookEl = document.createElement("div");
+            bookEl.className = "book";
+            bookEl.textContent = books[bookId].pages;
+            bookEl.style.backgroundColor = color;
+            bookEl.style.color = "#FFFFFF";
+            bookEl.style.transform = "scale(0.8)";
+            
+            const pageNumber = document.createElement("div");
+            pageNumber.className = "page-number";
+            pageNumber.textContent = `${books[bookId].pages} pages`;
+            bookEl.appendChild(pageNumber);
+            
+            return bookEl;
+        }
+        
+        nextBtn.addEventListener("click", () => {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateUI();
+            }
+        });
+        
+        prevBtn.addEventListener("click", () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateUI();
+            }
+        });
+        
+        // Initialize UI
+        updateUI();
+    </script>
+</body>
+</html>
