@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brute Force Approach Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #000000;
+        }
+        .container {
+            width: 800px;
+            margin: 20px auto;
+            text-align: center;
+        }
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        .animation-container {
+            width: 100%;
+            height: 300px;
+            margin: 20px 0;
+            position: relative;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+        .array-element {
+            width: 50px;
+            height: 50px;
+            margin: 0 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 18px;
+            transition: all 0.5s ease;
+            background-color: white;
+        }
+        .array-index {
+            position: absolute;
+            font-size: 14px;
+            color: #FF4800;
+            top: -25px;
+        }
+        .explanation {
+            margin-top: 20px;
+            font-size: 18px;
+            height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .nav-button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .highlight {
+            background-color: #FD9F78;
+            transform: scale(1.1);
+        }
+        .missing {
+            width: 50px;
+            height: 50px;
+            margin: 0 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px dashed #FF4800;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 18px;
+            color: #FF4800;
+            background-color: rgba(253, 159, 120, 0.2);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .formula-container {
+            margin-top: 30px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #000000;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .step-indicator {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Brute Force Approach for Finding Missing Elements</h1>
+        
+        <div class="animation-container">
+            <div class="array-container" id="arrayContainer"></div>
+            <div class="formula-container" id="formulaContainer">Common Difference = (12 - 2) / (5 - 1) = 10 / 4 = 2.5</div>
+            <div class="explanation" id="explanation">
+                Let's visualize how to find a missing number in an arithmetic progression using brute force approach.
+            </div>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">Step 1 of 5</div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prevBtn" disabled>Previous</button>
+            <button class="nav-button" id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const array = [2, 4, 8, 10, 12];
+        let currentStep = 1;
+        const totalSteps = 5;
+        
+        // Create array elements
+        const arrayContainer = document.getElementById('arrayContainer');
+        const explanation = document.getElementById('explanation');
+        const formulaContainer = document.getElementById('formulaContainer');
+        const stepIndicator = document.getElementById('stepIndicator');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        function initializeArray() {
+            arrayContainer.innerHTML = '';
+            array.forEach((value, index) => {
+                const elementContainer = document.createElement('div');
+                elementContainer.style.position = 'relative';
+                
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.id = `element-${index}`;
+                element.textContent = value;
+                
+                const indexElement = document.createElement('div');
+                indexElement.className = 'array-index';
+                indexElement.textContent = index;
+                
+                elementContainer.appendChild(indexElement);
+                elementContainer.appendChild(element);
+                arrayContainer.appendChild(elementContainer);
+                
+                // Add gap for missing element
+                if (index === 2) {
+                    const missingElement = document.createElement('div');
+                    missingElement.className = 'missing';
+                    missingElement.id = 'missing-element';
+                    missingElement.textContent = '6';
+                    
+                    const missingContainer = document.createElement('div');
+                    missingContainer.style.position = 'relative';
+                    
+                    missingContainer.appendChild(missingElement);
+                    arrayContainer.insertBefore(missingContainer, elementContainer);
+                }
+            });
+        }
+        
+        function updateStep() {
+            // Reset all elements
+            document.querySelectorAll('.array-element').forEach(el => {
+                el.classList.remove('highlight');
+            });
+            
+            stepIndicator.textContent = `Step ${currentStep} of ${totalSteps}`;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === totalSteps;
+            
+            // Handle different steps
+            switch (currentStep) {
+                case 1:
+                    explanation.innerHTML = '<p>We start with an array [2, 4, 8, 10, 12] and want to find missing elements.</p>';
+                    formulaContainer.style.opacity = '0';
+                    break;
+                case 2:
+                    document.getElementById('element-0').classList.add('highlight');
+                    document.getElementById('element-4').classList.add('highlight');
+                    explanation.innerHTML = '<p>First, we need to calculate the common difference in this arithmetic progression.</p><p>We use the first (2) and last (12) elements to calculate it.</p>';
+                    formulaContainer.textContent = 'Common Difference = (12 - 2) / (5 - 1) = 10 / 4 = 2.5';
+                    formulaContainer.style.opacity = '1';
+                    break;
+                case 3:
+                    formulaContainer.textContent = 'Since the result is 2.5, we know the actual common difference should be 2';
+                    explanation.innerHTML = '<p>Since we have integers, the common difference should be 2.</p><p>With this difference, we can check if all consecutive elements differ by 2.</p>';
+                    break;
+                case 4:
+                    document.getElementById('element-1').classList.add('highlight');
+                    document.getElementById('element-2').classList.add('highlight');
+                    explanation.innerHTML = '<p>Looking at consecutive elements:</p><p>4 → 8: The difference is 4, not 2!</p><p>This means there's a missing number between 4 and 8.</p>';
+                    formulaContainer.textContent = 'Gap found: 8 - 4 = 4 (should be 2)';
+                    break;
+                case 5:
+                    document.getElementById('missing-element').style.opacity = '1';
+                    explanation.innerHTML = '<p>The missing number is 6!</p><p>Adding 6 makes the progression complete: [2, 4, 6, 8, 10, 12]</p><p>Now each consecutive pair differs by exactly 2.</p>';
+                    formulaContainer.textContent = 'Complete sequence: [2, 4, 6, 8, 10, 12]';
+                    break;
+            }
+        }
+        
+        // Initialize the visualization
+        initializeArray();
+        updateStep();
+        
+        // Event listeners for navigation
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStep();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateStep();
+            }
+        });
+    </script>
+</body>
+</html>
