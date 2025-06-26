@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search Partitioning</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .animation-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .array {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .array-element {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #000000;
+            margin: 0 5px;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .array-label {
+            font-weight: bold;
+            margin: 10px 0;
+            color: #FF4800;
+        }
+        
+        .highlight {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .mid-highlight {
+            background-color: #FD9F78;
+            color: #FFFFFF;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 3px solid #FF4800;
+            background-color: rgba(253, 159, 120, 0.1);
+        }
+        
+        .step-indicator {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #FF4800;
+        }
+        
+        .partition-line {
+            position: absolute;
+            width: 2px;
+            background-color: #FF4800;
+            transform-origin: top;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+        
+        .arrow {
+            position: absolute;
+            font-size: 24px;
+            color: #FF4800;
+            animation: bounce 0.8s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Search Partitioning</h1>
+        
+        <div class="animation-container" id="animation-container">
+            <!-- Animation will be rendered here -->
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <!-- Explanation will be rendered here -->
+        </div>
+        
+        <div class="step-indicator" id="step-indicator">
+            Step 1 of 5
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prev-btn" disabled>Previous</button>
+            <button class="nav-button" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const animationContainer = document.getElementById("animation-container");
+            const explanationElement = document.getElementById("explanation");
+            const stepIndicator = document.getElementById("step-indicator");
+            const prevBtn = document.getElementById("prev-btn");
+            const nextBtn = document.getElementById("next-btn");
+            
+            // Define arrays
+            const array1 = [2, 3, 6, 7, 9];
+            const array2 = [1, 4, 8, 10];
+            
+            // Define steps of the animation
+            const steps = [
+                {
+                    title: "Initial Arrays",
+                    explanation: "We have two sorted arrays: [2, 3, 6, 7, 9] and [1, 4, 8, 10]. We want to find the 5th element in the merged array (which would be 6). Instead of merging the arrays, we use binary search partitioning.",
+                    render: () => {
+                        return `
+                            <div class="array-label">Array 1:</div>
+                            <div class="array">
+                                ${array1.map(num => `<div class="array-element">${num}</div>`).join('')}
+                            </div>
+                            <div class="array-label">Array 2:</div>
+                            <div class="array">
+                                ${array2.map(num => `<div class="array-element">${num}</div>`).join('')}
+                            </div>
+                            <div class="explanation">
+                                We need to find the 5th element (k=5) in the merged array without actually merging them.
+                            </div>
+                        `;
+                    }
+                },
+                {
+                    title: "Start Binary Search",
+                    explanation: "We begin by setting pointers to search in Array 1. The left boundary is at the start (l=0) and the right boundary is at the end (r=5). We'll cut Array 1 at different positions and find the complementary cut in Array 2.",
+                    render: () => {
+                        return `
+                            <div class="array-label">Array 1:</div>
+                            <div class="array">
+                                <div class="array-element highlight">2</div>
+                                <div class="array-element">3</div>
+                                <div class="array-element">6</div>
+                                <div class="array-element">7</div>
+                                <div class="array-element highlight">9</div>
+                            </div>
+                            <div class="array-label">Array 2:</div>
+                            <div class="array">
+                                <div class="array-element">1</div>
+                                <div class="array-element">4</div>
+                                <div class="array-element">8</div>
+                                <div class="array-element">10</div>
+                            </div>
+                            <div style="margin-top: 30px; text-align: center;">
+                                <div>Left boundary: 0 (start of Array 1)</div>
+                                <div>Right boundary: 5 (end of Array 1)</div>
+                                <div>We're looking for the 5th element (k=5)</div>
+                            </div>
+                        `;
+                    }
+                },
+                {
+                    title: "First Iteration",
+                    explanation: "We cut Array 1 at the middle position (mid = 2). That means we take 2 elements from Array 1 (2, 3). So we need 3 more elements from Array 2 (k - mid = 5 - 2 = 3). Those elements are (1, 4, 8).",
+                    render: () => {
+                        return `
+                            <div class="array-label">Array 1:</div>
+                            <div class="array" style="position: relative;">
+                                <div class="array-element highlight">2</div>
+                                <div class="array-element highlight">3</div>
+                                <div class="array-element mid-highlight">6</div>
+                                <div class="array-element">7</div>
+                                <div class="array-element">9</div>
+                                <div style="position: absolute; top: -20px; left: 102px; color: #FF4800;">Cut here (mid=2)</div>
+                                <div style="position: absolute; height: 60px; width: 2px; background-color: #FF4800; top: -10px; left: 102px;"></div>
+                            </div>
+                            <div class="array-label">Array 2:</div>
+                            <div class="array" style="position: relative;">
+                                <div class="array-element highlight">1</div>
+                                <div class="array-element highlight">4</div>
+                                <div class="array-element highlight">8</div>
+                                <div class="array-element">10</div>
+                                <div style="position: absolute; top: -20px; left: 147px; color: #FF4800;">Cut here (j=3)</div>
+                                <div style="position: absolute; height: 60px; width: 2px; background-color: #FF4800; top: -10px; left: 147px;"></div>
+                            </div>
+                            <div style="margin-top: 30px; text-align: center;">
+                                <div>Elements before cuts: [2, 3, 1, 4, 8]</div>
+                                <div>Last element from Array 1 cut: 3</div>
+                                <div>First element from Array 2 after cut: 8</div>
+                                <div style="margin-top: 10px;">Since 3 < 8, we need to move right in Array 1</div>
+                            </div>
+                        `;
+                    }
+                },
+                {
+                    title: "Second Iteration",
+                    explanation: "Since 3 < 8, we move the left boundary to mid + 1 = 3. Now we cut Array 1 at position 3, taking elements (2, 3, 6). So we need 2 more elements from Array 2 (k - mid = 5 - 3 = 2). Those elements are (1, 4).",
+                    render: () => {
+                        return `
+                            <div class="array-label">Array 1:</div>
+                            <div class="array" style="position: relative;">
+                                <div class="array-element highlight">2</div>
+                                <div class="array-element highlight">3</div>
+                                <div class="array-element highlight">6</div>
+                                <div class="array-element mid-highlight">7</div>
+                                <div class="array-element">9</div>
+                                <div style="position: absolute; top: -20px; left: 147px; color: #FF4800;">Cut here (mid=3)</div>
+                                <div style="position: absolute; height: 60px; width: 2px; background-color: #FF4800; top: -10px; left: 147px;"></div>
+                            </div>
+                            <div class="array-label">Array 2:</div>
+                            <div class="array" style="position: relative;">
+                                <div class="array-element highlight">1</div>
+                                <div class="array-element highlight">4</div>
+                                <div class="array-element">8</div>
+                                <div class="array-element">10</div>
+                                <div style="position: absolute; top: -20px; left: 102px; color: #FF4800;">Cut here (j=2)</div>
+                                <div style="position: absolute; height: 60px; width: 2px; background-color: #FF4800; top: -10px; left: 102px;"></div>
+                            </div>
+                            <div style="margin-top: 30px; text-align: center;">
+                                <div>Elements before cuts: [2, 3, 6, 1, 4]</div>
+                                <div>Last element from Array 1 cut: 6</div>
+                                <div>First element from Array 2 after cut: 8</div>
+                                <div style="margin-top: 10px;">Since 6 < 8, we need to move right in Array 1</div>
+                            </div>
+                        `;
+                    }
+                },
+                {
+                    title: "Final Result",
+                    explanation: "After checking that 6 < 8, we've found our answer. The 5th element in the merged array is 6, which is the last element from our cut in Array 1.",
+                    render: () => {
+                        return `
+                            <div class="array-label">Merged Elements in Order:</div>
+                            <div class="array">
+                                <div class="array-element">1</div>
+                                <div class="array-element">2</div>
+                                <div class="array-element">3</div>
+                                <div class="array-element">4</div>
+                                <div class="array-element" style="background-color: #FF4800; color: #FFFFFF;">6</div>
+                                <div class="array-element" style="opacity: 0.5;">7</div>
+                                <div class="array-element" style="opacity: 0.5;">8</div>
+                                <div class="array-element" style="opacity: 0.5;">9</div>
+                                <div class="array-element" style="opacity: 0.5;">10</div>
+                            </div>
+                            <div style="margin-top: 40px; text-align: center;">
+                                <div style="font-size: 20px; color: #FF4800; font-weight: bold;">The 5th element is 6!</div>
+                                <div style="margin-top: 20px;">
+                                    Binary search partitioning allowed us to find the kth element without merging the arrays.
+                                </div>
+                                <div style="margin-top: 10px;">
+                                    We performed just 2 iterations to find the answer.
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            ];
+            
+            let currentStep = 0;
+            
+            // Function to update the UI based on the current step
+            function updateUI() {
+                // Update animation
+                animationContainer.innerHTML = steps[currentStep].render();
+                
+                // Update explanation
+                explanationElement.innerHTML = steps[currentStep].explanation;
+                
+                // Update step indicator
+                stepIndicator.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+                
+                // Update button states
+                prevBtn.disabled = currentStep === 0;
+                nextBtn.disabled = currentStep === steps.length - 1;
+            }
+            
+            // Initialize UI
+            updateUI();
+            
+            // Button event listeners
+            prevBtn.addEventListener("click", function() {
+                if (currentStep > 0) {
+                    currentStep--;
+                    updateUI();
+                }
+            });
+            
+            nextBtn.addEventListener("click", function() {
+                if (currentStep < steps.length - 1) {
+                    currentStep++;
+                    updateUI();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
