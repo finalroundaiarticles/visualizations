@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fixed Point Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            color: #FF4800;
+            margin-bottom: 30px;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin: 50px 0;
+            overflow-x: auto;
+            padding: 20px 0;
+        }
+        .array-element {
+            width: 60px;
+            height: 60px;
+            margin: 0 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #FD9F78;
+            color: #000000;
+            font-weight: bold;
+            border-radius: 5px;
+            font-size: 18px;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+        .array-element.fixed-point {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 72, 0, 0.7);
+        }
+        .index {
+            position: absolute;
+            bottom: -25px;
+            font-size: 14px;
+            color: #000000;
+        }
+        .fixed-indicator {
+            position: absolute;
+            top: -40px;
+            font-size: 24px;
+            color: #FF4800;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .fixed-indicator.show {
+            opacity: 1;
+        }
+        .explanation {
+            margin: 40px 0;
+            padding: 20px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            text-align: left;
+            line-height: 1.6;
+        }
+        .explanation h2 {
+            color: #FF4800;
+            margin-top: 0;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            margin: 20px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Fixed Point Visualization</h1>
+        
+        <div class="explanation">
+            <h2>What is a Fixed Point?</h2>
+            <p>A <strong>fixed point</strong> in an array is an element where the <strong>value equals its index</strong>. In other words, for an array arr, a fixed point is a position i where <strong>arr[i] = i</strong>.</p>
+            <p>In this visualization, we'll explore the array <strong>[-10, -1, 0, 3, 10, 11, 30, 50, 100]</strong> and identify any fixed points.</p>
+        </div>
+        
+        <div class="step-indicator">Step <span id="current-step">1</span> of <span id="total-steps">4</span></div>
+        
+        <div class="array-container" id="array-display"></div>
+        
+        <div class="explanation" id="step-explanation">
+            <p>This is our array. Each box represents one element of the array. The number inside each box is the value of that element.</p>
+            <p>The number below each box is the index of that element in the array, starting from 0.</p>
+            <p>Click "Next" to start looking for fixed points.</p>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prev-btn" disabled>Previous</button>
+            <button class="nav-btn" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Array data
+        const array = [-10, -1, 0, 3, 10, 11, 30, 50, 100];
+        const arrayContainer = document.getElementById('array-display');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const stepExplanation = document.getElementById('step-explanation');
+        const currentStepElement = document.getElementById('current-step');
+        const totalStepsElement = document.getElementById('total-steps');
+        
+        let currentStep = 1;
+        const totalSteps = 4;
+        
+        totalStepsElement.textContent = totalSteps;
+        
+        // Initialize the array display
+        function initializeArray() {
+            arrayContainer.innerHTML = '';
+            
+            for (let i = 0; i < array.length; i++) {
+                const elementDiv = document.createElement('div');
+                elementDiv.className = 'array-element';
+                elementDiv.id = `element-${i}`;
+                elementDiv.textContent = array[i];
+                
+                const indexDiv = document.createElement('div');
+                indexDiv.className = 'index';
+                indexDiv.textContent = i;
+                elementDiv.appendChild(indexDiv);
+                
+                const indicatorDiv = document.createElement('div');
+                indicatorDiv.className = 'fixed-indicator';
+                indicatorDiv.textContent = '↓ Fixed Point ↓';
+                indicatorDiv.id = `indicator-${i}`;
+                elementDiv.appendChild(indicatorDiv);
+                
+                arrayContainer.appendChild(elementDiv);
+            }
+        }
+        
+        // Update the display based on current step
+        function updateDisplay() {
+            // Reset all elements
+            for (let i = 0; i < array.length; i++) {
+                const element = document.getElementById(`element-${i}`);
+                element.className = 'array-element';
+                
+                const indicator = document.getElementById(`indicator-${i}`);
+                indicator.className = 'fixed-indicator';
+            }
+            
+            currentStepElement.textContent = currentStep;
+            
+            switch (currentStep) {
+                case 1:
+                    stepExplanation.innerHTML = `
+                        <p>This is our array. Each box represents one element of the array. The number inside each box is the value of that element.</p>
+                        <p>The number below each box is the index of that element in the array, starting from 0.</p>
+                        <p>Click "Next" to start looking for fixed points.</p>
+                    `;
+                    prevBtn.disabled = true;
+                    break;
+                    
+                case 2:
+                    stepExplanation.innerHTML = `
+                        <p>Let's check each element to see if its value equals its index.</p>
+                        <p>A fixed point exists when <strong>arr[i] = i</strong>.</p>
+                        <p>We'll examine each element one by one.</p>
+                    `;
+                    prevBtn.disabled = false;
+                    
+                    // Highlight each element sequentially with animation
+                    animateSequentially(0);
+                    break;
+                    
+                case 3:
+                    stepExplanation.innerHTML = `
+                        <p>We found a fixed point at index 3!</p>
+                        <p>arr[3] = 3</p>
+                        <p>The value at index 3 is equal to its index, which makes it a fixed point.</p>
+                    `;
+                    
+                    // Highlight the fixed point
+                    const fixedPoint = document.getElementById('element-3');
+                    fixedPoint.className = 'array-element fixed-point';
+                    
+                    const indicator = document.getElementById('indicator-3');
+                    indicator.className = 'fixed-indicator show';
+                    break;
+                    
+                case 4:
+                    stepExplanation.innerHTML = `
+                        <p>Fixed points are important in various algorithms and can have interesting properties.</p>
+                        <p>In a sorted array like this one, there can be at most one fixed point (because the values grow faster than the indices).</p>
+                        <p>If arr[i] > i for all elements, then the array has no fixed point.</p>
+                        <p>Fixed points can be found in O(log n) time in sorted arrays using binary search!</p>
+                    `;
+                    nextBtn.disabled = true;
+                    
+                    // Keep highlighting the fixed point
+                    const fp = document.getElementById('element-3');
+                    fp.className = 'array-element fixed-point';
+                    
+                    const ind = document.getElementById('indicator-3');
+                    ind.className = 'fixed-indicator show';
+                    break;
+            }
+        }
+        
+        // Function to animate elements sequentially
+        function animateSequentially(index) {
+            if (index >= array.length || currentStep !== 2) return;
+            
+            setTimeout(() => {
+                // Highlight current element
+                const element = document.getElementById(`element-${index}`);
+                element.className = 'array-element';
+                
+                // Add a temporary highlight effect
+                setTimeout(() => {
+                    element.style.backgroundColor = '#FF4800';
+                    element.style.color = '#FFFFFF';
+                    
+                    // Check if it's a fixed point
+                    if (array[index] === index) {
+                        stepExplanation.innerHTML = `
+                            <p>Checking element at index ${index}:</p>
+                            <p>Value = ${array[index]}, Index = ${index}</p>
+                            <p>Since ${array[index]} = ${index}, this is a fixed point!</p>
+                        `;
+                    } else {
+                        stepExplanation.innerHTML = `
+                            <p>Checking element at index ${index}:</p>
+                            <p>Value = ${array[index]}, Index = ${index}</p>
+                            <p>Since ${array[index]} ≠ ${index}, this is not a fixed point.</p>
+                        `;
+                    }
+                    
+                    // Restore original color after a delay
+                    setTimeout(() => {
+                        element.style.backgroundColor = '#FD9F78';
+                        element.style.color = '#000000';
+                        
+                        // Move to next element
+                        animateSequentially(index + 1);
+                    }, 800);
+                }, 200);
+            }, 500);
+        }
+        
+        // Initialize
+        initializeArray();
+        updateDisplay();
+        
+        // Event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateDisplay();
+                nextBtn.disabled = false;
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateDisplay();
+                prevBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
