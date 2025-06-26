@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hash Map Grouping Process</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        .animation-container {
+            width: 100%;
+            height: 450px;
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .step {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .step.active {
+            opacity: 1;
+        }
+        .word {
+            display: inline-block;
+            padding: 8px 15px;
+            margin: 5px;
+            background-color: #FD9F78;
+            color: #000000;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .sorted-word {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .hash-map {
+            margin-top: 20px;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        .hash-entry {
+            margin: 10px 0;
+            padding: 5px;
+            border-bottom: 1px dashed #FD9F78;
+        }
+        .key {
+            font-weight: bold;
+            color: #FF4800;
+        }
+        .value-list {
+            margin-left: 40px;
+        }
+        .arrow {
+            color: #FF4800;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .nav-btn {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hash Map Grouping Process</h1>
+        
+        <div class="animation-container" id="animation">
+            <div class="step" id="step1">
+                <h2>Input Array of Words</h2>
+                <div class="word">eat</div>
+                <div class="word">tea</div>
+                <div class="word">tan</div>
+                <div class="word">ate</div>
+                <div class="word">nat</div>
+                <div class="word">bat</div>
+                <p>We start with an array of words that we want to group by anagrams.</p>
+            </div>
+            
+            <div class="step" id="step2">
+                <h2>Sort Each Word Alphabetically</h2>
+                <div>
+                    <div class="word">eat</div>
+                    <span class="arrow">→</span>
+                    <div class="word sorted-word">aet</div>
+                </div>
+                <p>For each word, we sort its characters alphabetically to create a key.</p>
+                <p>This way, all anagrams will have the same key.</p>
+            </div>
+            
+            <div class="step" id="step3">
+                <h2>Sort Each Word Alphabetically</h2>
+                <div>
+                    <div class="word">eat</div>
+                    <span class="arrow">→</span>
+                    <div class="word sorted-word">aet</div>
+                </div>
+                <div>
+                    <div class="word">tea</div>
+                    <span class="arrow">→</span>
+                    <div class="word sorted-word">aet</div>
+                </div>
+                <p>Notice how "eat" and "tea" both produce the same sorted key "aet".</p>
+            </div>
+            
+            <div class="step" id="step4">
+                <h2>Sort Each Word Alphabetically</h2>
+                <div>
+                    <div class="word">eat</div>
+                    <span class="arrow">→</span>
+                    <div class="word sorted-word">aet</div>
+                </div>
+                <div>
+                    <div class="word">tea</div>
+                    <span class="arrow">→</span>
+                    <div class="word sorted-word">aet</div>
+                </div>
+                <div>
+                    <div class="word">tan</div>
+                    <span class="arrow">→</span>
+                    <div class="word sorted-word">ant</div>
+                </div>
+                <p>The word "tan" gets sorted to "ant", which is a different key.</p>
+            </div>
+            
+            <div class="step" id="step5">
+                <h2>Sort Each Word Alphabetically</h2>
+                <div>
+                    <div class="word">eat</div>
+                    <span class="arrow">→</span>
+                    <div class="word sorted-word">aet</div>
+                </div>
+                <div>
+                    <div class="word">tea</div>
+                    <span class="arrow">→</span>
+                    <div class="word sorted-word">aet</div>
+                </div>
+                <div>
+                    <div class="word">tan</div>
+                    <span class="arrow">→</span>
+                    <div class="word sorted-word">ant</div>
+                </div>
+                <div>
+                    <div class="word">ate</div>
+                    <span class="arrow">→</span>
+                    <div class="word sorted-word">aet</div>
+                </div>
+                <p>"ate" also sorts to "aet", making it an anagram of "eat" and "tea".</p>
+            </div>
+            
+            <div class="step" id="step6">
+                <h2>Sort Each Word Alphabetically</h2>
+                <div>
+                    <div class="word">eat</div>
+                    <span class="arrow">→</span>
+                    <div class="word sorted-word">aet</div>
+                </div>
+                <div>
+                    <div class="word">tea</div>
+                    <span class="arrow">→</span>
+                    <div class="word sorted-word">aet</div>
+                </div>
+                <div>
+                    <div class="word">tan</div>
+                    <span class="arrow">→</span>
+                    <div class="word sorted-word">ant</div>
+                </div>
+                <div>
+                    <div class="word">ate</div>
+                    <span class="arrow">→</span>
+                    <div class="word sorted-word">aet</div>
+                </div>
+                <div>
+                    <div class="word">nat</div>
+                    <span class="arrow">→</span>
+                    <div class="word sorted-word">ant</div>
+                </div>
+                <p>"nat" sorts to "ant", matching with "tan".</p>
+            </div>
+            
+            <div class="step" id="step7">
+                <h2>Sort Each Word Alphabetically</h2>
+                <div>
+                    <div class="word">eat</div>
+                    <span class="arrow">→</span>
+                    <div class="word sorted-word">aet</div>
+                </div>
+                <div>
+                    <div class="word">tea</div>
+                    <span class="arrow">→</span>
+                    <div class="word sorted-word">aet</div>
+                </div>
+                <div>
+                    <div class="word">tan</div>
+                    <span class="arrow">→</span>
+                    <div class="word sorted-word">ant</div>
+                </div>
+                <div>
+                    <div class="word">ate</div>
+                    <span class="arrow">→</span>
+                    <div class="word sorted-word">aet</div>
+                </div>
+                <div>
+                    <div class="word">nat</div>
+                    <span class="arrow">→</span>
+                    <div class="word sorted-word">ant</div>
+                </div>
+                <div>
+                    <div class="word">bat</div>
+                    <span class="arrow">→</span>
+                    <div class="word sorted-word">abt</div>
+                </div>
+                <p>Finally, "bat" sorts to "abt", creating a new key.</p>
+            </div>
+            
+            <div class="step" id="step8">
+                <h2>Building the Hash Map</h2>
+                <div class="hash-map">
+                    <div class="hash-entry">
+                        <span class="key">Key: "aet"</span>
+                        <div class="value-list">Value: [ "eat" ]</div>
+                    </div>
+                </div>
+                <p>We start building our hash map using the sorted keys.</p>
+                <p>The first entry is "aet" → [ "eat" ]</p>
+            </div>
+            
+            <div class="step" id="step9">
+                <h2>Building the Hash Map</h2>
+                <div class="hash-map">
+                    <div class="hash-entry">
+                        <span class="key">Key: "aet"</span>
+                        <div class="value-list">Value: [ "eat", "tea" ]</div>
+                    </div>
+                </div>
+                <p>When we process "tea", we find the key "aet" already exists.</p>
+                <p>So we add "tea" to the existing list for "aet".</p>
+            </div>
+            
+            <div class="step" id="step10">
+                <h2>Building the Hash Map</h2>
+                <div class="hash-map">
+                    <div class="hash-entry">
+                        <span class="key">Key: "aet"</span>
+                        <div class="value-list">Value: [ "eat", "tea" ]</div>
+                    </div>
+                    <div class="hash-entry">
+                        <span class="key">Key: "ant"</span>
+                        <div class="value-list">Value: [ "tan" ]</div>
+                    </div>
+                </div>
+                <p>Next, we process "tan" and create a new entry with key "ant".</p>
+            </div>
+            
+            <div class="step" id="step11">
+                <h2>Building the Hash Map</h2>
+                <div class="hash-map">
+                    <div class="hash-entry">
+                        <span class="key">Key: "aet"</span>
+                        <div class="value-list">Value: [ "eat", "tea", "ate" ]</div>
+                    </div>
+                    <div class="hash-entry">
+                        <span class="key">Key: "ant"</span>
+                        <div class="value-list">Value: [ "tan" ]</div>
+                    </div>
+                </div>
+                <p>For "ate", we add it to the existing list for key "aet".</p>
+            </div>
+            
+            <div class="step" id="step12">
+                <h2>Building the Hash Map</h2>
+                <div class="hash-map">
+                    <div class="hash-entry">
+                        <span class="key">Key: "aet"</span>
+                        <div class="value-list">Value: [ "eat", "tea", "ate" ]</div>
+                    </div>
+                    <div class="hash-entry">
+                        <span class="key">Key: "ant"</span>
+                        <div class="value-list">Value: [ "tan", "nat" ]</div>
+                    </div>
+                </div>
+                <p>For "nat", we add it to the existing list for key "ant".</p>
+            </div>
+            
+            <div class="step" id="step13">
+                <h2>Final Hash Map</h2>
+                <div class="hash-map">
+                    <div class="hash-entry">
+                        <span class="key">Key: "aet"</span>
+                        <div class="value-list">Value: [ "eat", "tea", "ate" ]</div>
+                    </div>
+                    <div class="hash-entry">
+                        <span class="key">Key: "ant"</span>
+                        <div class="value-list">Value: [ "tan", "nat" ]</div>
+                    </div>
+                    <div class="hash-entry">
+                        <span class="key">Key: "abt"</span>
+                        <div class="value-list">Value: [ "bat" ]</div>
+                    </div>
+                </div>
+                <p>Finally, we add "bat" with its key "abt" to complete our hash map.</p>
+            </div>
+            
+            <div class="step" id="step14">
+                <h2>Result: Grouped Anagrams</h2>
+                <div class="hash-map">
+                    <div class="hash-entry">
+                        <span class="key">Group 1: (Key "aet")</span>
+                        <div class="value-list">[ "eat", "tea", "ate" ]</div>
+                    </div>
+                    <div class="hash-entry">
+                        <span class="key">Group 2: (Key "ant")</span>
+                        <div class="value-list">[ "tan", "nat" ]</div>
+                    </div>
+                    <div class="hash-entry">
+                        <span class="key">Group 3: (Key "abt")</span>
+                        <div class="value-list">[ "bat" ]</div>
+                    </div>
+                </div>
+                <p>The values from our hash map give us the grouped anagrams!</p>
+                <p>Each group contains words that are anagrams of each other.</p>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" class="nav-btn" disabled>Previous</button>
+            <button id="nextBtn" class="nav-btn">Next</button>
+        </div>
+        
+        <div class="step-indicator">
+            Step <span id="currentStep">1</span> of <span id="totalSteps">14</span>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 14;
+        
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const currentStepDisplay = document.getElementById('currentStep');
+        
+        function updateSteps() {
+            // Hide all steps
+            for (let i = 1; i <= totalSteps; i++) {
+                const step = document.getElementById(`step${i}`);
+                step.classList.remove('active');
+            }
+            
+            // Show current step
+            const currentStepElement = document.getElementById(`step${currentStep}`);
+            currentStepElement.classList.add('active');
+            
+            // Update step counter
+            currentStepDisplay.textContent = currentStep;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === totalSteps;
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateSteps();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateSteps();
+            }
+        });
+        
+        // Initialize
+        updateSteps();
+    </script>
+</body>
+</html>
