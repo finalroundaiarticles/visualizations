@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search for Painters Partition</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .visualization {
+            background-color: #FFFFFF;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 400px;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .array-item {
+            width: 50px;
+            height: 50px;
+            margin: 0 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #FD9F78;
+            color: #000000;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+        .array-item.highlighted {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn:hover {
+            background-color: #FD9F78;
+        }
+        .btn:disabled {
+            background-color: #FD9F78;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .search-range {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+        .range-item {
+            text-align: center;
+        }
+        .range-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FF4800;
+        }
+        .range-label {
+            font-size: 14px;
+            color: #000000;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #FFF;
+            border-left: 4px solid #FF4800;
+        }
+        .partition {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .partition-container {
+            margin: 0 10px;
+        }
+        .partition-label {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #FF4800;
+        }
+        .partition-items {
+            display: flex;
+        }
+        .step-indicator {
+            text-align: center;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Search for Painters Partition Problem</h1>
+        
+        <div class="visualization" id="visualization">
+            <div class="step-indicator" id="step-indicator">Step 1 of 7</div>
+            
+            <div class="array-container" id="array-container">
+                <div class="array-item">10</div>
+                <div class="array-item">20</div>
+                <div class="array-item">30</div>
+                <div class="array-item">40</div>
+            </div>
+            
+            <div class="search-range">
+                <div class="range-item">
+                    <div class="range-value" id="low">40</div>
+                    <div class="range-label">Low</div>
+                </div>
+                <div class="range-item">
+                    <div class="range-value" id="mid">60</div>
+                    <div class="range-label">Mid</div>
+                </div>
+                <div class="range-item">
+                    <div class="range-value" id="high">100</div>
+                    <div class="range-label">High</div>
+                </div>
+            </div>
+            
+            <div class="explanation" id="explanation">
+                <p>We start the binary search with low = max(array) = 40 and high = sum(array) = 100.</p>
+                <p>Our goal is to find the minimum possible maximum load that can be assigned to 2 painters.</p>
+            </div>
+            
+            <div id="partition-view">
+                <div class="partition-label">Checking if mid = 60 is a valid partition:</div>
+                <div class="partition" id="partition">
+                    <!-- Partitions will be shown here -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" id="prev-btn" disabled>Previous</button>
+            <button class="btn" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const steps = [
+            {
+                low: 40,
+                mid: 60,
+                high: 100,
+                explanation: "We start the binary search with low = max(array) = 40 and high = sum(array) = 100. Our goal is to find the minimum possible maximum load that can be assigned to 2 painters.",
+                partition: "Checking if mid = 60 is a valid partition:",
+                painters: [
+                    [10, 20, 30], // First painter
+                    [40]         // Second painter
+                ],
+                isValid: true
+            },
+            {
+                low: 40,
+                mid: 50,
+                high: 60,
+                explanation: "Mid = 60 is valid (we can assign the array with max load 60 to 2 painters). So we can try to find a better (smaller) solution. We update high = mid = 60.",
+                partition: "Checking if mid = 50 is a valid partition:",
+                painters: [
+                    [10, 20], // First painter
+                    [30, 40]  // Second painter
+                ],
+                isValid: true
+            },
+            {
+                low: 40,
+                mid: 45,
+                high: 50,
+                explanation: "Mid = 50 is valid (we can assign the array with max load 50 to 2 painters). So we can try to find a better (smaller) solution. We update high = mid = 50.",
+                partition: "Checking if mid = 45 is a valid partition:",
+                painters: [
+                    [10, 20], // First painter
+                    [30],     // Second painter - cannot add 40 as it exceeds 45
+                    [40]      // Need a third painter, which exceeds our limit!
+                ],
+                isValid: false
+            },
+            {
+                low: 46,
+                mid: 48,
+                high: 50,
+                explanation: "Mid = 45 is not valid (we need more than 2 painters if max load is 45). So we update low = mid + 1 = 46.",
+                partition: "Checking if mid = 48 is a valid partition:",
+                painters: [
+                    [10, 20], // First painter
+                    [30],     // Second painter - cannot add 40 as it exceeds 48
+                    [40]      // Need a third painter, which exceeds our limit!
+                ],
+                isValid: false
+            },
+            {
+                low: 49,
+                mid: 49,
+                high: 50,
+                explanation: "Mid = 48 is not valid (we need more than 2 painters if max load is 48). So we update low = mid + 1 = 49.",
+                partition: "Checking if mid = 49 is a valid partition:",
+                painters: [
+                    [10, 20], // First painter
+                    [30],     // Second painter - cannot add 40 as it exceeds 49
+                    [40]      // Need a third painter, which exceeds our limit!
+                ],
+                isValid: false
+            },
+            {
+                low: 50,
+                mid: 50,
+                high: 50,
+                explanation: "Mid = 49 is not valid (we need more than 2 painters if max load is 49). So we update low = mid + 1 = 50.",
+                partition: "Checking if mid = 50 is a valid partition:",
+                painters: [
+                    [10, 20], // First painter
+                    [30, 40]  // Second painter - exactly 50
+                ],
+                isValid: true
+            },
+            {
+                low: 50,
+                mid: 50,
+                high: 50,
+                explanation: "Now low = high = 50, our binary search is complete. The minimum possible maximum load is 50. This means each painter can be assigned boards such that no painter has a load more than 50 units, and we cannot do better than this.",
+                partition: "Final answer: 50",
+                painters: [
+                    [10, 20], // First painter
+                    [30, 40]  // Second painter
+                ],
+                isValid: true,
+                isFinal: true
+            }
+        ];
+        
+        let currentStep = 0;
+        
+        function updateVisualization() {
+            const step = steps[currentStep];
+            
+            // Update range values
+            document.getElementById('low').textContent = step.low;
+            document.getElementById('mid').textContent = step.mid;
+            document.getElementById('high').textContent = step.high;
+            
+            // Update explanation
+            document.getElementById('explanation').innerHTML = `<p>${step.explanation}</p>`;
+            
+            // Update partition view
+            const partitionView = document.getElementById('partition');
+            partitionView.innerHTML = '';
+            
+            if (step.painters) {
+                step.painters.forEach((painter, index) => {
+                    const container = document.createElement('div');
+                    container.className = 'partition-container';
+                    
+                    const label = document.createElement('div');
+                    label.className = 'partition-label';
+                    label.textContent = `Painter ${index + 1} (Sum: ${painter.reduce((a, b) => a + b, 0)})`;
+                    
+                    const items = document.createElement('div');
+                    items.className = 'partition-items';
+                    
+                    painter.forEach(value => {
+                        const item = document.createElement('div');
+                        item.className = 'array-item';
+                        item.textContent = value;
+                        items.appendChild(item);
+                    });
+                    
+                    container.appendChild(label);
+                    container.appendChild(items);
+                    partitionView.appendChild(container);
+                });
+                
+                const validityText = document.createElement('p');
+                validityText.style.textAlign = 'center';
+                validityText.style.marginTop = '20px';
+                validityText.style.fontWeight = 'bold';
+                
+                if (step.isFinal) {
+                    validityText.innerHTML = `<span style="color: #FF4800; font-size: 18px;">Final answer: ${step.mid}</span>`;
+                } else {
+                    validityText.innerHTML = step.isValid 
+                        ? `<span style="color: green;">Valid partition with ${step.painters.length} painters ✓</span>` 
+                        : `<span style="color: red;">Invalid partition - requires ${step.painters.length} painters ✗</span>`;
+                }
+                
+                partitionView.appendChild(validityText);
+            }
+            
+            // Update step indicator
+            document.getElementById('step-indicator').textContent = `Step ${currentStep + 1} of ${steps.length}`;
+            
+            // Update button states
+            document.getElementById('prev-btn').disabled = currentStep === 0;
+            document.getElementById('next-btn').disabled = currentStep === steps.length - 1;
+        }
+        
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+        
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        });
+        
+        // Initialize visualization
+        updateVisualization();
+    </script>
+</body>
+</html>
