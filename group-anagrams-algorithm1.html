@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brute Force Approach Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1, h2 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 20px auto;
+        }
+        
+        .visualization {
+            border: 2px solid #FF4800;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 500px;
+            position: relative;
+        }
+        
+        .word {
+            display: inline-block;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            background-color: #FD9F78;
+            color: #000000;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        
+        .sorted-word {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .grouped {
+            border: 2px dashed #FF4800;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+        
+        .grouped-title {
+            font-weight: bold;
+            color: #FF4800;
+            margin-bottom: 10px;
+        }
+        
+        .step-description {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-left: 4px solid #FF4800;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin: 20px 0;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .progress {
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .arrow {
+            font-size: 24px;
+            color: #FF4800;
+            margin: 10px;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 0 10px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            border-radius: 3px;
+        }
+        
+        .original-color {
+            background-color: #FD9F78;
+        }
+        
+        .sorted-color {
+            background-color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Brute Force Approach Visualization</h1>
+        <h2>Grouping Anagrams</h2>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color original-color"></div>
+                <span>Original Word</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color sorted-color"></div>
+                <span>Sorted Word</span>
+            </div>
+        </div>
+        
+        <div class="progress">Step <span id="current-step">1</span> of <span id="total-steps">6</span></div>
+        
+        <div class="visualization" id="visualization-container">
+            <!-- Content will be dynamically generated here -->
+        </div>
+        
+        <div class="nav-buttons">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Input array
+        const words = ['eat', 'tea', 'tan', 'ate', 'nat', 'bat'];
+        
+        // Steps for visualization
+        const steps = [
+            {
+                title: "Initial Array of Words",
+                description: "We start with an array of words: ['eat', 'tea', 'tan', 'ate', 'nat', 'bat']. Our goal is to group anagrams together.",
+                showSorted: false,
+                grouped: false
+            },
+            {
+                title: "Sort Each Word Alphabetically",
+                description: "For each word, we sort its letters alphabetically. This helps us identify anagrams since all anagrams will have the same sorted form.",
+                showSorted: true,
+                grouped: false
+            },
+            {
+                title: "Group by Sorted Form",
+                description: "Now we group words that have the same sorted form together. These groups are our anagrams.",
+                showSorted: true,
+                grouped: true
+            },
+            {
+                title: "Group 1: 'aet'",
+                description: "Words 'eat', 'tea', and 'ate' all sort to 'aet', so they form our first group of anagrams.",
+                showSorted: true,
+                grouped: true,
+                focusGroup: "aet"
+            },
+            {
+                title: "Group 2: 'ant'",
+                description: "Words 'tan' and 'nat' both sort to 'ant', so they form our second group of anagrams.",
+                showSorted: true,
+                grouped: true,
+                focusGroup: "ant"
+            },
+            {
+                title: "Group 3: 'abt'",
+                description: "Word 'bat' sorts to 'abt'. Since no other word sorts to 'abt', it forms a single-word group.",
+                showSorted: true,
+                grouped: true,
+                focusGroup: "abt"
+            }
+        ];
+        
+        // Function to sort a word alphabetically
+        function sortWord(word) {
+            return word.split('').sort().join('');
+        }
+        
+        // Group anagrams
+        function groupAnagrams(words) {
+            const groups = {};
+            
+            for (const word of words) {
+                const sortedWord = sortWord(word);
+                if (!groups[sortedWord]) {
+                    groups[sortedWord] = [];
+                }
+                groups[sortedWord].push(word);
+            }
+            
+            return groups;
+        }
+        
+        const anagramGroups = groupAnagrams(words);
+        
+        // Current step tracker
+        let currentStep = 1;
+        const totalSteps = steps.length;
+        
+        // Update the visualization based on current step
+        function updateVisualization() {
+            const container = document.getElementById('visualization-container');
+            const step = steps[currentStep - 1];
+            
+            // Clear previous content
+            container.innerHTML = '';
+            
+            // Add step title and description
+            const titleElement = document.createElement('h3');
+            titleElement.textContent = step.title;
+            container.appendChild(titleElement);
+            
+            const descriptionElement = document.createElement('div');
+            descriptionElement.className = 'step-description';
+            descriptionElement.textContent = step.description;
+            container.appendChild(descriptionElement);
+            
+            if (step.grouped) {
+                // Show grouped anagrams
+                for (const sortedWord in anagramGroups) {
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'grouped';
+                    
+                    if (step.focusGroup && step.focusGroup !== sortedWord) {
+                        groupDiv.style.opacity = '0.4';
+                    }
+                    
+                    const groupTitle = document.createElement('div');
+                    groupTitle.className = 'grouped-title';
+                    groupTitle.textContent = `Group: "${sortedWord}"`;
+                    groupDiv.appendChild(groupTitle);
+                    
+                    const wordsDiv = document.createElement('div');
+                    
+                    anagramGroups[sortedWord].forEach(word => {
+                        const wordSpan = document.createElement('span');
+                        wordSpan.className = 'word';
+                        wordSpan.textContent = word;
+                        
+                        if (step.showSorted) {
+                            const sortedSpan = document.createElement('span');
+                            sortedSpan.className = 'word sorted-word';
+                            sortedSpan.textContent = sortWord(word);
+                            
+                            const arrowSpan = document.createElement('span');
+                            arrowSpan.className = 'arrow';
+                            arrowSpan.innerHTML = '→';
+                            
+                            wordsDiv.appendChild(wordSpan);
+                            wordsDiv.appendChild(arrowSpan);
+                            wordsDiv.appendChild(sortedSpan);
+                            wordsDiv.appendChild(document.createElement('br'));
+                        } else {
+                            wordsDiv.appendChild(wordSpan);
+                        }
+                    });
+                    
+                    groupDiv.appendChild(wordsDiv);
+                    container.appendChild(groupDiv);
+                }
+            } else {
+                // Show individual words
+                const wordsDiv = document.createElement('div');
+                
+                words.forEach(word => {
+                    const wordContainer = document.createElement('div');
+                    wordContainer.style.display = 'inline-block';
+                    wordContainer.style.margin = '10px';
+                    wordContainer.style.textAlign = 'center';
+                    
+                    const wordSpan = document.createElement('span');
+                    wordSpan.className = 'word';
+                    wordSpan.textContent = word;
+                    wordContainer.appendChild(wordSpan);
+                    
+                    if (step.showSorted) {
+                        const arrowSpan = document.createElement('span');
+                        arrowSpan.className = 'arrow';
+                        arrowSpan.innerHTML = '↓';
+                        wordContainer.appendChild(document.createElement('br'));
+                        wordContainer.appendChild(arrowSpan);
+                        
+                        const sortedSpan = document.createElement('span');
+                        sortedSpan.className = 'word sorted-word';
+                        sortedSpan.textContent = sortWord(word);
+                        wordContainer.appendChild(document.createElement('br'));
+                        wordContainer.appendChild(sortedSpan);
+                    }
+                    
+                    wordsDiv.appendChild(wordContainer);
+                });
+                
+                container.appendChild(wordsDiv);
+            }
+            
+            // Update navigation buttons
+            document.getElementById('prev-btn').disabled = currentStep === 1;
+            document.getElementById('next-btn').disabled = currentStep === totalSteps;
+            
+            // Update progress
+            document.getElementById('current-step').textContent = currentStep;
+            document.getElementById('total-steps').textContent = totalSteps;
+        }
+        
+        // Event listeners for navigation buttons
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateVisualization();
+            }
+        });
+        
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+        
+        // Initialize visualization
+        updateVisualization();
+    </script>
+</body>
+</html>
