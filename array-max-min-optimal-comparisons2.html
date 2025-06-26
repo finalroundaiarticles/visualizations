@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pair-Based Comparison Strategy</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .array-element {
+            width: 50px;
+            height: 50px;
+            margin: 0 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #FFFFFF;
+            background-color: #FD9F78;
+            border-radius: 5px;
+        }
+        
+        .array-element.current {
+            background-color: #FF4800;
+        }
+        
+        .explanation {
+            background-color: #f9f9f9;
+            border-left: 5px solid #FF4800;
+            padding: 15px;
+            margin-bottom: 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .result-container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        
+        .result-box {
+            width: 120px;
+            text-align: center;
+            padding: 10px;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+        }
+        
+        .result-box h3 {
+            color: #FF4800;
+            margin-top: 0;
+        }
+        
+        .result-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #000000;
+        }
+        
+        .flowchart {
+            width: 100%;
+            height: 350px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .comparison {
+            position: absolute;
+            width: 300px;
+            height: 80px;
+            background-color: #f9f9f9;
+            border: 2px solid #FF4800;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 15px solid #FF4800;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            color: #000000;
+            font-size: 18px;
+            margin: 0 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pair-Based Comparison Strategy</h1>
+        
+        <div class="array-container" id="arrayContainer">
+            <!-- Array elements will be added here -->
+        </div>
+        
+        <div class="result-container">
+            <div class="result-box">
+                <h3>Current Max</h3>
+                <div class="result-value" id="maxValue">-</div>
+            </div>
+            <div class="result-box">
+                <h3>Current Min</h3>
+                <div class="result-value" id="minValue">-</div>
+            </div>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            This animation shows the pair-based comparison strategy to find the maximum and minimum values in an array.
+            By comparing elements in pairs, we can reduce the number of comparisons needed.
+        </div>
+        
+        <div class="flowchart" id="flowchart">
+            <!-- Flowchart elements will be added here -->
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prevBtn" disabled>Previous</button>
+            <div class="step-indicator" id="stepIndicator">Step 0 / 0</div>
+            <button class="nav-button" id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Original array
+        const originalArray = [3, 5, 1, 9, 2, 8];
+        
+        // Steps for the animation
+        const steps = [
+            {
+                title: "Initial Array",
+                description: "We start with the array [3, 5, 1, 9, 2, 8]. Our goal is to find the maximum and minimum values using pair-based comparison.",
+                activePairs: [],
+                max: null,
+                min: null,
+                comparisons: []
+            },
+            {
+                title: "Start with First Pair (3, 5)",
+                description: "Compare the first pair of elements (3, 5). Since 5 > 3, 5 becomes our current max and 3 becomes our current min.",
+                activePairs: [0, 1],
+                max: 5,
+                min: 3,
+                comparisons: [
+                    { text: "Compare 3 and 5", position: { top: 30, left: 250 } },
+                    { text: "5 > 3, so max = 5, min = 3", position: { top: 150, left: 250 } }
+                ]
+            },
+            {
+                title: "Second Pair (1, 9)",
+                description: "Compare the second pair (1, 9). Within the pair, 9 > 1, so 9 is the local max and 1 is the local min for this pair.",
+                activePairs: [2, 3],
+                max: 5,
+                min: 3,
+                comparisons: [
+                    { text: "Compare 1 and 9", position: { top: 30, left: 250 } },
+                    { text: "9 > 1, so local max = 9, local min = 1", position: { top: 150, left: 250 } }
+                ]
+            },
+            {
+                title: "Update Current Max/Min with Second Pair",
+                description: "Compare the local max (9) with current max (5). 9 > 5, so 9 becomes our new max. Compare the local min (1) with current min (3). 1 < 3, so 1 becomes our new min.",
+                activePairs: [2, 3],
+                max: 9,
+                min: 1,
+                comparisons: [
+                    { text: "Compare local max 9 with current max 5", position: { top: 30, left: 250 } },
+                    { text: "9 > 5, so new max = 9", position: { top: 150, left: 250 } },
+                    { text: "Compare local min 1 with current min 3", position: { top: 270, left: 250 } },
+                    { text: "1 < 3, so new min = 1", position: { top: 390, left: 250 } }
+                ]
+            },
+            {
+                title: "Third Pair (2, 8)",
+                description: "Compare the third pair (2, 8). Within the pair, 8 > 2, so 8 is the local max and 2 is the local min for this pair.",
+                activePairs: [4, 5],
+                max: 9,
+                min: 1,
+                comparisons: [
+                    { text: "Compare 2 and 8", position: { top: 30, left: 250 } },
+                    { text: "8 > 2, so local max = 8, local min = 2", position: { top: 150, left: 250 } }
+                ]
+            },
+            {
+                title: "Update Current Max/Min with Third Pair",
+                description: "Compare the local max (8) with current max (9). 8 < 9, so max remains 9. Compare the local min (2) with current min (1). 2 > 1, so min remains 1.",
+                activePairs: [4, 5],
+                max: 9,
+                min: 1,
+                comparisons: [
+                    { text: "Compare local max 8 with current max 9", position: { top: 30, left: 250 } },
+                    { text: "8 < 9, so max remains 9", position: { top: 150, left: 250 } },
+                    { text: "Compare local min 2 with current min 1", position: { top: 270, left: 250 } },
+                    { text: "2 > 1, so min remains 1", position: { top: 390, left: 250 } }
+                ]
+            },
+            {
+                title: "Final Result",
+                description: "After comparing all pairs, we have found the maximum value (9) and the minimum value (1) in the array. The pair-based strategy required fewer comparisons than checking each element individually.",
+                activePairs: [],
+                max: 9,
+                min: 1,
+                comparisons: [
+                    { text: "Maximum value: 9", position: { top: 100, left: 250 } },
+                    { text: "Minimum value: 1", position: { top: 220, left: 250 } }
+                ]
+            }
+        ];
+        
+        let currentStep = 0;
+        
+        // Initialize the animation
+        function init() {
+            const arrayContainer = document.getElementById('arrayContainer');
+            
+            // Create array elements
+            originalArray.forEach(value => {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.textContent = value;
+                arrayContainer.appendChild(element);
+            });
+            
+            updateStep();
+            
+            // Set up navigation buttons
+            document.getElementById('prevBtn').addEventListener('click', prevStep);
+            document.getElementById('nextBtn').addEventListener('click', nextStep);
+        }
+        
+        // Update the display for the current step
+        function updateStep() {
+            const step = steps[currentStep];
+            
+            // Update array highlighting
+            const arrayElements = document.querySelectorAll('.array-element');
+            arrayElements.forEach((element, index) => {
+                element.classList.remove('current');
+                if (step.activePairs.includes(index)) {
+                    element.classList.add('current');
+                }
+            });
+            
+            // Update max and min values
+            document.getElementById('maxValue').textContent = step.max !== null ? step.max : '-';
+            document.getElementById('minValue').textContent = step.min !== null ? step.min : '-';
+            
+            // Update explanation
+            document.getElementById('explanation').textContent = step.description;
+            
+            // Update flowchart
+            const flowchart = document.getElementById('flowchart');
+            flowchart.innerHTML = '';
+            
+            step.comparisons.forEach((comparison, index) => {
+                const compElement = document.createElement('div');
+                compElement.className = 'comparison';
+                compElement.textContent = comparison.text;
+                compElement.style.top = comparison.position.top + 'px';
+                compElement.style.left = comparison.position.left + 'px';
+                compElement.style.opacity = '1';
+                flowchart.appendChild(compElement);
+                
+                // Add arrow if not the last comparison
+                if (index < step.comparisons.length - 1) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'arrow';
+                    arrow.style.top = (comparison.position.top + 80) + 'px';
+                    arrow.style.left = (comparison.position.left + 150) + 'px';
+                    arrow.style.opacity = '1';
+                    flowchart.appendChild(arrow);
+                }
+            });
+            
+            // Update step indicator
+            document.getElementById('stepIndicator').textContent = `Step ${currentStep + 1} / ${steps.length}`;
+            
+            // Update navigation buttons
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === steps.length - 1;
+        }
+        
+        // Navigate to the previous step
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        }
+        
+        // Navigate to the next step
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateStep();
+            }
+        }
+        
+        // Initialize the animation when the page loads
+        window.onload = init;
+    </script>
+</body>
+</html>
