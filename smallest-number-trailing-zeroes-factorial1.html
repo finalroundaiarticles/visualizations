@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trailing Zeros in Factorial</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .slide {
+            display: none;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            animation-duration: 1s;
+            text-align: center;
+            min-height: 400px;
+        }
+        
+        .slide.active {
+            display: block;
+            animation-name: fadeIn;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            width: 90%;
+            max-width: 800px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .factorial-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        .factorial-display {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .number-line {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            position: relative;
+            padding: 30px 0;
+        }
+        
+        .digit {
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            margin: 0 5px;
+            background-color: #FD9F78;
+            border-radius: 5px;
+            font-weight: bold;
+            position: relative;
+            transition: all 0.5s;
+        }
+        
+        .digit.zero {
+            background-color: #FF4800;
+            color: white;
+        }
+        
+        .highlight {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #FF4800;
+        }
+        
+        .factorial-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .factorial-table th, .factorial-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .factorial-table th {
+            background-color: #FF4800;
+            color: white;
+        }
+        
+        .factorial-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .factorial-table td.highlight-zero {
+            background-color: #FD9F78;
+            font-weight: bold;
+        }
+        
+        .visualization {
+            height: 200px;
+            margin: 20px 0;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        
+        .bar {
+            width: 40px;
+            background-color: #FF4800;
+            margin: 0 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: height 1s;
+            position: relative;
+        }
+        
+        .bar-label {
+            position: absolute;
+            bottom: -25px;
+            font-weight: bold;
+        }
+        
+        .bar-value {
+            color: white;
+            font-weight: bold;
+            margin-top: -25px;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            text-align: left;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <h1>Trailing Zeros in Factorial</h1>
+    
+    <div class="container">
+        <div class="slide active" id="slide1">
+            <h2>What are Trailing Zeros?</h2>
+            <div class="explanation">
+                <p>Trailing zeros are the zeros that appear at the end of a number. For example, in the number 3600, there are two trailing zeros.</p>
+            </div>
+            <div class="number-line">
+                <div class="digit">3</div>
+                <div class="digit">6</div>
+                <div class="digit zero">0</div>
+                <div class="digit zero">0</div>
+                <div class="highlight">Trailing Zeros</div>
+            </div>
+            <div class="explanation">
+                <p>In this tutorial, we'll explore how to determine the number of trailing zeros in factorial calculations without actually computing the entire factorial.</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide2">
+            <h2>Factorial Examples</h2>
+            <div class="explanation">
+                <p>A factorial of a non-negative integer n, denoted as n!, is the product of all positive integers less than or equal to n.</p>
+                <p>For example: 5! = 5 × 4 × 3 × 2 × 1 = 120</p>
+            </div>
+            <div class="factorial-container">
+                <div class="factorial-display" id="factorial-example">5! = 5 × 4 × 3 × 2 × 1 = 120</div>
+                <div class="number-line">
+                    <div class="digit">1</div>
+                    <div class="digit">2</div>
+                    <div class="digit zero">0</div>
+                    <div class="highlight">1 Trailing Zero</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide3">
+            <h2>Factorial Table (n=0 to n=10)</h2>
+            <table class="factorial-table">
+                <thead>
+                    <tr>
+                        <th>n</th>
+                        <th>n!</th>
+                        <th>Trailing Zeros</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>0</td>
+                        <td>1</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>1</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>2</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>6</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>24</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>120</td>
+                        <td class="highlight-zero">1</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>720</td>
+                        <td class="highlight-zero">1</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>5,040</td>
+                        <td class="highlight-zero">1</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>40,320</td>
+                        <td class="highlight-zero">1</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>362,880</td>
+                        <td class="highlight-zero">1</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>3,628,800</td>
+                        <td class="highlight-zero">2</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="explanation">
+                <p>Notice that starting from n=5, we begin to see trailing zeros in the factorial results.</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide4">
+            <h2>Pattern of Trailing Zeros</h2>
+            <div class="visualization" id="visualization">
+                <!-- Bars will be added by JavaScript -->
+            </div>
+            <div class="explanation">
+                <p>Notice the pattern: the number of trailing zeros increases at n=5 and n=10.</p>
+                <p>This is because trailing zeros come from factors of 10 (which is 2×5) in the factorial calculation.</p>
+                <p>Since there are always more factors of 2 than 5 in a factorial, we only need to count the factors of 5 to determine the number of trailing zeros.</p>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide5">
+            <h2>Why Do Trailing Zeros Appear?</h2>
+            <div class="explanation">
+                <p>A trailing zero occurs when a number is divisible by 10 (which is 2 × 5).</p>
+                <p>In factorial calculations, we get a factor of 10 whenever we can pair a factor of 2 with a factor of 5.</p>
+                <p>Since there are always more factors of 2 than factors of 5 in a factorial, the number of trailing zeros depends on how many factors of 5 are in the factorial.</p>
+            </div>
+            <div class="factorial-container">
+                <div class="factorial-display">10! = 10 × 9 × 8 × 7 × 6 × 5 × 4 × 3 × 2 × 1</div>
+                <div class="factorial-display">= (5×2) × 9 × 8 × 7 × 6 × 5 × 4 × 3 × 2 × 1</div>
+                <div class="factorial-display">Two factors of 5: from 5 and 10 (5×2)</div>
+                <div class="factorial-display">= 3,628,800 (2 trailing zeros)</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="nav-buttons">
+        <button id="prevBtn" disabled>Previous</button>
+        <button id="nextBtn">Next</button>
+    </div>
+    
+    <script>
+        let currentSlide = 1;
+        const totalSlides = document.querySelectorAll('.slide').length;
+        
+        function showSlide(slideNumber) {
+            // Hide all slides
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            // Show the current slide
+            document.getElementById(`slide${slideNumber}`).classList.add('active');
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = (slideNumber === 1);
+            document.getElementById('nextBtn').disabled = (slideNumber === totalSlides);
+            
+            // Initialize specific slide content if needed
+            if (slideNumber === 2) {
+                animateFactorial();
+            } else if (slideNumber === 4) {
+                createVisualization();
+            }
+        }
+        
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentSlide > 1) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        });
+        
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        });
+        
+        function animateFactorial() {
+            const examples = [
+                "5! = 5 × 4 × 3 × 2 × 1 = 120",
+                "6! = 6 × 5 × 4 × 3 × 2 × 1 = 720",
+                "7! = 7 × 6 × 5 × 4 × 3 × 2 × 1 = 5,040"
+            ];
+            
+            const digits = [
+                ["1", "2", "0"],
+                ["7", "2", "0"],
+                ["5", "0", "4", "0"]
+            ];
+            
+            const zeros = [1, 1, 1];
+            
+            let index = 0;
+            const factorialDisplay = document.getElementById('factorial-example');
+            const numberLine = document.querySelector('#slide2 .number-line');
+            
+            function updateExample() {
+                factorialDisplay.textContent = examples[index];
+                
+                // Clear existing digits
+                while (numberLine.firstChild) {
+                    numberLine.removeChild(numberLine.firstChild);
+                }
+                
+                // Add new digits
+                digits[index].forEach((digit, i) => {
+                    const digitElement = document.createElement('div');
+                    digitElement.className = 'digit';
+                    digitElement.textContent = digit;
+                    
+                    if (digit === '0' && i >= digits[index].length - zeros[index]) {
+                        digitElement.classList.add('zero');
+                    }
+                    
+                    numberLine.appendChild(digitElement);
+                });
+                
+                // Add highlight
+                const highlight = document.createElement('div');
+                highlight.className = 'highlight';
+                highlight.textContent = zeros[index] === 1 ? "1 Trailing Zero" : `${zeros[index]} Trailing Zeros`;
+                numberLine.appendChild(highlight);
+                
+                index = (index + 1) % examples.length;
+            }
+            
+            updateExample();
+            setInterval(updateExample, 3000);
+        }
+        
+        function createVisualization() {
+            const visualization = document.getElementById('visualization');
+            visualization.innerHTML = '';
+            
+            const data = [
+                { n: 0, zeros: 0 },
+                { n: 1, zeros: 0 },
+                { n: 2, zeros: 0 },
+                { n: 3, zeros: 0 },
+                { n: 4, zeros: 0 },
+                { n: 5, zeros: 1 },
+                { n: 6, zeros: 1 },
+                { n: 7, zeros: 1 },
+                { n: 8, zeros: 1 },
+                { n: 9, zeros: 1 },
+                { n: 10, zeros: 2 }
+            ];
+            
+            // Create bars for visualization
+            data.forEach(item => {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.height = '0px';
+                
+                const label = document.createElement('div');
+                label.className = 'bar-label';
+                label.textContent = `n=${item.n}`;
+                
+                const value = document.createElement('div');
+                value.className = 'bar-value';
+                value.textContent = item.zeros;
+                
+                bar.appendChild(value);
+                bar.appendChild(label);
+                visualization.appendChild(bar);
+                
+                // Use setTimeout to create animation effect
+                setTimeout(() => {
+                    bar.style.height = `${item.zeros * 80 + 20}px`;
+                }, 100 * item.n);
+            });
+        }
+        
+        // Initialize
+        showSlide(currentSlide);
+    </script>
+</body>
+</html>
