@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search Comparison</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .explanation {
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .search-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .search-box {
+            width: 48%;
+            padding: 15px;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+        }
+        
+        .search-title {
+            color: #FF4800;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        
+        .array-element {
+            width: 40px;
+            height: 40px;
+            margin: 0 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #000000;
+            font-weight: bold;
+            position: relative;
+        }
+        
+        .array-index {
+            position: absolute;
+            bottom: -20px;
+            font-size: 12px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .highlight {
+            background-color: #FD9F78;
+        }
+        
+        .found {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .pointer {
+            font-weight: bold;
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .status {
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+            height: 20px;
+        }
+        
+        .step-description {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f8f8;
+            border-radius: 5px;
+            min-height: 60px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Search Comparison</h1>
+        
+        <div class="explanation">
+            <p>This visualization compares two binary search approaches for finding the first and last occurrence of a target value in a sorted array:</p>
+            <p><strong>Left Search:</strong> Finds the first occurrence by continuing to search left after finding a match.</p>
+            <p><strong>Right Search:</strong> Finds the last occurrence by continuing to search right after finding a match.</p>
+            <p>Target value: 8 | Array: [5, 7, 7, 8, 8, 8, 10]</p>
+        </div>
+        
+        <div class="search-container">
+            <div class="search-box">
+                <div class="search-title">Left Search (First Occurrence)</div>
+                <div class="array-container" id="left-array"></div>
+                <div class="pointer" id="left-pointers"></div>
+                <div class="status" id="left-status"></div>
+                <div class="step-description" id="left-description"></div>
+            </div>
+            
+            <div class="search-box">
+                <div class="search-title">Right Search (Last Occurrence)</div>
+                <div class="array-container" id="right-array"></div>
+                <div class="pointer" id="right-pointers"></div>
+                <div class="status" id="right-status"></div>
+                <div class="step-description" id="right-description"></div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // The array and target value
+        const array = [5, 7, 7, 8, 8, 8, 10];
+        const target = 8;
+        
+        // Left search (first occurrence) steps
+        const leftSteps = [
+            {
+                left: 0,
+                right: 6,
+                mid: 3,
+                description: "Initialize: left=0, right=6, mid=3. Check if array[3]=8 equals target 8.",
+                highlight: [3],
+                found: [],
+                status: "array[3]=8 equals target, but we need to find first occurrence"
+            },
+            {
+                left: 0,
+                right: 2,
+                mid: 1,
+                description: "Since we found target at mid, search left half to find first occurrence. New left=0, right=2, mid=1.",
+                highlight: [1],
+                found: [],
+                status: "array[1]=7 < target, so first occurrence must be to the right"
+            },
+            {
+                left: 2,
+                right: 2,
+                mid: 2,
+                description: "Update left=2, right=2, mid=2. Check if array[2]=7 equals target 8.",
+                highlight: [2],
+                found: [],
+                status: "array[2]=7 < target, so first occurrence must be to the right"
+            },
+            {
+                left: 3,
+                right: 2,
+                mid: null,
+                description: "Update left=3, right=2. Since left > right, the search terminates.",
+                highlight: [],
+                found: [3],
+                status: "First occurrence found at index 3"
+            }
+        ];
+        
+        // Right search (last occurrence) steps
+        const rightSteps = [
+            {
+                left: 0,
+                right: 6,
+                mid: 3,
+                description: "Initialize: left=0, right=6, mid=3. Check if array[3]=8 equals target 8.",
+                highlight: [3],
+                found: [],
+                status: "array[3]=8 equals target, but we need to find last occurrence"
+            },
+            {
+                left: 4,
+                right: 6,
+                mid: 5,
+                description: "Since we found target at mid, search right half to find last occurrence. New left=4, right=6, mid=5.",
+                highlight: [5],
+                found: [],
+                status: "array[5]=8 equals target, but we continue searching right"
+            },
+            {
+                left: 6,
+                right: 6,
+                mid: 6,
+                description: "Update left=6, right=6, mid=6. Check if array[6]=10 equals target 8.",
+                highlight: [6],
+                found: [],
+                status: "array[6]=10 > target, so last occurrence must be to the left"
+            },
+            {
+                left: 6,
+                right: 5,
+                mid: null,
+                description: "Update left=6, right=5. Since left > right, the search terminates.",
+                highlight: [],
+                found: [5],
+                status: "Last occurrence found at index 5"
+            }
+        ];
+        
+        // Initialize visualization
+        let currentStep = 0;
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        
+        // Create array elements
+        function createArrayElements() {
+            const leftArray = document.getElementById('left-array');
+            const rightArray = document.getElementById('right-array');
+            
+            leftArray.innerHTML = '';
+            rightArray.innerHTML = '';
+            
+            for (let i = 0; i < array.length; i++) {
+                const leftElement = document.createElement('div');
+                leftElement.className = 'array-element';
+                leftElement.id = `left-element-${i}`;
+                leftElement.textContent = array[i];
+                
+                const leftIndex = document.createElement('div');
+                leftIndex.className = 'array-index';
+                leftIndex.textContent = i;
+                leftElement.appendChild(leftIndex);
+                
+                leftArray.appendChild(leftElement);
+                
+                const rightElement = document.createElement('div');
+                rightElement.className = 'array-element';
+                rightElement.id = `right-element-${i}`;
+                rightElement.textContent = array[i];
+                
+                const rightIndex = document.createElement('div');
+                rightIndex.className = 'array-index';
+                rightIndex.textContent = i;
+                rightElement.appendChild(rightIndex);
+                
+                rightArray.appendChild(rightElement);
+            }
+        }
+        
+        // Update visualization based on current step
+        function updateVisualization() {
+            // Reset all elements
+            for (let i = 0; i < array.length; i++) {
+                document.getElementById(`left-element-${i}`).className = 'array-element';
+                document.getElementById(`right-element-${i}`).className = 'array-element';
+            }
+            
+            const leftStep = leftSteps[currentStep];
+            const rightStep = rightSteps[currentStep];
+            
+            // Update left search
+            document.getElementById('left-description').textContent = leftStep.description;
+            document.getElementById('left-status').textContent = leftStep.status;
+            
+            let leftPointersText = '';
+            if (leftStep.mid !== null) {
+                leftPointersText = `Left: ${leftStep.left} | Mid: ${leftStep.mid} | Right: ${leftStep.right}`;
+            } else {
+                leftPointersText = `Left: ${leftStep.left} | Right: ${leftStep.right}`;
+            }
+            document.getElementById('left-pointers').textContent = leftPointersText;
+            
+            // Highlight elements for left search
+            leftStep.highlight.forEach(index => {
+                document.getElementById(`left-element-${index}`).classList.add('highlight');
+            });
+            
+            leftStep.found.forEach(index => {
+                document.getElementById(`left-element-${index}`).classList.add('found');
+            });
+            
+            // Update right search
+            document.getElementById('right-description').textContent = rightStep.description;
+            document.getElementById('right-status').textContent = rightStep.status;
+            
+            let rightPointersText = '';
+            if (rightStep.mid !== null) {
+                rightPointersText = `Left: ${rightStep.left} | Mid: ${rightStep.mid} | Right: ${rightStep.right}`;
+            } else {
+                rightPointersText = `Left: ${rightStep.left} | Right: ${rightStep.right}`;
+            }
+            document.getElementById('right-pointers').textContent = rightPointersText;
+            
+            // Highlight elements for right search
+            rightStep.highlight.forEach(index => {
+                document.getElementById(`right-element-${index}`).classList.add('highlight');
+            });
+            
+            rightStep.found.forEach(index => {
+                document.getElementById(`right-element-${index}`).classList.add('found');
+            });
+            
+            // Update buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === leftSteps.length - 1;
+        }
+        
+        // Event listeners for buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateVisualization();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < leftSteps.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        });
+        
+        // Initialize
+        createArrayElements();
+        updateVisualization();
+    </script>
+</body>
+</html>
