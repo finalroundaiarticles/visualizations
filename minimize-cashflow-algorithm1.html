@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circular Debt Cancellation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            text-align: center;
+        }
+        h1 {
+            color: #000000;
+            margin-bottom: 30px;
+        }
+        .animation-container {
+            position: relative;
+            width: 500px;
+            height: 400px;
+            margin: 0 auto 30px;
+        }
+        .person {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background-color: #FD9F78;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 24px;
+            color: #000000;
+            transition: background-color 0.5s;
+        }
+        .person-a {
+            top: 20px;
+            left: 210px;
+        }
+        .person-b {
+            bottom: 80px;
+            right: 80px;
+        }
+        .person-c {
+            bottom: 80px;
+            left: 80px;
+        }
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .money {
+            position: absolute;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            opacity: 0;
+            transition: all 0.5s;
+        }
+        .explanation {
+            margin-top: 20px;
+            background-color: #FD9F78;
+            padding: 15px;
+            border-radius: 10px;
+            color: #000000;
+            margin-bottom: 30px;
+            min-height: 80px;
+        }
+        .controls {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            margin-top: 10px;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Circular Debt Cancellation</h1>
+        
+        <div class="animation-container">
+            <div class="person person-a">A</div>
+            <div class="person person-b">B</div>
+            <div class="person person-c">C</div>
+            
+            <!-- Arrows and money will be added by JavaScript -->
+        </div>
+        
+        <div class="explanation" id="explanation">
+            Welcome to Circular Debt Cancellation! Click "Next" to start the animation.
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">Step 0/5</div>
+    </div>
+
+    <script>
+        const animationContainer = document.querySelector('.animation-container');
+        const explanation = document.getElementById('explanation');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        
+        let currentStep = 0;
+        const totalSteps = 5;
+        
+        // Create SVG element for arrows
+        const svgNS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(svgNS, "svg");
+        svg.setAttribute("width", "500");
+        svg.setAttribute("height", "400");
+        animationContainer.appendChild(svg);
+        
+        // Create arrows
+        const arrowAB = createArrow("arrow-ab", 250, 90, 360, 180);
+        const arrowBC = createArrow("arrow-bc", 330, 240, 170, 240);
+        const arrowCA = createArrow("arrow-ca", 150, 240, 240, 90);
+        
+        // Create money labels
+        const moneyAB = createMoney("money-ab", "$10", 300, 120);
+        const moneyBC = createMoney("money-bc", "$10", 250, 250);
+        const moneyCA = createMoney("money-ca", "$10", 170, 160);
+        
+        // Step content
+        const steps = [
+            {
+                explanation: "Welcome to Circular Debt Cancellation! Click \"Next\" to start the animation.",
+                action: () => {}
+            },
+            {
+                explanation: "Here we have three people: A, B, and C, arranged in a circle.",
+                action: () => {}
+            },
+            {
+                explanation: "Person A owes $10 to Person B. Let's show this debt with an arrow and money.",
+                action: () => {
+                    arrowAB.style.opacity = "1";
+                    moneyAB.style.opacity = "1";
+                }
+            },
+            {
+                explanation: "Person B owes $10 to Person C. Another debt forms in our circle.",
+                action: () => {
+                    arrowBC.style.opacity = "1";
+                    moneyBC.style.opacity = "1";
+                }
+            },
+            {
+                explanation: "Person C owes $10 to Person A, completing our circular debt pattern.",
+                action: () => {
+                    arrowCA.style.opacity = "1";
+                    moneyCA.style.opacity = "1";
+                }
+            },
+            {
+                explanation: "In this circular arrangement, everyone owes $10 and is owed $10. The debts can be cancelled out completely, with no money needing to change hands!",
+                action: () => {
+                    // Highlight all people to show completion
+                    const people = document.querySelectorAll('.person');
+                    people.forEach(person => {
+                        person.style.backgroundColor = "#FF4800";
+                        person.style.color = "#FFFFFF";
+                    });
+                }
+            }
+        ];
+        
+        function createArrow(id, x1, y1, x2, y2) {
+            const arrow = document.createElementNS(svgNS, "path");
+            
+            // Calculate the direction and angle
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const angle = Math.atan2(dy, dx);
+            
+            // Shorten the line to account for the circle radius
+            const radius = 40; // Half of the circle width
+            const shortenedX1 = x1 + Math.cos(angle) * radius;
+            const shortenedY1 = y1 + Math.sin(angle) * radius;
+            const shortenedX2 = x2 - Math.cos(angle) * radius;
+            const shortenedY2 = y2 - Math.sin(angle) * radius;
+            
+            // Create arrowhead
+            const arrowLength = 15;
+            const arrowAngle = Math.PI / 6; // 30 degrees
+            
+            const ax1 = shortenedX2 - arrowLength * Math.cos(angle - arrowAngle);
+            const ay1 = shortenedY2 - arrowLength * Math.sin(angle - arrowAngle);
+            const ax2 = shortenedX2 - arrowLength * Math.cos(angle + arrowAngle);
+            const ay2 = shortenedY2 - arrowLength * Math.sin(angle + arrowAngle);
+            
+            // Create path
+            const pathData = `M${shortenedX1},${shortenedY1} L${shortenedX2},${shortenedY2} M${ax1},${ay1} L${shortenedX2},${shortenedY2} L${ax2},${ay2}`;
+            
+            arrow.setAttribute("d", pathData);
+            arrow.setAttribute("id", id);
+            arrow.setAttribute("stroke", "#FF4800");
+            arrow.setAttribute("stroke-width", "3");
+            arrow.setAttribute("fill", "none");
+            arrow.style.opacity = "0";
+            
+            svg.appendChild(arrow);
+            return arrow;
+        }
+        
+        function createMoney(id, text, x, y) {
+            const money = document.createElement('div');
+            money.className = 'money';
+            money.id = id;
+            money.textContent = text;
+            money.style.left = `${x}px`;
+            money.style.top = `${y}px`;
+            money.style.opacity = "0";
+            animationContainer.appendChild(money);
+            return money;
+        }
+        
+        function updateUI() {
+            // Update buttons
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps;
+            
+            // Update step indicator
+            stepIndicator.textContent = `Step ${currentStep}/${totalSteps}`;
+            
+            // Update explanation
+            explanation.textContent = steps[currentStep].explanation;
+            
+            // Execute the step action
+            steps[currentStep].action();
+        }
+        
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateUI();
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 0) {
+                // Reset styles if going back
+                if (currentStep === totalSteps) {
+                    const people = document.querySelectorAll('.person');
+                    people.forEach(person => {
+                        person.style.backgroundColor = "#FD9F78";
+                        person.style.color = "#000000";
+                    });
+                }
+                
+                if (currentStep === 5) {
+                    arrowCA.style.opacity = "0";
+                    moneyCA.style.opacity = "0";
+                } else if (currentStep === 4) {
+                    arrowBC.style.opacity = "0";
+                    moneyBC.style.opacity = "0";
+                } else if (currentStep === 3) {
+                    arrowAB.style.opacity = "0";
+                    moneyAB.style.opacity = "0";
+                }
+                
+                currentStep--;
+                updateUI();
+            }
+        }
+        
+        // Event listeners
+        nextBtn.addEventListener('click', nextStep);
+        prevBtn.addEventListener('click', prevStep);
+        
+        // Initialize UI
+        updateUI();
+    </script>
+</body>
+</html>
