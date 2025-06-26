@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+        }
+        .search-container {
+            margin: 20px 0;
+            position: relative;
+            min-height: 300px;
+        }
+        .search-step {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 0.5s;
+        }
+        .search-step.active {
+            display: flex;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .array-element {
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            border: 1px solid #000000;
+            margin: 2px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        .array-element.highlight {
+            background-color: #FD9F78;
+            transform: scale(1.1);
+        }
+        .array-element.mid {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            transform: scale(1.2);
+        }
+        .array-element.found {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: 2px solid #000000;
+            animation: pulse 1s infinite;
+        }
+        .explanation {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #FD9F78;
+            color: #000000;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .nav-button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .search-range {
+            font-weight: bold;
+            color: #FF4800;
+        }
+        .zeros-info {
+            font-style: italic;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Search Visualization</h1>
+        
+        <div class="search-container" id="searchContainer">
+            <!-- Step 1 -->
+            <div class="search-step active" data-step="1">
+                <div class="explanation">
+                    <p>Binary Search is a search algorithm that finds the position of a target value within a sorted array.</p>
+                    <p>In this example, we're looking for the value <strong>n = 5</strong> where <strong>n</strong> is the number of trailing zeros in <strong>n!</strong>.</p>
+                    <p>Starting search space: <span class="search-range">[0, 25]</span></p>
+                </div>
+                <div class="array-container" id="arrayContainer1">
+                    <!-- Array elements will be generated with JavaScript -->
+                </div>
+                <div class="zeros-info">We'll check values to find where n = 5 (value with 5 trailing zeros)</div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="search-step" data-step="2">
+                <div class="explanation">
+                    <p>First step: We check the middle element <strong>mid = 12</strong>.</p>
+                    <p>12! has <strong>2 trailing zeros</strong>, which is less than our target of 5.</p>
+                    <p>Since we need more zeros, we search in the right half.</p>
+                    <p>New search space: <span class="search-range">[13, 25]</span></p>
+                </div>
+                <div class="array-container" id="arrayContainer2">
+                    <!-- Array elements will be generated with JavaScript -->
+                </div>
+                <div class="zeros-info">12! has 2 trailing zeros (less than 5, so we move right)</div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="search-step" data-step="3">
+                <div class="explanation">
+                    <p>Next, we check the middle element <strong>mid = 19</strong>.</p>
+                    <p>19! has <strong>3 trailing zeros</strong>, which is still less than our target of 5.</p>
+                    <p>We need more zeros, so we continue searching in the right half.</p>
+                    <p>New search space: <span class="search-range">[20, 25]</span></p>
+                </div>
+                <div class="array-container" id="arrayContainer3">
+                    <!-- Array elements will be generated with JavaScript -->
+                </div>
+                <div class="zeros-info">19! has 3 trailing zeros (less than 5, so we move right)</div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="search-step" data-step="4">
+                <div class="explanation">
+                    <p>Now, we check the middle element <strong>mid = 22</strong>.</p>
+                    <p>22! has <strong>4 trailing zeros</strong>, which is still less than our target of 5.</p>
+                    <p>We need more zeros, so we continue searching in the right half.</p>
+                    <p>New search space: <span class="search-range">[23, 25]</span></p>
+                </div>
+                <div class="array-container" id="arrayContainer4">
+                    <!-- Array elements will be generated with JavaScript -->
+                </div>
+                <div class="zeros-info">22! has 4 trailing zeros (less than 5, so we move right)</div>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="search-step" data-step="5">
+                <div class="explanation">
+                    <p>Next, we check the middle element <strong>mid = 24</strong>.</p>
+                    <p>24! has <strong>4 trailing zeros</strong>, which is still less than our target of 5.</p>
+                    <p>We need more zeros, so we continue searching in the right half.</p>
+                    <p>New search space: <span class="search-range">[25, 25]</span></p>
+                </div>
+                <div class="array-container" id="arrayContainer5">
+                    <!-- Array elements will be generated with JavaScript -->
+                </div>
+                <div class="zeros-info">24! has 4 trailing zeros (less than 5, so we move right)</div>
+            </div>
+
+            <!-- Step 6 -->
+            <div class="search-step" data-step="6">
+                <div class="explanation">
+                    <p>Finally, we check <strong>mid = 25</strong>.</p>
+                    <p>25! has <strong>6 trailing zeros</strong>, which is greater than our target of 5.</p>
+                    <p>But since there's no number between 24 and 25, and 24! has 4 zeros (less than 5), we've found that 25 is the smallest number whose factorial has at least 5 trailing zeros.</p>
+                    <p>Result: <span class="search-range">25</span></p>
+                </div>
+                <div class="array-container" id="arrayContainer6">
+                    <!-- Array elements will be generated with JavaScript -->
+                </div>
+                <div class="zeros-info">25! has 6 trailing zeros (found our result!)</div>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <button id="prevBtn" class="nav-button" disabled>Previous</button>
+            <button id="nextBtn" class="nav-button">Next</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Generate array elements for each step
+            generateArrayElements(1, 0, 25, 12);
+            generateArrayElements(2, 13, 25, 19);
+            generateArrayElements(3, 20, 25, 22);
+            generateArrayElements(4, 23, 25, 24);
+            generateArrayElements(5, 25, 25, 25);
+            generateArrayElements(6, 25, 25, 25, true); // Mark as found in the last step
+
+            // Navigation
+            const searchSteps = document.querySelectorAll('.search-step');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            let currentStep = 1;
+
+            function updateButtons() {
+                prevBtn.disabled = currentStep === 1;
+                nextBtn.disabled = currentStep === searchSteps.length;
+            }
+
+            function showStep(step) {
+                searchSteps.forEach(el => {
+                    el.classList.remove('active');
+                });
+                document.querySelector(`.search-step[data-step="${step}"]`).classList.add('active');
+                currentStep = step;
+                updateButtons();
+            }
+
+            prevBtn.addEventListener('click', function() {
+                if (currentStep > 1) {
+                    showStep(currentStep - 1);
+                }
+            });
+
+            nextBtn.addEventListener('click', function() {
+                if (currentStep < searchSteps.length) {
+                    showStep(currentStep + 1);
+                }
+            });
+        });
+
+        function generateArrayElements(stepNumber, low, high, mid, found = false) {
+            const container = document.getElementById(`arrayContainer${stepNumber}`);
+            container.innerHTML = '';
+
+            // Calculate a reasonable step to show a subset of numbers if range is too large
+            const totalElements = high - low + 1;
+            let step = 1;
+            
+            if (totalElements > 15) {
+                step = Math.floor(totalElements / 15);
+            }
+
+            for (let i = low; i <= high; i += step) {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                
+                if (i === mid) {
+                    element.className += found ? ' found' : ' mid';
+                } else if (i >= low && i <= high) {
+                    element.className += ' highlight';
+                }
+                
+                element.textContent = i;
+                container.appendChild(element);
+            }
+
+            // Always ensure mid is displayed even if it would be skipped by the step
+            let midDisplayed = false;
+            for (let i = 0; i < container.children.length; i++) {
+                if (parseInt(container.children[i].textContent) === mid) {
+                    midDisplayed = true;
+                    break;
+                }
+            }
+
+            if (!midDisplayed && mid >= low && mid <= high) {
+                const midElement = document.createElement('div');
+                midElement.className = 'array-element' + (found ? ' found' : ' mid');
+                midElement.textContent = mid;
+                
+                // Find the right position to insert
+                let inserted = false;
+                for (let i = 0; i < container.children.length; i++) {
+                    if (parseInt(container.children[i].textContent) > mid) {
+                        container.insertBefore(midElement, container.children[i]);
+                        inserted = true;
+                        break;
+                    }
+                }
+                
+                if (!inserted) {
+                    container.appendChild(midElement);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
