@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trie Structure Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .explanation {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #FFF;
+            border-left: 5px solid #FF4800;
+        }
+        
+        .animation-container {
+            width: 100%;
+            height: 500px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #canvas {
+            background-color: #FFFFFF;
+            border: 1px solid #FD9F78;
+            border-radius: 5px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #CCCCCC;
+            cursor: not-allowed;
+        }
+        
+        .legend {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            border-radius: 3px;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Trie Structure Animation</h1>
+        
+        <div class="explanation" id="explanation">
+            Welcome to the Trie Structure Animation! A trie is a tree-like data structure used to store a collection of strings.
+        </div>
+        
+        <div class="animation-container">
+            <canvas id="canvas" width="900" height="500"></canvas>
+        </div>
+        
+        <div class="step-indicator">
+            Step <span id="currentStep">1</span> of <span id="totalSteps">6</span>
+        </div>
+        
+        <div class="nav-buttons">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FF4800;"></div>
+                <span>Root Node</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FD9F78;"></div>
+                <span>Character Node</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #000000;"></div>
+                <span>Word End</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #00A8E8; border: 1px solid #000;"></div>
+                <span>Current Focus</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Words to be added to trie
+        const words = ['cat', 'car', 'care', 'careful', 'dog', 'dodge'];
+        
+        // Animation state
+        let currentStep = 1;
+        const totalSteps = 6;
+        document.getElementById('totalSteps').textContent = totalSteps;
+        
+        // Navigation buttons
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        // Explanation texts for each step
+        const explanations = [
+            "A trie starts with a root node. We'll insert words like 'cat', 'car', 'care', 'careful', 'dog', and 'dodge'.",
+            "We've added 'cat' and 'car' to our trie. Notice how they share the common prefix 'ca'.",
+            "Now we've added 'care' and 'careful'. See how they build upon the existing 'car' path.",
+            "We've added 'dog' to the trie. It starts from a new branch at the root node.",
+            "Finally, we've added 'dodge'. It shares the prefix 'do' with 'dog'.",
+            "The complete trie structure with frequency counts. Bold nodes mark the end of complete words. This structure efficiently stores words with common prefixes."
+        ];
+        
+        // Trie node class
+        class TrieNode {
+            constructor(char, isRoot = false) {
+                this.char = char;
+                this.children = {};
+                this.isEndOfWord = false;
+                this.frequency = 0;
+                this.isRoot = isRoot;
+                this.x = 0;
+                this.y = 0;
+            }
+        }
+        
+        // Create the trie
+        const root = new TrieNode('', true);
+        
+        // Function to insert a word into the trie
+        function insertWord(word) {
+            let current = root;
+            for (let i = 0; i < word.length; i++) {
+                const char = word[i];
+                if (!current.children[char]) {
+                    current.children[char] = new TrieNode(char);
+                }
+                current = current.children[char];
+            }
+            current.isEndOfWord = true;
+            current.frequency++;
+        }
+        
+        // Build tries for each step
+        const tries = [];
+        
+        // Step 1: Empty trie with just root
+        tries.push(JSON.parse(JSON.stringify(root)));
+        
+        // Step 2: Add 'cat' and 'car'
+        insertWord('cat');
+        insertWord('car');
+        tries.push(JSON.parse(JSON.stringify(root)));
+        
+        // Step 3: Add 'care' and 'careful'
+        insertWord('care');
+        insertWord('careful');
+        tries.push(JSON.parse(JSON.stringify(root)));
+        
+        // Step 4: Add 'dog'
+        insertWord('dog');
+        tries.push(JSON.parse(JSON.stringify(root)));
+        
+        // Step 5: Add 'dodge'
+        insertWord('dodge');
+        tries.push(JSON.parse(JSON.stringify(root)));
+        
+        // Step 6: Complete trie
+        tries.push(JSON.parse(JSON.stringify(root)));
+        
+        // Calculate positions for nodes
+        function calculatePositions(node, x, y, horizontalSpacing, verticalSpacing, levelWidths = {}, levelPositions = {}) {
+            if (!levelWidths[y]) {
+                levelWidths[y] = 0;
+                levelPositions[y] = [];
+            }
+            
+            node.x = x;
+            node.y = y;
+            
+            // Add node to level positions to track horizontal placement
+            levelPositions[y].push(x);
+            
+            // Count children
+            const childCount = Object.keys(node.children).length;
+            
+            // Calculate positions for children
+            let i = 0;
+            for (const char in node.children) {
+                const childX = x - (childCount - 1) * horizontalSpacing / 2 + i * horizontalSpacing;
+                calculatePositions(
+                    node.children[char],
+                    childX,
+                    y + verticalSpacing,
+                    horizontalSpacing * 0.7,
+                    verticalSpacing,
+                    levelWidths,
+                    levelPositions
+                );
+                i++;
+            }
+            
+            return { levelWidths, levelPositions };
+        }
+        
+        // Layout for each step's trie
+        function layoutTrie(rootNode) {
+            // Deep copy the trie to avoid modifying the original
+            const treeCopy = JSON.parse(JSON.stringify(rootNode));
+            
+            // Calculate node positions
+            const horizontalSpacing = 100;
+            const verticalSpacing = 80;
+            const { levelWidths, levelPositions } = calculatePositions(treeCopy, canvas.width / 2, 60, horizontalSpacing, verticalSpacing);
+            
+            return treeCopy;
+        }
+        
+        // Draw a node
+        function drawNode(node, highlight = false) {
+            // Node circle
+            ctx.beginPath();
+            const radius = node.isRoot ? 30 : 25;
+            
+            if (highlight) {
+                ctx.fillStyle = "#00A8E8";
+                ctx.strokeStyle = "#000000";
+                ctx.lineWidth = 3;
+            } else {
+                ctx.fillStyle = node.isRoot ? "#FF4800" : "#FD9F78";
+                ctx.strokeStyle = "#000000";
+                ctx.lineWidth = 1;
+            }
+            
+            ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Node text
+            ctx.fillStyle = "#FFFFFF";
+            ctx.font = node.isRoot ? "bold 18px Arial" : "16px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(node.char || "Root", node.x, node.y);
+            
+            // Frequency count if not zero
+            if (node.frequency > 0) {
+                ctx.fillStyle = "#000000";
+                ctx.font = "12px Arial";
+                ctx.fillText(`(${node.frequency})`, node.x, node.y + radius + 15);
+            }
+            
+            // Indicator for end of word
+            if (node.isEndOfWord) {
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, radius + 5, 0, Math.PI * 2);
+                ctx.strokeStyle = "#000000";
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+        }
+        
+        // Draw a connection between nodes
+        function drawConnection(parentNode, childNode) {
+            ctx.beginPath();
+            ctx.moveTo(parentNode.x, parentNode.y + 25);
+            ctx.lineTo(childNode.x, childNode.y - 25);
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        // Draw the trie structure
+        function drawTrie(rootNode, highlightWord = "") {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Process nodes level by level for drawing
+            const queue = [{node: rootNode, parent: null, depth: 0, path: ""}];
+            const processedNodes = new Set();
+            
+            while (queue.length > 0) {
+                const {node, parent, depth, path} = queue.shift();
+                
+                // Generate unique ID for node to track processing
+                const nodeId = `${node.x},${node.y}`;
+                
+                if (!processedNodes.has(nodeId)) {
+                    // Draw connection to parent if exists
+                    if (parent) {
+                        drawConnection(parent, node);
+                    }
+                    
+                    // Determine if node should be highlighted
+                    const currentPath = path + node.char;
+                    const shouldHighlight = highlightWord && highlightWord.startsWith(currentPath) && 
+                                         (highlightWord.length === currentPath.length || 
+                                          Object.keys(node.children).some(char => highlightWord[currentPath.length] === char));
+                    
+                    // Draw the node
+                    drawNode(node, shouldHighlight);
+                    
+                    // Add children to queue
+                    for (const char in node.children) {
+                        queue.push({
+                            node: node.children[char],
+                            parent: node,
+                            depth: depth + 1,
+                            path: currentPath
+                        });
+                    }
+                    
+                    processedNodes.add(nodeId);
+                }
+            }
+        }
+        
+        // Layout all tries
+        const layoutTries = tries.map(trie => layoutTrie(trie));
+        
+        // Render current step
+        function renderCurrentStep() {
+            // Update explanation
+            document.getElementById('explanation').textContent = explanations[currentStep - 1];
+            
+            // Update step indicator
+            document.getElementById('currentStep').textContent = currentStep;
+            
+            // Draw trie for current step
+            const layoutedTrie = layoutTries[currentStep - 1];
+            
+            // Highlight words based on step
+            let highlightWord = "";
+            if (currentStep === 2) highlightWord = "ca";
+            else if (currentStep === 3) highlightWord = "care";
+            else if (currentStep === 4) highlightWord = "dog";
+            else if (currentStep === 5) highlightWord = "dodge";
+            
+            drawTrie(layoutedTrie, highlightWord);
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === totalSteps;
+        }
+        
+        // Initial render
+        renderCurrentStep();
+        
+        // Event listeners for navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                renderCurrentStep();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                renderCurrentStep();
+            }
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            renderCurrentStep();
+        });
+    </script>
+</body>
+</html>
