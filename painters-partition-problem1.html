@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Board Distribution Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .visualization {
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            min-height: 400px;
+        }
+        .boards {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+        }
+        .board {
+            text-align: center;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+        .board-visual {
+            background-color: #FD9F78;
+            margin: 0 auto;
+            transition: all 0.5s ease;
+        }
+        .board-label {
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        .group {
+            border: 2px dashed #FF4800;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px;
+            display: inline-block;
+            transition: all 0.5s ease;
+        }
+        .result {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #FF4800;
+        }
+        .explanation {
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        .nav-button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .step-indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #000000;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Board Distribution Visualization</h1>
+        
+        <div class="visualization" id="visualization">
+            <div class="boards" id="boards">
+                <!-- Boards will be added here dynamically -->
+            </div>
+            
+            <div id="partitioning">
+                <!-- Partitioning visualization will be added here dynamically -->
+            </div>
+            
+            <div class="result" id="result">
+                <!-- Result will be shown here -->
+            </div>
+            
+            <div class="explanation" id="explanation">
+                <!-- Explanation will be shown here -->
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prevBtn">Previous</button>
+            <button class="nav-button" id="nextBtn">Next</button>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">
+            Step 1 of 5
+        </div>
+    </div>
+
+    <script>
+        // Board lengths
+        const boards = [10, 20, 30, 40];
+        
+        // Maximum board width for visualization (in pixels)
+        const maxBoardWidth = 150;
+        
+        // Scale factor to visualize boards
+        const scaleFactor = maxBoardWidth / Math.max(...boards);
+        
+        // Current step in the visualization
+        let currentStep = 1;
+        const totalSteps = 5;
+        
+        // Initialize the visualization
+        function initVisualization() {
+            const boardsContainer = document.getElementById('boards');
+            boardsContainer.innerHTML = '';
+            
+            // Create visual representation of each board
+            boards.forEach((length, index) => {
+                const boardDiv = document.createElement('div');
+                boardDiv.className = 'board';
+                boardDiv.id = `board-${index}`;
+                
+                const boardVisual = document.createElement('div');
+                boardVisual.className = 'board-visual';
+                boardVisual.style.width = `${length * scaleFactor}px`;
+                boardVisual.style.height = '30px';
+                
+                const boardLabel = document.createElement('div');
+                boardLabel.className = 'board-label';
+                boardLabel.textContent = `Length: ${length} units`;
+                
+                boardDiv.appendChild(boardVisual);
+                boardDiv.appendChild(boardLabel);
+                boardsContainer.appendChild(boardDiv);
+            });
+            
+            updateStep(1);
+        }
+        
+        // Update the visualization based on current step
+        function updateStep(step) {
+            currentStep = step;
+            document.getElementById('stepIndicator').textContent = `Step ${currentStep} of ${totalSteps}`;
+            
+            // Enable/disable navigation buttons
+            document.getElementById('prevBtn').disabled = (currentStep === 1);
+            document.getElementById('nextBtn').disabled = (currentStep === totalSteps);
+            
+            const partitioningDiv = document.getElementById('partitioning');
+            const resultDiv = document.getElementById('result');
+            const explanationDiv = document.getElementById('explanation');
+            
+            // Reset all elements
+            partitioningDiv.innerHTML = '';
+            resultDiv.textContent = '';
+            explanationDiv.textContent = '';
+            
+            // Reset all board positions
+            boards.forEach((_, index) => {
+                const boardDiv = document.getElementById(`board-${index}`);
+                boardDiv.style.transform = 'none';
+            });
+            
+            // Update content based on current step
+            switch(currentStep) {
+                case 1:
+                    // Introduction
+                    explanationDiv.textContent = "We have 4 boards with lengths 10, 20, 30, and 40 units. We need to distribute them into two piles to minimize the total length (maximum sum of lengths in any pile).";
+                    break;
+                    
+                case 2:
+                    // First partition strategy: [10, 20] and [30, 40]
+                    explanationDiv.textContent = "Let's try our first partition strategy: Put boards [10, 20] in one pile and [30, 40] in another pile.";
+                    
+                    // Create groups
+                    const group1 = createGroup([0, 1], "Pile 1: [10, 20]");
+                    const group2 = createGroup([2, 3], "Pile 2: [30, 40]");
+                    
+                    partitioningDiv.appendChild(group1);
+                    partitioningDiv.appendChild(group2);
+                    
+                    // Move boards to their groups
+                    moveBoards();
+                    break;
+                    
+                case 3:
+                    // Show result of first strategy
+                    explanationDiv.textContent = "In the first partition, Pile 1 has a total length of 30 units (10 + 20) and Pile 2 has a total length of 70 units (30 + 40). The maximum length is 70 units.";
+                    
+                    const group1 = createGroup([0, 1], "Pile 1: [10, 20]");
+                    const group2 = createGroup([2, 3], "Pile 2: [30, 40]");
+                    
+                    partitioningDiv.appendChild(group1);
+                    partitioningDiv.appendChild(group2);
+                    
+                    moveBoards();
+                    
+                    resultDiv.textContent = "Maximum pile length: 70 units";
+                    resultDiv.style.color = "#FF4800";
+                    break;
+                    
+                case 4:
+                    // Second (optimal) partition strategy: [10, 20, 30] and [40]
+                    explanationDiv.textContent = "Let's try a different partition strategy: Put boards [10, 20, 30] in one pile and [40] in another pile.";
+                    
+                    const optGroup1 = createGroup([0, 1, 2], "Pile 1: [10, 20, 30]");
+                    const optGroup2 = createGroup([3], "Pile 2: [40]");
+                    
+                    partitioningDiv.appendChild(optGroup1);
+                    partitioningDiv.appendChild(optGroup2);
+                    
+                    moveBoards();
+                    break;
+                    
+                case 5:
+                    // Show result of optimal strategy
+                    explanationDiv.textContent = "In this partition, Pile 1 has a total length of 60 units (10 + 20 + 30) and Pile 2 has a total length of 40 units. The maximum length is 60 units, which is better than our first attempt! This is the optimal solution for this set of boards.";
+                    
+                    const optGroup1 = createGroup([0, 1, 2], "Pile 1: [10, 20, 30]");
+                    const optGroup2 = createGroup([3], "Pile 2: [40]");
+                    
+                    partitioningDiv.appendChild(optGroup1);
+                    partitioningDiv.appendChild(optGroup2);
+                    
+                    moveBoards();
+                    
+                    resultDiv.textContent = "Maximum pile length: 60 units (Optimal)";
+                    resultDiv.style.color = "#FF4800";
+                    break;
+            }
+        }
+        
+        // Helper function to create a group element
+        function createGroup(boardIndices, label) {
+            const group = document.createElement('div');
+            group.className = 'group';
+            
+            const labelDiv = document.createElement('div');
+            labelDiv.textContent = label;
+            group.appendChild(labelDiv);
+            
+            const sumValue = boardIndices.reduce((sum, index) => sum + boards[index], 0);
+            const sumDiv = document.createElement('div');
+            sumDiv.textContent = `Sum: ${sumValue} units`;
+            sumDiv.style.marginTop = '10px';
+            sumDiv.style.fontWeight = 'bold';
+            group.appendChild(sumDiv);
+            
+            // Store board indices in a data attribute
+            group.dataset.boardIndices = JSON.stringify(boardIndices);
+            
+            return group;
+        }
+        
+        // Helper function to move boards to their groups
+        function moveBoards() {
+            const groups = document.querySelectorAll('.group');
+            
+            groups.forEach(group => {
+                const boardIndices = JSON.parse(group.dataset.boardIndices);
+                const groupRect = group.getBoundingClientRect();
+                
+                boardIndices.forEach((boardIndex, i) => {
+                    const boardDiv = document.getElementById(`board-${boardIndex}`);
+                    const boardRect = boardDiv.getBoundingClientRect();
+                    
+                    // Calculate new position (centered in group)
+                    const newTop = groupRect.top - boardRect.top + 50 + (i * 40);
+                    
+                    // Apply transformation
+                    boardDiv.style.transform = `translateY(${newTop}px)`;
+                });
+            });
+        }
+        
+        // Event listeners for navigation buttons
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentStep > 1) {
+                updateStep(currentStep - 1);
+            }
+        });
+        
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                updateStep(currentStep + 1);
+            }
+        });
+        
+        // Initialize visualization on page load
+        window.onload = initVisualization;
+    </script>
+</body>
+</html>
