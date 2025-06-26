@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unique Prefixes Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        
+        .slide {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .slide.active {
+            display: flex;
+        }
+        
+        .word-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .word-box {
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #FFF;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            min-width: 120px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            position: relative;
+            transition: transform 0.3s ease;
+            margin-bottom: 40px;
+        }
+        
+        .word-box:hover {
+            transform: scale(1.05);
+        }
+        
+        .letter {
+            display: inline-block;
+            padding: 2px;
+            border-radius: 3px;
+            margin: 2px;
+        }
+        
+        .highlighted {
+            background-color: #FD9F78;
+            color: #000000;
+        }
+        
+        .prefix {
+            position: absolute;
+            bottom: -30px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 14px;
+            color: #FF4800;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            line-height: 1.6;
+            text-align: left;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 30px;
+        }
+        
+        .nav-btn {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        
+        .nav-btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-btn:disabled {
+            background-color: #FD9F78;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .trie-container {
+            margin: 20px auto;
+            width: 100%;
+            height: 400px;
+            position: relative;
+        }
+        
+        .trie-node {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: #FFFFFF;
+            border: 2px solid #FF4800;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+        
+        .trie-edge {
+            position: absolute;
+            background-color: #FD9F78;
+            height: 2px;
+            transform-origin: left center;
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+        
+        .word-label {
+            position: absolute;
+            font-size: 14px;
+            color: #FF4800;
+            font-weight: bold;
+            transition: opacity 0.5s ease;
+            opacity: 0;
+        }
+        
+        .progress-indicator {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .dot {
+            width: 10px;
+            height: 10px;
+            background-color: #FD9F78;
+            border-radius: 50%;
+            margin: 0 5px;
+            cursor: pointer;
+        }
+        
+        .dot.active {
+            background-color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <h1>Unique Prefixes Visualization</h1>
+    
+    <div class="container">
+        <div class="slide active" id="slide1">
+            <h2>Understanding Unique Prefixes</h2>
+            <div class="explanation">
+                <p>A <strong>unique prefix</strong> is the shortest prefix of a word that is not a prefix of any other word in a given set. This concept is important in data structures like tries (prefix trees) for efficient string operations.</p>
+                <p>For example, in our set of words (<strong>cat</strong>, <strong>car</strong>, <strong>care</strong>, <strong>careful</strong>, <strong>dog</strong>, <strong>dodge</strong>), we need to find the shortest prefix for each word that uniquely identifies it.</p>
+            </div>
+            <div class="word-container" id="initialWords">
+                <div class="word-box">cat</div>
+                <div class="word-box">car</div>
+                <div class="word-box">care</div>
+                <div class="word-box">careful</div>
+                <div class="word-box">dog</div>
+                <div class="word-box">dodge</div>
+            </div>
+        </div>
+
+        <div class="slide" id="slide2">
+            <h2>Finding Unique Prefixes</h2>
+            <div class="explanation">
+                <p>Let's visualize how we identify unique prefixes by examining each word and checking if its prefix is shared with other words.</p>
+                <p>As we find each unique prefix, it will be highlighted.</p>
+            </div>
+            <div class="word-container" id="highlightedWords">
+                <!-- Words with highlighted unique prefixes will be dynamically added here -->
+            </div>
+        </div>
+
+        <div class="slide" id="slide3">
+            <h2>Trie Representation</h2>
+            <div class="explanation">
+                <p>A <strong>trie</strong> (prefix tree) is a perfect data structure for finding unique prefixes. Each path from the root to a node represents a prefix, and we can identify the unique prefix for each word.</p>
+            </div>
+            <div class="trie-container" id="trieVisualization">
+                <!-- Trie visualization will be dynamically generated here -->
+            </div>
+        </div>
+
+        <div class="slide" id="slide4">
+            <h2>Summary of Unique Prefixes</h2>
+            <div class="explanation">
+                <p>Here are the unique prefixes for each word in our set:</p>
+            </div>
+            <div class="word-container" id="finalWords">
+                <!-- Final visualization with all unique prefixes will be here -->
+            </div>
+        </div>
+        
+        <div class="progress-indicator" id="progressDots">
+            <span class="dot active" data-slide="1"></span>
+            <span class="dot" data-slide="2"></span>
+            <span class="dot" data-slide="3"></span>
+            <span class="dot" data-slide="4"></span>
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="nav-btn" id="prevBtn" disabled>Previous</button>
+            <button class="nav-btn" id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Word list and their unique prefixes
+        const words = ['cat', 'car', 'care', 'careful', 'dog', 'dodge'];
+        const uniquePrefixes = ['cat', 'car', 'care', 'caref', 'd', 'do'];
+
+        // Current slide
+        let currentSlide = 1;
+        const totalSlides = 4;
+
+        // DOM elements
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const slides = document.querySelectorAll('.slide');
+        const progressDots = document.querySelectorAll('.dot');
+
+        // Navigation functions
+        function showSlide(slideNumber) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            document.getElementById(`slide${slideNumber}`).classList.add('active');
+            
+            // Update progress dots
+            progressDots.forEach(dot => dot.classList.remove('active'));
+            progressDots[slideNumber - 1].classList.add('active');
+            
+            // Update button states
+            prevBtn.disabled = slideNumber === 1;
+            nextBtn.disabled = slideNumber === totalSlides;
+            
+            // If we're on slide 2, animate the word highlighting
+            if (slideNumber === 2) {
+                animateUniquePrefixHighlighting();
+            }
+            
+            // If we're on slide 3, build the trie
+            if (slideNumber === 3) {
+                buildTrieVisualization();
+            }
+            
+            // If we're on slide 4, show the final unique prefixes
+            if (slideNumber === 4) {
+                showFinalUniquePrefixes();
+            }
+        }
+
+        function goToNextSlide() {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        }
+
+        function goToPrevSlide() {
+            if (currentSlide > 1) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        }
+
+        // Highlight unique prefixes animation
+        function animateUniquePrefixHighlighting() {
+            const wordContainer = document.getElementById('highlightedWords');
+            wordContainer.innerHTML = '';
+            
+            words.forEach((word, index) => {
+                const wordBox = document.createElement('div');
+                wordBox.className = 'word-box';
+                
+                const uniquePrefix = uniquePrefixes[index];
+                
+                for (let i = 0; i < word.length; i++) {
+                    const letterSpan = document.createElement('span');
+                    letterSpan.className = 'letter';
+                    letterSpan.textContent = word[i];
+                    
+                    if (i < uniquePrefix.length) {
+                        letterSpan.classList.add('highlighted');
+                    }
+                    
+                    wordBox.appendChild(letterSpan);
+                }
+                
+                const prefixLabel = document.createElement('div');
+                prefixLabel.className = 'prefix';
+                prefixLabel.textContent = `Unique Prefix: "${uniquePrefix}"`;
+                wordBox.appendChild(prefixLabel);
+                
+                wordContainer.appendChild(wordBox);
+                
+                // Animate each word box appearance
+                setTimeout(() => {
+                    wordBox.style.opacity = '1';
+                }, index * 300);
+            });
+        }
+
+        // Build trie visualization
+        function buildTrieVisualization() {
+            const trieContainer = document.getElementById('trieVisualization');
+            trieContainer.innerHTML = '';
+            
+            // Create root node
+            const rootNode = document.createElement('div');
+            rootNode.className = 'trie-node';
+            rootNode.textContent = '';
+            rootNode.style.top = '20px';
+            rootNode.style.left = '50%';
+            rootNode.style.transform = 'translateX(-50%)';
+            trieContainer.appendChild(rootNode);
+            
+            // Define the trie structure
+            const trieStructure = [
+                { char: 'c', x: 40, y: 100, parent: { x: 50, y: 20 } },
+                { char: 'd', x: 60, y: 100, parent: { x: 50, y: 20 } },
+                { char: 'a', x: 30, y: 160, parent: { x: 40, y: 100 } },
+                { char: 'o', x: 70, y: 160, parent: { x: 60, y: 100 } },
+                { char: 't', x: 20, y: 220, parent: { x: 30, y: 160 } },
+                { char: 'r', x: 40, y: 220, parent: { x: 30, y: 160 } },
+                { char: 'g', x: 60, y: 220, parent: { x: 70, y: 160 } },
+                { char: 'd', x: 80, y: 220, parent: { x: 70, y: 160 } },
+                { char: 'e', x: 50, y: 280, parent: { x: 40, y: 220 } },
+                { char: 'g', x: 90, y: 280, parent: { x: 80, y: 220 } },
+                { char: 'f', x: 60, y: 340, parent: { x: 50, y: 280 } },
+                { char: 'e', x: 100, y: 340, parent: { x: 90, y: 280 } },
+                { char: 'u', x: 70, y: 400, parent: { x: 60, y: 340 } },
+                { char: 'l', x: 80, y: 460, parent: { x: 70, y: 400 } }
+            ];
+            
+            // Word endings and labels
+            const wordEndings = [
+                { char: 't', position: { x: 20, y: 220 }, word: 'cat' },
+                { char: 'r', position: { x: 40, y: 220 }, word: 'car' },
+                { char: 'e', position: { x: 50, y: 280 }, word: 'care' },
+                { char: 'l', position: { x: 80, y: 460 }, word: 'careful' },
+                { char: 'g', position: { x: 60, y: 220 }, word: 'dog' },
+                { char: 'e', position: { x: 100, y: 340 }, word: 'dodge' }
+            ];
+            
+            // Create nodes and edges with animation delays
+            setTimeout(() => {
+                rootNode.style.opacity = '1';
+                
+                trieStructure.forEach((node, index) => {
+                    setTimeout(() => {
+                        // Create the node
+                        const trieNode = document.createElement('div');
+                        trieNode.className = 'trie-node';
+                        trieNode.textContent = node.char;
+                        trieNode.style.top = `${node.y}px`;
+                        trieNode.style.left = `${node.x}%`;
+                        trieContainer.appendChild(trieNode);
+                        
+                        // Create the edge to parent
+                        const edge = document.createElement('div');
+                        edge.className = 'trie-edge';
+                        
+                        // Calculate angle and length for the edge
+                        const dx = (node.x - node.parent.x) * trieContainer.clientWidth / 100;
+                        const dy = node.y - node.parent.y;
+                        const length = Math.sqrt(dx * dx + dy * dy);
+                        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+                        
+                        edge.style.width = `${length}px`;
+                        edge.style.transform = `rotate(${angle}deg)`;
+                        edge.style.top = `${node.parent.y + 20}px`;
+                        edge.style.left = `${node.parent.x}%`;
+                        
+                        trieContainer.appendChild(edge);
+                        
+                        // Animate appearance
+                        setTimeout(() => {
+                            edge.style.opacity = '1';
+                            trieNode.style.opacity = '1';
+                            
+                            // Check if this node is a word ending
+                            const wordEnding = wordEndings.find(ending => 
+                                ending.char === node.char && 
+                                ending.position.x === node.x && 
+                                ending.position.y === node.y
+                            );
+                            
+                            if (wordEnding) {
+                                const wordLabel = document.createElement('div');
+                                wordLabel.className = 'word-label';
+                                wordLabel.textContent = wordEnding.word;
+                                wordLabel.style.top = `${node.y + 20}px`;
+                                wordLabel.style.left = `${node.x}%`;
+                                trieContainer.appendChild(wordLabel);
+                                
+                                setTimeout(() => {
+                                    wordLabel.style.opacity = '1';
+                                }, 200);
+                            }
+                        }, 200);
+                        
+                    }, index * 400);
+                });
+            }, 500);
+        }
+
+        // Show final unique prefixes
+        function showFinalUniquePrefixes() {
+            const finalWordsContainer = document.getElementById('finalWords');
+            finalWordsContainer.innerHTML = '';
+            
+            words.forEach((word, index) => {
+                const wordBox = document.createElement('div');
+                wordBox.className = 'word-box';
+                
+                const uniquePrefix = uniquePrefixes[index];
+                
+                for (let i = 0; i < word.length; i++) {
+                    const letterSpan = document.createElement('span');
+                    letterSpan.className = 'letter';
+                    letterSpan.textContent = word[i];
+                    
+                    if (i < uniquePrefix.length) {
+                        letterSpan.classList.add('highlighted');
+                    }
+                    
+                    wordBox.appendChild(letterSpan);
+                }
+                
+                const prefixLabel = document.createElement('div');
+                prefixLabel.className = 'prefix';
+                prefixLabel.textContent = `Unique Prefix: "${uniquePrefix}"`;
+                wordBox.appendChild(prefixLabel);
+                
+                finalWordsContainer.appendChild(wordBox);
+            });
+        }
+
+        // Event listeners
+        nextBtn.addEventListener('click', goToNextSlide);
+        prevBtn.addEventListener('click', goToPrevSlide);
+        
+        // Allow clicking on progress dots to navigate
+        progressDots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                currentSlide = parseInt(dot.getAttribute('data-slide'));
+                showSlide(currentSlide);
+            });
+        });
+        
+        // Initialize the visualization
+        document.addEventListener('DOMContentLoaded', () => {
+            showSlide(1);
+        });
+    </script>
+</body>
+</html>
