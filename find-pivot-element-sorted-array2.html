@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotated Sorted Array Visualization</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1000px;
+        }
+        
+        .slide {
+            display: none;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        .visualization {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .array-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 10px;
+        }
+        
+        .array-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #FF4800;
+        }
+        
+        .array {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .cell {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #FD9F78;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 5px;
+            font-weight: bold;
+            position: relative;
+            background-color: #FFFFFF;
+            transition: all 0.5s ease;
+        }
+        
+        .cell.highlight {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .arrow {
+            position: absolute;
+            font-size: 24px;
+            color: #FF4800;
+            transform: translateY(-40px);
+        }
+        
+        .explanation {
+            background-color: #FFF;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 800px;
+            margin: 0 auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 400px;
+            margin-top: 30px;
+        }
+        
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .animation-container {
+            height: 150px;
+            position: relative;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Rotated Sorted Array Visualization</h1>
+        
+        <div class="slide active" id="slide1">
+            <div class="explanation">
+                <p>A sorted array is a collection of elements arranged in ascending or descending order. When we rotate a sorted array, we move elements from the beginning to the end (or vice versa).</p>
+            </div>
+            
+            <div class="visualization">
+                <div class="array-container">
+                    <div class="array-title">Original Sorted Array</div>
+                    <div class="array" id="originalArray"></div>
+                </div>
+            </div>
+            
+            <div class="animation-container" id="animationContainer1"></div>
+        </div>
+        
+        <div class="slide" id="slide2">
+            <div class="explanation">
+                <p>Let's rotate this array by moving 3 elements. First, we'll identify a rotation point.</p>
+            </div>
+            
+            <div class="visualization">
+                <div class="array-container">
+                    <div class="array-title">Original Sorted Array with Rotation Point</div>
+                    <div class="array" id="rotationPointArray"></div>
+                </div>
+            </div>
+            
+            <div class="animation-container" id="animationContainer2"></div>
+        </div>
+        
+        <div class="slide" id="slide3">
+            <div class="explanation">
+                <p>After rotation, elements before the rotation point move to the end of the array, and the structure changes.</p>
+            </div>
+            
+            <div class="visualization">
+                <div class="array-container">
+                    <div class="array-title">Rotated Array</div>
+                    <div class="array" id="rotatedArray"></div>
+                </div>
+            </div>
+            
+            <div class="animation-container" id="animationContainer3"></div>
+        </div>
+        
+        <div class="slide" id="slide4">
+            <div class="explanation">
+                <p>In the rotated array, the pivot element (the first element of the original sorted portion) is highlighted. Notice how the array still maintains two sorted subarrays.</p>
+            </div>
+            
+            <div class="visualization">
+                <div class="array-container">
+                    <div class="array-title">Original Sorted Array</div>
+                    <div class="array" id="comparisonOriginal"></div>
+                </div>
+                <div class="array-container">
+                    <div class="array-title">Rotated Array with Pivot Highlighted</div>
+                    <div class="array" id="comparisonRotated"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="slide" id="slide5">
+            <div class="explanation">
+                <p>A key property of rotated sorted arrays is that they consist of two sorted subarrays. This property is useful for various algorithms like binary search on rotated arrays.</p>
+            </div>
+            
+            <div class="visualization">
+                <div class="array-container">
+                    <div class="array-title">Two Sorted Subarrays in Rotated Array</div>
+                    <div class="array" id="twoSortedSubarrays"></div>
+                </div>
+            </div>
+            
+            <div class="animation-container" id="animationContainer5"></div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+    
+    <script>
+        // Array data
+        const originalArray = [0, 1, 2, 4, 5, 6, 7];
+        const rotatedArray = [4, 5, 6, 7, 0, 1, 2];
+        const rotationIndex = 4; // Index of the first element after rotation (pivot)
+        
+        // Helper function to create array cells
+        function createArrayCells(containerId, array, highlightIndices = [], arrowIndex = -1) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            array.forEach((value, index) => {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                if (highlightIndices.includes(index)) {
+                    cell.classList.add('highlight');
+                }
+                cell.textContent = value;
+                
+                // Add arrow if needed
+                if (index === arrowIndex) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'arrow';
+                    arrow.textContent = '↓';
+                    cell.appendChild(arrow);
+                }
+                
+                container.appendChild(cell);
+            });
+            
+            return container.querySelectorAll('.cell');
+        }
+        
+        // Initialize slides
+        let currentSlide = 1;
+        const totalSlides = 5;
+        
+        function showSlide(slideNumber) {
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            document.getElementById('slide' + slideNumber).classList.add('active');
+            
+            document.getElementById('prevBtn').disabled = (slideNumber === 1);
+            document.getElementById('nextBtn').disabled = (slideNumber === totalSlides);
+            
+            // Initialize slide content based on slide number
+            switch(slideNumber) {
+                case 1:
+                    const originalCells = createArrayCells('originalArray', originalArray);
+                    
+                    // Animation for slide 1
+                    setTimeout(() => {
+                        originalCells.forEach((cell, index) => {
+                            setTimeout(() => {
+                                cell.style.backgroundColor = '#FD9F78';
+                                setTimeout(() => {
+                                    cell.style.backgroundColor = '#FFFFFF';
+                                }, 300);
+                            }, index * 200);
+                        });
+                    }, 500);
+                    break;
+                    
+                case 2:
+                    const rotationCells = createArrayCells('rotationPointArray', originalArray, [], 3); // Arrow at index 3
+                    
+                    // Animation for slide 2
+                    const container = document.getElementById('animationContainer2');
+                    container.innerHTML = '<div style="font-weight: bold; color: #FF4800;">Rotation Point: After index 3</div>';
+                    break;
+                    
+                case 3:
+                    const rotatedCells = createArrayCells('rotatedArray', rotatedArray);
+                    
+                    // Animation for slide 3 - show the rotation happening
+                    const animContainer = document.getElementById('animationContainer3');
+                    animContainer.innerHTML = '';
+                    const animArray = document.createElement('div');
+                    animArray.className = 'array';
+                    animArray.style.marginTop = '20px';
+                    
+                    // First create original array
+                    originalArray.forEach(value => {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        cell.textContent = value;
+                        animArray.appendChild(cell);
+                    });
+                    
+                    animContainer.appendChild(animArray);
+                    const animCells = animArray.querySelectorAll('.cell');
+                    
+                    // Animate the rotation
+                    setTimeout(() => {
+                        // Highlight cells that will move
+                        for(let i = 0; i < rotationIndex - 1; i++) {
+                            animCells[i].style.backgroundColor = '#FD9F78';
+                        }
+                        
+                        setTimeout(() => {
+                            // Move cells
+                            animArray.style.transition = 'all 1s ease';
+                            for(let i = 0; i < rotationIndex - 1; i++) {
+                                animCells[i].style.transform = 'translateY(50px)';
+                                animCells[i].style.opacity = '0.5';
+                            }
+                            
+                            setTimeout(() => {
+                                // Reset and show rotated array
+                                animArray.innerHTML = '';
+                                rotatedArray.forEach((value, index) => {
+                                    const cell = document.createElement('div');
+                                    cell.className = 'cell';
+                                    cell.textContent = value;
+                                    if (index === rotationIndex) {
+                                        cell.classList.add('highlight');
+                                    }
+                                    animArray.appendChild(cell);
+                                });
+                            }, 1000);
+                        }, 1000);
+                    }, 500);
+                    break;
+                    
+                case 4:
+                    // Show original and rotated arrays side by side
+                    createArrayCells('comparisonOriginal', originalArray);
+                    createArrayCells('comparisonRotated', rotatedArray, [rotationIndex]); // Highlight pivot
+                    break;
+                    
+                case 5:
+                    // Show the two sorted subarrays
+                    const subCells = createArrayCells('twoSortedSubarrays', rotatedArray);
+                    
+                    // Color code the two sorted subarrays
+                    setTimeout(() => {
+                        // First subarray (larger values)
+                        for(let i = 0; i < rotationIndex; i++) {
+                            subCells[i].style.backgroundColor = '#FD9F78';
+                        }
+                        
+                        // Add a label for the first subarray
+                        const firstLabel = document.createElement('div');
+                        firstLabel.textContent = 'First Sorted Subarray';
+                        firstLabel.style.color = '#FF4800';
+                        firstLabel.style.marginTop = '10px';
+                        document.getElementById('animationContainer5').appendChild(firstLabel);
+                        
+                        setTimeout(() => {
+                            // Second subarray (smaller values)
+                            for(let i = rotationIndex; i < rotatedArray.length; i++) {
+                                subCells[i].style.backgroundColor = '#FF4800';
+                                subCells[i].style.color = '#FFFFFF';
+                            }
+                            
+                            // Add a label for the second subarray
+                            const secondLabel = document.createElement('div');
+                            secondLabel.textContent = 'Second Sorted Subarray';
+                            secondLabel.style.color = '#FF4800';
+                            secondLabel.style.marginTop = '10px';
+                            document.getElementById('animationContainer5').appendChild(secondLabel);
+                        }, 1500);
+                    }, 500);
+                    break;
+            }
+        }
+        
+        // Initialize first slide
+        showSlide(1);
+        
+        // Event listeners for navigation
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentSlide > 1) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        });
+        
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        });
+    </script>
+</body>
+</html>
