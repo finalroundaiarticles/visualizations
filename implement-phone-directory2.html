@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hash Table Phone Directory</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            position: relative;
+        }
+        .slide {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        .active {
+            display: flex;
+        }
+        .hash-table {
+            display: flex;
+            flex-direction: column;
+            margin: 20px 0;
+            width: 100%;
+        }
+        .bucket {
+            display: flex;
+            margin-bottom: 10px;
+            height: 60px;
+            align-items: center;
+        }
+        .index {
+            background-color: #FD9F78;
+            color: #000000;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            border-radius: 8px 0 0 8px;
+        }
+        .value {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            flex-grow: 1;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 0 8px 8px 0;
+            padding: 0 15px;
+        }
+        .empty {
+            background-color: #f0f0f0;
+            color: #aaa;
+        }
+        .arrow {
+            position: absolute;
+            stroke: #000000;
+            stroke-width: 2;
+            fill: none;
+            marker-end: url(#arrowhead);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .arrow.active {
+            opacity: 1;
+        }
+        .info-box {
+            background-color: #f9f9f9;
+            border: 2px solid #FF4800;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            width: 100%;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FD9F78;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .search-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        input {
+            padding: 8px;
+            border: 2px solid #FD9F78;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        .user-entry {
+            position: absolute;
+            background-color: #000000;
+            color: #FFFFFF;
+            padding: 10px;
+            border-radius: 5px;
+            opacity: 0;
+            transition: transform 1s, opacity 1s;
+        }
+        .phone-result {
+            color: #FF4800;
+            font-weight: bold;
+            text-align: center;
+            height: 30px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hash Table Phone Directory</h1>
+    
+    <div class="container">
+        <div class="slide active" id="slide1">
+            <div class="info-box">
+                <h3>What is a Hash Table?</h3>
+                <p>A hash table is a data structure that maps keys to values for highly efficient lookup. It uses a hash function to compute an index into an array where the value can be found.</p>
+            </div>
+            <div class="hash-table" id="initialTable">
+                <div class="bucket">
+                    <div class="index">0</div>
+                    <div class="value empty">Empty</div>
+                </div>
+                <div class="bucket">
+                    <div class="index">1</div>
+                    <div class="value empty">Empty</div>
+                </div>
+                <div class="bucket">
+                    <div class="index">2</div>
+                    <div class="value empty">Empty</div>
+                </div>
+                <div class="bucket">
+                    <div class="index">3</div>
+                    <div class="value empty">Empty</div>
+                </div>
+                <div class="bucket">
+                    <div class="index">4</div>
+                    <div class="value empty">Empty</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide" id="slide2">
+            <div class="info-box">
+                <h3>Adding Entries to the Phone Directory</h3>
+                <p>In our phone directory, we'll use names as keys and store phone numbers as values. The hash function converts each name to a unique index in the table.</p>
+            </div>
+            <div class="hash-table" id="filledTable">
+                <div class="bucket">
+                    <div class="index">0</div>
+                    <div class="value" id="alice">{"original_name": "Alice", "phone": "123-456-7890"}</div>
+                </div>
+                <div class="bucket">
+                    <div class="index">1</div>
+                    <div class="value empty">Empty</div>
+                </div>
+                <div class="bucket">
+                    <div class="index">2</div>
+                    <div class="value" id="bob">{"original_name": "Bob", "phone": "987-654-3210"}</div>
+                </div>
+                <div class="bucket">
+                    <div class="index">3</div>
+                    <div class="value empty">Empty</div>
+                </div>
+                <div class="bucket">
+                    <div class="index">4</div>
+                    <div class="value empty">Empty</div>
+                </div>
+            </div>
+            <div id="user-entry" class="user-entry">hash("alice") = 0</div>
+        </div>
+
+        <div class="slide" id="slide3">
+            <div class="info-box">
+                <h3>Looking Up Phone Numbers</h3>
+                <p>To find a phone number, we apply the hash function to the name to get the index, then retrieve the phone number directly - O(1) constant time lookup!</p>
+            </div>
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Enter name (alice or bob)">
+                <button id="searchButton">Search</button>
+                <div class="phone-result" id="phoneResult"></div>
+            </div>
+            <div class="hash-table">
+                <div class="bucket">
+                    <div class="index">0</div>
+                    <div class="value" id="alice2">{"original_name": "Alice", "phone": "123-456-7890"}</div>
+                </div>
+                <div class="bucket">
+                    <div class="index">1</div>
+                    <div class="value empty">Empty</div>
+                </div>
+                <div class="bucket">
+                    <div class="index">2</div>
+                    <div class="value" id="bob2">{"original_name": "Bob", "phone": "987-654-3210"}</div>
+                </div>
+                <div class="bucket">
+                    <div class="index">3</div>
+                    <div class="value empty">Empty</div>
+                </div>
+                <div class="bucket">
+                    <div class="index">4</div>
+                    <div class="value empty">Empty</div>
+                </div>
+            </div>
+            <svg id="arrow" class="arrow" width="100%" height="200" style="position: absolute; top: 160px; left: 0;">
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#000000"/>
+                    </marker>
+                </defs>
+                <path id="arrowPath" d="M400,50 Q400,150 250,170" />
+            </svg>
+        </div>
+
+        <div class="nav-buttons">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 3;
+        
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        function updateSlide() {
+            // Hide all slides
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            // Show current slide
+            document.getElementById('slide' + currentSlide).classList.add('active');
+            
+            // Update button states
+            prevBtn.disabled = currentSlide === 1;
+            nextBtn.disabled = currentSlide === totalSlides;
+            
+            // Run animations for specific slides
+            if (currentSlide === 2) {
+                setTimeout(() => {
+                    const userEntry = document.getElementById('user-entry');
+                    userEntry.style.opacity = 1;
+                    userEntry.style.transform = 'translateY(20px)';
+                    
+                    setTimeout(() => {
+                        userEntry.textContent = 'hash("bob") = 2';
+                        userEntry.style.transform = 'translateY(120px)';
+                    }, 2000);
+                }, 500);
+            }
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentSlide > 1) {
+                currentSlide--;
+                updateSlide();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                updateSlide();
+            }
+        });
+        
+        // Search functionality
+        const searchButton = document.getElementById('searchButton');
+        const searchInput = document.getElementById('searchInput');
+        const phoneResult = document.getElementById('phoneResult');
+        const arrow = document.getElementById('arrow');
+        const arrowPath = document.getElementById('arrowPath');
+        
+        searchButton.addEventListener('click', () => {
+            const name = searchInput.value.toLowerCase().trim();
+            arrow.classList.remove('active');
+            
+            if (name === 'alice') {
+                phoneResult.textContent = 'Alice: 123-456-7890';
+                const aliceRect = document.getElementById('alice2').getBoundingClientRect();
+                const containerRect = document.querySelector('.container').getBoundingClientRect();
+                
+                // Calculate relative positions
+                const startX = 400;
+                const startY = 50;
+                const endX = aliceRect.left + aliceRect.width/2 - containerRect.left;
+                const endY = aliceRect.top + aliceRect.height/2 - containerRect.top;
+                
+                arrowPath.setAttribute('d', `M${startX},${startY} Q${startX},${(startY+endY)/2} ${endX},${endY}`);
+                arrow.classList.add('active');
+            } else if (name === 'bob') {
+                phoneResult.textContent = 'Bob: 987-654-3210';
+                const bobRect = document.getElementById('bob2').getBoundingClientRect();
+                const containerRect = document.querySelector('.container').getBoundingClientRect();
+                
+                // Calculate relative positions
+                const startX = 400;
+                const startY = 50;
+                const endX = bobRect.left + bobRect.width/2 - containerRect.left;
+                const endY = bobRect.top + bobRect.height/2 - containerRect.top;
+                
+                arrowPath.setAttribute('d', `M${startX},${startY} Q${startX},${(startY+endY)/2} ${endX},${endY}`);
+                arrow.classList.add('active');
+            } else {
+                phoneResult.textContent = 'Name not found in directory';
+            }
+        });
+    </script>
+</body>
+</html>
