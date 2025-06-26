@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brute Force Square Root Calculation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .visualization-area {
+            border: 2px solid #FD9F78;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 300px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .number-line {
+            width: 80%;
+            height: 4px;
+            background-color: #000000;
+            margin: 50px 0;
+            position: relative;
+        }
+        
+        .number-marker {
+            position: absolute;
+            width: 2px;
+            height: 15px;
+            background-color: #000000;
+            bottom: 0;
+            transform: translateX(-50%);
+        }
+        
+        .number-label {
+            position: absolute;
+            bottom: -25px;
+            transform: translateX(-50%);
+            font-size: 14px;
+        }
+        
+        .square {
+            width: 0;
+            height: 0;
+            background-color: #FD9F78;
+            margin-top: 30px;
+            position: relative;
+            transition: all 1s ease;
+        }
+        
+        .square-label {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            width: 100px;
+            text-align: center;
+        }
+        
+        .square-area {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            color: #FFFFFF;
+        }
+        
+        .target-line {
+            width: 90%;
+            height: 2px;
+            background-color: #FF4800;
+            position: absolute;
+            top: 175px;
+        }
+        
+        .target-label {
+            position: absolute;
+            right: 0;
+            top: 160px;
+            font-weight: bold;
+            color: #FF4800;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #FD9F78;
+            border-radius: 5px;
+            color: #000000;
+            font-size: 16px;
+            text-align: center;
+        }
+        
+        .conclusion {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #FF4800;
+            border-radius: 5px;
+            color: #FFFFFF;
+            font-size: 18px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #FD9F78;
+        }
+        
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .progress {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Brute Force Square Root Calculation of √8</h1>
+        
+        <div class="visualization-area">
+            <div class="target-line"></div>
+            <div class="target-label">Target: 8</div>
+            
+            <div class="number-line">
+                <div class="number-marker" style="left: 0%"></div>
+                <div class="number-label" style="left: 0%">0</div>
+                
+                <div class="number-marker" style="left: 20%"></div>
+                <div class="number-label" style="left: 20%">1</div>
+                
+                <div class="number-marker" style="left: 40%"></div>
+                <div class="number-label" style="left: 40%">2</div>
+                
+                <div class="number-marker" style="left: 60%"></div>
+                <div class="number-label" style="left: 60%">3</div>
+                
+                <div class="number-marker" style="left: 80%"></div>
+                <div class="number-label" style="left: 80%">4</div>
+                
+                <div class="number-marker" style="left: 100%"></div>
+                <div class="number-label" style="left: 100%">5</div>
+            </div>
+            
+            <div class="square">
+                <div class="square-label">i = 0</div>
+                <div class="square-area">0</div>
+            </div>
+            
+            <div class="explanation">
+                To find the square root of 8 using brute force, we'll check each integer i, and find the largest i where i² ≤ 8.
+            </div>
+            
+            <div class="conclusion">
+                Therefore, the square root of 8 using brute force method is 2.
+                (The actual √8 ≈ 2.83, but in this brute force method with integers, we get the floor value)
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" class="nav-button" disabled>Previous</button>
+            <button id="nextBtn" class="nav-button">Next</button>
+        </div>
+        
+        <div class="progress">Step 0 of 4</div>
+    </div>
+
+    <script>
+        let currentStep = 0;
+        const totalSteps = 4;
+        
+        const explanations = [
+            "To find the square root of 8 using brute force, we'll check each integer i, and find the largest i where i² ≤ 8.",
+            "Let's check i=1: 1² = 1, which is less than 8. So we continue.",
+            "Let's check i=2: 2² = 4, which is less than 8. So we continue.",
+            "Let's check i=3: 3² = 9, which is greater than 8. We stop here.",
+            "Since 2² = 4 ≤ 8 and 3² = 9 > 8, the largest integer i where i² ≤ 8 is 2. Therefore √8 ≈ 2."
+        ];
+        
+        const squareSizes = [0, 40, 80, 120];
+        const squarePositions = ["0%", "20%", "40%", "60%"];
+        const squareValues = [0, 1, 4, 9];
+        
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const explanation = document.querySelector('.explanation');
+        const square = document.querySelector('.square');
+        const squareLabel = document.querySelector('.square-label');
+        const squareArea = document.querySelector('.square-area');
+        const conclusion = document.querySelector('.conclusion');
+        const progress = document.querySelector('.progress');
+        
+        function updateStep() {
+            // Update progress indicator
+            progress.textContent = `Step ${currentStep} of ${totalSteps}`;
+            
+            // Update button states
+            prevBtn.disabled = currentStep === 0;
+            nextBtn.disabled = currentStep === totalSteps;
+            
+            // Update explanation
+            explanation.textContent = explanations[currentStep];
+            
+            // Show/hide conclusion
+            conclusion.style.display = currentStep === totalSteps ? 'block' : 'none';
+            
+            // Update visualization
+            if (currentStep < totalSteps) {
+                square.style.width = `${squareSizes[currentStep]}px`;
+                square.style.height = `${squareSizes[currentStep]}px`;
+                square.style.left = squarePositions[currentStep];
+                squareLabel.textContent = `i = ${currentStep}`;
+                squareArea.textContent = `${currentStep}² = ${squareValues[currentStep]}`;
+                
+                if (currentStep === 3) {
+                    square.style.backgroundColor = '#FF4800';
+                } else {
+                    square.style.backgroundColor = '#FD9F78';
+                }
+            }
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateStep();
+            }
+        });
+        
+        // Initialize
+        updateStep();
+    </script>
+</body>
+</html>
