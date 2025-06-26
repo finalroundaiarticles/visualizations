@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search for Fixed Point</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .explanation {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            overflow-x: auto;
+        }
+        
+        .array-element {
+            width: 60px;
+            height: 60px;
+            margin: 0 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #000000;
+            border-radius: 5px;
+            font-weight: bold;
+            position: relative;
+        }
+        
+        .array-element .index {
+            position: absolute;
+            top: -25px;
+            font-size: 14px;
+        }
+        
+        .highlight-left {
+            background-color: #FD9F78;
+        }
+        
+        .highlight-right {
+            background-color: #FD9F78;
+        }
+        
+        .highlight-mid {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .fixed-point {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: 2px solid #000000;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .pointers {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        .pointer {
+            margin: 0 5px;
+            padding: 5px 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border-radius: 5px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #FF4800;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #FD9F78;
+        }
+        
+        .btn:disabled {
+            background-color: #FD9F78;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .step-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #FD9F78;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .current-step {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .result {
+            font-weight: bold;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 18px;
+            color: #FF4800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Search for Fixed Point</h1>
+        
+        <div class="explanation">
+            <p>A fixed point in an array is an element whose value equals its index. This animation demonstrates how binary search can efficiently find a fixed point in a sorted array.</p>
+            <p>We're searching the array: [-10, -1, 0, 3, 10, 11, 30, 50, 100]</p>
+        </div>
+        
+        <div class="array-container" id="arrayContainer"></div>
+        
+        <div class="pointers" id="pointers"></div>
+        
+        <div class="step-info" id="stepInfo">
+            <div class="current-step" id="currentStep"></div>
+            <div id="stepExplanation"></div>
+        </div>
+        
+        <div class="result" id="result"></div>
+        
+        <div class="controls">
+            <button class="btn" id="prevBtn">Previous</button>
+            <button class="btn" id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const array = [-10, -1, 0, 3, 10, 11, 30, 50, 100];
+        
+        // Precomputed steps for the binary search
+        const steps = [
+            {
+                left: 0,
+                right: 8,
+                mid: 4,
+                explanation: "Initialize left=0, right=8, mid=4. Compare array[4]=10 with index 4. Since 10 > 4, the fixed point (if exists) must be on the left side."
+            },
+            {
+                left: 0,
+                right: 3,
+                mid: 1,
+                explanation: "Now left=0, right=3, mid=1. Compare array[1]=-1 with index 1. Since -1 < 1, the fixed point (if exists) must be on the right side."
+            },
+            {
+                left: 2,
+                right: 3,
+                mid: 2,
+                explanation: "Now left=2, right=3, mid=2. Compare array[2]=0 with index 2. Since 0 < 2, the fixed point (if exists) must be on the right side."
+            },
+            {
+                left: 3,
+                right: 3,
+                mid: 3,
+                explanation: "Now left=3, right=3, mid=3. Compare array[3]=3 with index 3. Since 3 = 3, we found the fixed point at index 3!"
+            }
+        ];
+        
+        let currentStepIndex = 0;
+        
+        function renderArray() {
+            const arrayContainer = document.getElementById('arrayContainer');
+            arrayContainer.innerHTML = '';
+            
+            for (let i = 0; i < array.length; i++) {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                
+                // Apply highlighting based on current step
+                const currentStep = steps[currentStepIndex];
+                
+                if (i === currentStep.mid) {
+                    element.classList.add('highlight-mid');
+                } else if (i >= currentStep.left && i < currentStep.mid) {
+                    element.classList.add('highlight-left');
+                } else if (i > currentStep.mid && i <= currentStep.right) {
+                    element.classList.add('highlight-right');
+                }
+                
+                // If we're at the last step and found the fixed point
+                if (currentStepIndex === steps.length - 1 && array[i] === i) {
+                    element.classList.add('fixed-point');
+                }
+                
+                const indexSpan = document.createElement('span');
+                indexSpan.className = 'index';
+                indexSpan.textContent = i;
+                
+                element.appendChild(indexSpan);
+                element.appendChild(document.createTextNode(array[i]));
+                arrayContainer.appendChild(element);
+            }
+        }
+        
+        function renderPointers() {
+            const pointersContainer = document.getElementById('pointers');
+            pointersContainer.innerHTML = '';
+            
+            const currentStep = steps[currentStepIndex];
+            
+            const leftPointer = document.createElement('div');
+            leftPointer.className = 'pointer';
+            leftPointer.textContent = `Left: ${currentStep.left}`;
+            
+            const midPointer = document.createElement('div');
+            midPointer.className = 'pointer';
+            midPointer.textContent = `Mid: ${currentStep.mid}`;
+            
+            const rightPointer = document.createElement('div');
+            rightPointer.className = 'pointer';
+            rightPointer.textContent = `Right: ${currentStep.right}`;
+            
+            pointersContainer.appendChild(leftPointer);
+            pointersContainer.appendChild(midPointer);
+            pointersContainer.appendChild(rightPointer);
+        }
+        
+        function updateStepInfo() {
+            const currentStepElement = document.getElementById('currentStep');
+            const stepExplanationElement = document.getElementById('stepExplanation');
+            
+            currentStepElement.textContent = `Step ${currentStepIndex + 1} of ${steps.length}`;
+            stepExplanationElement.textContent = steps[currentStepIndex].explanation;
+        }
+        
+        function updateResult() {
+            const resultElement = document.getElementById('result');
+            
+            if (currentStepIndex === steps.length - 1) {
+                resultElement.textContent = "Fixed point found at index 3 (value = 3)!";
+            } else {
+                resultElement.textContent = "";
+            }
+        }
+        
+        function updateButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.disabled = currentStepIndex === 0;
+            nextBtn.disabled = currentStepIndex === steps.length - 1;
+        }
+        
+        function renderCurrentStep() {
+            renderArray();
+            renderPointers();
+            updateStepInfo();
+            updateResult();
+            updateButtons();
+        }
+        
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentStepIndex > 0) {
+                currentStepIndex--;
+                renderCurrentStep();
+            }
+        });
+        
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentStepIndex < steps.length - 1) {
+                currentStepIndex++;
+                renderCurrentStep();
+            }
+        });
+        
+        // Initial render
+        renderCurrentStep();
+    </script>
+</body>
+</html>
