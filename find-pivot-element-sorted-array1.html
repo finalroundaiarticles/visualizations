@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search Decision Process</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .array-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .array-element {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #000000;
+            margin: 0 5px;
+            font-weight: bold;
+            position: relative;
+        }
+        
+        .index {
+            position: absolute;
+            top: -25px;
+            font-size: 12px;
+        }
+        
+        .pointer {
+            position: absolute;
+            bottom: -40px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .pointer.left {
+            color: #FF4800;
+        }
+        
+        .pointer.right {
+            color: #FD9F78;
+        }
+        
+        .pointer.mid {
+            color: #000000;
+        }
+        
+        .array-element.left-pointer {
+            border: 2px solid #FF4800;
+        }
+        
+        .array-element.right-pointer {
+            border: 2px solid #FD9F78;
+        }
+        
+        .array-element.mid-pointer {
+            background-color: #000000;
+            color: #FFFFFF;
+        }
+        
+        .array-element.target {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #FF4800;
+            background-color: rgba(253, 159, 120, 0.1);
+        }
+        
+        .decision {
+            font-weight: bold;
+            color: #FF4800;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #FF4800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background-color: #FD9F78;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .status-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .status {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Search Decision Process</h1>
+        <p>Finding pivot element (0) in a rotated sorted array [4, 5, 6, 7, 0, 1, 2]</p>
+        
+        <div class="array-container" id="arrayContainer"></div>
+        
+        <div class="explanation" id="explanation"></div>
+        
+        <div class="status-container">
+            <div class="status" id="status"></div>
+        </div>
+        
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const array = [4, 5, 6, 7, 0, 1, 2];
+        const target = 0; // The pivot element we want to find
+        
+        // Define all the steps of the binary search
+        const steps = [
+            {
+                left: 0,
+                right: 6,
+                mid: 3,
+                explanation: "Initialize binary search with left=0, right=6, mid=3. The value at mid is 7. Since array[mid] (7) > array[right] (2), we know the pivot must be in the right half.",
+                decision: "Search in right half (mid+1 to right)"
+            },
+            {
+                left: 4,
+                right: 6,
+                mid: 5,
+                explanation: "Now left=4, right=6, mid=5. The value at mid is 1. Since array[mid] (1) < array[right] (2), we know the pivot must be in the left half.",
+                decision: "Search in left half (left to mid)"
+            },
+            {
+                left: 4,
+                right: 5,
+                mid: 4,
+                explanation: "Now left=4, right=5, mid=4. The value at mid is 0. Since array[mid] (0) < array[right] (1), we know the pivot could be at mid or to the left.",
+                decision: "Search in left half (left to mid)"
+            },
+            {
+                left: 4,
+                right: 4,
+                mid: 4,
+                explanation: "Now left=4, right=4, mid=4. The value at mid is 0, which is the minimum element in the array (pivot)!",
+                decision: "Pivot found at index 4!"
+            }
+        ];
+        
+        let currentStep = 0;
+        
+        function renderArray() {
+            const arrayContainer = document.getElementById('arrayContainer');
+            arrayContainer.innerHTML = '';
+            
+            const step = steps[currentStep];
+            
+            for (let i = 0; i < array.length; i++) {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.textContent = array[i];
+                
+                // Add index above each element
+                const indexSpan = document.createElement('span');
+                indexSpan.className = 'index';
+                indexSpan.textContent = i;
+                element.appendChild(indexSpan);
+                
+                // Mark elements with pointers
+                if (i === step.left) {
+                    element.classList.add('left-pointer');
+                    const pointerSpan = document.createElement('span');
+                    pointerSpan.className = 'pointer left';
+                    pointerSpan.textContent = 'L';
+                    element.appendChild(pointerSpan);
+                }
+                
+                if (i === step.right) {
+                    element.classList.add('right-pointer');
+                    const pointerSpan = document.createElement('span');
+                    pointerSpan.className = 'pointer right';
+                    pointerSpan.textContent = 'R';
+                    element.appendChild(pointerSpan);
+                }
+                
+                if (i === step.mid) {
+                    element.classList.add('mid-pointer');
+                    const pointerSpan = document.createElement('span');
+                    pointerSpan.className = 'pointer mid';
+                    pointerSpan.textContent = 'M';
+                    element.appendChild(pointerSpan);
+                }
+                
+                if (array[i] === target && (currentStep === steps.length - 1)) {
+                    element.classList.add('target');
+                }
+                
+                arrayContainer.appendChild(element);
+            }
+        }
+        
+        function updateExplanation() {
+            const explanationDiv = document.getElementById('explanation');
+            const step = steps[currentStep];
+            explanationDiv.innerHTML = `
+                ${step.explanation} <br><br>
+                <span class="decision">Decision: ${step.decision}</span>
+            `;
+        }
+        
+        function updateStatus() {
+            const statusDiv = document.getElementById('status');
+            if (currentStep === steps.length - 1) {
+                statusDiv.textContent = `Found pivot ${target} at index ${steps[currentStep].mid}!`;
+                statusDiv.style.color = '#FF4800';
+            } else {
+                statusDiv.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+                statusDiv.style.color = '#000000';
+            }
+        }
+        
+        function updateButtons() {
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === steps.length - 1;
+        }
+        
+        function update() {
+            renderArray();
+            updateExplanation();
+            updateStatus();
+            updateButtons();
+        }
+        
+        document.getElementById('nextBtn').addEventListener('click', function() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                update();
+            }
+        });
+        
+        document.getElementById('prevBtn').addEventListener('click', function() {
+            if (currentStep > 0) {
+                currentStep--;
+                update();
+            }
+        });
+        
+        // Initial render
+        update();
+    </script>
+</body>
+</html>
