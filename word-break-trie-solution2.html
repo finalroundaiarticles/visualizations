@@ -3,400 +3,360 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Programming Table Evolution</title>
+    <title>Trie Word Break Visualization</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #FFFFFF;
             margin: 0;
             padding: 20px;
-            color: #000000;
+            font-family: Arial, sans-serif;
+            background-color: white;
+            overflow: hidden;
         }
+        
         .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        h1 {
-            color: #FF4800;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .dp-container {
+            width: 100vw;
+            height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-bottom: 30px;
-        }
-        .dp-array {
-            display: flex;
-            margin-bottom: 20px;
-        }
-        .dp-cell {
-            width: 40px;
-            height: 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 1px solid #000000;
-            margin-right: 5px;
-            font-weight: bold;
             position: relative;
         }
-        .dp-indices {
-            display: flex;
-            margin-bottom: 5px;
-        }
-        .dp-index {
-            width: 40px;
-            height: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-right: 5px;
-            color: #FF4800;
-            font-weight: bold;
-        }
-        .dp-chars {
-            display: flex;
-            margin-bottom: 10px;
-        }
-        .dp-char {
-            width: 40px;
-            height: 30px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-right: 5px;
-            font-weight: bold;
-            background-color: #FD9F78;
-            border-radius: 5px;
-        }
-        .true {
-            background-color: #FF4800;
-            color: #FFFFFF;
-        }
-        .false {
-            background-color: #FFFFFF;
-            color: #000000;
-        }
-        .current {
-            background-color: #FD9F78;
-        }
-        .arrow {
+        
+        .controls {
             position: absolute;
-            border-left: 2px solid #FF4800;
-            border-bottom: 2px solid #FF4800;
-            width: 10px;
-            height: 10px;
-            transform: rotate(45deg);
-            display: none;
-        }
-        .explanation {
-            background-color: #FD9F78;
-            color: #000000;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 16px;
-            line-height: 1.5;
-        }
-        .step-controls {
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            justify-content: center;
-            margin-top: 20px;
+            gap: 10px;
+            z-index: 100;
         }
-        .control-btn {
-            background-color: #FF4800;
-            color: #FFFFFF;
+        
+        .btn {
+            background-color: #ff4800;
+            color: white;
             border: none;
             padding: 10px 20px;
-            margin: 0 10px;
-            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
             cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
+            border-radius: 5px;
         }
-        .control-btn:hover {
-            background-color: #FD9F78;
+        
+        .btn:hover {
+            background-color: #e63e00;
         }
-        .control-btn:disabled {
-            background-color: #cccccc;
+        
+        .btn:disabled {
+            background-color: #1c1d20;
             cursor: not-allowed;
         }
-        .dictionary {
-            margin-top: 30px;
-            padding: 15px;
-            border: 2px solid #FF4800;
-            border-radius: 8px;
-        }
-        .dictionary h3 {
-            color: #FF4800;
-            margin-top: 0;
-        }
-        .dictionary-words {
+        
+        .visualization {
+            flex: 1;
+            width: 100%;
             display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
-        .word {
-            background-color: #FD9F78;
-            padding: 5px 10px;
-            border-radius: 5px;
-        }
-        .step-indicator {
-            text-align: center;
-            margin-bottom: 20px;
+        
+        .section-title {
+            color: #1c1d20;
+            font-size: 18px;
             font-weight: bold;
-            color: #FF4800;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .dict-display {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .dict-word {
+            display: flex;
+            gap: 2px;
+        }
+        
+        .dict-char {
+            width: 30px;
+            height: 30px;
+            border: 2px solid #ff4800;
+            background-color: #ff4800;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .string-section {
+            margin-top: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .string-display {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .string-char {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #1c1d20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #1c1d20;
+            background-color: white;
+        }
+        
+        .string-char.highlighted {
+            background-color: #ff4800;
+            color: white;
+        }
+        
+        .dp-display {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        
+        .dp-cell {
+            width: 40px;
+            height: 30px;
+            border: 2px solid #1c1d20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: #1c1d20;
+            background-color: white;
+        }
+        
+        .dp-cell.true {
+            background-color: #ff4800;
+            color: white;
+        }
+        
+        .step-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-left: 4px solid #ff4800;
+            font-size: 14px;
+            color: #1c1d20;
+            max-width: 600px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Dynamic Programming: Word Break Visualization</h1>
-        
-        <div class="explanation" id="explanation">
-            Welcome to the DP Table Evolution for Word Break problem. We'll visualize how the dp array evolves when checking if "leetcode" can be segmented into words from our dictionary.
+        <div class="controls">
+            <button class="btn" id="prevBtn" onclick="previousStep()">Previous</button>
+            <button class="btn" id="nextBtn" onclick="nextStep()">Next</button>
         </div>
         
-        <div class="step-indicator">Step <span id="current-step">0</span> of <span id="total-steps">0</span></div>
-        
-        <div class="dp-container">
-            <div class="dp-indices" id="dp-indices"></div>
-            <div class="dp-chars" id="dp-chars"></div>
-            <div class="dp-array" id="dp-array"></div>
-        </div>
-        
-        <div class="dictionary">
-            <h3>Dictionary:</h3>
-            <div class="dictionary-words">
-                <div class="word">leet</div>
-                <div class="word">code</div>
-                <div class="word">lee</div>
-                <div class="word">t</div>
+        <div class="visualization">
+            <div class="string-section">
+                <div class="section-title">Dictionary: ["final", "round"]</div>
+                <div class="dict-display" id="dictDisplay">
+                    <!-- Dictionary words will be rendered here -->
+                </div>
+                <div class="section-title">String: "finalround"</div>
+                <div class="string-display" id="stringDisplay">
+                    <!-- String characters will be rendered here -->
+                </div>
+                <div class="section-title">DP Array</div>
+                <div class="dp-display" id="dpDisplay">
+                    <!-- DP array will be rendered here -->
+                </div>
+                <div class="step-info" id="stepInfo">
+                    <!-- Step information will be displayed here -->
+                </div>
             </div>
-        </div>
-        
-        <div class="step-controls">
-            <button id="prev-btn" class="control-btn" disabled>Previous</button>
-            <button id="next-btn" class="control-btn">Next</button>
         </div>
     </div>
 
     <script>
-        // Define the steps of the DP algorithm
-        const string = "leetcode";
-        const dictionary = ["leet", "code", "lee", "t"];
-        
-        // Define all the steps in the DP evolution
-        const steps = [
-            {
-                description: "We start with a dp array of length string.length + 1. dp[i] will be true if the substring up to index i can be segmented into dictionary words. Initially, only dp[0] is true (empty string).",
-                dpArray: [true, false, false, false, false, false, false, false, false],
-                current: null,
-                arrows: []
-            },
-            {
-                description: "Starting at position 0, we check if any word in the dictionary can form a valid prefix of 'leetcode'.",
-                dpArray: [true, false, false, false, false, false, false, false, false],
-                current: 0,
-                arrows: []
-            },
-            {
-                description: "We find 'leet' in the dictionary. Since dp[0] is true and 'leet' is in the dictionary, we set dp[0+4] = dp[4] = true.",
-                dpArray: [true, false, false, false, true, false, false, false, false],
-                current: 4,
-                arrows: [{from: 0, to: 4}]
-            },
-            {
-                description: "We also find 'lee' in the dictionary. Since dp[0] is true and 'lee' is in the dictionary, we set dp[0+3] = dp[3] = true.",
-                dpArray: [true, false, false, true, true, false, false, false, false],
-                current: 3,
-                arrows: [{from: 0, to: 3}]
-            },
-            {
-                description: "We find 't' in the dictionary. Since dp[0] is true and 't' is in the dictionary, we set dp[0+1] = dp[1] = true.",
-                dpArray: [true, true, false, true, true, false, false, false, false],
-                current: 1,
-                arrows: [{from: 0, to: 1}]
-            },
-            {
-                description: "Now we move to position 1 and check if any dictionary word can be formed starting from this position.",
-                dpArray: [true, true, false, true, true, false, false, false, false],
-                current: 1,
-                arrows: []
-            },
-            {
-                description: "No dictionary word matches starting from position 1, so we move to position 2.",
-                dpArray: [true, true, false, true, true, false, false, false, false],
-                current: 2,
-                arrows: []
-            },
-            {
-                description: "No dictionary word matches starting from position 2, so we move to position 3.",
-                dpArray: [true, true, false, true, true, false, false, false, false],
-                current: 3,
-                arrows: []
-            },
-            {
-                description: "From position 3, we check if any dictionary word can be formed. 't' is in the dictionary, so we check dp[3] which is true. We set dp[3+1] = dp[4] = true (already true from earlier).",
-                dpArray: [true, true, false, true, true, false, false, false, false],
-                current: 4,
-                arrows: [{from: 3, to: 4}]
-            },
-            {
-                description: "Now we move to position 4 and check if any dictionary word can be formed starting from this position.",
-                dpArray: [true, true, false, true, true, false, false, false, false],
-                current: 4,
-                arrows: []
-            },
-            {
-                description: "From position 4, we find 'code' in the dictionary. Since dp[4] is true and 'code' is in the dictionary, we set dp[4+4] = dp[8] = true.",
-                dpArray: [true, true, false, true, true, false, false, false, true],
-                current: 8,
-                arrows: [{from: 4, to: 8}]
-            },
-            {
-                description: "We've completed all positions. Since dp[8] (the end of the string) is true, the string 'leetcode' can be segmented into words from our dictionary: 'leet' + 'code'.",
-                dpArray: [true, true, false, true, true, false, false, false, true],
-                current: null,
-                arrows: [{from: 0, to: 4}, {from: 4, to: 8}]
-            }
-        ];
-        
-        // Set up the UI
-        const dpIndicesElement = document.getElementById('dp-indices');
-        const dpCharsElement = document.getElementById('dp-chars');
-        const dpArrayElement = document.getElementById('dp-array');
-        const explanationElement = document.getElementById('explanation');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const currentStepElement = document.getElementById('current-step');
-        const totalStepsElement = document.getElementById('total-steps');
-        
+        const string = "finalround";
+        const wordDict = ["final", "round"];
         let currentStep = 0;
+        let maxSteps = 0;
         
-        // Initialize indices and characters
-        function initializeDP() {
-            // Set up indices
-            dpIndicesElement.innerHTML = '';
-            for (let i = 0; i <= string.length; i++) {
-                const indexDiv = document.createElement('div');
-                indexDiv.className = 'dp-index';
-                indexDiv.textContent = i;
-                dpIndicesElement.appendChild(indexDiv);
+        // Build trie structure
+        class TrieNode {
+            constructor() {
+                this.children = {};
+                this.isEndWord = false;
+            }
+        }
+        
+        class Trie {
+            constructor() {
+                this.root = new TrieNode();
             }
             
-            // Set up characters
-            dpCharsElement.innerHTML = '';
-            // Empty string position
-            const emptyCharDiv = document.createElement('div');
-            emptyCharDiv.className = 'dp-char';
-            emptyCharDiv.textContent = 'ε';
-            dpCharsElement.appendChild(emptyCharDiv);
+            insert(word) {
+                let node = this.root;
+                for (let char of word) {
+                    if (!(char in node.children)) {
+                        node.children[char] = new TrieNode();
+                    }
+                    node = node.children[char];
+                }
+                node.isEndWord = true;
+            }
+        }
+        
+        const trie = new Trie();
+        for (let word of wordDict) {
+            trie.insert(word);
+        }
+        
+        // Simulate the algorithm steps
+        let steps = [];
+        
+        function simulateAlgorithm() {
+            const n = string.length;
+            const dp = new Array(n + 1).fill(false);
+            dp[0] = true;
             
-            // Characters from the string
+            steps.push({
+                type: 'init',
+                dp: [...dp],
+                currentPos: -1,
+                info: 'Initialize DP array. dp[0] = true (empty string can be segmented)'
+            });
+            
+            for (let i = 1; i <= n; i++) {
+                steps.push({
+                    type: 'checking',
+                    dp: [...dp],
+                    currentPos: i,
+                    info: `Checking position ${i}: s[0:${i}] = "${string.substring(0, i)}"`
+                });
+                
+                for (let j = 0; j < i; j++) {
+                    const substring = string.substring(j, i);
+                    if (wordDict.includes(substring) && dp[j]) {
+                        dp[i] = true;
+                        steps.push({
+                            type: 'found',
+                            dp: [...dp],
+                            currentPos: i,
+                            highlightStart: j,
+                            highlightEnd: i - 1,
+                            info: `Found word "${substring}" from position ${j} to ${i-1}. dp[${j}] = true, so dp[${i}] = true`
+                        });
+                        break;
+                    }
+                }
+                
+                if (!dp[i]) {
+                    steps.push({
+                        type: 'not_found',
+                        dp: [...dp],
+                        currentPos: i,
+                        info: `No valid word segmentation found ending at position ${i}. dp[${i}] = false`
+                    });
+                }
+            }
+            
+            steps.push({
+                type: 'result',
+                dp: [...dp],
+                currentPos: -1,
+                info: `Final result: dp[${n}] = ${dp[n]} - String ${dp[n] ? 'CAN' : 'CANNOT'} be segmented`
+            });
+            
+            maxSteps = steps.length - 1;
+        }
+        
+        function renderDict() {
+            const container = document.getElementById('dictDisplay');
+            container.innerHTML = '';
+            
+            for (let word of wordDict) {
+                const wordDiv = document.createElement('div');
+                wordDiv.className = 'dict-word';
+                
+                for (let char of word) {
+                    const charDiv = document.createElement('div');
+                    charDiv.className = 'dict-char';
+                    charDiv.textContent = char;
+                    wordDiv.appendChild(charDiv);
+                }
+                
+                container.appendChild(wordDiv);
+            }
+        }
+        
+        function renderString(step) {
+            const container = document.getElementById('stringDisplay');
+            container.innerHTML = '';
+            
             for (let i = 0; i < string.length; i++) {
                 const charDiv = document.createElement('div');
-                charDiv.className = 'dp-char';
-                charDiv.textContent = string[i];
-                dpCharsElement.appendChild(charDiv);
-            }
-            
-            totalStepsElement.textContent = steps.length;
-        }
-        
-        // Update the DP array visualization
-        function updateDPArray(step) {
-            dpArrayElement.innerHTML = '';
-            
-            for (let i = 0; i < step.dpArray.length; i++) {
-                const cellDiv = document.createElement('div');
-                cellDiv.className = `dp-cell ${step.dpArray[i] ? 'true' : 'false'}`;
-                cellDiv.textContent = step.dpArray[i] ? 'T' : 'F';
-                
-                if (step.current === i) {
-                    cellDiv.classList.add('current');
+                charDiv.className = 'string-char';
+                if (step.highlightStart !== undefined && i >= step.highlightStart && i <= step.highlightEnd) {
+                    charDiv.className += ' highlighted';
                 }
-                
-                // Add arrow placeholder
-                const arrowDiv = document.createElement('div');
-                arrowDiv.className = 'arrow';
-                cellDiv.appendChild(arrowDiv);
-                
-                dpArrayElement.appendChild(cellDiv);
+                charDiv.textContent = string[i];
+                container.appendChild(charDiv);
             }
-            
-            // Display arrows
-            if (step.arrows && step.arrows.length > 0) {
-                step.arrows.forEach(arrow => {
-                    const cells = document.querySelectorAll('.dp-cell');
-                    const fromCell = cells[arrow.from];
-                    const toCell = cells[arrow.to];
-                    
-                    if (fromCell && toCell) {
-                        const arrowElement = fromCell.querySelector('.arrow');
-                        if (arrowElement) {
-                            arrowElement.style.display = 'block';
-                            
-                            // Calculate the distance for the arrow
-                            const distance = (arrow.to - arrow.from) * 45; // 45px is approximate cell width with margin
-                            arrowElement.style.width = `${distance}px`;
-                            arrowElement.style.transform = 'rotate(0deg)';
-                            arrowElement.style.top = '20px';
-                            arrowElement.style.left = '20px';
-                            arrowElement.style.borderBottom = 'none';
-                            arrowElement.style.borderLeft = 'none';
-                            arrowElement.style.borderTop = '2px solid #FF4800';
-                            arrowElement.style.position = 'absolute';
-                            
-                            // Add arrowhead
-                            const arrowHead = document.createElement('div');
-                            arrowHead.style.position = 'absolute';
-                            arrowHead.style.right = '-6px';
-                            arrowHead.style.top = '-5px';
-                            arrowHead.style.width = '10px';
-                            arrowHead.style.height = '10px';
-                            arrowHead.style.borderRight = '2px solid #FF4800';
-                            arrowHead.style.borderTop = '2px solid #FF4800';
-                            arrowHead.style.transform = 'rotate(45deg)';
-                            
-                            arrowElement.appendChild(arrowHead);
-                        }
-                    }
-                });
-            }
-            
-            explanationElement.textContent = step.description;
-            currentStepElement.textContent = currentStep + 1;
         }
         
-        // Initialize and show first step
-        initializeDP();
-        updateDPArray(steps[currentStep]);
+        function renderDP(step) {
+            const container = document.getElementById('dpDisplay');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < step.dp.length; i++) {
+                const dpDiv = document.createElement('div');
+                dpDiv.className = `dp-cell ${step.dp[i] ? 'true' : ''}`;
+                dpDiv.textContent = step.dp[i] ? 'T' : 'F';
+                container.appendChild(dpDiv);
+            }
+        }
         
-        // Event listeners for navigation buttons
-        prevBtn.addEventListener('click', () => {
+        function updateVisualization() {
+            const step = steps[currentStep];
+            renderString(step);
+            renderDP(step);
+            document.getElementById('stepInfo').textContent = step.info;
+            
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === maxSteps;
+        }
+        
+        function nextStep() {
+            if (currentStep < maxSteps) {
+                currentStep++;
+                updateVisualization();
+            }
+        }
+        
+        function previousStep() {
             if (currentStep > 0) {
                 currentStep--;
-                updateDPArray(steps[currentStep]);
-                nextBtn.disabled = false;
-                if (currentStep === 0) {
-                    prevBtn.disabled = true;
-                }
+                updateVisualization();
             }
-        });
+        }
         
-        nextBtn.addEventListener('click', () => {
-            if (currentStep < steps.length - 1) {
-                currentStep++;
-                updateDPArray(steps[currentStep]);
-                prevBtn.disabled = false;
-                if (currentStep === steps.length - 1) {
-                    nextBtn.disabled = true;
-                }
-            }
-        });
+        // Initialize
+        simulateAlgorithm();
+        renderDict();
+        updateVisualization();
     </script>
 </body>
 </html>
