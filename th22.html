@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employment Types Comparison</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .filter-container {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .filter-btn {
+            background-color: #FFFFFF;
+            border: 2px solid #FF4800;
+            color: #FF4800;
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-btn.active {
+            background-color: #FF4800;
+            color: #FFFFFF;
+        }
+        
+        .filter-btn:hover {
+            background-color: #FD9F78;
+            color: #FFFFFF;
+            border-color: #FD9F78;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            overflow: hidden;
+            border-radius: 10px;
+        }
+        
+        .comparison-table th {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background-color: rgba(253, 159, 120, 0.1);
+        }
+        
+        .comparison-table tr:hover {
+            background-color: rgba(253, 159, 120, 0.2);
+        }
+        
+        .employment-type {
+            font-weight: bold;
+            color: #FF4800;
+        }
+        
+        .criteria-label {
+            font-weight: bold;
+        }
+        
+        .reset-btn {
+            background-color: #000000;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 20px auto;
+            display: block;
+        }
+        
+        .reset-btn:hover {
+            background-color: #333333;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .employment-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px;
+            background-color: #FFFFFF;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .employment-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-title {
+            color: #FF4800;
+            margin-top: 0;
+            border-bottom: 2px solid #FD9F78;
+            padding-bottom: 10px;
+        }
+        
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        @media (max-width: 768px) {
+            .comparison-table {
+                font-size: 14px;
+            }
+            
+            .filter-btn {
+                padding: 6px 12px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Employment Types Comparison</h1>
+    
+    <div class="filter-container">
+        <button class="filter-btn active" data-criteria="all">All Criteria</button>
+        <button class="filter-btn" data-criteria="duration">Duration</button>
+        <button class="filter-btn" data-criteria="legal">Legal Status</button>
+        <button class="filter-btn" data-criteria="compensation">Compensation</button>
+        <button class="filter-btn" data-criteria="purpose">Purpose</button>
+        <button class="filter-btn" data-criteria="commitment">Commitment Level</button>
+    </div>
+    
+    <table class="comparison-table" id="comparisonTable">
+        <thead>
+            <tr>
+                <th>Criteria</th>
+                <th>Full-Time</th>
+                <th>Part-Time</th>
+                <th>Contract</th>
+                <th>Temporary</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Duration -->
+            <tr class="criteria-row" data-criteria="duration">
+                <td class="criteria-label">Duration</td>
+                <td>Indefinite (ongoing)</td>
+                <td>Indefinite (ongoing)</td>
+                <td>Fixed term (project-based)</td>
+                <td>Short-term (weeks to months)</td>
+            </tr>
+            
+            <!-- Legal Status -->
+            <tr class="criteria-row" data-criteria="legal">
+                <td class="criteria-label">Legal Status</td>
+                <td>Employee (benefits eligible)</td>
+                <td>Employee (limited benefits)</td>
+                <td>Independent contractor</td>
+                <td>Employee or contractor</td>
+            </tr>
+            
+            <!-- Compensation -->
+            <tr class="criteria-row" data-criteria="compensation">
+                <td class="criteria-label">Compensation</td>
+                <td>Salary or hourly with benefits</td>
+                <td>Hourly with limited benefits</td>
+                <td>Project rate or hourly (no benefits)</td>
+                <td>Typically hourly (minimal benefits)</td>
+            </tr>
+            
+            <!-- Purpose -->
+            <tr class="criteria-row" data-criteria="purpose">
+                <td class="criteria-label">Purpose</td>
+                <td>Core business operations</td>
+                <td>Reduced staffing needs</td>
+                <td>Specialized skills or projects</td>
+                <td>Seasonal or interim coverage</td>
+            </tr>
+            
+            <!-- Commitment Level -->
+            <tr class="criteria-row" data-criteria="commitment">
+                <td class="criteria-label">Commitment Level</td>
+                <td>High (40+ hours weekly)</td>
+                <td>Medium (15-30 hours weekly)</td>
+                <td>Varies by contract terms</td>
+                <td>Limited to specific timeframe</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <button class="reset-btn" id="resetBtn">Reset Filters</button>
+    
+    <div class="cards-container">
+        <div class="employment-card">
+            <h3 class="card-title">Full-Time Employment</h3>
+            <p><strong>Duration:</strong> Indefinite (ongoing)</p>
+            <p><strong>Legal Status:</strong> Employee (benefits eligible)</p>
+            <p><strong>Compensation:</strong> Salary or hourly with benefits</p>
+            <p><strong>Purpose:</strong> Core business operations</p>
+            <p><strong>Commitment Level:</strong> High (40+ hours weekly)</p>
+        </div>
+        
+        <div class="employment-card">
+            <h3 class="card-title">Part-Time Employment</h3>
+            <p><strong>Duration:</strong> Indefinite (ongoing)</p>
+            <p><strong>Legal Status:</strong> Employee (limited benefits)</p>
+            <p><strong>Compensation:</strong> Hourly with limited benefits</p>
+            <p><strong>Purpose:</strong> Reduced staffing needs</p>
+            <p><strong>Commitment Level:</strong> Medium (15-30 hours weekly)</p>
+        </div>
+        
+        <div class="employment-card">
+            <h3 class="card-title">Contract Employment</h3>
+            <p><strong>Duration:</strong> Fixed term (project-based)</p>
+            <p><strong>Legal Status:</strong> Independent contractor</p>
+            <p><strong>Compensation:</strong> Project rate or hourly (no benefits)</p>
+            <p><strong>Purpose:</strong> Specialized skills or projects</p>
+            <p><strong>Commitment Level:</strong> Varies by contract terms</p>
+        </div>
+        
+        <div class="employment-card">
+            <h3 class="card-title">Temporary Employment</h3>
+            <p><strong>Duration:</strong> Short-term (weeks to months)</p>
+            <p><strong>Legal Status:</strong> Employee or contractor</p>
+            <p><strong>Compensation:</strong> Typically hourly (minimal benefits)</p>
+            <p><strong>Purpose:</strong> Seasonal or interim coverage</p>
+            <p><strong>Commitment Level:</strong> Limited to specific timeframe</p>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            const criteriaRows = document.querySelectorAll('.criteria-row');
+            const resetBtn = document.getElementById('resetBtn');
+            
+            // Filter table rows based on selected criteria
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const criteria = this.getAttribute('data-criteria');
+                    
+                    // Update active button
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Show/hide rows based on criteria
+                    if (criteria === 'all') {
+                        criteriaRows.forEach(row => row.classList.remove('hidden'));
+                    } else {
+                        criteriaRows.forEach(row => {
+                            if (row.getAttribute('data-criteria') === criteria) {
+                                row.classList.remove('hidden');
+                            } else {
+                                row.classList.add('hidden');
+                            }
+                        });
+                    }
+                });
+            });
+            
+            // Reset filters
+            resetBtn.addEventListener('click', function() {
+                criteriaRows.forEach(row => row.classList.remove('hidden'));
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                document.querySelector('[data-criteria="all"]').classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
