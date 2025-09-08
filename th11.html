@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal Compliance Decision Tree</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        
+        h1 {
+            color: #FF4800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        #flowchart {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #FD9F78;
+            border-radius: 8px;
+            overflow: auto;
+        }
+        
+        .node {
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            text-align: center;
+        }
+        
+        .question {
+            background-color: #FD9F78;
+            color: #000000;
+            font-weight: bold;
+        }
+        
+        .outcome {
+            background-color: #FF4800;
+            color: #FFFFFF;
+            font-weight: bold;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background-color: #000000;
+            color: #FFFFFF;
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 250px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+        
+        .info-panel {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #FD9F78;
+            border-radius: 8px;
+            background-color: #FFFFFF;
+        }
+        
+        .info-title {
+            color: #FF4800;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Work Trial Legality Decision Tree</h1>
+        
+        <div id="flowchart"></div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FD9F78;"></div>
+                <span>Decision Point</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FF4800;"></div>
+                <span>Outcome</span>
+            </div>
+        </div>
+        
+        <div class="info-panel">
+            <h3 class="info-title">About This Decision Tree</h3>
+            <p>This interactive flowchart helps determine the legality of work trials and payment requirements based on jurisdiction and trial characteristics. Navigate the decision path by clicking on nodes to expand or collapse branches. Hover over nodes for additional information.</p>
+            <p>Note: This tool provides general guidance only and should not replace professional legal advice. Employment laws vary significantly by jurisdiction and are subject to change.</p>
+        </div>
+        
+        <div id="tooltip" class="tooltip"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script>
+        // Define the decision tree data
+        const treeData = {
+            name: "Is the work trial in the US?",
+            tooltip: "Different countries have different laws regarding work trials and unpaid labor",
+            type: "question",
+            children: [
+                {
+                    name: "Yes - US",
+                    type: "question",
+                    tooltip: "US has specific federal and state laws regarding unpaid work trials",
+                    children: [
+                        {
+                            name: "Is the trial primarily for the benefit of the individual?",
+                            type: "question",
+                            tooltip: "If the trial is primarily educational and benefits the individual rather than the business, it may qualify as an unpaid internship",
+                            children: [
+                                {
+                                    name: "Yes - Benefits Individual",
+                                    type: "question",
+                                    tooltip: "This is one factor in the 'primary beneficiary test' used by courts",
+                                    children: [
+                                        {
+                                            name: "Is the trial less than a few hours?",
+                                            type: "question",
+                                            tooltip: "Brief trials may be viewed differently than extended ones",
+                                            children: [
+                                                {
+                                                    name: "Yes - Brief Trial",
+                                                    type: "question",
+                                                    tooltip: "Brief demonstrations of skills may be permissible in some contexts",
+                                                    children: [
+                                                        {
+                                                            name: "Is productive work being performed?",
+                                                            type: "question",
+                                                            tooltip: "If the individual is producing value for the business, this often requires compensation",
+                                                            children: [
+                                                                {
+                                                                    name: "Yes - Productive Work",
+                                                                    type: "outcome",
+                                                                    tooltip: "When productive work is performed, payment is typically required",
+                                                                    children: [
+                                                                        {
+                                                                            name: "Payment Required",
+                                                                            type: "outcome",
+                                                                            tooltip: "The trial participant should be paid at least minimum wage for all hours worked"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    name: "No - Observational Only",
+                                                                    type: "outcome",
+                                                                    tooltip: "Purely observational activities may not require payment",
+                                                                    children: [
+                                                                        {
+                                                                            name: "May Be Legal Without Pay",
+                                                                            type: "outcome",
+                                                                            tooltip: "Brief, observational job shadowing may be permissible without pay, but check state laws"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    name: "No - Extended Trial",
+                                                    type: "outcome",
+                                                    tooltip: "Extended periods where skills are demonstrated typically require payment",
+                                                    children: [
+                                                        {
+                                                            name: "Payment Required",
+                                                            type: "outcome",
+                                                            tooltip: "Longer trials almost always require payment under FLSA regulations"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    name: "No - Benefits Business",
+                                    type: "outcome",
+                                    tooltip: "If the business is the primary beneficiary, payment is required",
+                                    children: [
+                                        {
+                                            name: "Payment Required",
+                                            type: "outcome",
+                                            tooltip: "When a business benefits from labor, compensation is required under the FLSA"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    name: "No - Outside US",
+                    type: "question",
+                    tooltip: "International labor laws vary significantly by country",
+                    children: [
+                        {
+                            name: "Is the trial in the EU?",
+                            type: "question",
+                            tooltip: "The European Union has relatively strict labor protections",
+                            children: [
+                                {
+                                    name: "Yes - EU",
+                                    type: "question",
+                                    tooltip: "EU member states generally have strong worker protections",
+                                    children: [
+                                        {
+                                            name: "Is this part of formal education/training?",
+                                            type: "question",
+                                            tooltip: "Educational internships may have different requirements",
+                                            children: [
+                                                {
+                                                    name: "Yes - Educational",
+                                                    type: "outcome",
+                                                    tooltip: "Formal educational placements may have specific exemptions",
+                                                    children: [
+                                                        {
+                                                            name: "Check Specific Country Laws",
+                                                            type: "outcome",
+                                                            tooltip: "Even educational placements have minimum requirements that vary by country"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    name: "No - Standard Work Trial",
+                                                    type: "outcome",
+                                                    tooltip: "Most EU countries prohibit unpaid work trials outside educational contexts",
+                                                    children: [
+                                                        {
+                                                            name: "Payment Almost Always Required",
+                                                            type: "outcome",
+                                                            tooltip: "EU labor laws generally require payment for all work performed"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    name: "No - Non-EU",
+                                    type: "question",
+                                    tooltip: "Requirements vary significantly outside the EU",
+                                    children: [
+                                        {
+                                            name: "Is the trial in UK, Canada, or Australia?",
+                                            type: "question",
+                                            tooltip: "These countries have similar frameworks to the US but with some key differences",
+                                            children: [
+                                                {
+                                                    name: "Yes",
+                                                    type: "outcome",
+                                                    tooltip: "These countries generally require payment for work trials with limited exceptions",
+                                                    children: [
+                                                        {
+                                                            name: "Brief Skills Demo May Be Unpaid",
+                                                            type: "outcome",
+                                                            tooltip: "Very short demonstrations (1-3 hours) may be permissible without pay in some cases"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    name: "No - Other Country",
+                                                    type: "outcome",
+                                                    tooltip: "Labor laws vary widely in other jurisdictions",
+                                                    children: [
+                                                        {
+                                                            name: "Consult Local Labor Laws",
+                                                            type: "outcome",
+                                                            tooltip: "Research the specific country's regulations or consult with a local employment attorney"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // Set up the D3 visualization
+        const margin = {top: 20, right: 120, bottom: 20, left: 120};
+        const width = 1100 - margin.right - margin.left;
+        const height = 560 - margin.top - margin.bottom;
+
+        // Create the SVG container
+        const svg = d3.select("#flowchart")
+            .append("svg")
+            .attr("width", width + margin.right + margin.left)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Create a tree layout
+        const tree = d3.tree().size([height, width]);
+
+        // Converts the hierarchical data into a node-link structure
+        const root = d3.hierarchy(treeData);
+        
+        // Assign the x and y coordinates to each node
+        tree(root);
+
+        // Create links between nodes
+        const link = svg.selectAll(".link")
+            .data(root.links())
+            .enter().append("path")
+            .attr("class", "link")
+            .attr("fill", "none")
+            .attr("stroke", "#FD9F78")
+            .attr("stroke-width", 2)
+            .attr("d", d => {
+                return `M${d.source.y},${d.source.x}
+                        C${(d.source.y + d.target.y) / 2},${d.source.x}
+                         ${(d.source.y + d.target.y) / 2},${d.target.x}
+                         ${d.target.y},${d.target.x}`;
+            });
+
+        // Create nodes
+        const node = svg.selectAll(".node")
+            .data(root.descendants())
+            .enter().append("g")
+            .attr("class", "node")
+            .attr("transform", d => `translate(${d.y},${d.x})`)
+            .on("mouseover", function(event, d) {
+                if (d.data.tooltip) {
+                    const tooltip = d3.select("#tooltip");
+                    tooltip.html(d.data.tooltip)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 20) + "px")
+                        .style("display", "block");
+                }
+            })
+            .on("mouseout", function() {
+                d3.select("#tooltip").style("display", "none");
+            });
+
+        // Add rectangles for nodes
+        node.append("rect")
+            .attr("width", d => Math.max(d.data.name.length * 6, 120))
+            .attr("height", 40)
+            .attr("x", d => -Math.max(d.data.name.length * 6, 120) / 2)
+            .attr("y", -20)
+            .attr("rx", 5)
+            .attr("ry", 5)
+            .attr("class", d => d.data.type)
+            .attr("fill", d => d.data.type === "question" ? "#FD9F78" : "#FF4800");
+
+        // Add text to nodes
+        node.append("text")
+            .attr("dy", 5)
+            .attr("text-anchor", "middle")
+            .attr("fill", d => d.data.type === "question" ? "#000000" : "#FFFFFF")
+            .text(d => {
+                const words = d.data.name.split(' ');
+                if (words.length > 5) {
+                    return words.slice(0, 5).join(' ') + '...';
+                }
+                return d.data.name;
+            })
+            .append("title")
+            .text(d => d.data.name);
+    </script>
+</body>
+</html>
